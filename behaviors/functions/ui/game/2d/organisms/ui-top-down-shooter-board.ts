@@ -30,7 +30,7 @@ const ALIAS = 'UiTopDownShooterBoard';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiTopDownShooterBoardEventKey = 'FIRE' | 'GAME_END' | 'INIT' | 'MOVE' | 'PLAY_AGAIN' | 'TILE_CLICK' | 'UNIT_CLICK';
+export type StdUiTopDownShooterBoardEventKey = 'FIRE' | 'GAME_END' | 'INIT' | 'MOVE_DOWN' | 'MOVE_LEFT' | 'MOVE_RIGHT' | 'MOVE_UP' | 'PLAY_AGAIN' | 'TILE_CLICK' | 'UNIT_CLICK';
 
 /**
  * Payload shape for the `TILE_CLICK` event.
@@ -48,19 +48,38 @@ export interface StdUiTopDownShooterBoardUnitClickPayload {
 }
 
 /**
- * Payload shape for the `MOVE` event.
+ * Payload shape for the `MOVE_LEFT` event.
  */
-export interface StdUiTopDownShooterBoardMovePayload {
-  dx: number;
-  dy: number;
+export interface StdUiTopDownShooterBoardMoveLeftPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `MOVE_RIGHT` event.
+ */
+export interface StdUiTopDownShooterBoardMoveRightPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `MOVE_UP` event.
+ */
+export interface StdUiTopDownShooterBoardMoveUpPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `MOVE_DOWN` event.
+ */
+export interface StdUiTopDownShooterBoardMoveDownPayload {
+  id?: string;
 }
 
 /**
  * Payload shape for the `FIRE` event.
  */
 export interface StdUiTopDownShooterBoardFirePayload {
-  tx: number;
-  ty: number;
+  id?: string;
 }
 
 /**
@@ -918,36 +937,60 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
             'tier': 'domain',
           },
           {
-            'description': 'Emits UI:{moveEvent} with {dx,dy} on arrow/WASD key press to move the player',
-            'event': 'MOVE',
+            'description': 'Move-left intent (keyboard keyMap)',
+            'event': 'MOVE_LEFT',
             'payloadSchema': [
               {
-                'name': 'dx',
-                'required': true,
-                'type': 'number',
-              },
-              {
-                'name': 'dy',
-                'required': true,
-                'type': 'number',
+                'name': 'id',
+                'type': 'string',
               },
             ],
             'scope': 'external',
             'tier': 'domain',
           },
           {
-            'description': 'Emits UI:{fireEvent} with {tx,ty} on space / arena click to fire a projectile',
+            'description': 'Move-right intent (keyboard keyMap)',
+            'event': 'MOVE_RIGHT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Move-up intent (keyboard keyMap)',
+            'event': 'MOVE_UP',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Move-down intent (keyboard keyMap)',
+            'event': 'MOVE_DOWN',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Fire intent (keyboard Space / Fire button)',
             'event': 'FIRE',
             'payloadSchema': [
               {
-                'name': 'tx',
-                'required': true,
-                'type': 'number',
-              },
-              {
-                'name': 'ty',
-                'required': true,
-                'type': 'number',
+                'name': 'id',
+                'type': 'string',
               },
             ],
             'scope': 'external',
@@ -1007,37 +1050,61 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
               'name': 'Initialize',
             },
             {
-              'description': 'Emits UI:{moveEvent} with {dx,dy} on arrow/WASD key press to move the player',
-              'key': 'MOVE',
-              'name': 'Move',
+              'description': 'Move-left intent (keyboard keyMap)',
+              'key': 'MOVE_LEFT',
+              'name': 'Move Left',
               'payloadSchema': [
                 {
-                  'name': 'dx',
-                  'required': true,
-                  'type': 'number',
-                },
-                {
-                  'name': 'dy',
-                  'required': true,
-                  'type': 'number',
+                  'name': 'id',
+                  'type': 'string',
                 },
               ],
               'tier': 'domain',
             },
             {
-              'description': 'Emits UI:{fireEvent} with {tx,ty} on space / arena click to fire a projectile',
+              'description': 'Move-right intent (keyboard keyMap)',
+              'key': 'MOVE_RIGHT',
+              'name': 'Move Right',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'tier': 'domain',
+            },
+            {
+              'description': 'Move-up intent (keyboard keyMap)',
+              'key': 'MOVE_UP',
+              'name': 'Move Up',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'tier': 'domain',
+            },
+            {
+              'description': 'Move-down intent (keyboard keyMap)',
+              'key': 'MOVE_DOWN',
+              'name': 'Move Down',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'tier': 'domain',
+            },
+            {
+              'description': 'Fire intent (keyboard Space / Fire button)',
               'key': 'FIRE',
               'name': 'Fire',
               'payloadSchema': [
                 {
-                  'name': 'tx',
-                  'required': true,
-                  'type': 'number',
-                },
-                {
-                  'name': 'ty',
-                  'required': true,
-                  'type': 'number',
+                  'name': 'id',
+                  'type': 'string',
                 },
               ],
               'tier': 'domain',
@@ -1223,9 +1290,26 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
+                        'backgroundImage': [
+                          'object/get',
+                          '@config.assetManifest',
+                          'background',
+                        ],
                         'effects': '@entity.effects',
                         'features': [
                           'array/map',
@@ -1258,7 +1342,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                             },
                           ],
                         ],
-                        'projection': 'flat',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                          'Space': 'FIRE',
+                        },
+                        'projection': 'free',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': false,
@@ -1357,14 +1452,50 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-score',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-score.png',
+                                'variant': '',
+                              },
                               'label': 'Score',
                               'value': '@entity.score',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-wave',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-wave.png',
+                                'variant': '',
+                              },
                               'label': 'Wave',
                               'value': '@entity.wave',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lives',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-lives.png',
+                                'variant': '',
+                              },
                               'label': 'Lives',
                               'value': '@entity.lives',
                             },
@@ -1378,7 +1509,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         },
                         {
                           'action': 'FIRE',
-                          'icon': 'zap',
+                          'iconAsset': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'icon-fire',
+                            'role': 'ui',
+                            'style': 'sci-fi',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-fire.png',
+                            'variant': '',
+                          },
                           'label': 'Fire',
                           'type': 'button',
                           'variant': 'primary',
@@ -1388,6 +1530,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -1411,42 +1565,121 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         'math/max',
                         0,
                         [
-                          'math/min',
-                          '@config.width',
+                          '-',
                           [
-                            '+',
-                            [
-                              'object/get',
-                              '@entity.player',
-                              'x',
-                            ],
-                            [
-                              '*',
-                              '@payload.dx',
-                              '@config.moveStep',
-                            ],
+                            'object/get',
+                            '@entity.player',
+                            'x',
                           ],
+                          '@config.moveStep',
                         ],
                       ],
+                    },
+                  ],
+                ],
+              ],
+              'event': 'MOVE_LEFT',
+              'from': 'playing',
+              'guard': [
+                '==',
+                '@entity.result',
+                'none',
+              ],
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.player',
+                  [
+                    'object/merge',
+                    '@entity.player',
+                    {
+                      'animation': 'walk',
+                      'x': [
+                        'math/min',
+                        '@config.width',
+                        [
+                          '+',
+                          [
+                            'object/get',
+                            '@entity.player',
+                            'x',
+                          ],
+                          '@config.moveStep',
+                        ],
+                      ],
+                    },
+                  ],
+                ],
+              ],
+              'event': 'MOVE_RIGHT',
+              'from': 'playing',
+              'guard': [
+                '==',
+                '@entity.result',
+                'none',
+              ],
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.player',
+                  [
+                    'object/merge',
+                    '@entity.player',
+                    {
+                      'animation': 'walk',
                       'y': [
                         'math/max',
                         0,
                         [
-                          'math/min',
-                          '@config.height',
+                          '-',
                           [
-                            '+',
-                            [
-                              'object/get',
-                              '@entity.player',
-                              'y',
-                            ],
-                            [
-                              '*',
-                              '@payload.dy',
-                              '@config.moveStep',
-                            ],
+                            'object/get',
+                            '@entity.player',
+                            'y',
                           ],
+                          '@config.moveStep',
+                        ],
+                      ],
+                    },
+                  ],
+                ],
+              ],
+              'event': 'MOVE_UP',
+              'from': 'playing',
+              'guard': [
+                '==',
+                '@entity.result',
+                'none',
+              ],
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.player',
+                  [
+                    'object/merge',
+                    '@entity.player',
+                    {
+                      'animation': 'walk',
+                      'y': [
+                        'math/min',
+                        '@config.height',
+                        [
+                          '+',
+                          [
+                            'object/get',
+                            '@entity.player',
+                            'y',
+                          ],
+                          '@config.moveStep',
                         ],
                       ],
                     },
@@ -1456,9 +1689,26 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
+                        'backgroundImage': [
+                          'object/get',
+                          '@config.assetManifest',
+                          'background',
+                        ],
                         'effects': '@entity.effects',
                         'features': [
                           'array/map',
@@ -1491,7 +1741,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                             },
                           ],
                         ],
-                        'projection': 'flat',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                          'Space': 'FIRE',
+                        },
+                        'projection': 'free',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': false,
@@ -1590,14 +1851,50 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-score',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-score.png',
+                                'variant': '',
+                              },
                               'label': 'Score',
                               'value': '@entity.score',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-wave',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-wave.png',
+                                'variant': '',
+                              },
                               'label': 'Wave',
                               'value': '@entity.wave',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lives',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-lives.png',
+                                'variant': '',
+                              },
                               'label': 'Lives',
                               'value': '@entity.lives',
                             },
@@ -1611,7 +1908,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         },
                         {
                           'action': 'FIRE',
-                          'icon': 'zap',
+                          'iconAsset': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'icon-fire',
+                            'role': 'ui',
+                            'style': 'sci-fi',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-fire.png',
+                            'variant': '',
+                          },
                           'label': 'Fire',
                           'type': 'button',
                           'variant': 'primary',
@@ -1622,11 +1930,23 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                       'justify': 'between',
                       'type': 'stack',
                     },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'type': 'game-shell',
                   },
                 ],
               ],
-              'event': 'MOVE',
+              'event': 'MOVE_DOWN',
               'from': 'playing',
               'guard': [
                 '==',
@@ -1694,9 +2014,26 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
+                        'backgroundImage': [
+                          'object/get',
+                          '@config.assetManifest',
+                          'background',
+                        ],
                         'effects': '@entity.effects',
                         'features': [
                           'array/map',
@@ -1729,7 +2066,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                             },
                           ],
                         ],
-                        'projection': 'flat',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                          'Space': 'FIRE',
+                        },
+                        'projection': 'free',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': false,
@@ -1828,14 +2176,50 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-score',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-score.png',
+                                'variant': '',
+                              },
                               'label': 'Score',
                               'value': '@entity.score',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-wave',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-wave.png',
+                                'variant': '',
+                              },
                               'label': 'Wave',
                               'value': '@entity.wave',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lives',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-lives.png',
+                                'variant': '',
+                              },
                               'label': 'Lives',
                               'value': '@entity.lives',
                             },
@@ -1849,7 +2233,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         },
                         {
                           'action': 'FIRE',
-                          'icon': 'zap',
+                          'iconAsset': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'icon-fire',
+                            'role': 'ui',
+                            'style': 'sci-fi',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-fire.png',
+                            'variant': '',
+                          },
                           'label': 'Fire',
                           'type': 'button',
                           'variant': 'primary',
@@ -1859,6 +2254,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -1889,9 +2296,26 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
+                        'backgroundImage': [
+                          'object/get',
+                          '@config.assetManifest',
+                          'background',
+                        ],
                         'effects': '@entity.effects',
                         'features': [
                           'array/map',
@@ -1924,7 +2348,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                             },
                           ],
                         ],
-                        'projection': 'flat',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                          'Space': 'FIRE',
+                        },
+                        'projection': 'free',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': false,
@@ -2023,14 +2458,50 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-score',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-score.png',
+                                'variant': '',
+                              },
                               'label': 'Score',
                               'value': '@entity.score',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-wave',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-wave.png',
+                                'variant': '',
+                              },
                               'label': 'Wave',
                               'value': '@entity.wave',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lives',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-lives.png',
+                                'variant': '',
+                              },
                               'label': 'Lives',
                               'value': '@entity.lives',
                             },
@@ -2044,7 +2515,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         },
                         {
                           'action': 'FIRE',
-                          'icon': 'zap',
+                          'iconAsset': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'icon-fire',
+                            'role': 'ui',
+                            'style': 'sci-fi',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-fire.png',
+                            'variant': '',
+                          },
                           'label': 'Fire',
                           'type': 'button',
                           'variant': 'primary',
@@ -2054,6 +2536,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -2084,9 +2578,26 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
+                        'backgroundImage': [
+                          'object/get',
+                          '@config.assetManifest',
+                          'background',
+                        ],
                         'effects': '@entity.effects',
                         'features': [
                           'array/map',
@@ -2119,7 +2630,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                             },
                           ],
                         ],
-                        'projection': 'flat',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                          'Space': 'FIRE',
+                        },
+                        'projection': 'free',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': false,
@@ -2218,14 +2740,50 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-score',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-score.png',
+                                'variant': '',
+                              },
                               'label': 'Score',
                               'value': '@entity.score',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-wave',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-wave.png',
+                                'variant': '',
+                              },
                               'label': 'Wave',
                               'value': '@entity.wave',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lives',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-lives.png',
+                                'variant': '',
+                              },
                               'label': 'Lives',
                               'value': '@entity.lives',
                             },
@@ -2239,7 +2797,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         },
                         {
                           'action': 'FIRE',
-                          'icon': 'zap',
+                          'iconAsset': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'icon-fire',
+                            'role': 'ui',
+                            'style': 'sci-fi',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-fire.png',
+                            'variant': '',
+                          },
                           'label': 'Fire',
                           'type': 'button',
                           'variant': 'primary',
@@ -2249,6 +2818,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -2269,9 +2850,26 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
+                        'backgroundImage': [
+                          'object/get',
+                          '@config.assetManifest',
+                          'background',
+                        ],
                         'effects': '@entity.effects',
                         'features': [
                           'array/map',
@@ -2304,7 +2902,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                             },
                           ],
                         ],
-                        'projection': 'flat',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                          'Space': 'FIRE',
+                        },
+                        'projection': 'free',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': false,
@@ -2403,14 +3012,50 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-score',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-score.png',
+                                'variant': '',
+                              },
                               'label': 'Score',
                               'value': '@entity.score',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-wave',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-wave.png',
+                                'variant': '',
+                              },
                               'label': 'Wave',
                               'value': '@entity.wave',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lives',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-lives.png',
+                                'variant': '',
+                              },
                               'label': 'Lives',
                               'value': '@entity.lives',
                             },
@@ -2424,7 +3069,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         },
                         {
                           'action': 'FIRE',
-                          'icon': 'zap',
+                          'iconAsset': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'icon-fire',
+                            'role': 'ui',
+                            'style': 'sci-fi',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-fire.png',
+                            'variant': '',
+                          },
                           'label': 'Fire',
                           'type': 'button',
                           'variant': 'primary',
@@ -2434,6 +3090,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -2570,9 +3238,26 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
+                        'backgroundImage': [
+                          'object/get',
+                          '@config.assetManifest',
+                          'background',
+                        ],
                         'effects': '@entity.effects',
                         'features': [
                           'array/map',
@@ -2605,7 +3290,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                             },
                           ],
                         ],
-                        'projection': 'flat',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                          'Space': 'FIRE',
+                        },
+                        'projection': 'free',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': false,
@@ -2704,14 +3400,50 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-score',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-score.png',
+                                'variant': '',
+                              },
                               'label': 'Score',
                               'value': '@entity.score',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-wave',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-wave.png',
+                                'variant': '',
+                              },
                               'label': 'Wave',
                               'value': '@entity.wave',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lives',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-lives.png',
+                                'variant': '',
+                              },
                               'label': 'Lives',
                               'value': '@entity.lives',
                             },
@@ -2725,7 +3457,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                         },
                         {
                           'action': 'FIRE',
-                          'icon': 'zap',
+                          'iconAsset': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'icon-fire',
+                            'role': 'ui',
+                            'style': 'sci-fi',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-fire.png',
+                            'variant': '',
+                          },
                           'label': 'Fire',
                           'type': 'button',
                           'variant': 'primary',
@@ -2735,6 +3478,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -2850,9 +3605,26 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                 'render-ui',
                 'main',
                 {
+                  'backgroundAsset': {
+                    'animations': [],
+                    'aspect': '1:1',
+                    'category': 'ui',
+                    'dimension': '2d',
+                    'name': 'panel-frame',
+                    'role': 'ui',
+                    'style': 'sci-fi',
+                    'thumbnailUrl': '',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                    'variant': '',
+                  },
                   'children': [
                     {
                       'assetManifest': '@config.assetManifest',
+                      'backgroundImage': [
+                        'object/get',
+                        '@config.assetManifest',
+                        'background',
+                      ],
                       'effects': '@entity.effects',
                       'features': [
                         'array/map',
@@ -2885,7 +3657,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                           },
                         ],
                       ],
-                      'projection': 'flat',
+                      'keyMap': {
+                        'ArrowDown': 'MOVE_DOWN',
+                        'ArrowLeft': 'MOVE_LEFT',
+                        'ArrowRight': 'MOVE_RIGHT',
+                        'ArrowUp': 'MOVE_UP',
+                        'KeyA': 'MOVE_LEFT',
+                        'KeyD': 'MOVE_RIGHT',
+                        'KeyS': 'MOVE_DOWN',
+                        'KeyW': 'MOVE_UP',
+                        'Space': 'FIRE',
+                      },
+                      'projection': 'free',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
                       'showMinimap': false,
@@ -2984,14 +3767,50 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                       {
                         'stats': [
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'icon-score',
+                              'role': 'ui',
+                              'style': 'sci-fi',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-score.png',
+                              'variant': '',
+                            },
                             'label': 'Score',
                             'value': '@entity.score',
                           },
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'icon-wave',
+                              'role': 'ui',
+                              'style': 'sci-fi',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-wave.png',
+                              'variant': '',
+                            },
                             'label': 'Wave',
                             'value': '@entity.wave',
                           },
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'icon-lives',
+                              'role': 'ui',
+                              'style': 'sci-fi',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-lives.png',
+                              'variant': '',
+                            },
                             'label': 'Lives',
                             'value': '@entity.lives',
                           },
@@ -3005,7 +3824,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                       },
                       {
                         'action': 'FIRE',
-                        'icon': 'zap',
+                        'iconAsset': {
+                          'animations': [],
+                          'aspect': '1:1',
+                          'category': 'ui',
+                          'dimension': '2d',
+                          'name': 'icon-fire',
+                          'role': 'ui',
+                          'style': 'sci-fi',
+                          'thumbnailUrl': '',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-fire.png',
+                          'variant': '',
+                        },
                         'label': 'Fire',
                         'type': 'button',
                         'variant': 'primary',
@@ -3015,6 +3845,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                     'gap': 'md',
                     'justify': 'between',
                     'type': 'stack',
+                  },
+                  'hudBackgroundAsset': {
+                    'animations': [],
+                    'aspect': '1:1',
+                    'category': 'ui',
+                    'dimension': '2d',
+                    'name': 'panel-frame',
+                    'role': 'ui',
+                    'style': 'sci-fi',
+                    'thumbnailUrl': '',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                    'variant': '',
                   },
                   'type': 'game-shell',
                 },
@@ -3650,9 +4492,26 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                 'render-ui',
                 'main',
                 {
+                  'backgroundAsset': {
+                    'animations': [],
+                    'aspect': '1:1',
+                    'category': 'ui',
+                    'dimension': '2d',
+                    'name': 'panel-frame',
+                    'role': 'ui',
+                    'style': 'sci-fi',
+                    'thumbnailUrl': '',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                    'variant': '',
+                  },
                   'children': [
                     {
                       'assetManifest': '@config.assetManifest',
+                      'backgroundImage': [
+                        'object/get',
+                        '@config.assetManifest',
+                        'background',
+                      ],
                       'effects': '@entity.effects',
                       'features': [
                         'array/map',
@@ -3685,7 +4544,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                           },
                         ],
                       ],
-                      'projection': 'flat',
+                      'keyMap': {
+                        'ArrowDown': 'MOVE_DOWN',
+                        'ArrowLeft': 'MOVE_LEFT',
+                        'ArrowRight': 'MOVE_RIGHT',
+                        'ArrowUp': 'MOVE_UP',
+                        'KeyA': 'MOVE_LEFT',
+                        'KeyD': 'MOVE_RIGHT',
+                        'KeyS': 'MOVE_DOWN',
+                        'KeyW': 'MOVE_UP',
+                        'Space': 'FIRE',
+                      },
+                      'projection': 'free',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
                       'showMinimap': false,
@@ -3784,14 +4654,50 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                       {
                         'stats': [
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'icon-score',
+                              'role': 'ui',
+                              'style': 'sci-fi',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-score.png',
+                              'variant': '',
+                            },
                             'label': 'Score',
                             'value': '@entity.score',
                           },
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'icon-wave',
+                              'role': 'ui',
+                              'style': 'sci-fi',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-wave.png',
+                              'variant': '',
+                            },
                             'label': 'Wave',
                             'value': '@entity.wave',
                           },
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'icon-lives',
+                              'role': 'ui',
+                              'style': 'sci-fi',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-lives.png',
+                              'variant': '',
+                            },
                             'label': 'Lives',
                             'value': '@entity.lives',
                           },
@@ -3805,7 +4711,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                       },
                       {
                         'action': 'FIRE',
-                        'icon': 'zap',
+                        'iconAsset': {
+                          'animations': [],
+                          'aspect': '1:1',
+                          'category': 'ui',
+                          'dimension': '2d',
+                          'name': 'icon-fire',
+                          'role': 'ui',
+                          'style': 'sci-fi',
+                          'thumbnailUrl': '',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/icon-fire.png',
+                          'variant': '',
+                        },
                         'label': 'Fire',
                         'type': 'button',
                         'variant': 'primary',
@@ -3815,6 +4732,18 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                     'gap': 'md',
                     'justify': 'between',
                     'type': 'stack',
+                  },
+                  'hudBackgroundAsset': {
+                    'animations': [],
+                    'aspect': '1:1',
+                    'category': 'ui',
+                    'dimension': '2d',
+                    'name': 'panel-frame',
+                    'role': 'ui',
+                    'style': 'sci-fi',
+                    'thumbnailUrl': '',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/ui/panel-frame.png',
+                    'variant': '',
                   },
                   'type': 'game-shell',
                 },
