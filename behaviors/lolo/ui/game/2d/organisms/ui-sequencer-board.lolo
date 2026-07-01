@@ -65,12 +65,15 @@ orbital SequencerBoardOrbital {
         (set @entity.result "none")
         (set @entity.currentStep -1)
         (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: ghost } ] } ] }
-          children: [
-            { type: sequence-bar, slots: (array/map @entity.slots (fn s (array/first (array/filter @entity.availableActions (fn a (== (object/get a id) (object/get s placedActionId))))))), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, categoryColors: @config.categoryColors, slotDropEvent: PLACE, slotRemoveEvent: REMOVE },
-            { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s (object/get s placedActionId))), allowDuplicates: @entity.allowDuplicates, categoryColors: @config.categoryColors, label: "Actions" }
-          ]
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
         })
     }
 
@@ -90,68 +93,86 @@ orbital SequencerBoardOrbital {
         (set @entity.result "none")
         (set @entity.currentStep -1)
         (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: ghost } ] } ] }
-          children: [
-            { type: sequence-bar, slots: (array/map @entity.slots (fn s (array/first (array/filter @entity.availableActions (fn a (== (object/get a id) (object/get s placedActionId))))))), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, categoryColors: @config.categoryColors, slotDropEvent: PLACE, slotRemoveEvent: REMOVE },
-            { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s (object/get s placedActionId))), allowDuplicates: @entity.allowDuplicates, categoryColors: @config.categoryColors, label: "Actions" }
-          ]
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
         })
 
       PLACE -> building
         (set @entity.slots (array/map @entity.slots (fn s (if (== (object/get s index) ?slotIndex) (object/merge s { placedActionId: ?actionId }) s))))
         (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: ghost } ] } ] }
-          children: [
-            { type: sequence-bar, slots: (array/map @entity.slots (fn s (array/first (array/filter @entity.availableActions (fn a (== (object/get a id) (object/get s placedActionId))))))), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, categoryColors: @config.categoryColors, slotDropEvent: PLACE, slotRemoveEvent: REMOVE },
-            { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s (object/get s placedActionId))), allowDuplicates: @entity.allowDuplicates, categoryColors: @config.categoryColors, label: "Actions" }
-          ]
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
         })
 
       REMOVE -> building
         (set @entity.slots (array/map @entity.slots (fn s (if (== (object/get s index) ?slotIndex) (object/merge s { placedActionId: "" }) s))))
         (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: ghost } ] } ] }
-          children: [
-            { type: sequence-bar, slots: (array/map @entity.slots (fn s (array/first (array/filter @entity.availableActions (fn a (== (object/get a id) (object/get s placedActionId))))))), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, categoryColors: @config.categoryColors, slotDropEvent: PLACE, slotRemoveEvent: REMOVE },
-            { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s (object/get s placedActionId))), allowDuplicates: @entity.allowDuplicates, categoryColors: @config.categoryColors, label: "Actions" }
-          ]
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
         })
 
       PLAY -> playing-back
         (set @entity.currentStep 0)
         (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: ghost } ] } ] }
-          children: [
-            { type: sequence-bar, slots: (array/map @entity.slots (fn s (array/first (array/filter @entity.availableActions (fn a (== (object/get a id) (object/get s placedActionId))))))), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, categoryColors: @config.categoryColors, slotDropEvent: PLACE, slotRemoveEvent: REMOVE },
-            { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s (object/get s placedActionId))), allowDuplicates: @entity.allowDuplicates, categoryColors: @config.categoryColors, label: "Actions" }
-          ]
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
         })
 
       CHECK -> complete when (array/some @entity.solutions (fn sol (== (array/map @entity.slots (fn s (object/get s placedActionId))) sol)))
         (set @entity.attempts (+ @entity.attempts 1))
         (set @entity.result "win")
         (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: ghost } ] } ] }
-          children: [
-            { type: sequence-bar, slots: (array/map @entity.slots (fn s (array/first (array/filter @entity.availableActions (fn a (== (object/get a id) (object/get s placedActionId))))))), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, categoryColors: @config.categoryColors, slotDropEvent: PLACE, slotRemoveEvent: REMOVE },
-            { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s (object/get s placedActionId))), allowDuplicates: @entity.allowDuplicates, categoryColors: @config.categoryColors, label: "Actions" }
-          ]
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
         })
 
       CHECK -> building
         (set @entity.attempts (+ @entity.attempts 1))
         (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: ghost } ] } ] }
-          children: [
-            { type: sequence-bar, slots: (array/map @entity.slots (fn s (array/first (array/filter @entity.availableActions (fn a (== (object/get a id) (object/get s placedActionId))))))), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, categoryColors: @config.categoryColors, slotDropEvent: PLACE, slotRemoveEvent: REMOVE },
-            { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s (object/get s placedActionId))), allowDuplicates: @entity.allowDuplicates, categoryColors: @config.categoryColors, label: "Actions" }
-          ]
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
         })
     }
 
@@ -159,23 +180,29 @@ orbital SequencerBoardOrbital {
       STEP -> building when (>= @entity.currentStep (- @entity.maxSlots 1))
         (set @entity.currentStep -1)
         (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: ghost } ] } ] }
-          children: [
-            { type: sequence-bar, slots: (array/map @entity.slots (fn s (array/first (array/filter @entity.availableActions (fn a (== (object/get a id) (object/get s placedActionId))))))), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, categoryColors: @config.categoryColors, slotDropEvent: PLACE, slotRemoveEvent: REMOVE },
-            { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s (object/get s placedActionId))), allowDuplicates: @entity.allowDuplicates, categoryColors: @config.categoryColors, label: "Actions" }
-          ]
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
         })
 
       STEP -> playing-back
         (set @entity.currentStep (+ @entity.currentStep 1))
         (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: ghost } ] } ] }
-          children: [
-            { type: sequence-bar, slots: (array/map @entity.slots (fn s (array/first (array/filter @entity.availableActions (fn a (== (object/get a id) (object/get s placedActionId))))))), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, categoryColors: @config.categoryColors, slotDropEvent: PLACE, slotRemoveEvent: REMOVE },
-            { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s (object/get s placedActionId))), allowDuplicates: @entity.allowDuplicates, categoryColors: @config.categoryColors, label: "Actions" }
-          ]
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
         })
     }
 
@@ -186,12 +213,15 @@ orbital SequencerBoardOrbital {
         (set @entity.result "none")
         (set @entity.currentStep -1)
         (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: ghost } ] } ] }
-          children: [
-            { type: sequence-bar, slots: (array/map @entity.slots (fn s (array/first (array/filter @entity.availableActions (fn a (== (object/get a id) (object/get s placedActionId))))))), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, categoryColors: @config.categoryColors, slotDropEvent: PLACE, slotRemoveEvent: REMOVE },
-            { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s (object/get s placedActionId))), allowDuplicates: @entity.allowDuplicates, categoryColors: @config.categoryColors, label: "Actions" }
-          ]
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
         })
     }
 
