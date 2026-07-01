@@ -19,6 +19,21 @@
             "required": false
           },
           {
+            "name": "currentState",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "selectedState",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "addingFrom",
+            "type": "string",
+            "required": false
+          },
+          {
             "name": "entityName",
             "type": "string",
             "required": false
@@ -86,36 +101,36 @@
       {
         "name": "StateArchitectBoardRender",
         "emittedEvents": [
-          "COMPLETE",
-          "RUN_TESTS",
-          "ADD_TRANSITION",
+          "SELECT_NODE",
+          "START_CONNECT",
           "REMOVE_TRANSITION",
+          "RUN_TESTS",
           "PLAY_AGAIN"
         ],
         "listenedEvents": [],
         "events": [
           {
-            "name": "COMPLETE",
+            "name": "SELECT_NODE",
             "direction": "emit",
-            "description": "Emitted by the component when test-run completes; carries pass count.",
+            "description": "Player clicks a state node; FSM either selects it, cancels a pending connect, or wires a transition from the pending source.",
             "tier": "domain"
           },
           {
-            "name": "RUN_TESTS",
+            "name": "START_CONNECT",
             "direction": "emit",
-            "description": "Player triggers the test runner; component evaluates each test case and fires COMPLETE.",
-            "tier": "domain"
-          },
-          {
-            "name": "ADD_TRANSITION",
-            "direction": "emit",
-            "description": "Player wires a new transition in the graph editor.",
+            "description": "Player begins wiring a transition from the currently selected state node.",
             "tier": "domain"
           },
           {
             "name": "REMOVE_TRANSITION",
             "direction": "emit",
-            "description": "Player removes a transition from the graph.",
+            "description": "Player removes a transition, identified by its (from, to, event) triple.",
+            "tier": "domain"
+          },
+          {
+            "name": "RUN_TESTS",
+            "direction": "emit",
+            "description": "Player runs the test suite; the FSM simulates each test case through the transition graph and scores passes.",
             "tier": "domain"
           },
           {
@@ -134,13 +149,6 @@
           }
         ],
         "overridableConfigKeys": [
-          {
-            "key": "activeFilters",
-            "type": "json",
-            "label": "Active Filters",
-            "description": "Active filters",
-            "tier": "presentation"
-          },
           {
             "key": "availableEvents",
             "type": "[string]",
@@ -233,62 +241,6 @@
             "tier": "presentation"
           },
           {
-            "key": "pageProp",
-            "type": "number",
-            "default": 0,
-            "label": "Page",
-            "description": "Current page number",
-            "synonyms": "page",
-            "tier": "presentation"
-          },
-          {
-            "key": "pageSize",
-            "type": "number",
-            "default": 0,
-            "label": "Page Size",
-            "description": "Number of items per page",
-            "tier": "presentation"
-          },
-          {
-            "key": "searchValue",
-            "type": "string",
-            "default": "Search Value",
-            "label": "Search Value",
-            "description": "Current search query value",
-            "tier": "presentation"
-          },
-          {
-            "key": "selectedIds",
-            "type": "[string]",
-            "default": [],
-            "label": "Selected Ids",
-            "description": "Currently selected item IDs",
-            "tier": "presentation",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "key": "sortBy",
-            "type": "string",
-            "default": "Sort By",
-            "label": "Sort By",
-            "description": "Current sort field",
-            "tier": "presentation"
-          },
-          {
-            "key": "sortDirection",
-            "type": "string",
-            "default": "asc",
-            "label": "Sort Direction",
-            "description": "Current sort direction",
-            "tier": "presentation",
-            "enumValues": [
-              "asc",
-              "desc"
-            ]
-          },
-          {
             "key": "states",
             "type": "[string]",
             "default": [
@@ -376,14 +328,6 @@
             "tier": "domain"
           },
           {
-            "key": "totalCount",
-            "type": "number",
-            "default": 0,
-            "label": "Total Count",
-            "description": "Total number of items",
-            "tier": "presentation"
-          },
-          {
             "key": "transitions",
             "type": "[StateArchitectBoardTransitionsItem]",
             "default": [],
@@ -461,14 +405,17 @@
         "entityContract": {
           "requires": [],
           "provides": [
+            "addingFrom",
             "attempts",
             "availableEvents",
+            "currentState",
             "description",
             "entityName",
             "hint",
             "initialState",
             "passedTests",
             "result",
+            "selectedState",
             "states",
             "testCases",
             "title",
@@ -487,11 +434,11 @@
       }
     ],
     "emittedEvents": [
-      "ADD_TRANSITION",
-      "COMPLETE",
       "PLAY_AGAIN",
       "REMOVE_TRANSITION",
-      "RUN_TESTS"
+      "RUN_TESTS",
+      "SELECT_NODE",
+      "START_CONNECT"
     ],
     "listenedEvents": []
   }

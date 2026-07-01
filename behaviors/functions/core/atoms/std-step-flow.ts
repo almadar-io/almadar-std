@@ -113,9 +113,6 @@ export interface StdStepFlowParams {
   entityName: string;
   /** Extra fields to add to the orbital-scoped entity clone. */
   fields?: EntityField[];
-  /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
-  persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;
   /** Per-key event rename map. Keys narrow to the trait's declared emit names. */
@@ -162,7 +159,7 @@ export function stdStepFlow(params: StdStepFlowParams): OrbitalDefinition {
   const entity: Entity = {
     name: params.entityName,
     fields: params.fields ?? [],
-    ...(params.persistence !== undefined ? { persistence: params.persistence } : {}),
+    persistence: 'runtime',
   };
   return makeOrbitalWithUses({
     name: 'StepFlowOrbital',

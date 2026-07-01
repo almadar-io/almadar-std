@@ -36,15 +36,15 @@ export type StdUiSequencerBoardEventKey = 'CHECK' | 'INIT' | 'PLACE' | 'PLAY' | 
  * Payload shape for the `PLACE` event.
  */
 export interface StdUiSequencerBoardPlacePayload {
-  slotIndex: number;
-  actionId: string;
+  slotNumber: number;
+  itemId: string;
 }
 
 /**
  * Payload shape for the `REMOVE` event.
  */
 export interface StdUiSequencerBoardRemovePayload {
-  slotIndex: number;
+  slotNumber: number;
 }
 
 /**
@@ -120,9 +120,7 @@ export interface StdUiSequencerBoardConfig {
  * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
- *   persistence    — entity persistence mode
  *   entityName     — rename the canonical entity
- *   collection     — override the derived collection key
  *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
  *                    `events`, `name`, `emitsScope`, `listens`.
  *                    `effects` is NOT exposed — `.lolo` removed it
@@ -134,12 +132,8 @@ export interface StdUiSequencerBoardSequencerBoardOrbitalParams {
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
   pagePath?: string;
-  /** Override the canonical entity persistence mode. */
-  persistence?: EntityPersistence;
   /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
   entityName?: string;
-  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
-  collection?: string;
   /**
    * Per-imported-trait override surface keyed on each imported
    * trait's canonical `name`. Accepts every override `.lolo`
@@ -161,7 +155,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
     uses: [],
     entity: {
       name: canonicalName,
-      persistence: params.persistence ?? 'runtime',
+      persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
@@ -181,6 +175,93 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'name': 'placedActionId',
                   'required': false,
                   'type': 'string',
+                },
+                'placedItem': {
+                  'name': 'placedItem',
+                  'properties': {
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'description': {
+                      'name': 'description',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'iconEmoji': {
+                      'name': 'iconEmoji',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'iconUrl': {
+                      'name': 'iconUrl',
+                      'properties': {
+                        'animations': {
+                          'items': {
+                            'type': 'string',
+                          },
+                          'name': 'animations',
+                          'required': false,
+                          'type': 'array',
+                        },
+                        'aspect': {
+                          'name': 'aspect',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'category': {
+                          'name': 'category',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'dimension': {
+                          'name': 'dimension',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'name': {
+                          'name': 'name',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'role': {
+                          'name': 'role',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'style': {
+                          'name': 'style',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'thumbnailUrl': {
+                          'name': 'thumbnailUrl',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'url': {
+                          'name': 'url',
+                          'required': false,
+                          'type': 'string',
+                        },
+                      },
+                      'required': false,
+                      'type': 'object',
+                    },
+                    'id': {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
                 },
               },
               'type': 'object',
@@ -653,6 +734,93 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'required': false,
                   'type': 'string',
                 },
+                'placedItem': {
+                  'name': 'placedItem',
+                  'properties': {
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'description': {
+                      'name': 'description',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'iconEmoji': {
+                      'name': 'iconEmoji',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'iconUrl': {
+                      'name': 'iconUrl',
+                      'properties': {
+                        'animations': {
+                          'items': {
+                            'type': 'string',
+                          },
+                          'name': 'animations',
+                          'required': false,
+                          'type': 'array',
+                        },
+                        'aspect': {
+                          'name': 'aspect',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'category': {
+                          'name': 'category',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'dimension': {
+                          'name': 'dimension',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'name': {
+                          'name': 'name',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'role': {
+                          'name': 'role',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'style': {
+                          'name': 'style',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'thumbnailUrl': {
+                          'name': 'thumbnailUrl',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'url': {
+                          'name': 'url',
+                          'required': false,
+                          'type': 'string',
+                        },
+                      },
+                      'required': false,
+                      'type': 'object',
+                    },
+                    'id': {
+                      'name': 'id',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
               },
               'type': 'object',
             },
@@ -707,12 +875,12 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
             'event': 'PLACE',
             'payloadSchema': [
               {
-                'name': 'slotIndex',
+                'name': 'slotNumber',
                 'required': true,
                 'type': 'number',
               },
               {
-                'name': 'actionId',
+                'name': 'itemId',
                 'required': true,
                 'type': 'string',
               },
@@ -725,7 +893,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
             'event': 'REMOVE',
             'payloadSchema': [
               {
-                'name': 'slotIndex',
+                'name': 'slotNumber',
                 'required': true,
                 'type': 'number',
               },
@@ -823,12 +991,12 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
               'name': 'Place',
               'payloadSchema': [
                 {
-                  'name': 'slotIndex',
+                  'name': 'slotNumber',
                   'required': true,
                   'type': 'number',
                 },
                 {
-                  'name': 'actionId',
+                  'name': 'itemId',
                   'required': true,
                   'type': 'string',
                 },
@@ -841,7 +1009,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
               'name': 'Remove',
               'payloadSchema': [
                 {
-                  'name': 'slotIndex',
+                  'name': 'slotNumber',
                   'required': true,
                   'type': 'number',
                 },
@@ -1006,6 +1174,25 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                       {
                         'children': [
                           {
+                            'actions': '@entity.availableActions',
+                            'allowDuplicates': '@entity.allowDuplicates',
+                            'type': 'action-palette',
+                            'usedActionIds': [
+                              'array/map',
+                              '@entity.slots',
+                              [
+                                'fn',
+                                's',
+                                '@s.placedActionId',
+                              ],
+                            ],
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
                             'entity': '@entity.slots',
                             'fields': [],
                             'gap': 'sm',
@@ -1013,65 +1200,11 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                               'fn',
                               's',
                               {
-                                'children': [
-                                  {
-                                    'children': [
-                                      {
-                                        'content': '@s.index',
-                                        'type': 'typography',
-                                        'variant': 'label',
-                                      },
-                                      {
-                                        'label': '@s.placedActionId',
-                                        'type': 'badge',
-                                      },
-                                      {
-                                        'action': 'REMOVE',
-                                        'actionPayload': {
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'label': 'Clear',
-                                        'type': 'button',
-                                        'variant': 'ghost',
-                                      },
-                                    ],
-                                    'direction': 'horizontal',
-                                    'gap': 'sm',
-                                    'justify': 'between',
-                                    'type': 'stack',
-                                  },
-                                  {
-                                    'entity': '@entity.availableActions',
-                                    'fields': [],
-                                    'gap': 'xs',
-                                    'renderItem': [
-                                      'fn',
-                                      'a',
-                                      {
-                                        'action': 'PLACE',
-                                        'actionPayload': {
-                                          'actionId': '@a.id',
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'iconAsset': '@a.iconUrl',
-                                        'label': '@a.name',
-                                        'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedActionId',
-                                            '@a.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
-                                      },
-                                    ],
-                                    'type': 'data-list',
-                                  },
-                                ],
-                                'type': 'card',
+                                'dropEvent': 'PLACE',
+                                'equippedItem': '@s.placedItem',
+                                'removeEvent': 'REMOVE',
+                                'slotNumber': '@s.index',
+                                'type': 'trait-slot',
                               },
                             ],
                             'type': 'data-list',
@@ -1218,6 +1351,25 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                       {
                         'children': [
                           {
+                            'actions': '@entity.availableActions',
+                            'allowDuplicates': '@entity.allowDuplicates',
+                            'type': 'action-palette',
+                            'usedActionIds': [
+                              'array/map',
+                              '@entity.slots',
+                              [
+                                'fn',
+                                's',
+                                '@s.placedActionId',
+                              ],
+                            ],
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
                             'entity': '@entity.slots',
                             'fields': [],
                             'gap': 'sm',
@@ -1225,65 +1377,11 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                               'fn',
                               's',
                               {
-                                'children': [
-                                  {
-                                    'children': [
-                                      {
-                                        'content': '@s.index',
-                                        'type': 'typography',
-                                        'variant': 'label',
-                                      },
-                                      {
-                                        'label': '@s.placedActionId',
-                                        'type': 'badge',
-                                      },
-                                      {
-                                        'action': 'REMOVE',
-                                        'actionPayload': {
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'label': 'Clear',
-                                        'type': 'button',
-                                        'variant': 'ghost',
-                                      },
-                                    ],
-                                    'direction': 'horizontal',
-                                    'gap': 'sm',
-                                    'justify': 'between',
-                                    'type': 'stack',
-                                  },
-                                  {
-                                    'entity': '@entity.availableActions',
-                                    'fields': [],
-                                    'gap': 'xs',
-                                    'renderItem': [
-                                      'fn',
-                                      'a',
-                                      {
-                                        'action': 'PLACE',
-                                        'actionPayload': {
-                                          'actionId': '@a.id',
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'iconAsset': '@a.iconUrl',
-                                        'label': '@a.name',
-                                        'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedActionId',
-                                            '@a.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
-                                      },
-                                    ],
-                                    'type': 'data-list',
-                                  },
-                                ],
-                                'type': 'card',
+                                'dropEvent': 'PLACE',
+                                'equippedItem': '@s.placedItem',
+                                'removeEvent': 'REMOVE',
+                                'slotNumber': '@s.index',
+                                'type': 'trait-slot',
                               },
                             ],
                             'type': 'data-list',
@@ -1355,21 +1453,34 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                         'if',
                         [
                           '==',
-                          [
-                            'object/get',
-                            's',
-                            'index',
-                          ],
-                          '@payload.slotIndex',
+                          '@s.index',
+                          '@payload.slotNumber',
                         ],
                         [
                           'object/merge',
-                          's',
+                          '@s',
                           {
-                            'placedActionId': '@payload.actionId',
+                            'placedActionId': '@payload.itemId',
+                            'placedItem': [
+                              'array/find',
+                              '@config.availableActions',
+                              [
+                                'fn',
+                                'a',
+                                [
+                                  '==',
+                                  [
+                                    'object/get',
+                                    '@a',
+                                    'id',
+                                  ],
+                                  '@payload.itemId',
+                                ],
+                              ],
+                            ],
                           },
                         ],
-                        's',
+                        '@s',
                       ],
                     ],
                   ],
@@ -1397,6 +1508,25 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                       {
                         'children': [
                           {
+                            'actions': '@entity.availableActions',
+                            'allowDuplicates': '@entity.allowDuplicates',
+                            'type': 'action-palette',
+                            'usedActionIds': [
+                              'array/map',
+                              '@entity.slots',
+                              [
+                                'fn',
+                                's',
+                                '@s.placedActionId',
+                              ],
+                            ],
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
                             'entity': '@entity.slots',
                             'fields': [],
                             'gap': 'sm',
@@ -1404,65 +1534,11 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                               'fn',
                               's',
                               {
-                                'children': [
-                                  {
-                                    'children': [
-                                      {
-                                        'content': '@s.index',
-                                        'type': 'typography',
-                                        'variant': 'label',
-                                      },
-                                      {
-                                        'label': '@s.placedActionId',
-                                        'type': 'badge',
-                                      },
-                                      {
-                                        'action': 'REMOVE',
-                                        'actionPayload': {
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'label': 'Clear',
-                                        'type': 'button',
-                                        'variant': 'ghost',
-                                      },
-                                    ],
-                                    'direction': 'horizontal',
-                                    'gap': 'sm',
-                                    'justify': 'between',
-                                    'type': 'stack',
-                                  },
-                                  {
-                                    'entity': '@entity.availableActions',
-                                    'fields': [],
-                                    'gap': 'xs',
-                                    'renderItem': [
-                                      'fn',
-                                      'a',
-                                      {
-                                        'action': 'PLACE',
-                                        'actionPayload': {
-                                          'actionId': '@a.id',
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'iconAsset': '@a.iconUrl',
-                                        'label': '@a.name',
-                                        'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedActionId',
-                                            '@a.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
-                                      },
-                                    ],
-                                    'type': 'data-list',
-                                  },
-                                ],
-                                'type': 'card',
+                                'dropEvent': 'PLACE',
+                                'equippedItem': '@s.placedItem',
+                                'removeEvent': 'REMOVE',
+                                'slotNumber': '@s.index',
+                                'type': 'trait-slot',
                               },
                             ],
                             'type': 'data-list',
@@ -1534,21 +1610,17 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                         'if',
                         [
                           '==',
-                          [
-                            'object/get',
-                            's',
-                            'index',
-                          ],
-                          '@payload.slotIndex',
+                          '@s.index',
+                          '@payload.slotNumber',
                         ],
                         [
                           'object/merge',
-                          's',
+                          '@s',
                           {
                             'placedActionId': '',
                           },
                         ],
-                        's',
+                        '@s',
                       ],
                     ],
                   ],
@@ -1576,6 +1648,25 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                       {
                         'children': [
                           {
+                            'actions': '@entity.availableActions',
+                            'allowDuplicates': '@entity.allowDuplicates',
+                            'type': 'action-palette',
+                            'usedActionIds': [
+                              'array/map',
+                              '@entity.slots',
+                              [
+                                'fn',
+                                's',
+                                '@s.placedActionId',
+                              ],
+                            ],
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
                             'entity': '@entity.slots',
                             'fields': [],
                             'gap': 'sm',
@@ -1583,65 +1674,11 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                               'fn',
                               's',
                               {
-                                'children': [
-                                  {
-                                    'children': [
-                                      {
-                                        'content': '@s.index',
-                                        'type': 'typography',
-                                        'variant': 'label',
-                                      },
-                                      {
-                                        'label': '@s.placedActionId',
-                                        'type': 'badge',
-                                      },
-                                      {
-                                        'action': 'REMOVE',
-                                        'actionPayload': {
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'label': 'Clear',
-                                        'type': 'button',
-                                        'variant': 'ghost',
-                                      },
-                                    ],
-                                    'direction': 'horizontal',
-                                    'gap': 'sm',
-                                    'justify': 'between',
-                                    'type': 'stack',
-                                  },
-                                  {
-                                    'entity': '@entity.availableActions',
-                                    'fields': [],
-                                    'gap': 'xs',
-                                    'renderItem': [
-                                      'fn',
-                                      'a',
-                                      {
-                                        'action': 'PLACE',
-                                        'actionPayload': {
-                                          'actionId': '@a.id',
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'iconAsset': '@a.iconUrl',
-                                        'label': '@a.name',
-                                        'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedActionId',
-                                            '@a.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
-                                      },
-                                    ],
-                                    'type': 'data-list',
-                                  },
-                                ],
-                                'type': 'card',
+                                'dropEvent': 'PLACE',
+                                'equippedItem': '@s.placedItem',
+                                'removeEvent': 'REMOVE',
+                                'slotNumber': '@s.index',
+                                'type': 'trait-slot',
                               },
                             ],
                             'type': 'data-list',
@@ -1728,6 +1765,25 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                       {
                         'children': [
                           {
+                            'actions': '@entity.availableActions',
+                            'allowDuplicates': '@entity.allowDuplicates',
+                            'type': 'action-palette',
+                            'usedActionIds': [
+                              'array/map',
+                              '@entity.slots',
+                              [
+                                'fn',
+                                's',
+                                '@s.placedActionId',
+                              ],
+                            ],
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
                             'entity': '@entity.slots',
                             'fields': [],
                             'gap': 'sm',
@@ -1735,65 +1791,11 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                               'fn',
                               's',
                               {
-                                'children': [
-                                  {
-                                    'children': [
-                                      {
-                                        'content': '@s.index',
-                                        'type': 'typography',
-                                        'variant': 'label',
-                                      },
-                                      {
-                                        'label': '@s.placedActionId',
-                                        'type': 'badge',
-                                      },
-                                      {
-                                        'action': 'REMOVE',
-                                        'actionPayload': {
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'label': 'Clear',
-                                        'type': 'button',
-                                        'variant': 'ghost',
-                                      },
-                                    ],
-                                    'direction': 'horizontal',
-                                    'gap': 'sm',
-                                    'justify': 'between',
-                                    'type': 'stack',
-                                  },
-                                  {
-                                    'entity': '@entity.availableActions',
-                                    'fields': [],
-                                    'gap': 'xs',
-                                    'renderItem': [
-                                      'fn',
-                                      'a',
-                                      {
-                                        'action': 'PLACE',
-                                        'actionPayload': {
-                                          'actionId': '@a.id',
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'iconAsset': '@a.iconUrl',
-                                        'label': '@a.name',
-                                        'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedActionId',
-                                            '@a.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
-                                      },
-                                    ],
-                                    'type': 'data-list',
-                                  },
-                                ],
-                                'type': 'card',
+                                'dropEvent': 'PLACE',
+                                'equippedItem': '@s.placedItem',
+                                'removeEvent': 'REMOVE',
+                                'slotNumber': '@s.index',
+                                'type': 'trait-slot',
                               },
                             ],
                             'type': 'data-list',
@@ -1889,6 +1891,25 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                       {
                         'children': [
                           {
+                            'actions': '@entity.availableActions',
+                            'allowDuplicates': '@entity.allowDuplicates',
+                            'type': 'action-palette',
+                            'usedActionIds': [
+                              'array/map',
+                              '@entity.slots',
+                              [
+                                'fn',
+                                's',
+                                '@s.placedActionId',
+                              ],
+                            ],
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
                             'entity': '@entity.slots',
                             'fields': [],
                             'gap': 'sm',
@@ -1896,65 +1917,11 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                               'fn',
                               's',
                               {
-                                'children': [
-                                  {
-                                    'children': [
-                                      {
-                                        'content': '@s.index',
-                                        'type': 'typography',
-                                        'variant': 'label',
-                                      },
-                                      {
-                                        'label': '@s.placedActionId',
-                                        'type': 'badge',
-                                      },
-                                      {
-                                        'action': 'REMOVE',
-                                        'actionPayload': {
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'label': 'Clear',
-                                        'type': 'button',
-                                        'variant': 'ghost',
-                                      },
-                                    ],
-                                    'direction': 'horizontal',
-                                    'gap': 'sm',
-                                    'justify': 'between',
-                                    'type': 'stack',
-                                  },
-                                  {
-                                    'entity': '@entity.availableActions',
-                                    'fields': [],
-                                    'gap': 'xs',
-                                    'renderItem': [
-                                      'fn',
-                                      'a',
-                                      {
-                                        'action': 'PLACE',
-                                        'actionPayload': {
-                                          'actionId': '@a.id',
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'iconAsset': '@a.iconUrl',
-                                        'label': '@a.name',
-                                        'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedActionId',
-                                            '@a.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
-                                      },
-                                    ],
-                                    'type': 'data-list',
-                                  },
-                                ],
-                                'type': 'card',
+                                'dropEvent': 'PLACE',
+                                'equippedItem': '@s.placedItem',
+                                'removeEvent': 'REMOVE',
+                                'slotNumber': '@s.index',
+                                'type': 'trait-slot',
                               },
                             ],
                             'type': 'data-list',
@@ -2070,6 +2037,25 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                       {
                         'children': [
                           {
+                            'actions': '@entity.availableActions',
+                            'allowDuplicates': '@entity.allowDuplicates',
+                            'type': 'action-palette',
+                            'usedActionIds': [
+                              'array/map',
+                              '@entity.slots',
+                              [
+                                'fn',
+                                's',
+                                '@s.placedActionId',
+                              ],
+                            ],
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
                             'entity': '@entity.slots',
                             'fields': [],
                             'gap': 'sm',
@@ -2077,65 +2063,11 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                               'fn',
                               's',
                               {
-                                'children': [
-                                  {
-                                    'children': [
-                                      {
-                                        'content': '@s.index',
-                                        'type': 'typography',
-                                        'variant': 'label',
-                                      },
-                                      {
-                                        'label': '@s.placedActionId',
-                                        'type': 'badge',
-                                      },
-                                      {
-                                        'action': 'REMOVE',
-                                        'actionPayload': {
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'label': 'Clear',
-                                        'type': 'button',
-                                        'variant': 'ghost',
-                                      },
-                                    ],
-                                    'direction': 'horizontal',
-                                    'gap': 'sm',
-                                    'justify': 'between',
-                                    'type': 'stack',
-                                  },
-                                  {
-                                    'entity': '@entity.availableActions',
-                                    'fields': [],
-                                    'gap': 'xs',
-                                    'renderItem': [
-                                      'fn',
-                                      'a',
-                                      {
-                                        'action': 'PLACE',
-                                        'actionPayload': {
-                                          'actionId': '@a.id',
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'iconAsset': '@a.iconUrl',
-                                        'label': '@a.name',
-                                        'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedActionId',
-                                            '@a.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
-                                      },
-                                    ],
-                                    'type': 'data-list',
-                                  },
-                                ],
-                                'type': 'card',
+                                'dropEvent': 'PLACE',
+                                'equippedItem': '@s.placedItem',
+                                'removeEvent': 'REMOVE',
+                                'slotNumber': '@s.index',
+                                'type': 'trait-slot',
                               },
                             ],
                             'type': 'data-list',
@@ -2222,6 +2154,25 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                       {
                         'children': [
                           {
+                            'actions': '@entity.availableActions',
+                            'allowDuplicates': '@entity.allowDuplicates',
+                            'type': 'action-palette',
+                            'usedActionIds': [
+                              'array/map',
+                              '@entity.slots',
+                              [
+                                'fn',
+                                's',
+                                '@s.placedActionId',
+                              ],
+                            ],
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
                             'entity': '@entity.slots',
                             'fields': [],
                             'gap': 'sm',
@@ -2229,65 +2180,11 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                               'fn',
                               's',
                               {
-                                'children': [
-                                  {
-                                    'children': [
-                                      {
-                                        'content': '@s.index',
-                                        'type': 'typography',
-                                        'variant': 'label',
-                                      },
-                                      {
-                                        'label': '@s.placedActionId',
-                                        'type': 'badge',
-                                      },
-                                      {
-                                        'action': 'REMOVE',
-                                        'actionPayload': {
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'label': 'Clear',
-                                        'type': 'button',
-                                        'variant': 'ghost',
-                                      },
-                                    ],
-                                    'direction': 'horizontal',
-                                    'gap': 'sm',
-                                    'justify': 'between',
-                                    'type': 'stack',
-                                  },
-                                  {
-                                    'entity': '@entity.availableActions',
-                                    'fields': [],
-                                    'gap': 'xs',
-                                    'renderItem': [
-                                      'fn',
-                                      'a',
-                                      {
-                                        'action': 'PLACE',
-                                        'actionPayload': {
-                                          'actionId': '@a.id',
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'iconAsset': '@a.iconUrl',
-                                        'label': '@a.name',
-                                        'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedActionId',
-                                            '@a.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
-                                      },
-                                    ],
-                                    'type': 'data-list',
-                                  },
-                                ],
-                                'type': 'card',
+                                'dropEvent': 'PLACE',
+                                'equippedItem': '@s.placedItem',
+                                'removeEvent': 'REMOVE',
+                                'slotNumber': '@s.index',
+                                'type': 'trait-slot',
                               },
                             ],
                             'type': 'data-list',
@@ -2387,6 +2284,25 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                       {
                         'children': [
                           {
+                            'actions': '@entity.availableActions',
+                            'allowDuplicates': '@entity.allowDuplicates',
+                            'type': 'action-palette',
+                            'usedActionIds': [
+                              'array/map',
+                              '@entity.slots',
+                              [
+                                'fn',
+                                's',
+                                '@s.placedActionId',
+                              ],
+                            ],
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
                             'entity': '@entity.slots',
                             'fields': [],
                             'gap': 'sm',
@@ -2394,65 +2310,11 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                               'fn',
                               's',
                               {
-                                'children': [
-                                  {
-                                    'children': [
-                                      {
-                                        'content': '@s.index',
-                                        'type': 'typography',
-                                        'variant': 'label',
-                                      },
-                                      {
-                                        'label': '@s.placedActionId',
-                                        'type': 'badge',
-                                      },
-                                      {
-                                        'action': 'REMOVE',
-                                        'actionPayload': {
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'label': 'Clear',
-                                        'type': 'button',
-                                        'variant': 'ghost',
-                                      },
-                                    ],
-                                    'direction': 'horizontal',
-                                    'gap': 'sm',
-                                    'justify': 'between',
-                                    'type': 'stack',
-                                  },
-                                  {
-                                    'entity': '@entity.availableActions',
-                                    'fields': [],
-                                    'gap': 'xs',
-                                    'renderItem': [
-                                      'fn',
-                                      'a',
-                                      {
-                                        'action': 'PLACE',
-                                        'actionPayload': {
-                                          'actionId': '@a.id',
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'iconAsset': '@a.iconUrl',
-                                        'label': '@a.name',
-                                        'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedActionId',
-                                            '@a.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
-                                      },
-                                    ],
-                                    'type': 'data-list',
-                                  },
-                                ],
-                                'type': 'card',
+                                'dropEvent': 'PLACE',
+                                'equippedItem': '@s.placedItem',
+                                'removeEvent': 'REMOVE',
+                                'slotNumber': '@s.index',
+                                'type': 'trait-slot',
                               },
                             ],
                             'type': 'data-list',
@@ -2554,6 +2416,25 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                       {
                         'children': [
                           {
+                            'actions': '@entity.availableActions',
+                            'allowDuplicates': '@entity.allowDuplicates',
+                            'type': 'action-palette',
+                            'usedActionIds': [
+                              'array/map',
+                              '@entity.slots',
+                              [
+                                'fn',
+                                's',
+                                '@s.placedActionId',
+                              ],
+                            ],
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
                             'entity': '@entity.slots',
                             'fields': [],
                             'gap': 'sm',
@@ -2561,65 +2442,11 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                               'fn',
                               's',
                               {
-                                'children': [
-                                  {
-                                    'children': [
-                                      {
-                                        'content': '@s.index',
-                                        'type': 'typography',
-                                        'variant': 'label',
-                                      },
-                                      {
-                                        'label': '@s.placedActionId',
-                                        'type': 'badge',
-                                      },
-                                      {
-                                        'action': 'REMOVE',
-                                        'actionPayload': {
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'label': 'Clear',
-                                        'type': 'button',
-                                        'variant': 'ghost',
-                                      },
-                                    ],
-                                    'direction': 'horizontal',
-                                    'gap': 'sm',
-                                    'justify': 'between',
-                                    'type': 'stack',
-                                  },
-                                  {
-                                    'entity': '@entity.availableActions',
-                                    'fields': [],
-                                    'gap': 'xs',
-                                    'renderItem': [
-                                      'fn',
-                                      'a',
-                                      {
-                                        'action': 'PLACE',
-                                        'actionPayload': {
-                                          'actionId': '@a.id',
-                                          'slotIndex': '@s.index',
-                                        },
-                                        'iconAsset': '@a.iconUrl',
-                                        'label': '@a.name',
-                                        'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedActionId',
-                                            '@a.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
-                                      },
-                                    ],
-                                    'type': 'data-list',
-                                  },
-                                ],
-                                'type': 'card',
+                                'dropEvent': 'PLACE',
+                                'equippedItem': '@s.placedItem',
+                                'removeEvent': 'REMOVE',
+                                'slotNumber': '@s.index',
+                                'type': 'trait-slot',
                               },
                             ],
                             'type': 'data-list',
@@ -2737,9 +2564,7 @@ export const StdUiSequencerBoardSequencerBoardOrbitalManifest = {
   paramFields: [
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
     { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [

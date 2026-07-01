@@ -20,16 +20,10 @@ orbital SequencerBoardOrbital {
       name : string
       thumbnailUrl : string
     }
-  type SequencerBoardSlotOption = {
-    slotIndex : number!
-    actionId : string!
-    label : string
-    iconUrl : Asset
-  }
   type SequencerBoardSlotsItem = {
     index : number!
     placedActionId : string
-    options : [SequencerBoardSlotOption]
+    placedItem : SequencerBoardAvailableActionsItem
   }
   type SequencerBoardCategoryColorsValue = {
     bg : string!
@@ -58,7 +52,7 @@ orbital SequencerBoardOrbital {
 
     state menu {
       START -> building
-        (set @entity.slots (array/map @config.slots (fn s (object/merge @s { options: (array/map @config.availableActions (fn a { slotIndex: (object/get @s index), actionId: (object/get @a id), label: (object/get @a name), iconUrl: (object/get @a iconUrl) })) }))))
+        (set @entity.slots @config.slots)
         (set @entity.availableActions @config.availableActions)
         (set @entity.solutions @config.solutions)
         (set @entity.maxSlots @config.maxSlots)
@@ -76,14 +70,15 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
+            { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
           ]
         })
     }
 
     state building {
       INIT -> building
-        (set @entity.slots (array/map @config.slots (fn s (object/merge @s { options: (array/map @config.availableActions (fn a { slotIndex: (object/get @s index), actionId: (object/get @a id), label: (object/get @a name), iconUrl: (object/get @a iconUrl) })) }))))
+        (set @entity.slots @config.slots)
         (set @entity.availableActions @config.availableActions)
         (set @entity.solutions @config.solutions)
         (set @entity.maxSlots @config.maxSlots)
@@ -101,29 +96,32 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
+            { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
           ]
         })
 
       PLACE -> building
-        (set @entity.slots (array/map @entity.slots (fn s (if (== (object/get s index) ?slotIndex) (object/merge s { placedActionId: ?actionId }) s))))
+        (set @entity.slots (array/map @entity.slots (fn s (if (== @s.index ?slotNumber) (object/merge @s { placedActionId: ?itemId, placedItem: (array/find @config.availableActions (fn a (== (object/get @a id) ?itemId))) }) @s))))
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
+            { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
           ]
         })
 
       REMOVE -> building
-        (set @entity.slots (array/map @entity.slots (fn s (if (== (object/get s index) ?slotIndex) (object/merge s { placedActionId: "" }) s))))
+        (set @entity.slots (array/map @entity.slots (fn s (if (== @s.index ?slotNumber) (object/merge @s { placedActionId: "", placedItem: null }) @s))))
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
+            { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
           ]
         })
 
@@ -134,7 +132,8 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
+            { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
           ]
         })
 
@@ -146,7 +145,8 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
+            { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
           ]
         })
 
@@ -157,7 +157,8 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
+            { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
           ]
         })
     }
@@ -170,7 +171,8 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
+            { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
           ]
         })
 
@@ -181,14 +183,15 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
+            { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
           ]
         })
     }
 
     state complete {
       PLAY_AGAIN -> menu
-        (set @entity.slots (array/map @config.slots (fn s (object/merge @s { options: (array/map @config.availableActions (fn a { slotIndex: (object/get @s index), actionId: (object/get @a id), label: (object/get @a name), iconUrl: (object/get @a iconUrl) })) }))))
+        (set @entity.slots @config.slots)
         (set @entity.attempts 0)
         (set @entity.result "none")
         (set @entity.currentStep -1)
@@ -197,20 +200,21 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
+            { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
           ]
         })
     }
 
     emits {
       PLACE -> external {
-        slotIndex : number!
-        actionId : string!
+        slotNumber : number!
+        itemId : string!
       }
         @description "placeEvent prop — emitted when player drops an action into a slot"
         @tier "domain"
       REMOVE -> external {
-        slotIndex : number!
+        slotNumber : number!
       }
         @description "removeEvent prop — emitted when player removes an action from a slot"
         @tier "domain"
