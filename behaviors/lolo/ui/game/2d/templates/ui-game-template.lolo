@@ -5,6 +5,17 @@ orbital GameTemplateOrbital {
   type GameTemplateControls = {
     isPlaying : boolean
   }
+  type GameTemplateBackgroundAsset = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
 
   entity GameTemplateItem [runtime] {
     id : string!
@@ -25,6 +36,7 @@ orbital GameTemplateOrbital {
           debugPanel: @config.debugPanel
           showDebugPanel: @config.showDebugPanel
           controls: @config.controls
+          backgroundAsset: @config.backgroundAsset
           type: game-template
         })
       GameTemplateLoaded -> idle
@@ -37,6 +49,7 @@ orbital GameTemplateOrbital {
           debugPanel: @config.debugPanel
           showDebugPanel: @config.showDebugPanel
           controls: @config.controls
+          backgroundAsset: @config.backgroundAsset
           type: game-template
         })
     }
@@ -68,6 +81,10 @@ orbital GameTemplateOrbital {
       controls : GameTemplateControls = { isPlaying: false }
         @label "Controls"
         @description "Game controls"
+        @tier "presentation"
+      backgroundAsset : GameTemplateBackgroundAsset = { url: "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png", role: "decoration", category: "backgroundAsset", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "backgroundAsset", thumbnailUrl: "" }
+        @label "Background Asset"
+        @description "Background image for the canvas area. Falls back to bg-muted flat color."
         @tier "presentation"
     }
   }

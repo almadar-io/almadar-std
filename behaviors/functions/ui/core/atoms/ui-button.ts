@@ -54,6 +54,8 @@ export interface StdUiButtonConfig {
   disabled?: boolean;
   /** Default: `"circle"` */
   icon?: unknown;
+  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"iconAsset","dimension":"2d","name":"iconAsset","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
+  iconAsset?: EntityRow;
   iconRight?: unknown;
   /** Default: `false` */
   isLoading?: boolean;

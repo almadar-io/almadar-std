@@ -1,6 +1,29 @@
 app ui-game-shell "1.0.0"
 "GameShell — UI factory (1:1 with the @almadar/ui game-shell pattern)."
 orbital GameShellOrbital {
+  type GameShellBackgroundAsset = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type GameShellHudBackgroundAsset = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+
   entity GameShellItem [runtime] {
     id : string!
   }
@@ -16,6 +39,8 @@ orbital GameShellOrbital {
           className: @config.className
           showTopBar: @config.showTopBar
           children: [{ type: canvas-2d }]
+          backgroundAsset: @config.backgroundAsset
+          hudBackgroundAsset: @config.hudBackgroundAsset
           type: game-shell
         })
     }
@@ -32,6 +57,14 @@ orbital GameShellOrbital {
       showTopBar : boolean = true
         @label "Show Top Bar"
         @description "Whether to show the minimal top bar (default: true)"
+        @tier "presentation"
+      backgroundAsset : GameShellBackgroundAsset = { url: "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png", role: "decoration", category: "backgroundAsset", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "backgroundAsset", thumbnailUrl: "" }
+        @label "Background Asset"
+        @description "Background image for the shell/main area (e.g. Kenny panel frame). Falls back to CSS #0a0a0f."
+        @tier "presentation"
+      hudBackgroundAsset : GameShellHudBackgroundAsset = { url: "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png", role: "decoration", category: "hudBackgroundAsset", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "hudBackgroundAsset", thumbnailUrl: "" }
+        @label "Hud Background Asset"
+        @description "Background image for the HUD bar. Falls back to CSS #12121f surface color."
         @tier "presentation"
     }
   }

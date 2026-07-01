@@ -30,6 +30,8 @@ orbital ChoiceButtonOrbital {
           disabled: @config.disabled
           selected: @config.selected
           onClick: CLICK
+          action: ACTION
+          payload: @config.payload
           className: @config.className
           type: choice-button
         })
@@ -40,6 +42,11 @@ orbital ChoiceButtonOrbital {
         id : string
       }
         @description "Click handler"
+        @tier "essential"
+      ACTION -> external {
+        id : string
+      }
+        @description "Declarative event name — emits UI:{action} via eventBus on click"
         @tier "essential"
     }
 
@@ -67,6 +74,10 @@ orbital ChoiceButtonOrbital {
       selected : boolean = false
         @label "Selected"
         @description "Whether the choice is currently selected"
+        @tier "presentation"
+      payload : Map string string = { item: "Item" }
+        @label "Payload"
+        @description "Semantic payload emitted with the action (e.g. `{ nextId, choiceIndex }` for a branching choice)."
         @tier "presentation"
       className : string = ""
         @label "Class Name"

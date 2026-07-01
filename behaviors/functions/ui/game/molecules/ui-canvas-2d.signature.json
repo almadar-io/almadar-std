@@ -18,8 +18,7 @@
           "TILE_CLICK",
           "UNIT_CLICK",
           "TILE_HOVER",
-          "TILE_LEAVE",
-          "KEY"
+          "TILE_LEAVE"
         ],
         "listenedEvents": [],
         "events": [
@@ -45,12 +44,6 @@
             "name": "TILE_LEAVE",
             "direction": "emit",
             "description": "Emits UI:{tileLeaveEvent} with {} on tile leave",
-            "tier": "essential"
-          },
-          {
-            "name": "KEY",
-            "direction": "emit",
-            "description": "Emits UI:{keyEvent} with { key } on keydown — for side/free keyboard control",
             "tier": "essential"
           },
           {
@@ -739,6 +732,32 @@
             "tier": "presentation"
           },
           {
+            "key": "keyMap",
+            "type": "Map<string,string>",
+            "default": {
+              "item": "Item"
+            },
+            "label": "Key Map",
+            "description": "Maps a keydown `e.code` → the board's SEMANTIC event, e.g. `{ ArrowLeft: 'LEFT', KeyA: 'LEFT', Space: 'JUMP' }`. The input layer emits `UI:<event>` so the FSM stays device-agnostic — keyboard and d-pad converge on the same events.",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "keyUpMap",
+            "type": "Map<string,string>",
+            "default": {
+              "item": "Item"
+            },
+            "label": "Key Up Map",
+            "description": "Maps a keyup `e.code` → the board's SEMANTIC event, e.g. `{ ArrowLeft: 'STOP' }`. Omit a key to ignore its release (e.g. jump).",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
             "key": "platforms",
             "type": "[Canvas2dPlatformsItem]",
             "default": [
@@ -1141,7 +1160,6 @@
       }
     ],
     "emittedEvents": [
-      "KEY",
       "TILE_CLICK",
       "TILE_HOVER",
       "TILE_LEAVE",

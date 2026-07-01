@@ -48,6 +48,8 @@ export interface StdUiDrawerSlotConfig {
   position?: 'left' | 'right';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  /** Default: `"Source Trait"` */
+  sourceTrait?: string;
   /** Default: `"Title"` */
   title?: string;
 }
@@ -185,6 +187,13 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
               'full',
             ],
           },
+          'sourceTrait': {
+            'default': 'Source Trait',
+            'description': 'Source trait name for qualified event emission',
+            'label': 'Source Trait',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'title': {
             'default': 'Title',
             'description': 'Override drawer title (extracted from children if not provided)',
@@ -238,6 +247,7 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                     'isLoading': '@config.isLoading',
                     'position': '@config.position',
                     'size': '@config.size',
+                    'sourceTrait': '@config.sourceTrait',
                     'title': '@config.title',
                     'type': 'drawer-slot',
                   },

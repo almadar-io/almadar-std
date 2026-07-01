@@ -47,8 +47,12 @@ export interface StdUiMiniMapConfig {
   mapHeight?: number;
   /** Default: `100` */
   mapWidth?: number;
+  /** Default: `{"item":{"animations":["static"],"aspect":"1:1","category":"item","dimension":"2d","name":"item","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png"}}` */
+  tileAssets?: Record<string, TraitConfig>;
   /** Default: `[{"color":"Color","x":1,"y":1},{"color":"Color 2","x":2,"y":2}]` */
   tiles?: EntityRow[];
+  /** Default: `{"item":{"animations":["static"],"aspect":"1:1","category":"item","dimension":"2d","name":"item","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png"}}` */
+  unitAssets?: Record<string, TraitConfig>;
   /** Default: `[{"color":"Color","isPlayer":false,"x":1,"y":1},{"color":"Color 2","isPlayer":true,"x":2,"y":2}]` */
   units?: EntityRow[];
   /** Default: `{"h":1,"w":1,"x":1,"y":1}` */

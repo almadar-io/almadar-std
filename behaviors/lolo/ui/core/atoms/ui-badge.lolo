@@ -1,6 +1,18 @@
 app ui-badge "1.0.0"
 "Badge — UI factory (1:1 with the @almadar/ui badge pattern)."
 orbital BadgeOrbital {
+  type BadgeIconAsset = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+
   entity BadgeItem [runtime] {
     id : string!
   }
@@ -17,6 +29,7 @@ orbital BadgeOrbital {
           amount: @config.amount
           label: @config.label
           icon: @config.icon
+          iconAsset: @config.iconAsset
           onRemove: REMOVE
           removeLabel: @config.removeLabel
           type: badge
@@ -55,6 +68,10 @@ orbital BadgeOrbital {
       icon : icon = "circle"
         @label "Icon"
         @description "Lucide icon component or canonical kebab-case icon name string"
+        @tier "presentation"
+      iconAsset : BadgeIconAsset = { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "iconAsset", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "iconAsset", thumbnailUrl: "" }
+        @label "Icon Asset"
+        @description "Asset image rendered as the badge icon; takes precedence over icon when provided."
         @tier "presentation"
       removeLabel : string = "Remove Label"
         @label "Remove Label"

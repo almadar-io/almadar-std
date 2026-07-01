@@ -7,6 +7,28 @@ orbital GameAudioToggleOrbital {
     code : string
     stack : string
   }
+  type GameAudioToggleOnAsset = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type GameAudioToggleOffAsset = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
 
   entity GameAudioToggleItem [runtime] {
     id : string!
@@ -22,6 +44,8 @@ orbital GameAudioToggleOrbital {
           className: @config.className
           isLoading: @config.isLoading
           error: @config.error
+          onAsset: @config.onAsset
+          offAsset: @config.offAsset
           type: game-audio-toggle
         })
     }
@@ -42,6 +66,14 @@ orbital GameAudioToggleOrbital {
       error : GameAudioToggleError
         @label "Error"
         @description "Error state (passed through)"
+        @tier "presentation"
+      onAsset : GameAudioToggleOnAsset = { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "onAsset", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "onAsset", thumbnailUrl: "" }
+        @label "On Asset"
+        @description "Asset rendered when sound is ON. Falls back to 🔊 emoji."
+        @tier "presentation"
+      offAsset : GameAudioToggleOffAsset = { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "offAsset", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "offAsset", thumbnailUrl: "" }
+        @label "Off Asset"
+        @description "Asset rendered when sound is OFF (muted). Falls back to 🔇 emoji."
         @tier "presentation"
     }
   }

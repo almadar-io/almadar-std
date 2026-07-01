@@ -1,0 +1,207 @@
+{
+  "description": "StateGraph — UI factory (1:1 with the @almadar/ui state-graph pattern).",
+  "name": "ui-state-graph",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "StateGraphItem",
+        "persistence": "runtime"
+      },
+      "name": "StateGraphOrbital",
+      "pages": [
+        {
+          "name": "StateGraphPage",
+          "path": "/state-graph",
+          "traits": [
+            {
+              "ref": "StateGraphRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "addingFrom": {
+              "default": "Adding From",
+              "description": "When set, the graph is in 'pick a target' mode from this state.",
+              "label": "Adding From",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "currentState": {
+              "default": "Current State",
+              "description": "State highlighted as current (test playback / initial).",
+              "label": "Current State",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Graph canvas height.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "initialState": {
+              "default": "Initial State",
+              "description": "The machine's initial state (ring-marked).",
+              "label": "Initial State",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "selectedState": {
+              "default": "Selected State",
+              "description": "State the player has selected (first click).",
+              "label": "Selected State",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "states": {
+              "default": [
+                "Item",
+                "Item 2"
+              ],
+              "description": "All states in the machine (node labels).",
+              "items": {
+                "type": "string"
+              },
+              "label": "States",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "transitions": {
+              "default": [],
+              "description": "Player-built transitions rendered as arrows.",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "guardHint": {
+                    "name": "guardHint",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Transitions",
+              "tier": "presentation",
+              "type": "[StateGraphTransitionsItem]"
+            },
+            "width": {
+              "default": 500.0,
+              "description": "Graph canvas width.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Emits UI:{nodeClickEvent} with { stateId } when a node is clicked.",
+              "event": "NODE_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "StateGraphItem",
+          "name": "StateGraphRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Emits UI:{nodeClickEvent} with { stateId } when a node is clicked.",
+                "key": "NODE_CLICK",
+                "name": "Node Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "addingFrom": "@config.addingFrom",
+                      "className": "@config.className",
+                      "currentState": "@config.currentState",
+                      "height": "@config.height",
+                      "initialState": "@config.initialState",
+                      "nodeClickEvent": "NODE_CLICK",
+                      "selectedState": "@config.selectedState",
+                      "states": "@config.states",
+                      "transitions": "@config.transitions",
+                      "type": "state-graph",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

@@ -30,12 +30,19 @@ const ALIAS = 'UiChoiceButton';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiChoiceButtonEventKey = 'CLICK' | 'INIT';
+export type StdUiChoiceButtonEventKey = 'ACTION' | 'CLICK' | 'INIT';
 
 /**
  * Payload shape for the `CLICK` event.
  */
 export interface StdUiChoiceButtonClickPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ACTION` event.
+ */
+export interface StdUiChoiceButtonActionPayload {
   id?: string;
 }
 
@@ -56,6 +63,8 @@ export interface StdUiChoiceButtonConfig {
   icon?: unknown;
   /** Default: `0` */
   index?: number;
+  /** Default: `{"item":"Item"}` */
+  payload?: Record<string, TraitConfig>;
   /** Default: `false` */
   selected?: boolean;
   /** Default: `"Charge forward into the fray"` */

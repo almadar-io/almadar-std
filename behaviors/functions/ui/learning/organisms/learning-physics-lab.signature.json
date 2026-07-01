@@ -27,6 +27,11 @@
             "name": "shapes",
             "type": "array",
             "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
           }
         ],
         "persistence": "runtime"
@@ -35,9 +40,31 @@
     "traits": [
       {
         "name": "PhysicsLabRender",
-        "emittedEvents": [],
+        "emittedEvents": [
+          "START",
+          "PAUSE",
+          "RESET"
+        ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "START",
+            "direction": "emit",
+            "description": "startEvent prop — begins the physics integration loop",
+            "tier": "domain"
+          },
+          {
+            "name": "PAUSE",
+            "direction": "emit",
+            "description": "pauseEvent prop — halts the integration loop, freezing the bodies",
+            "tier": "domain"
+          },
+          {
+            "name": "RESET",
+            "direction": "emit",
+            "description": "resetEvent prop — restores the bodies to their initial config state",
+            "tier": "domain"
+          },
           {
             "name": "INIT",
             "direction": "listen"
@@ -49,7 +76,7 @@
             "type": "boolean",
             "default": false,
             "label": "Animate",
-            "description": "Enable continuous redraw loop.",
+            "description": "Enable the canvas's own redraw loop (independent of the physics tick).",
             "tier": "presentation"
           },
           {
@@ -65,27 +92,43 @@
             "default": [
               {
                 "color": "#2563eb",
-                "id": "source",
-                "label": "source",
-                "radius": 12,
-                "vx": 0,
+                "fx": 0,
+                "fy": 0,
+                "id": "ball-a",
+                "label": "A",
+                "radius": 16,
+                "vx": 5,
                 "vy": 0,
-                "x": 80,
-                "y": 200
+                "x": 90,
+                "y": 70
               },
               {
                 "color": "#16a34a",
-                "id": "point",
-                "label": "point",
-                "radius": 8,
-                "vx": 0,
-                "vy": 0,
-                "x": 300,
-                "y": 200
+                "fx": 0,
+                "fy": 0,
+                "id": "ball-b",
+                "label": "B",
+                "radius": 11,
+                "vx": -4,
+                "vy": 3,
+                "x": 320,
+                "y": 50
+              },
+              {
+                "color": "#dc2626",
+                "fx": 0,
+                "fy": 0,
+                "id": "ball-c",
+                "label": "C",
+                "radius": 13,
+                "vx": 2,
+                "vy": -2,
+                "x": 500,
+                "y": 90
               }
             ],
             "label": "Bodies",
-            "description": "Bodies or particles to render.",
+            "description": "Bodies or particles to simulate; each carries position (x,y) and velocity (vx,vy).",
             "tier": "domain",
             "items": {
               "properties": {
@@ -148,7 +191,7 @@
             "type": "[PhysicsLabConstraint]",
             "default": [],
             "label": "Constraints",
-            "description": "Links between bodies.",
+            "description": "Links between bodies, drawn as connecting lines.",
             "tier": "domain",
             "items": {
               "properties": {
@@ -172,11 +215,27 @@
             }
           },
           {
+            "key": "damping",
+            "type": "number",
+            "default": 0.995,
+            "label": "Damping",
+            "description": "Fraction of velocity retained each tick, modelling air resistance.",
+            "tier": "domain"
+          },
+          {
             "key": "forceScale",
             "type": "number",
             "default": 30,
             "label": "Force Scale",
             "tier": "presentation"
+          },
+          {
+            "key": "gravity",
+            "type": "number",
+            "default": 0.4,
+            "label": "Gravity",
+            "description": "Downward acceleration added to each body's vy every tick.",
+            "tier": "domain"
           },
           {
             "key": "height",
@@ -200,7 +259,7 @@
             "default": "wave",
             "label": "Mode",
             "description": "What kind of physics visualization to render.",
-            "synonyms": "oscillation, sine wave, sound wave, light, electric field, magnetic field, gravitational field, force, ray, lens, mirror, pendulum, swing, circuit, resistor, battery, current",
+            "synonyms": "oscillation, sine wave, sound wave, light, electric field, magnetic field, gravitational field, force, ray, lens, mirror, pendulum, swing, circuit, resistor, battery, current, projectile, bounce, gravity, kinematics, motion",
             "tier": "domain",
             "enumValues": [
               "wave",
@@ -209,6 +268,14 @@
               "pendulum",
               "circuit"
             ]
+          },
+          {
+            "key": "restitution",
+            "type": "number",
+            "default": 0.78,
+            "label": "Restitution",
+            "description": "Fraction of speed kept when a body bounces off a wall (0 = dead stop, 1 = perfectly elastic).",
+            "tier": "domain"
           },
           {
             "key": "shapes",
@@ -394,7 +461,7 @@
           {
             "key": "showVelocity",
             "type": "boolean",
-            "default": false,
+            "default": true,
             "label": "Show Velocity",
             "description": "Render velocity arrows for each body.",
             "tier": "presentation"
@@ -410,7 +477,7 @@
           {
             "key": "velocityScale",
             "type": "number",
-            "default": 25,
+            "default": 8,
             "label": "Velocity Scale",
             "tier": "presentation"
           },
@@ -430,6 +497,7 @@
           "provides": [
             "bodies",
             "constraints",
+            "running",
             "shapes",
             "title"
           ]
@@ -443,7 +511,11 @@
         "primaryEntity": "PhysicsLabItem"
       }
     ],
-    "emittedEvents": [],
+    "emittedEvents": [
+      "PAUSE",
+      "RESET",
+      "START"
+    ],
     "listenedEvents": []
   }
 ]

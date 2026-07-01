@@ -694,6 +694,30 @@
               "tier": "presentation",
               "type": "boolean"
             },
+            "keyMap": {
+              "default": {
+                "item": "Item"
+              },
+              "description": "Maps a keydown `e.code` → the board's SEMANTIC event, e.g. `{ ArrowLeft: 'LEFT', KeyA: 'LEFT', Space: 'JUMP' }`. The input layer emits `UI:<event>` so the FSM stays device-agnostic — keyboard and d-pad converge on the same events.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Key Map",
+              "tier": "presentation",
+              "type": "Map<string,string>"
+            },
+            "keyUpMap": {
+              "default": {
+                "item": "Item"
+              },
+              "description": "Maps a keyup `e.code` → the board's SEMANTIC event, e.g. `{ ArrowLeft: 'STOP' }`. Omit a key to ignore its release (e.g. jump).",
+              "items": {
+                "type": "string"
+              },
+              "label": "Key Up Map",
+              "tier": "presentation",
+              "type": "Map<string,string>"
+            },
             "platforms": {
               "default": [
                 {
@@ -1126,19 +1150,6 @@
               ],
               "scope": "external",
               "tier": "essential"
-            },
-            {
-              "description": "Emits UI:{keyEvent} with { key } on keydown — for side/free keyboard control",
-              "event": "KEY",
-              "payloadSchema": [
-                {
-                  "name": "key",
-                  "required": true,
-                  "type": "string"
-                }
-              ],
-              "scope": "external",
-              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -1215,19 +1226,6 @@
                   }
                 ],
                 "tier": "essential"
-              },
-              {
-                "description": "Emits UI:{keyEvent} with { key } on keydown — for side/free keyboard control",
-                "key": "KEY",
-                "name": "Key",
-                "payloadSchema": [
-                  {
-                    "name": "key",
-                    "required": true,
-                    "type": "string"
-                  }
-                ],
-                "tier": "essential"
               }
             ],
             "states": [
@@ -1258,7 +1256,8 @@
                       "features": "@config.features",
                       "hoveredTile": "@config.hoveredTile",
                       "isLoading": "@config.isLoading",
-                      "keyEvent": "KEY",
+                      "keyMap": "@config.keyMap",
+                      "keyUpMap": "@config.keyUpMap",
                       "platforms": "@config.platforms",
                       "player": "@config.player",
                       "playerSprite": "@config.playerSprite",

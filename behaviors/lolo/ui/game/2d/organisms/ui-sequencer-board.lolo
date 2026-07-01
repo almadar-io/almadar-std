@@ -1,5 +1,5 @@
 app ui-sequencer-board "1.0.0"
-"SequencerBoard — order-the-steps puzzle: player places actions into slots; CHECK guard compares slot sequence against solution; win on exact match."
+"SequencerBoard — order-the-steps puzzle: player drags actions into a sequence-bar; CHECK compares the slot order against the solution; PLAY animates the sequence step-by-step."
 orbital SequencerBoardOrbital {
   type SequencerBoardAvailableActionsItem = {
     id : string!
@@ -45,36 +45,12 @@ orbital SequencerBoardOrbital {
     attempts : number = 0
     result : "none" | "win" = none
     currentStep : number = -1
+    playing : boolean = false
+    slotFeedback : [string]
   }
 
   trait SequencerBoardRender -> @rebindable SequencerBoardItem [interaction, instance] {
     initial: building
-
-    state menu {
-      START -> building
-        (set @entity.slots @config.slots)
-        (set @entity.availableActions @config.availableActions)
-        (set @entity.solutions @config.solutions)
-        (set @entity.maxSlots @config.maxSlots)
-        (set @entity.allowDuplicates @config.allowDuplicates)
-        (set @entity.title @config.title)
-        (set @entity.description @config.description)
-        (set @entity.hint @config.hint)
-        (set @entity.successMessage @config.successMessage)
-        (set @entity.headerImage @config.headerImage)
-        (set @entity.attempts 0)
-        (set @entity.result "none")
-        (set @entity.currentStep -1)
-        (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
-          children: [
-            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
-          ]
-        })
-    }
 
     state building {
       INIT -> building
@@ -91,117 +67,119 @@ orbital SequencerBoardOrbital {
         (set @entity.attempts 0)
         (set @entity.result "none")
         (set @entity.currentStep -1)
+        (set @entity.playing false)
+        (set @entity.slotFeedback [])
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: secondary }, { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
             { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
+            { type: card, children: [ { type: sequence-bar, slots: (array/map @entity.slots (fn s @s.placedItem)), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, playing: @entity.playing, slotFeedback: @entity.slotFeedback, slotDropEvent: PLACE, slotRemoveEvent: REMOVE } ] }
           ]
         })
 
       PLACE -> building
+        (set @entity.slotFeedback [])
         (set @entity.slots (array/map @entity.slots (fn s (if (== @s.index ?slotNumber) (object/merge @s { placedActionId: ?itemId, placedItem: (array/find @config.availableActions (fn a (== (object/get @a id) ?itemId))) }) @s))))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: secondary }, { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
             { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
+            { type: card, children: [ { type: sequence-bar, slots: (array/map @entity.slots (fn s @s.placedItem)), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, playing: @entity.playing, slotFeedback: @entity.slotFeedback, slotDropEvent: PLACE, slotRemoveEvent: REMOVE } ] }
           ]
         })
 
       REMOVE -> building
+        (set @entity.slotFeedback [])
         (set @entity.slots (array/map @entity.slots (fn s (if (== @s.index ?slotNumber) (object/merge @s { placedActionId: "", placedItem: null }) @s))))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: secondary }, { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
             { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
+            { type: card, children: [ { type: sequence-bar, slots: (array/map @entity.slots (fn s @s.placedItem)), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, playing: @entity.playing, slotFeedback: @entity.slotFeedback, slotDropEvent: PLACE, slotRemoveEvent: REMOVE } ] }
           ]
         })
 
-      PLAY -> playing-back
+      PLAY -> building
+        (set @entity.slotFeedback [])
         (set @entity.currentStep 0)
+        (set @entity.playing true)
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: secondary }, { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
             { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
+            { type: card, children: [ { type: sequence-bar, slots: (array/map @entity.slots (fn s @s.placedItem)), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, playing: @entity.playing, slotFeedback: @entity.slotFeedback, slotDropEvent: PLACE, slotRemoveEvent: REMOVE } ] }
           ]
         })
 
       CHECK -> complete when (array/some @entity.solutions (fn sol (== (array/map @entity.slots (fn s (object/get s placedActionId))) sol)))
         (set @entity.attempts (+ @entity.attempts 1))
         (set @entity.result "win")
+        (set @entity.currentStep -1)
+        (set @entity.playing false)
+        (set @entity.slotFeedback [])
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: secondary }, { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
             { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
+            { type: card, children: [ { type: sequence-bar, slots: (array/map @entity.slots (fn s @s.placedItem)), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, playing: @entity.playing, slotFeedback: @entity.slotFeedback, slotDropEvent: PLACE, slotRemoveEvent: REMOVE } ] }
           ]
         })
 
       CHECK -> building
         (set @entity.attempts (+ @entity.attempts 1))
+        (set @entity.slotFeedback (array/map @entity.slots (fn s (if (== @s.placedActionId (array/nth (array/first @entity.solutions) @s.index)) "correct" "wrong"))))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: secondary }, { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
             { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
-          ]
-        })
-    }
-
-    state playing-back {
-      STEP -> building when (>= @entity.currentStep (- @entity.maxSlots 1))
-        (set @entity.currentStep -1)
-        (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
-          children: [
-            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
-          ]
-        })
-
-      STEP -> playing-back
-        (set @entity.currentStep (+ @entity.currentStep 1))
-        (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
-          children: [
-            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
+            { type: card, children: [ { type: sequence-bar, slots: (array/map @entity.slots (fn s @s.placedItem)), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, playing: @entity.playing, slotFeedback: @entity.slotFeedback, slotDropEvent: PLACE, slotRemoveEvent: REMOVE } ] }
           ]
         })
     }
 
     state complete {
-      PLAY_AGAIN -> menu
+      PLAY_AGAIN -> building
         (set @entity.slots @config.slots)
         (set @entity.attempts 0)
         (set @entity.result "none")
         (set @entity.currentStep -1)
+        (set @entity.playing false)
+        (set @entity.slotFeedback [])
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: secondary }, { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
             { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: trait-slot, slotNumber: @s.index, equippedItem: @s.placedItem, dropEvent: PLACE, removeEvent: REMOVE }) } ] }
+            { type: card, children: [ { type: sequence-bar, slots: (array/map @entity.slots (fn s @s.placedItem)), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, playing: @entity.playing, slotFeedback: @entity.slotFeedback, slotDropEvent: PLACE, slotRemoveEvent: REMOVE } ] }
+          ]
+        })
+    }
+
+    ticks {
+      playbackTick every 1s
+        when @entity.playing
+        (set @entity.playing (< @entity.currentStep (- @entity.maxSlots 1)))
+        (set @entity.currentStep (if (>= @entity.currentStep (- @entity.maxSlots 1)) -1 (+ @entity.currentStep 1)))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: secondary }, { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: action-palette, actions: @entity.availableActions, usedActionIds: (array/map @entity.slots (fn s @s.placedActionId)), allowDuplicates: @entity.allowDuplicates } ] },
+            { type: card, children: [ { type: sequence-bar, slots: (array/map @entity.slots (fn s @s.placedItem)), maxSlots: @entity.maxSlots, currentStep: @entity.currentStep, playing: @entity.playing, slotFeedback: @entity.slotFeedback, slotDropEvent: PLACE, slotRemoveEvent: REMOVE } ] }
           ]
         })
     }
@@ -211,27 +189,22 @@ orbital SequencerBoardOrbital {
         slotNumber : number!
         itemId : string!
       }
-        @description "placeEvent prop — emitted when player drops an action into a slot"
+        @description "slotDropEvent prop — emitted when the player drops an action into a slot"
         @tier "domain"
       REMOVE -> external {
         slotNumber : number!
       }
-        @description "removeEvent prop — emitted when player removes an action from a slot"
+        @description "slotRemoveEvent prop — emitted when the player clears a slot"
         @tier "domain"
       PLAY -> external {
-        sequence : [string]!
+        id : string
       }
-        @description "playEvent prop — emitted with the current slot sequence on playback start"
-        @tier "domain"
-      STEP -> external {
-        step : number!
-      }
-        @description "Advances playback one step; entity.currentStep increments until maxSlots-1 then returns to building"
+        @description "playEvent prop — starts step-by-step playback of the current sequence"
         @tier "domain"
       CHECK -> external {
-        sequence : [string]!
+        id : string
       }
-        @description "checkEvent prop — emitted when player submits the sequence for validation"
+        @description "checkEvent prop — submits the sequence for validation"
         @tier "domain"
       PLAY_AGAIN -> external {
         id : string

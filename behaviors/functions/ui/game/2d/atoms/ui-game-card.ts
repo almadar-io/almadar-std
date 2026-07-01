@@ -59,6 +59,8 @@ export interface StdUiGameCardConfig {
   defense?: number;
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"frameAsset","dimension":"2d","name":"frameAsset","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
+  frameAsset?: EntityRow;
   /** Default: `"Name"` */
   name?: string;
   /** Default: `false` */

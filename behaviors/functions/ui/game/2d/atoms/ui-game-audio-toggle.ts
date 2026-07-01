@@ -44,6 +44,10 @@ export interface StdUiGameAudioToggleConfig {
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"offAsset","dimension":"2d","name":"offAsset","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
+  offAsset?: EntityRow;
+  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"onAsset","dimension":"2d","name":"onAsset","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
+  onAsset?: EntityRow;
   /** Default: `"sm"` */
   size?: 'sm' | 'md' | 'lg';
 }

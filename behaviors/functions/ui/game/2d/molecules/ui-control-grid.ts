@@ -59,6 +59,12 @@ export interface StdUiControlGridConfig {
   buttons?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `{"item":{"animations":["static"],"aspect":"1:1","category":"item","dimension":"2d","name":"item","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png"}}` */
+  directionAssets?: Record<string, TraitConfig>;
+  /** Default: `{"item":"Item"}` */
+  directionEvents?: Record<string, TraitConfig>;
+  /** Default: `{"item":"Item"}` */
+  directionReleaseEvents?: Record<string, TraitConfig>;
   /** Default: `false` */
   disabled?: boolean;
   /** Default: `false` */

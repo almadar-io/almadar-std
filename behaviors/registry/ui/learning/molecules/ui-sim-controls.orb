@@ -1,0 +1,302 @@
+{
+  "description": "Simulation controls — a Start / Pause / Reset button row that emits START/PAUSE/RESET for a sim engine to listen to. Composed by learning orbitals via `uses`.",
+  "name": "ui-sim-controls",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "SimControlsItem",
+        "persistence": "runtime"
+      },
+      "name": "SimControlsOrbital",
+      "pages": [
+        {
+          "name": "SimControlsPage",
+          "path": "/sim-controls",
+          "traits": [
+            {
+              "ref": "SimControlsRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "pauseLabel": {
+              "default": "Pause",
+              "description": "Label for the pause button.",
+              "label": "Pause Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "resetLabel": {
+              "default": "Reset",
+              "description": "Label for the reset button.",
+              "label": "Reset Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "startLabel": {
+              "default": "Start",
+              "description": "Label for the start button.",
+              "label": "Start Label",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Emitted when the player presses Start; a sim engine listens to begin its tick.",
+              "event": "START",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Emitted when the player presses Pause; a sim engine listens to halt its tick.",
+              "event": "PAUSE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Emitted when the player presses Reset; a sim engine listens to restore initial state.",
+              "event": "RESET",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "SimControlsItem",
+          "name": "SimControlsRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Emitted when the player presses Start; a sim engine listens to begin its tick.",
+                "key": "START",
+                "name": "Start",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emitted when the player presses Pause; a sim engine listens to halt its tick.",
+                "key": "PAUSE",
+                "name": "Pause",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emitted when the player presses Reset; a sim engine listens to restore initial state.",
+                "key": "RESET",
+                "name": "Reset",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "action": "START",
+                          "label": "@config.startLabel",
+                          "type": "button",
+                          "variant": "primary"
+                        },
+                        {
+                          "action": "PAUSE",
+                          "label": "@config.pauseLabel",
+                          "type": "button",
+                          "variant": "secondary"
+                        },
+                        {
+                          "action": "RESET",
+                          "label": "@config.resetLabel",
+                          "type": "button",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "action": "START",
+                          "label": "@config.startLabel",
+                          "type": "button",
+                          "variant": "primary"
+                        },
+                        {
+                          "action": "PAUSE",
+                          "label": "@config.pauseLabel",
+                          "type": "button",
+                          "variant": "secondary"
+                        },
+                        {
+                          "action": "RESET",
+                          "label": "@config.resetLabel",
+                          "type": "button",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "START",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "action": "START",
+                          "label": "@config.startLabel",
+                          "type": "button",
+                          "variant": "primary"
+                        },
+                        {
+                          "action": "PAUSE",
+                          "label": "@config.pauseLabel",
+                          "type": "button",
+                          "variant": "secondary"
+                        },
+                        {
+                          "action": "RESET",
+                          "label": "@config.resetLabel",
+                          "type": "button",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "PAUSE",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "action": "START",
+                          "label": "@config.startLabel",
+                          "type": "button",
+                          "variant": "primary"
+                        },
+                        {
+                          "action": "PAUSE",
+                          "label": "@config.pauseLabel",
+                          "type": "button",
+                          "variant": "secondary"
+                        },
+                        {
+                          "action": "RESET",
+                          "label": "@config.resetLabel",
+                          "type": "button",
+                          "variant": "ghost"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "RESET",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

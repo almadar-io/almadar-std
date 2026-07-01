@@ -1,5 +1,5 @@
 {
-  "description": "SequencerBoard — order-the-steps puzzle: player places actions into slots; CHECK guard compares slot sequence against solution; win on exact match.",
+  "description": "SequencerBoard — order-the-steps puzzle: player drags actions into a sequence-bar; CHECK compares the slot order against the solution; PLAY animates the sequence step-by-step.",
   "name": "ui-sequencer-board",
   "orbitals": [
     {
@@ -313,6 +313,18 @@
             "default": -1.0,
             "name": "currentStep",
             "type": "number"
+          },
+          {
+            "default": false,
+            "name": "playing",
+            "type": "boolean"
+          },
+          {
+            "items": {
+              "type": "string"
+            },
+            "name": "slotFeedback",
+            "type": "array"
           }
         ],
         "name": "SequencerBoardItem",
@@ -727,7 +739,7 @@
           },
           "emits": [
             {
-              "description": "placeEvent prop — emitted when player drops an action into a slot",
+              "description": "slotDropEvent prop — emitted when the player drops an action into a slot",
               "event": "PLACE",
               "payloadSchema": [
                 {
@@ -745,7 +757,7 @@
               "tier": "domain"
             },
             {
-              "description": "removeEvent prop — emitted when player removes an action from a slot",
+              "description": "slotRemoveEvent prop — emitted when the player clears a slot",
               "event": "REMOVE",
               "payloadSchema": [
                 {
@@ -758,39 +770,24 @@
               "tier": "domain"
             },
             {
-              "description": "playEvent prop — emitted with the current slot sequence on playback start",
+              "description": "playEvent prop — starts step-by-step playback of the current sequence",
               "event": "PLAY",
               "payloadSchema": [
                 {
-                  "name": "sequence",
-                  "required": true,
-                  "type": "[string]"
+                  "name": "id",
+                  "type": "string"
                 }
               ],
               "scope": "external",
               "tier": "domain"
             },
             {
-              "description": "Advances playback one step; entity.currentStep increments until maxSlots-1 then returns to building",
-              "event": "STEP",
-              "payloadSchema": [
-                {
-                  "name": "step",
-                  "required": true,
-                  "type": "number"
-                }
-              ],
-              "scope": "external",
-              "tier": "domain"
-            },
-            {
-              "description": "checkEvent prop — emitted when player submits the sequence for validation",
+              "description": "checkEvent prop — submits the sequence for validation",
               "event": "CHECK",
               "payloadSchema": [
                 {
-                  "name": "sequence",
-                  "required": true,
-                  "type": "[string]"
+                  "name": "id",
+                  "type": "string"
                 }
               ],
               "scope": "external",
@@ -819,7 +816,9 @@
               "headerImage",
               "hint",
               "maxSlots",
+              "playing",
               "result",
+              "slotFeedback",
               "slots",
               "solutions",
               "successMessage",
@@ -834,15 +833,11 @@
           "stateMachine": {
             "events": [
               {
-                "key": "START",
-                "name": "Start"
-              },
-              {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
-                "description": "placeEvent prop — emitted when player drops an action into a slot",
+                "description": "slotDropEvent prop — emitted when the player drops an action into a slot",
                 "key": "PLACE",
                 "name": "Place",
                 "payloadSchema": [
@@ -860,7 +855,7 @@
                 "tier": "domain"
               },
               {
-                "description": "removeEvent prop — emitted when player removes an action from a slot",
+                "description": "slotRemoveEvent prop — emitted when the player clears a slot",
                 "key": "REMOVE",
                 "name": "Remove",
                 "payloadSchema": [
@@ -873,40 +868,25 @@
                 "tier": "domain"
               },
               {
-                "description": "playEvent prop — emitted with the current slot sequence on playback start",
+                "description": "playEvent prop — starts step-by-step playback of the current sequence",
                 "key": "PLAY",
                 "name": "Play",
                 "payloadSchema": [
                   {
-                    "name": "sequence",
-                    "required": true,
-                    "type": "[string]"
+                    "name": "id",
+                    "type": "string"
                   }
                 ],
                 "tier": "domain"
               },
               {
-                "description": "checkEvent prop — emitted when player submits the sequence for validation",
+                "description": "checkEvent prop — submits the sequence for validation",
                 "key": "CHECK",
                 "name": "Check",
                 "payloadSchema": [
                   {
-                    "name": "sequence",
-                    "required": true,
-                    "type": "[string]"
-                  }
-                ],
-                "tier": "domain"
-              },
-              {
-                "description": "Advances playback one step; entity.currentStep increments until maxSlots-1 then returns to building",
-                "key": "STEP",
-                "name": "Step",
-                "payloadSchema": [
-                  {
-                    "name": "step",
-                    "required": true,
-                    "type": "number"
+                    "name": "id",
+                    "type": "string"
                   }
                 ],
                 "tier": "domain"
@@ -928,12 +908,6 @@
               {
                 "isInitial": true,
                 "name": "building"
-              },
-              {
-                "name": "menu"
-              },
-              {
-                "name": "playing-back"
               },
               {
                 "name": "complete"
@@ -1008,6 +982,16 @@
                     -1.0
                   ],
                   [
+                    "set",
+                    "@entity.playing",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.slotFeedback",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -1049,21 +1033,22 @@
                         {
                           "children": [
                             {
-                              "entity": "@entity.slots",
-                              "fields": [],
-                              "gap": "sm",
-                              "renderItem": [
-                                "fn",
-                                "s",
-                                {
-                                  "dropEvent": "PLACE",
-                                  "equippedItem": "@s.placedItem",
-                                  "removeEvent": "REMOVE",
-                                  "slotNumber": "@s.index",
-                                  "type": "trait-slot"
-                                }
+                              "currentStep": "@entity.currentStep",
+                              "maxSlots": "@entity.maxSlots",
+                              "playing": "@entity.playing",
+                              "slotDropEvent": "PLACE",
+                              "slotFeedback": "@entity.slotFeedback",
+                              "slotRemoveEvent": "REMOVE",
+                              "slots": [
+                                "array/map",
+                                "@entity.slots",
+                                [
+                                  "fn",
+                                  "s",
+                                  "@s.placedItem"
+                                ]
                               ],
-                              "type": "data-list"
+                              "type": "sequence-bar"
                             }
                           ],
                           "type": "card"
@@ -1087,182 +1072,11 @@
                           {
                             "children": [
                               {
-                                "action": "CHECK",
-                                "label": "Check",
-                                "type": "button",
-                                "variant": "primary"
-                              },
-                              {
-                                "action": "PLAY_AGAIN",
-                                "label": "Reset",
+                                "action": "PLAY",
+                                "label": "Play",
                                 "type": "button",
                                 "variant": "secondary"
-                              }
-                            ],
-                            "direction": "horizontal",
-                            "gap": "sm",
-                            "type": "stack"
-                          }
-                        ],
-                        "direction": "horizontal",
-                        "gap": "md",
-                        "justify": "between",
-                        "type": "stack"
-                      },
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "START",
-                "from": "menu",
-                "to": "building"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.slots",
-                    "@config.slots"
-                  ],
-                  [
-                    "set",
-                    "@entity.availableActions",
-                    "@config.availableActions"
-                  ],
-                  [
-                    "set",
-                    "@entity.solutions",
-                    "@config.solutions"
-                  ],
-                  [
-                    "set",
-                    "@entity.maxSlots",
-                    "@config.maxSlots"
-                  ],
-                  [
-                    "set",
-                    "@entity.allowDuplicates",
-                    "@config.allowDuplicates"
-                  ],
-                  [
-                    "set",
-                    "@entity.title",
-                    "@config.title"
-                  ],
-                  [
-                    "set",
-                    "@entity.description",
-                    "@config.description"
-                  ],
-                  [
-                    "set",
-                    "@entity.hint",
-                    "@config.hint"
-                  ],
-                  [
-                    "set",
-                    "@entity.successMessage",
-                    "@config.successMessage"
-                  ],
-                  [
-                    "set",
-                    "@entity.headerImage",
-                    "@config.headerImage"
-                  ],
-                  [
-                    "set",
-                    "@entity.attempts",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.result",
-                    "none"
-                  ],
-                  [
-                    "set",
-                    "@entity.currentStep",
-                    -1.0
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "content": "@entity.description",
-                              "type": "typography",
-                              "variant": "body"
-                            }
-                          ],
-                          "type": "card"
-                        },
-                        {
-                          "children": [
-                            {
-                              "actions": "@entity.availableActions",
-                              "allowDuplicates": "@entity.allowDuplicates",
-                              "type": "action-palette",
-                              "usedActionIds": [
-                                "array/map",
-                                "@entity.slots",
-                                [
-                                  "fn",
-                                  "s",
-                                  "@s.placedActionId"
-                                ]
-                              ]
-                            }
-                          ],
-                          "type": "card"
-                        },
-                        {
-                          "children": [
-                            {
-                              "entity": "@entity.slots",
-                              "fields": [],
-                              "gap": "sm",
-                              "renderItem": [
-                                "fn",
-                                "s",
-                                {
-                                  "dropEvent": "PLACE",
-                                  "equippedItem": "@s.placedItem",
-                                  "removeEvent": "REMOVE",
-                                  "slotNumber": "@s.index",
-                                  "type": "trait-slot"
-                                }
-                              ],
-                              "type": "data-list"
-                            }
-                          ],
-                          "type": "card"
-                        }
-                      ],
-                      "hud": {
-                        "children": [
-                          {
-                            "stats": [
-                              {
-                                "label": "Attempts",
-                                "value": "@entity.attempts"
                               },
-                              {
-                                "label": "Status",
-                                "value": "@entity.result"
-                              }
-                            ],
-                            "type": "game-hud"
-                          },
-                          {
-                            "children": [
                               {
                                 "action": "CHECK",
                                 "label": "Check",
@@ -1296,6 +1110,11 @@
               },
               {
                 "effects": [
+                  [
+                    "set",
+                    "@entity.slotFeedback",
+                    []
+                  ],
                   [
                     "set",
                     "@entity.slots",
@@ -1383,21 +1202,22 @@
                         {
                           "children": [
                             {
-                              "entity": "@entity.slots",
-                              "fields": [],
-                              "gap": "sm",
-                              "renderItem": [
-                                "fn",
-                                "s",
-                                {
-                                  "dropEvent": "PLACE",
-                                  "equippedItem": "@s.placedItem",
-                                  "removeEvent": "REMOVE",
-                                  "slotNumber": "@s.index",
-                                  "type": "trait-slot"
-                                }
+                              "currentStep": "@entity.currentStep",
+                              "maxSlots": "@entity.maxSlots",
+                              "playing": "@entity.playing",
+                              "slotDropEvent": "PLACE",
+                              "slotFeedback": "@entity.slotFeedback",
+                              "slotRemoveEvent": "REMOVE",
+                              "slots": [
+                                "array/map",
+                                "@entity.slots",
+                                [
+                                  "fn",
+                                  "s",
+                                  "@s.placedItem"
+                                ]
                               ],
-                              "type": "data-list"
+                              "type": "sequence-bar"
                             }
                           ],
                           "type": "card"
@@ -1420,6 +1240,12 @@
                           },
                           {
                             "children": [
+                              {
+                                "action": "PLAY",
+                                "label": "Play",
+                                "type": "button",
+                                "variant": "secondary"
+                              },
                               {
                                 "action": "CHECK",
                                 "label": "Check",
@@ -1453,6 +1279,11 @@
               },
               {
                 "effects": [
+                  [
+                    "set",
+                    "@entity.slotFeedback",
+                    []
+                  ],
                   [
                     "set",
                     "@entity.slots",
@@ -1523,21 +1354,22 @@
                         {
                           "children": [
                             {
-                              "entity": "@entity.slots",
-                              "fields": [],
-                              "gap": "sm",
-                              "renderItem": [
-                                "fn",
-                                "s",
-                                {
-                                  "dropEvent": "PLACE",
-                                  "equippedItem": "@s.placedItem",
-                                  "removeEvent": "REMOVE",
-                                  "slotNumber": "@s.index",
-                                  "type": "trait-slot"
-                                }
+                              "currentStep": "@entity.currentStep",
+                              "maxSlots": "@entity.maxSlots",
+                              "playing": "@entity.playing",
+                              "slotDropEvent": "PLACE",
+                              "slotFeedback": "@entity.slotFeedback",
+                              "slotRemoveEvent": "REMOVE",
+                              "slots": [
+                                "array/map",
+                                "@entity.slots",
+                                [
+                                  "fn",
+                                  "s",
+                                  "@s.placedItem"
+                                ]
                               ],
-                              "type": "data-list"
+                              "type": "sequence-bar"
                             }
                           ],
                           "type": "card"
@@ -1560,6 +1392,12 @@
                           },
                           {
                             "children": [
+                              {
+                                "action": "PLAY",
+                                "label": "Play",
+                                "type": "button",
+                                "variant": "secondary"
+                              },
                               {
                                 "action": "CHECK",
                                 "label": "Check",
@@ -1595,8 +1433,18 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.slotFeedback",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.currentStep",
                     0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.playing",
+                    true
                   ],
                   [
                     "render-ui",
@@ -1640,21 +1488,22 @@
                         {
                           "children": [
                             {
-                              "entity": "@entity.slots",
-                              "fields": [],
-                              "gap": "sm",
-                              "renderItem": [
-                                "fn",
-                                "s",
-                                {
-                                  "dropEvent": "PLACE",
-                                  "equippedItem": "@s.placedItem",
-                                  "removeEvent": "REMOVE",
-                                  "slotNumber": "@s.index",
-                                  "type": "trait-slot"
-                                }
+                              "currentStep": "@entity.currentStep",
+                              "maxSlots": "@entity.maxSlots",
+                              "playing": "@entity.playing",
+                              "slotDropEvent": "PLACE",
+                              "slotFeedback": "@entity.slotFeedback",
+                              "slotRemoveEvent": "REMOVE",
+                              "slots": [
+                                "array/map",
+                                "@entity.slots",
+                                [
+                                  "fn",
+                                  "s",
+                                  "@s.placedItem"
+                                ]
                               ],
-                              "type": "data-list"
+                              "type": "sequence-bar"
                             }
                           ],
                           "type": "card"
@@ -1677,6 +1526,12 @@
                           },
                           {
                             "children": [
+                              {
+                                "action": "PLAY",
+                                "label": "Play",
+                                "type": "button",
+                                "variant": "secondary"
+                              },
                               {
                                 "action": "CHECK",
                                 "label": "Check",
@@ -1706,7 +1561,7 @@
                 ],
                 "event": "PLAY",
                 "from": "building",
-                "to": "playing-back"
+                "to": "building"
               },
               {
                 "effects": [
@@ -1723,6 +1578,21 @@
                     "set",
                     "@entity.result",
                     "win"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    -1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.playing",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.slotFeedback",
+                    []
                   ],
                   [
                     "render-ui",
@@ -1766,21 +1636,22 @@
                         {
                           "children": [
                             {
-                              "entity": "@entity.slots",
-                              "fields": [],
-                              "gap": "sm",
-                              "renderItem": [
-                                "fn",
-                                "s",
-                                {
-                                  "dropEvent": "PLACE",
-                                  "equippedItem": "@s.placedItem",
-                                  "removeEvent": "REMOVE",
-                                  "slotNumber": "@s.index",
-                                  "type": "trait-slot"
-                                }
+                              "currentStep": "@entity.currentStep",
+                              "maxSlots": "@entity.maxSlots",
+                              "playing": "@entity.playing",
+                              "slotDropEvent": "PLACE",
+                              "slotFeedback": "@entity.slotFeedback",
+                              "slotRemoveEvent": "REMOVE",
+                              "slots": [
+                                "array/map",
+                                "@entity.slots",
+                                [
+                                  "fn",
+                                  "s",
+                                  "@s.placedItem"
+                                ]
                               ],
-                              "type": "data-list"
+                              "type": "sequence-bar"
                             }
                           ],
                           "type": "card"
@@ -1803,6 +1674,12 @@
                           },
                           {
                             "children": [
+                              {
+                                "action": "PLAY",
+                                "label": "Play",
+                                "type": "button",
+                                "variant": "secondary"
+                              },
                               {
                                 "action": "CHECK",
                                 "label": "Check",
@@ -1871,250 +1748,32 @@
                     ]
                   ],
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "content": "@entity.description",
-                              "type": "typography",
-                              "variant": "body"
-                            }
-                          ],
-                          "type": "card"
-                        },
-                        {
-                          "children": [
-                            {
-                              "actions": "@entity.availableActions",
-                              "allowDuplicates": "@entity.allowDuplicates",
-                              "type": "action-palette",
-                              "usedActionIds": [
-                                "array/map",
-                                "@entity.slots",
-                                [
-                                  "fn",
-                                  "s",
-                                  "@s.placedActionId"
-                                ]
-                              ]
-                            }
-                          ],
-                          "type": "card"
-                        },
-                        {
-                          "children": [
-                            {
-                              "entity": "@entity.slots",
-                              "fields": [],
-                              "gap": "sm",
-                              "renderItem": [
-                                "fn",
-                                "s",
-                                {
-                                  "dropEvent": "PLACE",
-                                  "equippedItem": "@s.placedItem",
-                                  "removeEvent": "REMOVE",
-                                  "slotNumber": "@s.index",
-                                  "type": "trait-slot"
-                                }
-                              ],
-                              "type": "data-list"
-                            }
-                          ],
-                          "type": "card"
-                        }
-                      ],
-                      "hud": {
-                        "children": [
-                          {
-                            "stats": [
-                              {
-                                "label": "Attempts",
-                                "value": "@entity.attempts"
-                              },
-                              {
-                                "label": "Status",
-                                "value": "@entity.result"
-                              }
-                            ],
-                            "type": "game-hud"
-                          },
-                          {
-                            "children": [
-                              {
-                                "action": "CHECK",
-                                "label": "Check",
-                                "type": "button",
-                                "variant": "primary"
-                              },
-                              {
-                                "action": "PLAY_AGAIN",
-                                "label": "Reset",
-                                "type": "button",
-                                "variant": "secondary"
-                              }
-                            ],
-                            "direction": "horizontal",
-                            "gap": "sm",
-                            "type": "stack"
-                          }
-                        ],
-                        "direction": "horizontal",
-                        "gap": "md",
-                        "justify": "between",
-                        "type": "stack"
-                      },
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "CHECK",
-                "from": "building",
-                "to": "building"
-              },
-              {
-                "effects": [
-                  [
                     "set",
-                    "@entity.currentStep",
-                    -1.0
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "content": "@entity.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "content": "@entity.description",
-                              "type": "typography",
-                              "variant": "body"
-                            }
-                          ],
-                          "type": "card"
-                        },
-                        {
-                          "children": [
-                            {
-                              "actions": "@entity.availableActions",
-                              "allowDuplicates": "@entity.allowDuplicates",
-                              "type": "action-palette",
-                              "usedActionIds": [
-                                "array/map",
-                                "@entity.slots",
-                                [
-                                  "fn",
-                                  "s",
-                                  "@s.placedActionId"
-                                ]
-                              ]
-                            }
-                          ],
-                          "type": "card"
-                        },
-                        {
-                          "children": [
-                            {
-                              "entity": "@entity.slots",
-                              "fields": [],
-                              "gap": "sm",
-                              "renderItem": [
-                                "fn",
-                                "s",
-                                {
-                                  "dropEvent": "PLACE",
-                                  "equippedItem": "@s.placedItem",
-                                  "removeEvent": "REMOVE",
-                                  "slotNumber": "@s.index",
-                                  "type": "trait-slot"
-                                }
-                              ],
-                              "type": "data-list"
-                            }
-                          ],
-                          "type": "card"
-                        }
-                      ],
-                      "hud": {
-                        "children": [
-                          {
-                            "stats": [
-                              {
-                                "label": "Attempts",
-                                "value": "@entity.attempts"
-                              },
-                              {
-                                "label": "Status",
-                                "value": "@entity.result"
-                              }
-                            ],
-                            "type": "game-hud"
-                          },
-                          {
-                            "children": [
-                              {
-                                "action": "CHECK",
-                                "label": "Check",
-                                "type": "button",
-                                "variant": "primary"
-                              },
-                              {
-                                "action": "PLAY_AGAIN",
-                                "label": "Reset",
-                                "type": "button",
-                                "variant": "secondary"
-                              }
-                            ],
-                            "direction": "horizontal",
-                            "gap": "sm",
-                            "type": "stack"
-                          }
-                        ],
-                        "direction": "horizontal",
-                        "gap": "md",
-                        "justify": "between",
-                        "type": "stack"
-                      },
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "STEP",
-                "from": "playing-back",
-                "guard": [
-                  ">=",
-                  "@entity.currentStep",
-                  [
-                    "-",
-                    "@entity.maxSlots",
-                    1.0
-                  ]
-                ],
-                "to": "building"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.currentStep",
+                    "@entity.slotFeedback",
                     [
-                      "+",
-                      "@entity.currentStep",
-                      1.0
+                      "array/map",
+                      "@entity.slots",
+                      [
+                        "fn",
+                        "s",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@s.placedActionId",
+                            [
+                              "array/nth",
+                              [
+                                "array/first",
+                                "@entity.solutions"
+                              ],
+                              "@s.index"
+                            ]
+                          ],
+                          "correct",
+                          "wrong"
+                        ]
+                      ]
                     ]
                   ],
                   [
@@ -2159,21 +1818,22 @@
                         {
                           "children": [
                             {
-                              "entity": "@entity.slots",
-                              "fields": [],
-                              "gap": "sm",
-                              "renderItem": [
-                                "fn",
-                                "s",
-                                {
-                                  "dropEvent": "PLACE",
-                                  "equippedItem": "@s.placedItem",
-                                  "removeEvent": "REMOVE",
-                                  "slotNumber": "@s.index",
-                                  "type": "trait-slot"
-                                }
+                              "currentStep": "@entity.currentStep",
+                              "maxSlots": "@entity.maxSlots",
+                              "playing": "@entity.playing",
+                              "slotDropEvent": "PLACE",
+                              "slotFeedback": "@entity.slotFeedback",
+                              "slotRemoveEvent": "REMOVE",
+                              "slots": [
+                                "array/map",
+                                "@entity.slots",
+                                [
+                                  "fn",
+                                  "s",
+                                  "@s.placedItem"
+                                ]
                               ],
-                              "type": "data-list"
+                              "type": "sequence-bar"
                             }
                           ],
                           "type": "card"
@@ -2196,6 +1856,12 @@
                           },
                           {
                             "children": [
+                              {
+                                "action": "PLAY",
+                                "label": "Play",
+                                "type": "button",
+                                "variant": "secondary"
+                              },
                               {
                                 "action": "CHECK",
                                 "label": "Check",
@@ -2223,9 +1889,9 @@
                     }
                   ]
                 ],
-                "event": "STEP",
-                "from": "playing-back",
-                "to": "playing-back"
+                "event": "CHECK",
+                "from": "building",
+                "to": "building"
               },
               {
                 "effects": [
@@ -2248,6 +1914,16 @@
                     "set",
                     "@entity.currentStep",
                     -1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.playing",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.slotFeedback",
+                    []
                   ],
                   [
                     "render-ui",
@@ -2291,21 +1967,22 @@
                         {
                           "children": [
                             {
-                              "entity": "@entity.slots",
-                              "fields": [],
-                              "gap": "sm",
-                              "renderItem": [
-                                "fn",
-                                "s",
-                                {
-                                  "dropEvent": "PLACE",
-                                  "equippedItem": "@s.placedItem",
-                                  "removeEvent": "REMOVE",
-                                  "slotNumber": "@s.index",
-                                  "type": "trait-slot"
-                                }
+                              "currentStep": "@entity.currentStep",
+                              "maxSlots": "@entity.maxSlots",
+                              "playing": "@entity.playing",
+                              "slotDropEvent": "PLACE",
+                              "slotFeedback": "@entity.slotFeedback",
+                              "slotRemoveEvent": "REMOVE",
+                              "slots": [
+                                "array/map",
+                                "@entity.slots",
+                                [
+                                  "fn",
+                                  "s",
+                                  "@s.placedItem"
+                                ]
                               ],
-                              "type": "data-list"
+                              "type": "sequence-bar"
                             }
                           ],
                           "type": "card"
@@ -2328,6 +2005,12 @@
                           },
                           {
                             "children": [
+                              {
+                                "action": "PLAY",
+                                "label": "Play",
+                                "type": "button",
+                                "variant": "secondary"
+                              },
                               {
                                 "action": "CHECK",
                                 "label": "Check",
@@ -2357,10 +2040,166 @@
                 ],
                 "event": "PLAY_AGAIN",
                 "from": "complete",
-                "to": "menu"
+                "to": "building"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.playing",
+                  [
+                    "<",
+                    "@entity.currentStep",
+                    [
+                      "-",
+                      "@entity.maxSlots",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.currentStep",
+                  [
+                    "if",
+                    [
+                      ">=",
+                      "@entity.currentStep",
+                      [
+                        "-",
+                        "@entity.maxSlots",
+                        1.0
+                      ]
+                    ],
+                    -1.0,
+                    [
+                      "+",
+                      "@entity.currentStep",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          {
+                            "content": "@entity.title",
+                            "type": "typography",
+                            "variant": "h4"
+                          },
+                          {
+                            "content": "@entity.description",
+                            "type": "typography",
+                            "variant": "body"
+                          }
+                        ],
+                        "type": "card"
+                      },
+                      {
+                        "children": [
+                          {
+                            "actions": "@entity.availableActions",
+                            "allowDuplicates": "@entity.allowDuplicates",
+                            "type": "action-palette",
+                            "usedActionIds": [
+                              "array/map",
+                              "@entity.slots",
+                              [
+                                "fn",
+                                "s",
+                                "@s.placedActionId"
+                              ]
+                            ]
+                          }
+                        ],
+                        "type": "card"
+                      },
+                      {
+                        "children": [
+                          {
+                            "currentStep": "@entity.currentStep",
+                            "maxSlots": "@entity.maxSlots",
+                            "playing": "@entity.playing",
+                            "slotDropEvent": "PLACE",
+                            "slotFeedback": "@entity.slotFeedback",
+                            "slotRemoveEvent": "REMOVE",
+                            "slots": [
+                              "array/map",
+                              "@entity.slots",
+                              [
+                                "fn",
+                                "s",
+                                "@s.placedItem"
+                              ]
+                            ],
+                            "type": "sequence-bar"
+                          }
+                        ],
+                        "type": "card"
+                      }
+                    ],
+                    "hud": {
+                      "children": [
+                        {
+                          "stats": [
+                            {
+                              "label": "Attempts",
+                              "value": "@entity.attempts"
+                            },
+                            {
+                              "label": "Status",
+                              "value": "@entity.result"
+                            }
+                          ],
+                          "type": "game-hud"
+                        },
+                        {
+                          "children": [
+                            {
+                              "action": "PLAY",
+                              "label": "Play",
+                              "type": "button",
+                              "variant": "secondary"
+                            },
+                            {
+                              "action": "CHECK",
+                              "label": "Check",
+                              "type": "button",
+                              "variant": "primary"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Reset",
+                              "type": "button",
+                              "variant": "secondary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "guard": "@entity.playing",
+              "interval": 1000.0,
+              "name": "playbackTick"
+            }
+          ]
         }
       ]
     }

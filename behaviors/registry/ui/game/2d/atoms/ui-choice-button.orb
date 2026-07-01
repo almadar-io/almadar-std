@@ -131,6 +131,18 @@
               "tier": "presentation",
               "type": "number"
             },
+            "payload": {
+              "default": {
+                "item": "Item"
+              },
+              "description": "Semantic payload emitted with the action (e.g. `{ nextId, choiceIndex }` for a branching choice).",
+              "items": {
+                "type": "string"
+              },
+              "label": "Payload",
+              "tier": "presentation",
+              "type": "Map<string,string>"
+            },
             "selected": {
               "default": false,
               "description": "Whether the choice is currently selected",
@@ -150,6 +162,18 @@
             {
               "description": "Click handler",
               "event": "CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Declarative event name — emits UI:{action} via eventBus on click",
+              "event": "ACTION",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -185,6 +209,18 @@
                   }
                 ],
                 "tier": "essential"
+              },
+              {
+                "description": "Declarative event name — emits UI:{action} via eventBus on click",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
               }
             ],
             "states": [
@@ -200,12 +236,14 @@
                     "render-ui",
                     "main",
                     {
+                      "action": "ACTION",
                       "assetUrl": "@config.assetUrl",
                       "className": "@config.className",
                       "disabled": "@config.disabled",
                       "icon": "@config.icon",
                       "index": "@config.index",
                       "onClick": "CLICK",
+                      "payload": "@config.payload",
                       "selected": "@config.selected",
                       "text": "@config.text",
                       "type": "choice-button"

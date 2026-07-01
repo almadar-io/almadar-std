@@ -152,7 +152,8 @@ orbital Canvas2dOrbital {
           unitClickEvent: UNIT_CLICK
           tileHoverEvent: TILE_HOVER
           tileLeaveEvent: TILE_LEAVE
-          keyEvent: KEY
+          keyMap: @config.keyMap
+          keyUpMap: @config.keyUpMap
           camera: @config.camera
           scale: @config.scale
           unitScale: @config.unitScale
@@ -195,11 +196,6 @@ orbital Canvas2dOrbital {
         id : string
       }
         @description "Emits UI:{tileLeaveEvent} with {} on tile leave"
-        @tier "essential"
-      KEY -> external {
-        key : string!
-      }
-        @description "Emits UI:{keyEvent} with { key } on keydown — for side/free keyboard control"
         @tier "essential"
     }
 
@@ -263,6 +259,14 @@ orbital Canvas2dOrbital {
       hoveredTile : Canvas2dHoveredTile = { x: 1, y: 1 }
         @label "Hovered Tile"
         @description "Hovered tile position"
+        @tier "presentation"
+      keyMap : Map string string = { item: "Item" }
+        @label "Key Map"
+        @description "Maps a keydown `e.code` → the board's SEMANTIC event, e.g. `{ ArrowLeft: 'LEFT', KeyA: 'LEFT', Space: 'JUMP' }`. The input layer emits `UI:<event>` so the FSM stays device-agnostic — keyboard and d-pad converge on the same events."
+        @tier "presentation"
+      keyUpMap : Map string string = { item: "Item" }
+        @label "Key Up Map"
+        @description "Maps a keyup `e.code` → the board's SEMANTIC event, e.g. `{ ArrowLeft: 'STOP' }`. Omit a key to ignore its release (e.g. jump)."
         @tier "presentation"
       camera : "pan-zoom" | "follow" | "fixed" = "pan-zoom"
         @label "Camera"

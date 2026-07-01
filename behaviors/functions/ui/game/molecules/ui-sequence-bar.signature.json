@@ -1,0 +1,285 @@
+[
+  {
+    "organism": "ui-sequence-bar",
+    "orbital": "SequenceBarOrbital",
+    "tier": "molecules",
+    "factoryPath": "behaviors/functions/ui/game/2d/molecules/ui-sequence-bar.ts",
+    "entities": [
+      {
+        "name": "SequenceBarItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "SequenceBarRender",
+        "emittedEvents": [
+          "SLOT_DROP",
+          "SLOT_REMOVE"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SLOT_DROP",
+            "direction": "emit",
+            "description": "Called when an item is dropped into slot at index (callback path)",
+            "tier": "essential"
+          },
+          {
+            "name": "SLOT_REMOVE",
+            "direction": "emit",
+            "description": "Called when a slot is cleared (callback path)",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "categoryColors",
+            "type": "Map<string,SequenceBarCategoryColorsValue>",
+            "default": {},
+            "label": "Category Colors",
+            "description": "Category → color mapping",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "bg": {
+                  "name": "bg",
+                  "required": true,
+                  "type": "string"
+                },
+                "border": {
+                  "name": "border",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "Additional CSS classes",
+            "tier": "presentation"
+          },
+          {
+            "key": "currentStep",
+            "type": "number",
+            "default": -1,
+            "label": "Current Step",
+            "description": "Current step index during playback (-1 = not playing)",
+            "tier": "presentation"
+          },
+          {
+            "key": "maxSlots",
+            "type": "number",
+            "default": 1,
+            "label": "Max Slots",
+            "description": "Max number of slots",
+            "tier": "presentation"
+          },
+          {
+            "key": "playing",
+            "type": "boolean",
+            "default": false,
+            "label": "Playing",
+            "description": "Whether the sequence is currently playing (disable interaction)",
+            "tier": "presentation"
+          },
+          {
+            "key": "size",
+            "type": "string",
+            "default": "lg",
+            "label": "Size",
+            "description": "Size variant",
+            "tier": "presentation",
+            "enumValues": [
+              "sm",
+              "md",
+              "lg"
+            ]
+          },
+          {
+            "key": "slotFeedback",
+            "type": "[string]",
+            "default": [],
+            "label": "Slot Feedback",
+            "description": "Per-slot correctness feedback shown after a failed attempt",
+            "tier": "presentation",
+            "items": {
+              "type": "string",
+              "values": [
+                "correct",
+                "wrong"
+              ]
+            }
+          },
+          {
+            "key": "slots",
+            "type": "[SequenceBarSlotsItem]",
+            "default": [
+              {
+                "category": "Category",
+                "description": "Description",
+                "iconEmoji": "Icon Emoji",
+                "iconUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "iconUrl",
+                  "dimension": "2d",
+                  "name": "iconUrl",
+                  "role": "ui",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png"
+                },
+                "id": "Id",
+                "name": "Name"
+              },
+              {
+                "category": "Category 2",
+                "description": "Description 2",
+                "iconEmoji": "Icon Emoji 2",
+                "iconUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "iconUrl",
+                  "dimension": "2d",
+                  "name": "iconUrl",
+                  "role": "ui",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png"
+                },
+                "id": "Id 2",
+                "name": "Name 2"
+              }
+            ],
+            "label": "Slots",
+            "description": "The current sequence (sparse — undefined means empty slot)",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "category": {
+                  "name": "category",
+                  "required": true,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "iconEmoji": {
+                  "name": "iconEmoji",
+                  "required": false,
+                  "type": "string"
+                },
+                "iconUrl": {
+                  "name": "iconUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                },
+                "stateMachine": {
+                  "name": "stateMachine",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "SequenceBarPage",
+        "defaultPath": "/sequence-bar",
+        "primaryEntity": "SequenceBarItem"
+      }
+    ],
+    "emittedEvents": [
+      "SLOT_DROP",
+      "SLOT_REMOVE"
+    ],
+    "listenedEvents": []
+  }
+]

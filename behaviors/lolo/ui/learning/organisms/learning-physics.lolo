@@ -1,0 +1,41 @@
+app learning-physics "1.0.0"
+"Physics learning app — a fat organism whose orbitals are individual physics topics, each composed via `uses` from a per-law engine atom. kflow presents one orbital as one lesson."
+orbital ProjectileMotionOrbital {
+  uses Projectile from "std/behaviors/std-physics-projectile"
+
+  type ProjectileBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    vx : number
+    vy : number
+    fx : number
+    fy : number
+  }
+
+  entity ProjectileScene [runtime] {
+    id : string!
+    bodies : [ProjectileBody]
+    running : boolean = false
+  }
+
+  trait ProjectileEngine = Projectile.traits.ProjectileSim -> ProjectileScene {
+    config {
+      title: "Projectile Motion"
+      gravity: 0.4
+      restitution: 0.78
+      damping: 0.995
+      width: 600
+      height: 400
+      bodies: [
+        { id: "ball-a", x: 90, y: 70, radius: 16, color: "#2563eb", label: "A", vx: 5, vy: 0, fx: 0, fy: 0 },
+        { id: "ball-b", x: 320, y: 50, radius: 11, color: "#16a34a", label: "B", vx: -4, vy: 3, fx: 0, fy: 0 }
+      ]
+    }
+  }
+
+  page "/physics/projectile" as ProjectileMotionPage -> ProjectileEngine
+}
