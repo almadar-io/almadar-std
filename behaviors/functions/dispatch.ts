@@ -221,11 +221,6 @@ import {
   isStdUiBuilderBoardBuilderBoardOrbitalParams,
 } from './ui/game/2d/organisms/ui-builder-board.js';
 import {
-  stdUiCanvasEffectCanvasEffectOrbital,
-  StdUiCanvasEffectCanvasEffectOrbitalManifest,
-  isStdUiCanvasEffectCanvasEffectOrbitalParams,
-} from './ui/game/2d/organisms/ui-canvas-effect.js';
-import {
   stdUiCardBattlerBoardCardBattlerBoardOrbital,
   StdUiCardBattlerBoardCardBattlerBoardOrbitalManifest,
   isStdUiCardBattlerBoardCardBattlerBoardOrbitalParams,
@@ -1054,15 +1049,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiBuilderBoardBuilderBoardOrbital(p);
     },
     manifest: StdUiBuilderBoardBuilderBoardOrbitalManifest,
-  }],
-  ['ui-canvas-effect::CanvasEffectOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiCanvasEffectCanvasEffectOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-canvas-effect::CanvasEffectOrbital');
-      }
-      return stdUiCanvasEffectCanvasEffectOrbital(p);
-    },
-    manifest: StdUiCanvasEffectCanvasEffectOrbitalManifest,
   }],
   ['ui-card-battler-board::CardBattlerBoardOrbital', {
     factory: (p: object): OrbitalDefinition => {

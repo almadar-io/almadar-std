@@ -376,7 +376,6 @@ export * from './ui/marketing/organisms/ui-book-nav-bar.js';
 export * from './ui/marketing/organisms/ui-book-table-of-contents.js';
 export * from './ui/marketing/organisms/ui-book-viewer.js';
 export * from './ui/game/2d/organisms/ui-builder-board.js';
-export * from './ui/game/2d/organisms/ui-canvas-effect.js';
 export * from './ui/game/2d/organisms/ui-card-battler-board.js';
 export * from './ui/marketing/organisms/ui-case-study-organism.js';
 export * from './ui/game/2d/organisms/ui-castle-board.js';
