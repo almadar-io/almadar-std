@@ -52,15 +52,12 @@ orbital VisualNovelBoardOrbital {
         (set @entity.currentText (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) text))
         (set @entity.currentChoices (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) choices))
         (render-ui main {
-          type: visual-novel-board
-          nodes: @entity.nodes
-          currentNodeId: @entity.currentNodeId
-          typewriterSpeed: @config.typewriterSpeed
-          portraitScale: @config.portraitScale
-          assetManifest: { backgrounds: { corridor: @config.corridorBg, forge: @config.forgeBg, core: @config.coreBg }, portraits: { guide: @config.portraitUrl, rival: @config.portraitUrl } }
-          chooseEvent: CHOOSE
-          advanceEvent: ADVANCE
-          restartEvent: RESTART
+          type: game-shell
+          backgroundAsset: (let ((bg (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) backgroundKey))) (if (== @bg "forge") @config.forgeBg (if (== @bg "core") @config.coreBg @config.corridorBg)))
+          children: [
+            { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText, portrait: @config.portraitUrl },
+            { type: stack, direction: vertical, gap: sm, children: (array/map @entity.currentChoices (fn c { type: choice-button, text: (object/get @c label), action: CHOOSE, payload: { nextId: (object/get @c nextId) } })) }
+          ]
         })
 
       CHOOSE -> playing
@@ -69,28 +66,22 @@ orbital VisualNovelBoardOrbital {
         (set @entity.currentText (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) text))
         (set @entity.currentChoices (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) choices))
         (render-ui main {
-          type: visual-novel-board
-          nodes: @entity.nodes
-          currentNodeId: @entity.currentNodeId
-          typewriterSpeed: @config.typewriterSpeed
-          portraitScale: @config.portraitScale
-          assetManifest: { backgrounds: { corridor: @config.corridorBg, forge: @config.forgeBg, core: @config.coreBg }, portraits: { guide: @config.portraitUrl, rival: @config.portraitUrl } }
-          chooseEvent: CHOOSE
-          advanceEvent: ADVANCE
-          restartEvent: RESTART
+          type: game-shell
+          backgroundAsset: (let ((bg (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) backgroundKey))) (if (== @bg "forge") @config.forgeBg (if (== @bg "core") @config.coreBg @config.corridorBg)))
+          children: [
+            { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText, portrait: @config.portraitUrl },
+            { type: stack, direction: vertical, gap: sm, children: (array/map @entity.currentChoices (fn c { type: choice-button, text: (object/get @c label), action: CHOOSE, payload: { nextId: (object/get @c nextId) } })) }
+          ]
         })
 
       ADVANCE -> playing
         (render-ui main {
-          type: visual-novel-board
-          nodes: @entity.nodes
-          currentNodeId: @entity.currentNodeId
-          typewriterSpeed: @config.typewriterSpeed
-          portraitScale: @config.portraitScale
-          assetManifest: { backgrounds: { corridor: @config.corridorBg, forge: @config.forgeBg, core: @config.coreBg }, portraits: { guide: @config.portraitUrl, rival: @config.portraitUrl } }
-          chooseEvent: CHOOSE
-          advanceEvent: ADVANCE
-          restartEvent: RESTART
+          type: game-shell
+          backgroundAsset: (let ((bg (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) backgroundKey))) (if (== @bg "forge") @config.forgeBg (if (== @bg "core") @config.coreBg @config.corridorBg)))
+          children: [
+            { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText, portrait: @config.portraitUrl },
+            { type: stack, direction: vertical, gap: sm, children: (array/map @entity.currentChoices (fn c { type: choice-button, text: (object/get @c label), action: CHOOSE, payload: { nextId: (object/get @c nextId) } })) }
+          ]
         })
 
       RESTART -> playing
@@ -99,24 +90,20 @@ orbital VisualNovelBoardOrbital {
         (set @entity.currentText (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) text))
         (set @entity.currentChoices (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) choices))
         (render-ui main {
-          type: visual-novel-board
-          nodes: @entity.nodes
-          currentNodeId: @entity.currentNodeId
-          typewriterSpeed: @config.typewriterSpeed
-          portraitScale: @config.portraitScale
-          assetManifest: { backgrounds: { corridor: @config.corridorBg, forge: @config.forgeBg, core: @config.coreBg }, portraits: { guide: @config.portraitUrl, rival: @config.portraitUrl } }
-          chooseEvent: CHOOSE
-          advanceEvent: ADVANCE
-          restartEvent: RESTART
+          type: game-shell
+          backgroundAsset: (let ((bg (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) backgroundKey))) (if (== @bg "forge") @config.forgeBg (if (== @bg "core") @config.coreBg @config.corridorBg)))
+          children: [
+            { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText, portrait: @config.portraitUrl },
+            { type: stack, direction: vertical, gap: sm, children: (array/map @entity.currentChoices (fn c { type: choice-button, text: (object/get @c label), action: CHOOSE, payload: { nextId: (object/get @c nextId) } })) }
+          ]
         })
     }
 
     emits {
       CHOOSE -> external {
-        choiceIndex : number!
         nextId : string!
       }
-        @description "Emits UI:{chooseEvent} with {choiceIndex} when the player selects a branching choice"
+        @description "Emits UI:{chooseEvent} with {nextId} when the player selects a branching choice"
         @tier "domain"
       ADVANCE -> external {
         id : string

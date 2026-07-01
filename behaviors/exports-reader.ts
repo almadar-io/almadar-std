@@ -10,6 +10,9 @@
 
 import * as behaviorFns from './functions/index.js';
 import type { OrbitalDefinition, OrbitalSchema } from '@almadar/core/types';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export type BehaviorLevel = 'atoms' | 'molecules' | 'organisms';
 
@@ -93,18 +96,40 @@ export function getBehaviorsByLevel(level: BehaviorLevel): OrbitalSchema[] {
   return getAllBehaviors();
 }
 
+function findEntry(behaviorName: string): BehaviorEntry | undefined {
+  // Fast path: exact match (the normal std-* convention).
+  let entry = getEntries().find(e => e.name === behaviorName);
+  if (entry) return entry;
+
+  // Some generated wrapper functions prefix the behavior name with `std-`
+  // even when the registry name does not start with `std-` (e.g. the
+  // function `stdLearningMathLab` maps to `std-learning-math-lab`, but the
+  // registry name is `learning-math-lab`). Try the prefixed name and, if it
+  // exists, return that wrapper instead of treating the organism as missing.
+  if (!behaviorName.startsWith('std-')) {
+    entry = getEntries().find(e => e.name === `std-${behaviorName}`);
+  }
+  return entry;
+}
+
 export function loadGoldenOrb(behaviorName: string): OrbitalSchema | null {
-  const entry = getEntries().find(e => e.name === behaviorName);
+  const entry = findEntry(behaviorName);
   if (!entry) return null;
   try {
-    return callBehavior(entry);
+    const orb = callBehavior(entry);
+    // Ensure the returned schema uses the requested name, not the prefixed
+    // wrapper-derived name.
+    if (orb.name !== behaviorName) {
+      return { ...orb, name: behaviorName };
+    }
+    return orb;
   } catch {
     return null;
   }
 }
 
 export function hasGoldenOrb(behaviorName: string): boolean {
-  return getEntries().some(e => e.name === behaviorName);
+  return findEntry(behaviorName) !== undefined;
 }
 
 export function getBehavior(behaviorName: string): OrbitalSchema | null {
