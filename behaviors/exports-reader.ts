@@ -10,9 +10,6 @@
 
 import * as behaviorFns from './functions/index.js';
 import type { OrbitalDefinition, OrbitalSchema } from '@almadar/core/types';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 export type BehaviorLevel = 'atoms' | 'molecules' | 'organisms';
 

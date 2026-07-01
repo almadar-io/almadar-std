@@ -56,20 +56,12 @@ orbital CardBattlerBoardOrbital {
         (set @entity.hand @config.hand)
         (set @entity.board [])
         (render-ui main {
-          type: card-battler-board
-          hand: @entity.hand
-          handItems: (array/map @entity.hand (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" }, playEvent: PLAY_CARD }))
-          deck: @entity.deck
-          board: @entity.board
-          mana: @entity.mana
-          maxMana: @entity.maxMana
-          turn: @entity.turn
-          result: @entity.result
-          assetManifest: @config.assetManifest
-          playCardEvent: PLAY_CARD
-          endTurnEvent: END_TURN
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Mana", value: @entity.mana }, { label: "Turn", value: @entity.turn } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: secondary } ] } ] }
+          children: [
+            { type: data-list, entity: @entity.board, fields: [], gap: sm, renderItem: (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" } }) },
+            { type: data-list, entity: @entity.hand, fields: [], gap: sm, renderItem: (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" }, clickEvent: PLAY_CARD }) }
+          ]
         })
 
       PLAY_CARD -> playing when (and (== @entity.result "none") (> (array/len (array/filter @entity.hand (fn c (and (== @c.id ?cardId) (<= (object/get @c cost) @entity.mana))))) 0))
@@ -77,20 +69,12 @@ orbital CardBattlerBoardOrbital {
         (set @entity.board (array/concat @entity.board (array/filter @entity.hand (fn c (== @c.id ?cardId)))))
         (set @entity.hand (array/filter @entity.hand (fn c (not (== @c.id ?cardId)))))
         (render-ui main {
-          type: card-battler-board
-          hand: @entity.hand
-          handItems: (array/map @entity.hand (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" }, playEvent: PLAY_CARD }))
-          deck: @entity.deck
-          board: @entity.board
-          mana: @entity.mana
-          maxMana: @entity.maxMana
-          turn: @entity.turn
-          result: @entity.result
-          assetManifest: @config.assetManifest
-          playCardEvent: PLAY_CARD
-          endTurnEvent: END_TURN
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Mana", value: @entity.mana }, { label: "Turn", value: @entity.turn } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: secondary } ] } ] }
+          children: [
+            { type: data-list, entity: @entity.board, fields: [], gap: sm, renderItem: (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" } }) },
+            { type: data-list, entity: @entity.hand, fields: [], gap: sm, renderItem: (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" }, clickEvent: PLAY_CARD }) }
+          ]
         })
 
       END_TURN -> playing when (== @entity.result "none")
@@ -101,38 +85,22 @@ orbital CardBattlerBoardOrbital {
         (set @entity.deck (array/slice @entity.deck @config.drawPerTurn (array/len @entity.deck)))
         (set @entity.result (if (>= @entity.turn @config.turnsToWin) "won" @entity.result))
         (render-ui main {
-          type: card-battler-board
-          hand: @entity.hand
-          handItems: (array/map @entity.hand (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" }, playEvent: PLAY_CARD }))
-          deck: @entity.deck
-          board: @entity.board
-          mana: @entity.mana
-          maxMana: @entity.maxMana
-          turn: @entity.turn
-          result: @entity.result
-          assetManifest: @config.assetManifest
-          playCardEvent: PLAY_CARD
-          endTurnEvent: END_TURN
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Mana", value: @entity.mana }, { label: "Turn", value: @entity.turn } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: secondary } ] } ] }
+          children: [
+            { type: data-list, entity: @entity.board, fields: [], gap: sm, renderItem: (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" } }) },
+            { type: data-list, entity: @entity.hand, fields: [], gap: sm, renderItem: (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" }, clickEvent: PLAY_CARD }) }
+          ]
         })
 
       GAME_END -> gameover when (or (== @entity.result "won") (== @entity.result "lost"))
         (render-ui main {
-          type: card-battler-board
-          hand: @entity.hand
-          handItems: (array/map @entity.hand (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" }, playEvent: PLAY_CARD }))
-          deck: @entity.deck
-          board: @entity.board
-          mana: @entity.mana
-          maxMana: @entity.maxMana
-          turn: @entity.turn
-          result: @entity.result
-          assetManifest: @config.assetManifest
-          playCardEvent: PLAY_CARD
-          endTurnEvent: END_TURN
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Mana", value: @entity.mana }, { label: "Turn", value: @entity.turn } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: secondary } ] } ] }
+          children: [
+            { type: data-list, entity: @entity.board, fields: [], gap: sm, renderItem: (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" } }) },
+            { type: data-list, entity: @entity.hand, fields: [], gap: sm, renderItem: (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" }, clickEvent: PLAY_CARD }) }
+          ]
         })
     }
 
@@ -146,20 +114,12 @@ orbital CardBattlerBoardOrbital {
         (set @entity.hand @config.hand)
         (set @entity.board [])
         (render-ui main {
-          type: card-battler-board
-          hand: @entity.hand
-          handItems: (array/map @entity.hand (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" }, playEvent: PLAY_CARD }))
-          deck: @entity.deck
-          board: @entity.board
-          mana: @entity.mana
-          maxMana: @entity.maxMana
-          turn: @entity.turn
-          result: @entity.result
-          assetManifest: @config.assetManifest
-          playCardEvent: PLAY_CARD
-          endTurnEvent: END_TURN
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Mana", value: @entity.mana }, { label: "Turn", value: @entity.turn } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: secondary } ] } ] }
+          children: [
+            { type: data-list, entity: @entity.board, fields: [], gap: sm, renderItem: (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" } }) },
+            { type: data-list, entity: @entity.hand, fields: [], gap: sm, renderItem: (fn c { type: game-card, id: @c.id, title: @c.title, cost: @c.cost, attack: @c.attack, defense: @c.defense, sprite: @c.sprite, frameAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/ui/card-frame.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "5:7", name: "card-frame", thumbnailUrl: "" }, clickEvent: PLAY_CARD }) }
+          ]
         })
     }
 
