@@ -58,14 +58,14 @@ export interface StdUiPlatformerBoardGameEndPayload {
  * Payload shape for the `LEFT` event.
  */
 export interface StdUiPlatformerBoardLeftPayload {
-  direction: number;
+  id?: string;
 }
 
 /**
  * Payload shape for the `RIGHT` event.
  */
 export interface StdUiPlatformerBoardRightPayload {
-  direction: number;
+  id?: string;
 }
 
 /**
@@ -900,33 +900,31 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
             'tier': 'domain',
           },
           {
-            'description': 'Left arrow / A key pressed',
+            'description': 'Move-left intent (keyboard keyMap or d-pad directionEvents)',
             'event': 'LEFT',
             'payloadSchema': [
               {
-                'name': 'direction',
-                'required': true,
-                'type': 'number',
+                'name': 'id',
+                'type': 'string',
               },
             ],
             'scope': 'external',
             'tier': 'domain',
           },
           {
-            'description': 'Right arrow / D key pressed',
+            'description': 'Move-right intent (keyboard keyMap or d-pad directionEvents)',
             'event': 'RIGHT',
             'payloadSchema': [
               {
-                'name': 'direction',
-                'required': true,
-                'type': 'number',
+                'name': 'id',
+                'type': 'string',
               },
             ],
             'scope': 'external',
             'tier': 'domain',
           },
           {
-            'description': 'Up / Space pressed',
+            'description': 'Jump intent (keyboard keyMap or d-pad directionEvents)',
             'event': 'JUMP',
             'payloadSchema': [
               {
@@ -938,7 +936,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
             'tier': 'domain',
           },
           {
-            'description': 'Horizontal key released',
+            'description': 'Stop-horizontal intent (keyboard keyUpMap or d-pad directionReleaseEvents)',
             'event': 'STOP',
             'payloadSchema': [
               {
@@ -989,33 +987,31 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
               'name': 'Initialize',
             },
             {
-              'description': 'Left arrow / A key pressed',
+              'description': 'Move-left intent (keyboard keyMap or d-pad directionEvents)',
               'key': 'LEFT',
               'name': 'Left',
               'payloadSchema': [
                 {
-                  'name': 'direction',
-                  'required': true,
-                  'type': 'number',
+                  'name': 'id',
+                  'type': 'string',
                 },
               ],
               'tier': 'domain',
             },
             {
-              'description': 'Right arrow / D key pressed',
+              'description': 'Move-right intent (keyboard keyMap or d-pad directionEvents)',
               'key': 'RIGHT',
               'name': 'Right',
               'payloadSchema': [
                 {
-                  'name': 'direction',
-                  'required': true,
-                  'type': 'number',
+                  'name': 'id',
+                  'type': 'string',
                 },
               ],
               'tier': 'domain',
             },
             {
-              'description': 'Up / Space pressed',
+              'description': 'Jump intent (keyboard keyMap or d-pad directionEvents)',
               'key': 'JUMP',
               'name': 'Jump',
               'payloadSchema': [
@@ -1027,7 +1023,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
               'tier': 'domain',
             },
             {
-              'description': 'Horizontal key released',
+              'description': 'Stop-horizontal intent (keyboard keyUpMap or d-pad directionReleaseEvents)',
               'key': 'STOP',
               'name': 'Stop',
               'payloadSchema': [
@@ -1180,11 +1176,38 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'pixel',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'backgroundImage': '@config.backgroundImage',
                         'bgColor': '@config.bgColor',
                         'camera': 'follow',
+                        'keyMap': {
+                          'ArrowLeft': 'LEFT',
+                          'ArrowRight': 'RIGHT',
+                          'ArrowUp': 'JUMP',
+                          'KeyA': 'LEFT',
+                          'KeyD': 'RIGHT',
+                          'KeyW': 'JUMP',
+                          'Space': 'JUMP',
+                        },
+                        'keyUpMap': {
+                          'ArrowLeft': 'STOP',
+                          'ArrowRight': 'STOP',
+                          'KeyA': 'STOP',
+                          'KeyD': 'STOP',
+                        },
                         'platforms': '@config.platforms',
                         'player': '@entity.player',
                         'playerSprite': '@config.playerSprite',
@@ -1204,10 +1227,34 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'star',
+                                'role': 'ui',
+                                'style': 'pixel',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/star.png',
+                                'variant': '',
+                              },
                               'label': 'Score',
                               'value': '@entity.score',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'coin',
+                                'role': 'ui',
+                                'style': 'pixel',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/coin.png',
+                                'variant': '',
+                              },
                               'label': 'Lives',
                               'value': '@entity.lives',
                             },
@@ -1215,15 +1262,82 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           'type': 'game-hud',
                         },
                         {
-                          'downAction': 'STOP',
-                          'leftAction': 'LEFT',
-                          'rightAction': 'RIGHT',
-                          'type': 'd-pad',
-                          'upAction': 'JUMP',
+                          'directionAssets': {
+                            'down': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'key-down',
+                              'role': 'ui',
+                              'style': 'pixel',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-down.png',
+                              'variant': '',
+                            },
+                            'left': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'key-left',
+                              'role': 'ui',
+                              'style': 'pixel',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-left.png',
+                              'variant': '',
+                            },
+                            'right': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'key-right',
+                              'role': 'ui',
+                              'style': 'pixel',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-right.png',
+                              'variant': '',
+                            },
+                            'up': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'key-up',
+                              'role': 'ui',
+                              'style': 'pixel',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-up.png',
+                              'variant': '',
+                            },
+                          },
+                          'directionEvents': {
+                            'left': 'LEFT',
+                            'right': 'RIGHT',
+                            'up': 'JUMP',
+                          },
+                          'directionReleaseEvents': {
+                            'left': 'STOP',
+                            'right': 'STOP',
+                          },
+                          'kind': 'dpad',
+                          'type': 'control-grid',
                         },
                         {
                           'action': 'PLAY_AGAIN',
-                          'icon': 'refresh',
+                          'iconAsset': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'icon-restart',
+                            'role': 'ui',
+                            'style': 'pixel',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/icon-restart.png',
+                            'variant': '',
+                          },
                           'label': 'Restart',
                           'type': 'button',
                           'variant': 'secondary',
@@ -1233,6 +1347,18 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'pixel',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -1452,11 +1578,38 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'pixel',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'backgroundImage': '@config.backgroundImage',
                         'bgColor': '@config.bgColor',
                         'camera': 'follow',
+                        'keyMap': {
+                          'ArrowLeft': 'LEFT',
+                          'ArrowRight': 'RIGHT',
+                          'ArrowUp': 'JUMP',
+                          'KeyA': 'LEFT',
+                          'KeyD': 'RIGHT',
+                          'KeyW': 'JUMP',
+                          'Space': 'JUMP',
+                        },
+                        'keyUpMap': {
+                          'ArrowLeft': 'STOP',
+                          'ArrowRight': 'STOP',
+                          'KeyA': 'STOP',
+                          'KeyD': 'STOP',
+                        },
                         'platforms': '@config.platforms',
                         'player': '@entity.player',
                         'playerSprite': '@config.playerSprite',
@@ -1476,10 +1629,34 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'star',
+                                'role': 'ui',
+                                'style': 'pixel',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/star.png',
+                                'variant': '',
+                              },
                               'label': 'Score',
                               'value': '@entity.score',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'coin',
+                                'role': 'ui',
+                                'style': 'pixel',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/coin.png',
+                                'variant': '',
+                              },
                               'label': 'Lives',
                               'value': '@entity.lives',
                             },
@@ -1487,15 +1664,82 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           'type': 'game-hud',
                         },
                         {
-                          'downAction': 'STOP',
-                          'leftAction': 'LEFT',
-                          'rightAction': 'RIGHT',
-                          'type': 'd-pad',
-                          'upAction': 'JUMP',
+                          'directionAssets': {
+                            'down': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'key-down',
+                              'role': 'ui',
+                              'style': 'pixel',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-down.png',
+                              'variant': '',
+                            },
+                            'left': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'key-left',
+                              'role': 'ui',
+                              'style': 'pixel',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-left.png',
+                              'variant': '',
+                            },
+                            'right': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'key-right',
+                              'role': 'ui',
+                              'style': 'pixel',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-right.png',
+                              'variant': '',
+                            },
+                            'up': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'key-up',
+                              'role': 'ui',
+                              'style': 'pixel',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-up.png',
+                              'variant': '',
+                            },
+                          },
+                          'directionEvents': {
+                            'left': 'LEFT',
+                            'right': 'RIGHT',
+                            'up': 'JUMP',
+                          },
+                          'directionReleaseEvents': {
+                            'left': 'STOP',
+                            'right': 'STOP',
+                          },
+                          'kind': 'dpad',
+                          'type': 'control-grid',
                         },
                         {
                           'action': 'PLAY_AGAIN',
-                          'icon': 'refresh',
+                          'iconAsset': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'icon-restart',
+                            'role': 'ui',
+                            'style': 'pixel',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/icon-restart.png',
+                            'variant': '',
+                          },
                           'label': 'Restart',
                           'type': 'button',
                           'variant': 'secondary',
@@ -1505,6 +1749,18 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'pixel',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -1561,11 +1817,38 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'pixel',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'backgroundImage': '@config.backgroundImage',
                         'bgColor': '@config.bgColor',
                         'camera': 'follow',
+                        'keyMap': {
+                          'ArrowLeft': 'LEFT',
+                          'ArrowRight': 'RIGHT',
+                          'ArrowUp': 'JUMP',
+                          'KeyA': 'LEFT',
+                          'KeyD': 'RIGHT',
+                          'KeyW': 'JUMP',
+                          'Space': 'JUMP',
+                        },
+                        'keyUpMap': {
+                          'ArrowLeft': 'STOP',
+                          'ArrowRight': 'STOP',
+                          'KeyA': 'STOP',
+                          'KeyD': 'STOP',
+                        },
                         'platforms': '@config.platforms',
                         'player': '@entity.player',
                         'playerSprite': '@config.playerSprite',
@@ -1585,10 +1868,34 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'star',
+                                'role': 'ui',
+                                'style': 'pixel',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/star.png',
+                                'variant': '',
+                              },
                               'label': 'Score',
                               'value': '@entity.score',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'coin',
+                                'role': 'ui',
+                                'style': 'pixel',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/coin.png',
+                                'variant': '',
+                              },
                               'label': 'Lives',
                               'value': '@entity.lives',
                             },
@@ -1596,15 +1903,82 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           'type': 'game-hud',
                         },
                         {
-                          'downAction': 'STOP',
-                          'leftAction': 'LEFT',
-                          'rightAction': 'RIGHT',
-                          'type': 'd-pad',
-                          'upAction': 'JUMP',
+                          'directionAssets': {
+                            'down': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'key-down',
+                              'role': 'ui',
+                              'style': 'pixel',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-down.png',
+                              'variant': '',
+                            },
+                            'left': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'key-left',
+                              'role': 'ui',
+                              'style': 'pixel',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-left.png',
+                              'variant': '',
+                            },
+                            'right': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'key-right',
+                              'role': 'ui',
+                              'style': 'pixel',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-right.png',
+                              'variant': '',
+                            },
+                            'up': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'key-up',
+                              'role': 'ui',
+                              'style': 'pixel',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-up.png',
+                              'variant': '',
+                            },
+                          },
+                          'directionEvents': {
+                            'left': 'LEFT',
+                            'right': 'RIGHT',
+                            'up': 'JUMP',
+                          },
+                          'directionReleaseEvents': {
+                            'left': 'STOP',
+                            'right': 'STOP',
+                          },
+                          'kind': 'dpad',
+                          'type': 'control-grid',
                         },
                         {
                           'action': 'PLAY_AGAIN',
-                          'icon': 'refresh',
+                          'iconAsset': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'icon-restart',
+                            'role': 'ui',
+                            'style': 'pixel',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/icon-restart.png',
+                            'variant': '',
+                          },
                           'label': 'Restart',
                           'type': 'button',
                           'variant': 'secondary',
@@ -1614,6 +1988,18 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'pixel',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -1626,6 +2012,466 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
           ],
         },
         'ticks': [
+          {
+            'effects': [
+              [
+                'let',
+                [
+                  [
+                    'vy1',
+                    [
+                      'math/clamp',
+                      [
+                        '+',
+                        '@entity.player.vy',
+                        '@config.gravity',
+                      ],
+                      [
+                        '-',
+                        0,
+                        '@config.jumpStrength',
+                      ],
+                      '@config.maxFallSpeed',
+                    ],
+                  ],
+                  [
+                    'px1',
+                    [
+                      'math/clamp',
+                      [
+                        '+',
+                        '@entity.player.x',
+                        '@entity.player.vx',
+                      ],
+                      0,
+                      [
+                        '-',
+                        '@entity.worldWidth',
+                        '@entity.player.width',
+                      ],
+                    ],
+                  ],
+                  [
+                    'pw',
+                    '@entity.player.width',
+                  ],
+                  [
+                    'ph',
+                    '@entity.player.height',
+                  ],
+                  [
+                    'livesLeft',
+                    [
+                      '-',
+                      '@entity.lives',
+                      1,
+                    ],
+                  ],
+                ],
+                [
+                  'let',
+                  [
+                    [
+                      'py1',
+                      [
+                        '+',
+                        '@entity.player.y',
+                        '@vy1',
+                      ],
+                    ],
+                  ],
+                  [
+                    'let',
+                    [
+                      [
+                        'playerRect',
+                        {
+                          'h': '@ph',
+                          'w': '@pw',
+                          'x': '@px1',
+                          'y': '@py1',
+                        },
+                      ],
+                    ],
+                    [
+                      'let',
+                      [
+                        [
+                          'hit',
+                          [
+                            'array/find',
+                            '@config.platforms',
+                            [
+                              'fn',
+                              'p',
+                              [
+                                'and',
+                                [
+                                  '!=',
+                                  [
+                                    'object/get',
+                                    '@p',
+                                    'type',
+                                  ],
+                                  'goal',
+                                ],
+                                [
+                                  'geo/aabb-overlap',
+                                  '@playerRect',
+                                  {
+                                    'h': '@p.height',
+                                    'w': '@p.width',
+                                    'x': '@p.x',
+                                    'y': '@p.y',
+                                  },
+                                ],
+                              ],
+                            ],
+                          ],
+                        ],
+                      ],
+                      [
+                        'let',
+                        [
+                          [
+                            'hazardHit',
+                            [
+                              'array/find',
+                              '@config.platforms',
+                              [
+                                'fn',
+                                'p',
+                                [
+                                  'and',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@p',
+                                      'type',
+                                    ],
+                                    'hazard',
+                                  ],
+                                  [
+                                    'geo/aabb-overlap',
+                                    '@playerRect',
+                                    {
+                                      'h': '@p.height',
+                                      'w': '@p.width',
+                                      'x': '@p.x',
+                                      'y': '@p.y',
+                                    },
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                        ],
+                        [
+                          'let',
+                          [
+                            [
+                              'goalHit',
+                              [
+                                'array/find',
+                                '@config.platforms',
+                                [
+                                  'fn',
+                                  'p',
+                                  [
+                                    'and',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@p',
+                                        'type',
+                                      ],
+                                      'goal',
+                                    ],
+                                    [
+                                      'geo/aabb-overlap',
+                                      '@playerRect',
+                                      {
+                                        'h': '@p.height',
+                                        'w': '@p.width',
+                                        'x': '@p.x',
+                                        'y': '@p.y',
+                                      },
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                          [
+                            'let',
+                            [
+                              [
+                                'hitY',
+                                [
+                                  'object/get',
+                                  '@hit',
+                                  'y',
+                                  '@entity.worldHeight',
+                                ],
+                              ],
+                              [
+                                'landed',
+                                [
+                                  'and',
+                                  [
+                                    '!=',
+                                    '@hit',
+                                    null,
+                                  ],
+                                  [
+                                    '>',
+                                    '@vy1',
+                                    0,
+                                  ],
+                                ],
+                              ],
+                            ],
+                            [
+                              'let',
+                              [
+                                [
+                                  'py2',
+                                  [
+                                    'if',
+                                    '@landed',
+                                    [
+                                      '-',
+                                      '@hitY',
+                                      '@ph',
+                                    ],
+                                    '@py1',
+                                  ],
+                                ],
+                                [
+                                  'vy2',
+                                  [
+                                    'if',
+                                    '@landed',
+                                    0,
+                                    '@vy1',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'let',
+                                [
+                                  [
+                                    'atGround',
+                                    [
+                                      '>=',
+                                      [
+                                        '+',
+                                        '@py2',
+                                        '@ph',
+                                      ],
+                                      '@entity.worldHeight',
+                                    ],
+                                  ],
+                                ],
+                                [
+                                  'let',
+                                  [
+                                    [
+                                      'py3',
+                                      [
+                                        'if',
+                                        '@atGround',
+                                        [
+                                          '-',
+                                          '@entity.worldHeight',
+                                          '@ph',
+                                        ],
+                                        '@py2',
+                                      ],
+                                    ],
+                                    [
+                                      'vy3',
+                                      [
+                                        'if',
+                                        '@atGround',
+                                        0,
+                                        '@vy2',
+                                      ],
+                                    ],
+                                    [
+                                      'grounded',
+                                      [
+                                        'or',
+                                        '@landed',
+                                        '@atGround',
+                                      ],
+                                    ],
+                                  ],
+                                  [
+                                    'let',
+                                    [
+                                      [
+                                        'fell',
+                                        [
+                                          '>',
+                                          '@py3',
+                                          '@entity.worldHeight',
+                                        ],
+                                      ],
+                                    ],
+                                    [
+                                      'let',
+                                      [
+                                        [
+                                          'damaged',
+                                          [
+                                            'or',
+                                            [
+                                              '!=',
+                                              '@hazardHit',
+                                              null,
+                                            ],
+                                            '@fell',
+                                          ],
+                                        ],
+                                      ],
+                                      [
+                                        'do',
+                                        [
+                                          'set',
+                                          '@entity.player',
+                                          [
+                                            'object/merge',
+                                            '@entity.player',
+                                            {
+                                              'grounded': '@grounded',
+                                              'vy': '@vy3',
+                                              'x': '@px1',
+                                              'y': '@py3',
+                                            },
+                                          ],
+                                        ],
+                                        [
+                                          'set',
+                                          '@entity.result',
+                                          [
+                                            'if',
+                                            [
+                                              '!=',
+                                              '@goalHit',
+                                              null,
+                                            ],
+                                            'won',
+                                            [
+                                              'if',
+                                              [
+                                                'and',
+                                                '@damaged',
+                                                [
+                                                  '<=',
+                                                  '@livesLeft',
+                                                  0,
+                                                ],
+                                              ],
+                                              'lost',
+                                              'none',
+                                            ],
+                                          ],
+                                        ],
+                                        [
+                                          'set',
+                                          '@entity.score',
+                                          [
+                                            'if',
+                                            [
+                                              '!=',
+                                              '@goalHit',
+                                              null,
+                                            ],
+                                            [
+                                              '+',
+                                              '@entity.score',
+                                              100,
+                                            ],
+                                            '@entity.score',
+                                          ],
+                                        ],
+                                        [
+                                          'set',
+                                          '@entity.lives',
+                                          [
+                                            'if',
+                                            [
+                                              'and',
+                                              '@damaged',
+                                              [
+                                                '>',
+                                                '@entity.lives',
+                                                0,
+                                              ],
+                                              [
+                                                '==',
+                                                '@entity.result',
+                                                'none',
+                                              ],
+                                            ],
+                                            '@livesLeft',
+                                            '@entity.lives',
+                                          ],
+                                        ],
+                                        [
+                                          'set',
+                                          '@entity.player',
+                                          [
+                                            'if',
+                                            [
+                                              'and',
+                                              '@damaged',
+                                              [
+                                                '==',
+                                                '@entity.result',
+                                                'none',
+                                              ],
+                                            ],
+                                            {
+                                              'animation': 'idle',
+                                              'facingRight': true,
+                                              'frame': 0,
+                                              'grounded': false,
+                                              'height': 48,
+                                              'vx': 0,
+                                              'vy': 0,
+                                              'width': 32,
+                                              'x': 80,
+                                              'y': 320,
+                                            },
+                                            '@entity.player',
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+            ],
+            'guard': [
+              '==',
+              '@entity.result',
+              'none',
+            ],
+            'interval': 33,
+            'name': 'gameflowTick',
+          },
           {
             'effects': [
               [
@@ -1698,11 +2544,38 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                 'render-ui',
                 'main',
                 {
+                  'backgroundAsset': {
+                    'animations': [],
+                    'aspect': '1:1',
+                    'category': 'ui',
+                    'dimension': '2d',
+                    'name': 'panel-frame',
+                    'role': 'ui',
+                    'style': 'pixel',
+                    'thumbnailUrl': '',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/panel-frame.png',
+                    'variant': '',
+                  },
                   'children': [
                     {
                       'backgroundImage': '@config.backgroundImage',
                       'bgColor': '@config.bgColor',
                       'camera': 'follow',
+                      'keyMap': {
+                        'ArrowLeft': 'LEFT',
+                        'ArrowRight': 'RIGHT',
+                        'ArrowUp': 'JUMP',
+                        'KeyA': 'LEFT',
+                        'KeyD': 'RIGHT',
+                        'KeyW': 'JUMP',
+                        'Space': 'JUMP',
+                      },
+                      'keyUpMap': {
+                        'ArrowLeft': 'STOP',
+                        'ArrowRight': 'STOP',
+                        'KeyA': 'STOP',
+                        'KeyD': 'STOP',
+                      },
                       'platforms': '@config.platforms',
                       'player': '@entity.player',
                       'playerSprite': '@config.playerSprite',
@@ -1722,10 +2595,34 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                       {
                         'stats': [
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'star',
+                              'role': 'ui',
+                              'style': 'pixel',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/star.png',
+                              'variant': '',
+                            },
                             'label': 'Score',
                             'value': '@entity.score',
                           },
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'coin',
+                              'role': 'ui',
+                              'style': 'pixel',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/coin.png',
+                              'variant': '',
+                            },
                             'label': 'Lives',
                             'value': '@entity.lives',
                           },
@@ -1733,15 +2630,82 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                         'type': 'game-hud',
                       },
                       {
-                        'downAction': 'STOP',
-                        'leftAction': 'LEFT',
-                        'rightAction': 'RIGHT',
-                        'type': 'd-pad',
-                        'upAction': 'JUMP',
+                        'directionAssets': {
+                          'down': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'key-down',
+                            'role': 'ui',
+                            'style': 'pixel',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-down.png',
+                            'variant': '',
+                          },
+                          'left': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'key-left',
+                            'role': 'ui',
+                            'style': 'pixel',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-left.png',
+                            'variant': '',
+                          },
+                          'right': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'key-right',
+                            'role': 'ui',
+                            'style': 'pixel',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-right.png',
+                            'variant': '',
+                          },
+                          'up': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'key-up',
+                            'role': 'ui',
+                            'style': 'pixel',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/key-up.png',
+                            'variant': '',
+                          },
+                        },
+                        'directionEvents': {
+                          'left': 'LEFT',
+                          'right': 'RIGHT',
+                          'up': 'JUMP',
+                        },
+                        'directionReleaseEvents': {
+                          'left': 'STOP',
+                          'right': 'STOP',
+                        },
+                        'kind': 'dpad',
+                        'type': 'control-grid',
                       },
                       {
                         'action': 'PLAY_AGAIN',
-                        'icon': 'refresh',
+                        'iconAsset': {
+                          'animations': [],
+                          'aspect': '1:1',
+                          'category': 'ui',
+                          'dimension': '2d',
+                          'name': 'icon-restart',
+                          'role': 'ui',
+                          'style': 'pixel',
+                          'thumbnailUrl': '',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/icon-restart.png',
+                          'variant': '',
+                        },
                         'label': 'Restart',
                         'type': 'button',
                         'variant': 'secondary',
@@ -1751,6 +2715,18 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     'gap': 'md',
                     'justify': 'between',
                     'type': 'stack',
+                  },
+                  'hudBackgroundAsset': {
+                    'animations': [],
+                    'aspect': '1:1',
+                    'category': 'ui',
+                    'dimension': '2d',
+                    'name': 'panel-frame',
+                    'role': 'ui',
+                    'style': 'pixel',
+                    'thumbnailUrl': '',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/ui/panel-frame.png',
+                    'variant': '',
                   },
                   'type': 'game-shell',
                 },

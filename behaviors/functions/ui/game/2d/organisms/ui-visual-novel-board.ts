@@ -36,7 +36,6 @@ export type StdUiVisualNovelBoardEventKey = 'ADVANCE' | 'CHOOSE' | 'INIT' | 'RES
  * Payload shape for the `CHOOSE` event.
  */
 export interface StdUiVisualNovelBoardChoosePayload {
-  choiceIndex: number;
   nextId: string;
 }
 
@@ -61,29 +60,27 @@ export interface StdUiVisualNovelBoardRestartPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiVisualNovelBoardConfig {
-  /** Default: `{"animations":["static"],"aspect":"16:9","category":"corridor","dimension":"2d","name":"corridor","role":"decoration","style":"","thumbnailUrl":"","url":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'%3E%3Crect width='100%25' height='100%25' fill='%231a1a2e'/%3E%3Cline x1='0' y1='450' x2='1600' y2='450' stroke='%23333355' stroke-width='2'/%3E%3C/svg%3E","variant":""}` */
-  backgroundImage?: EntityRow;
   /** Default: `""` */
   className?: string;
+  /** Default: `{"animations":["static"],"aspect":"16:9","category":"core","dimension":"2d","name":"core","role":"decoration","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/core.png","variant":""}` */
+  coreBg?: EntityRow;
+  /** Default: `{"animations":["static"],"aspect":"16:9","category":"corridor","dimension":"2d","name":"corridor","role":"decoration","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png","variant":""}` */
+  corridorBg?: EntityRow;
   error?: EntityRow;
+  /** Default: `{"animations":["static"],"aspect":"16:9","category":"forge","dimension":"2d","name":"forge","role":"decoration","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/forge.png","variant":""}` */
+  forgeBg?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"backgroundKey":"corridor","choices":[{"label":"Approach the sentinel.","nextId":"meet"},{"label":"Turn back.","nextId":"retreat"}],"id":"start","portraitKey":"guide","speaker":"Narrator","text":"The corridor stretches into shadow. A lone sentinel blocks your path."},{"backgroundKey":"forge","choices":[{"label":"I seek the core.","nextId":"end"},{"label":"I am only passing through.","nextId":"retreat"}],"id":"meet","portraitKey":"rival","speaker":"Sentinel","text":"You carry the old marks. Speak your purpose, traveler."},{"backgroundKey":"corridor","choices":[{"label":"Begin again.","nextId":"start"}],"id":"retreat","portraitKey":"guide","speaker":"Narrator","text":"You withdraw into the dark. The path will wait for braver feet."},{"backgroundKey":"core","choices":[{"label":"Begin again.","nextId":"start"}],"id":"end","portraitKey":"rival","speaker":"Sentinel","text":"Then the way is open. Walk it well."}]` */
   nodes?: EntityRow[];
   /** Default: `1` */
   portraitScale?: number;
-  /** Default: `{"url":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='400'%3E%3Crect width='100%25' height='100%25' fill='%23334' rx='8'/%3E%3Ccircle cx='100' cy='100' r='60' fill='%23556'/%3E%3Crect x='40' y='170' width='120' height='180' rx='10' fill='%23445'/%3E%3C/svg%3E","role":"npc","category":"guide","animations":["static"],"style":"","variant":"","dimension":"2d","aspect":"1:2","name":"guide","thumbnailUrl":""}` */
+  /** Default: `{"animations":["static"],"aspect":"1:2","category":"guide","dimension":"2d","name":"guide","role":"npc","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png","variant":""}` */
   portraitUrl?: EntityRow;
   /** Default: `"start"` */
   startNodeId?: string;
   /** Default: `30` */
   typewriterSpeed?: number;
-  /** Default: `{"url":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'%3E%3Crect width='100%25' height='100%25' fill='%231a1a2e'/%3E%3Cline x1='0' y1='450' x2='1600' y2='450' stroke='%23333355' stroke-width='2'/%3E%3C/svg%3E","role":"decoration","category":"corridor","animations":["static"],"style":"","variant":"","dimension":"2d","aspect":"16:9","name":"corridor","thumbnailUrl":""}` */
-  corridorBg?: EntityRow;
-  /** Default: `{"url":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'%3E%3Crect width='100%25' height='100%25' fill='%232e1a0a'/%3E%3Cline x1='0' y1='450' x2='1600' y2='450' stroke='%23553322' stroke-width='2'/%3E%3C/svg%3E","role":"decoration","category":"forge","animations":["static"],"style":"","variant":"","dimension":"2d","aspect":"16:9","name":"forge","thumbnailUrl":""}` */
-  forgeBg?: EntityRow;
-  /** Default: `{"url":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'%3E%3Crect width='100%25' height='100%25' fill='%230a1e2e'/%3E%3Cline x1='0' y1='450' x2='1600' y2='450' stroke='%23224455' stroke-width='2'/%3E%3C/svg%3E","role":"decoration","category":"core","animations":["static"],"style":"","variant":"","dimension":"2d","aspect":"16:9","name":"core","thumbnailUrl":""}` */
-  coreBg?: EntityRow;
 }
 
 /**
@@ -247,23 +244,30 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
       rebindInlineTraitEntity({
         'category': 'interaction',
         'config': {
-          'backgroundImage': {
+          'className': {
+            'default': '',
+            'description': 'className prop',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'coreBg': {
             'default': {
               'animations': [
                 'static',
               ],
               'aspect': '16:9',
-              'category': 'corridor',
+              'category': 'core',
               'dimension': '2d',
-              'name': 'corridor',
+              'name': 'core',
               'role': 'decoration',
-              'style': '',
+              'style': 'adventure',
               'thumbnailUrl': '',
-              'url': 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1600\' height=\'900\'%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'%231a1a2e\'/%3E%3Cline x1=\'0\' y1=\'450\' x2=\'1600\' y2=\'450\' stroke=\'%23333355\' stroke-width=\'2\'/%3E%3C/svg%3E',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/core.png',
               'variant': '',
             },
-            'description': 'Full-frame scene background rendered behind the dialogue box.',
-            'label': 'Background Image',
+            'description': 'Ancient core scene background (dark teal).',
+            'label': 'Core Background',
             'properties': {
               'animations': {
                 'items': {
@@ -322,12 +326,80 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
             'tier': 'presentation',
             'type': 'Asset',
           },
-          'className': {
-            'default': '',
-            'description': 'className prop',
-            'label': 'Class Name',
+          'corridorBg': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '16:9',
+              'category': 'corridor',
+              'dimension': '2d',
+              'name': 'corridor',
+              'role': 'decoration',
+              'style': 'adventure',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png',
+              'variant': '',
+            },
+            'description': 'Stone corridor scene background (dark blue-grey).',
+            'label': 'Corridor Background',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+              'variant': {
+                'name': 'variant',
+                'required': false,
+                'type': 'string',
+              },
+            },
             'tier': 'presentation',
-            'type': 'string',
+            'type': 'Asset',
           },
           'error': {
             'description': 'Error state (UiError)',
@@ -356,6 +428,81 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
             },
             'tier': 'presentation',
             'type': 'VisualNovelBoardError',
+          },
+          'forgeBg': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '16:9',
+              'category': 'forge',
+              'dimension': '2d',
+              'name': 'forge',
+              'role': 'decoration',
+              'style': 'adventure',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/forge.png',
+              'variant': '',
+            },
+            'description': 'Forge room scene background (dark orange-red).',
+            'label': 'Forge Background',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+              'variant': {
+                'name': 'variant',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
           },
           'isLoading': {
             'default': false,
@@ -491,18 +638,18 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
           },
           'portraitUrl': {
             'default': {
-              'url': 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'400\'%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'%23334\' rx=\'8\'/%3E%3Ccircle cx=\'100\' cy=\'100\' r=\'60\' fill=\'%23556\'/%3E%3Crect x=\'40\' y=\'170\' width=\'120\' height=\'180\' rx=\'10\' fill=\'%23445\'/%3E%3C/svg%3E',
-              'role': 'npc',
-              'category': 'guide',
               'animations': [
                 'static',
               ],
-              'style': '',
-              'variant': '',
-              'dimension': '2d',
               'aspect': '1:2',
+              'category': 'guide',
+              'dimension': '2d',
               'name': 'guide',
+              'role': 'npc',
+              'style': 'adventure',
               'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png',
+              'variant': '',
             },
             'description': 'Large character portrait rendered standing over the scene.',
             'label': 'Portrait Url',
@@ -578,77 +725,12 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
             'tier': 'presentation',
             'type': 'number',
           },
-          'corridorBg': {
-            'default': {
-              'url': 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1600\' height=\'900\'%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'%231a1a2e\'/%3E%3Cline x1=\'0\' y1=\'450\' x2=\'1600\' y2=\'450\' stroke=\'%23333355\' stroke-width=\'2\'/%3E%3C/svg%3E',
-              'role': 'decoration',
-              'category': 'corridor',
-              'animations': [
-                'static',
-              ],
-              'style': '',
-              'variant': '',
-              'dimension': '2d',
-              'aspect': '16:9',
-              'name': 'corridor',
-              'thumbnailUrl': '',
-            },
-            'description': 'Stone corridor scene background.',
-            'label': 'Corridor Background',
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'forgeBg': {
-            'default': {
-              'url': 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1600\' height=\'900\'%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'%232e1a0a\'/%3E%3Cline x1=\'0\' y1=\'450\' x2=\'1600\' y2=\'450\' stroke=\'%23553322\' stroke-width=\'2\'/%3E%3C/svg%3E',
-              'role': 'decoration',
-              'category': 'forge',
-              'animations': [
-                'static',
-              ],
-              'style': '',
-              'variant': '',
-              'dimension': '2d',
-              'aspect': '16:9',
-              'name': 'forge',
-              'thumbnailUrl': '',
-            },
-            'description': 'Forge room scene background.',
-            'label': 'Forge Background',
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
-          'coreBg': {
-            'default': {
-              'url': 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1600\' height=\'900\'%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'%230a1e2e\'/%3E%3Cline x1=\'0\' y1=\'450\' x2=\'1600\' y2=\'450\' stroke=\'%23224455\' stroke-width=\'2\'/%3E%3C/svg%3E',
-              'role': 'decoration',
-              'category': 'core',
-              'animations': [
-                'static',
-              ],
-              'style': '',
-              'variant': '',
-              'dimension': '2d',
-              'aspect': '16:9',
-              'name': 'core',
-              'thumbnailUrl': '',
-            },
-            'description': 'Ancient core scene background.',
-            'label': 'Core Background',
-            'tier': 'presentation',
-            'type': 'Asset',
-          },
         },
         'emits': [
           {
-            'description': 'Emits UI:{chooseEvent} with {choiceIndex} when the player selects a branching choice',
+            'description': 'Emits UI:{chooseEvent} with {nextId} when the player selects a branching choice',
             'event': 'CHOOSE',
             'payloadSchema': [
-              {
-                'name': 'choiceIndex',
-                'required': true,
-                'type': 'number',
-              },
               {
                 'name': 'nextId',
                 'required': true,
@@ -704,15 +786,10 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
               'name': 'Initialize',
             },
             {
-              'description': 'Emits UI:{chooseEvent} with {choiceIndex} when the player selects a branching choice',
+              'description': 'Emits UI:{chooseEvent} with {nextId} when the player selects a branching choice',
               'key': 'CHOOSE',
               'name': 'Choose',
               'payloadSchema': [
-                {
-                  'name': 'choiceIndex',
-                  'required': true,
-                  'type': 'number',
-                },
                 {
                   'name': 'nextId',
                   'required': true,
@@ -841,25 +918,88 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   'render-ui',
                   'main',
                   {
-                    'advanceEvent': 'ADVANCE',
-                    'assetManifest': {
-                      'backgrounds': {
-                        'corridor': '@config.corridorBg',
-                        'forge': '@config.forgeBg',
-                        'core': '@config.coreBg',
+                    'backgroundAsset': [
+                      'let',
+                      [
+                        [
+                          'bg',
+                          [
+                            'object/get',
+                            [
+                              'array/first',
+                              [
+                                'array/filter',
+                                '@entity.nodes',
+                                [
+                                  'fn',
+                                  'n',
+                                  [
+                                    '==',
+                                    '@n.id',
+                                    '@entity.currentNodeId',
+                                  ],
+                                ],
+                              ],
+                            ],
+                            'backgroundKey',
+                          ],
+                        ],
+                      ],
+                      [
+                        'if',
+                        [
+                          '==',
+                          '@bg',
+                          'forge',
+                        ],
+                        '@config.forgeBg',
+                        [
+                          'if',
+                          [
+                            '==',
+                            '@bg',
+                            'core',
+                          ],
+                          '@config.coreBg',
+                          '@config.corridorBg',
+                        ],
+                      ],
+                    ],
+                    'children': [
+                      {
+                        'portrait': '@config.portraitUrl',
+                        'speaker': '@entity.currentSpeaker',
+                        'text': '@entity.currentText',
+                        'type': 'dialogue-bubble',
                       },
-                      'portraits': {
-                        'guide': '@config.portraitUrl',
-                        'rival': '@config.portraitUrl',
+                      {
+                        'entity': '@entity.currentChoices',
+                        'fields': [],
+                        'gap': 'sm',
+                        'renderItem': [
+                          'fn',
+                          'c',
+                          {
+                            'action': 'CHOOSE',
+                            'payload': {
+                              'nextId': [
+                                'object/get',
+                                '@c',
+                                'nextId',
+                              ],
+                            },
+                            'text': [
+                              'object/get',
+                              '@c',
+                              'label',
+                            ],
+                            'type': 'choice-button',
+                          },
+                        ],
+                        'type': 'data-list',
                       },
-                    },
-                    'chooseEvent': 'CHOOSE',
-                    'currentNodeId': '@entity.currentNodeId',
-                    'nodes': '@entity.nodes',
-                    'portraitScale': '@config.portraitScale',
-                    'restartEvent': 'RESTART',
-                    'type': 'visual-novel-board',
-                    'typewriterSpeed': '@config.typewriterSpeed',
+                    ],
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -950,25 +1090,88 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   'render-ui',
                   'main',
                   {
-                    'advanceEvent': 'ADVANCE',
-                    'assetManifest': {
-                      'backgrounds': {
-                        'corridor': '@config.corridorBg',
-                        'forge': '@config.forgeBg',
-                        'core': '@config.coreBg',
+                    'backgroundAsset': [
+                      'let',
+                      [
+                        [
+                          'bg',
+                          [
+                            'object/get',
+                            [
+                              'array/first',
+                              [
+                                'array/filter',
+                                '@entity.nodes',
+                                [
+                                  'fn',
+                                  'n',
+                                  [
+                                    '==',
+                                    '@n.id',
+                                    '@entity.currentNodeId',
+                                  ],
+                                ],
+                              ],
+                            ],
+                            'backgroundKey',
+                          ],
+                        ],
+                      ],
+                      [
+                        'if',
+                        [
+                          '==',
+                          '@bg',
+                          'forge',
+                        ],
+                        '@config.forgeBg',
+                        [
+                          'if',
+                          [
+                            '==',
+                            '@bg',
+                            'core',
+                          ],
+                          '@config.coreBg',
+                          '@config.corridorBg',
+                        ],
+                      ],
+                    ],
+                    'children': [
+                      {
+                        'portrait': '@config.portraitUrl',
+                        'speaker': '@entity.currentSpeaker',
+                        'text': '@entity.currentText',
+                        'type': 'dialogue-bubble',
                       },
-                      'portraits': {
-                        'guide': '@config.portraitUrl',
-                        'rival': '@config.portraitUrl',
+                      {
+                        'entity': '@entity.currentChoices',
+                        'fields': [],
+                        'gap': 'sm',
+                        'renderItem': [
+                          'fn',
+                          'c',
+                          {
+                            'action': 'CHOOSE',
+                            'payload': {
+                              'nextId': [
+                                'object/get',
+                                '@c',
+                                'nextId',
+                              ],
+                            },
+                            'text': [
+                              'object/get',
+                              '@c',
+                              'label',
+                            ],
+                            'type': 'choice-button',
+                          },
+                        ],
+                        'type': 'data-list',
                       },
-                    },
-                    'chooseEvent': 'CHOOSE',
-                    'currentNodeId': '@entity.currentNodeId',
-                    'nodes': '@entity.nodes',
-                    'portraitScale': '@config.portraitScale',
-                    'restartEvent': 'RESTART',
-                    'type': 'visual-novel-board',
-                    'typewriterSpeed': '@config.typewriterSpeed',
+                    ],
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -982,25 +1185,88 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   'render-ui',
                   'main',
                   {
-                    'advanceEvent': 'ADVANCE',
-                    'assetManifest': {
-                      'backgrounds': {
-                        'corridor': '@config.corridorBg',
-                        'forge': '@config.forgeBg',
-                        'core': '@config.coreBg',
+                    'backgroundAsset': [
+                      'let',
+                      [
+                        [
+                          'bg',
+                          [
+                            'object/get',
+                            [
+                              'array/first',
+                              [
+                                'array/filter',
+                                '@entity.nodes',
+                                [
+                                  'fn',
+                                  'n',
+                                  [
+                                    '==',
+                                    '@n.id',
+                                    '@entity.currentNodeId',
+                                  ],
+                                ],
+                              ],
+                            ],
+                            'backgroundKey',
+                          ],
+                        ],
+                      ],
+                      [
+                        'if',
+                        [
+                          '==',
+                          '@bg',
+                          'forge',
+                        ],
+                        '@config.forgeBg',
+                        [
+                          'if',
+                          [
+                            '==',
+                            '@bg',
+                            'core',
+                          ],
+                          '@config.coreBg',
+                          '@config.corridorBg',
+                        ],
+                      ],
+                    ],
+                    'children': [
+                      {
+                        'portrait': '@config.portraitUrl',
+                        'speaker': '@entity.currentSpeaker',
+                        'text': '@entity.currentText',
+                        'type': 'dialogue-bubble',
                       },
-                      'portraits': {
-                        'guide': '@config.portraitUrl',
-                        'rival': '@config.portraitUrl',
+                      {
+                        'entity': '@entity.currentChoices',
+                        'fields': [],
+                        'gap': 'sm',
+                        'renderItem': [
+                          'fn',
+                          'c',
+                          {
+                            'action': 'CHOOSE',
+                            'payload': {
+                              'nextId': [
+                                'object/get',
+                                '@c',
+                                'nextId',
+                              ],
+                            },
+                            'text': [
+                              'object/get',
+                              '@c',
+                              'label',
+                            ],
+                            'type': 'choice-button',
+                          },
+                        ],
+                        'type': 'data-list',
                       },
-                    },
-                    'chooseEvent': 'CHOOSE',
-                    'currentNodeId': '@entity.currentNodeId',
-                    'nodes': '@entity.nodes',
-                    'portraitScale': '@config.portraitScale',
-                    'restartEvent': 'RESTART',
-                    'type': 'visual-novel-board',
-                    'typewriterSpeed': '@config.typewriterSpeed',
+                    ],
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1091,25 +1357,88 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   'render-ui',
                   'main',
                   {
-                    'advanceEvent': 'ADVANCE',
-                    'assetManifest': {
-                      'backgrounds': {
-                        'corridor': '@config.corridorBg',
-                        'forge': '@config.forgeBg',
-                        'core': '@config.coreBg',
+                    'backgroundAsset': [
+                      'let',
+                      [
+                        [
+                          'bg',
+                          [
+                            'object/get',
+                            [
+                              'array/first',
+                              [
+                                'array/filter',
+                                '@entity.nodes',
+                                [
+                                  'fn',
+                                  'n',
+                                  [
+                                    '==',
+                                    '@n.id',
+                                    '@entity.currentNodeId',
+                                  ],
+                                ],
+                              ],
+                            ],
+                            'backgroundKey',
+                          ],
+                        ],
+                      ],
+                      [
+                        'if',
+                        [
+                          '==',
+                          '@bg',
+                          'forge',
+                        ],
+                        '@config.forgeBg',
+                        [
+                          'if',
+                          [
+                            '==',
+                            '@bg',
+                            'core',
+                          ],
+                          '@config.coreBg',
+                          '@config.corridorBg',
+                        ],
+                      ],
+                    ],
+                    'children': [
+                      {
+                        'portrait': '@config.portraitUrl',
+                        'speaker': '@entity.currentSpeaker',
+                        'text': '@entity.currentText',
+                        'type': 'dialogue-bubble',
                       },
-                      'portraits': {
-                        'guide': '@config.portraitUrl',
-                        'rival': '@config.portraitUrl',
+                      {
+                        'entity': '@entity.currentChoices',
+                        'fields': [],
+                        'gap': 'sm',
+                        'renderItem': [
+                          'fn',
+                          'c',
+                          {
+                            'action': 'CHOOSE',
+                            'payload': {
+                              'nextId': [
+                                'object/get',
+                                '@c',
+                                'nextId',
+                              ],
+                            },
+                            'text': [
+                              'object/get',
+                              '@c',
+                              'label',
+                            ],
+                            'type': 'choice-button',
+                          },
+                        ],
+                        'type': 'data-list',
                       },
-                    },
-                    'chooseEvent': 'CHOOSE',
-                    'currentNodeId': '@entity.currentNodeId',
-                    'nodes': '@entity.nodes',
-                    'portraitScale': '@config.portraitScale',
-                    'restartEvent': 'RESTART',
-                    'type': 'visual-novel-board',
-                    'typewriterSpeed': '@config.typewriterSpeed',
+                    ],
+                    'type': 'game-shell',
                   },
                 ],
               ],

@@ -2153,6 +2153,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
@@ -2175,10 +2187,34 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-coin',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-coin.png',
+                                'variant': '',
+                              },
                               'label': 'Round',
                               'value': '@entity.turn',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-health',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-health.png',
+                                'variant': '',
+                              },
                               'label': 'Allies',
                               'value': [
                                 'array/len',
@@ -2214,6 +2250,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                               ],
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-star',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-star.png',
+                                'variant': '',
+                              },
                               'label': 'Enemies',
                               'value': [
                                 'array/len',
@@ -2291,6 +2339,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -2346,6 +2406,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
@@ -2368,10 +2440,34 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-coin',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-coin.png',
+                                'variant': '',
+                              },
                               'label': 'Round',
                               'value': '@entity.turn',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-health',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-health.png',
+                                'variant': '',
+                              },
                               'label': 'Allies',
                               'value': [
                                 'array/len',
@@ -2407,6 +2503,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                               ],
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-star',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-star.png',
+                                'variant': '',
+                              },
                               'label': 'Enemies',
                               'value': [
                                 'array/len',
@@ -2449,6 +2557,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -2494,6 +2614,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
@@ -2516,10 +2648,34 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-coin',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-coin.png',
+                                'variant': '',
+                              },
                               'label': 'Round',
                               'value': '@entity.turn',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-health',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-health.png',
+                                'variant': '',
+                              },
                               'label': 'Allies',
                               'value': [
                                 'array/len',
@@ -2555,6 +2711,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                               ],
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-star',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-star.png',
+                                'variant': '',
+                              },
                               'label': 'Enemies',
                               'value': [
                                 'array/len',
@@ -2598,6 +2766,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'justify': 'between',
                       'type': 'stack',
                     },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'type': 'game-shell',
                   },
                 ],
@@ -2617,6 +2797,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
@@ -2639,10 +2831,34 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-coin',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-coin.png',
+                                'variant': '',
+                              },
                               'label': 'Round',
                               'value': '@entity.turn',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-health',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-health.png',
+                                'variant': '',
+                              },
                               'label': 'Allies',
                               'value': [
                                 'array/len',
@@ -2678,6 +2894,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                               ],
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-star',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-star.png',
+                                'variant': '',
+                              },
                               'label': 'Enemies',
                               'value': [
                                 'array/len',
@@ -2755,6 +2983,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -2811,6 +3051,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
@@ -2833,10 +3085,34 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-coin',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-coin.png',
+                                'variant': '',
+                              },
                               'label': 'Round',
                               'value': '@entity.turn',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-health',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-health.png',
+                                'variant': '',
+                              },
                               'label': 'Allies',
                               'value': [
                                 'array/len',
@@ -2872,6 +3148,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                               ],
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-star',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-star.png',
+                                'variant': '',
+                              },
                               'label': 'Enemies',
                               'value': [
                                 'array/len',
@@ -2949,6 +3237,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -3247,6 +3547,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
@@ -3269,10 +3581,34 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-coin',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-coin.png',
+                                'variant': '',
+                              },
                               'label': 'Round',
                               'value': '@entity.turn',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-health',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-health.png',
+                                'variant': '',
+                              },
                               'label': 'Allies',
                               'value': [
                                 'array/len',
@@ -3308,6 +3644,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                               ],
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-star',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-star.png',
+                                'variant': '',
+                              },
                               'label': 'Enemies',
                               'value': [
                                 'array/len',
@@ -3386,6 +3734,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'justify': 'between',
                       'type': 'stack',
                     },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'type': 'game-shell',
                   },
                 ],
@@ -3420,6 +3780,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
@@ -3442,10 +3814,34 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-coin',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-coin.png',
+                                'variant': '',
+                              },
                               'label': 'Round',
                               'value': '@entity.turn',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-health',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-health.png',
+                                'variant': '',
+                              },
                               'label': 'Allies',
                               'value': [
                                 'array/len',
@@ -3481,6 +3877,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                               ],
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-star',
+                                'role': 'ui',
+                                'style': 'adventure',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-star.png',
+                                'variant': '',
+                              },
                               'label': 'Enemies',
                               'value': [
                                 'array/len',
@@ -3520,7 +3928,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         },
                         {
                           'action': 'PLAY_AGAIN',
-                          'icon': 'refresh',
+                          'iconAsset': {
+                            'animations': [],
+                            'aspect': '1:1',
+                            'category': 'ui',
+                            'dimension': '2d',
+                            'name': 'icon-restart',
+                            'role': 'ui',
+                            'style': 'adventure',
+                            'thumbnailUrl': '',
+                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-restart.png',
+                            'variant': '',
+                          },
                           'label': 'Play Again',
                           'type': 'button',
                           'variant': 'primary',
@@ -3530,6 +3949,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -3548,6 +3979,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                 'render-ui',
                 'main',
                 {
+                  'backgroundAsset': {
+                    'animations': [],
+                    'aspect': '1:1',
+                    'category': 'ui',
+                    'dimension': '2d',
+                    'name': 'panel-frame',
+                    'role': 'ui',
+                    'style': 'adventure',
+                    'thumbnailUrl': '',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                    'variant': '',
+                  },
                   'children': [
                     {
                       'assetManifest': '@config.assetManifest',
@@ -3570,10 +4013,34 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       {
                         'stats': [
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'icon-coin',
+                              'role': 'ui',
+                              'style': 'adventure',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-coin.png',
+                              'variant': '',
+                            },
                             'label': 'Round',
                             'value': '@entity.turn',
                           },
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'icon-health',
+                              'role': 'ui',
+                              'style': 'adventure',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-health.png',
+                              'variant': '',
+                            },
                             'label': 'Allies',
                             'value': [
                               'array/len',
@@ -3609,6 +4076,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                             ],
                           },
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'icon-star',
+                              'role': 'ui',
+                              'style': 'adventure',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-star.png',
+                              'variant': '',
+                            },
                             'label': 'Enemies',
                             'value': [
                               'array/len',
@@ -3686,6 +4165,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'gap': 'md',
                     'justify': 'between',
                     'type': 'stack',
+                  },
+                  'hudBackgroundAsset': {
+                    'animations': [],
+                    'aspect': '1:1',
+                    'category': 'ui',
+                    'dimension': '2d',
+                    'name': 'panel-frame',
+                    'role': 'ui',
+                    'style': 'adventure',
+                    'thumbnailUrl': '',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                    'variant': '',
                   },
                   'type': 'game-shell',
                 },
@@ -4521,6 +5012,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                 'render-ui',
                 'main',
                 {
+                  'backgroundAsset': {
+                    'animations': [],
+                    'aspect': '1:1',
+                    'category': 'ui',
+                    'dimension': '2d',
+                    'name': 'panel-frame',
+                    'role': 'ui',
+                    'style': 'adventure',
+                    'thumbnailUrl': '',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                    'variant': '',
+                  },
                   'children': [
                     {
                       'assetManifest': '@config.assetManifest',
@@ -4543,10 +5046,34 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       {
                         'stats': [
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'icon-coin',
+                              'role': 'ui',
+                              'style': 'adventure',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-coin.png',
+                              'variant': '',
+                            },
                             'label': 'Round',
                             'value': '@entity.turn',
                           },
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'icon-health',
+                              'role': 'ui',
+                              'style': 'adventure',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-health.png',
+                              'variant': '',
+                            },
                             'label': 'Allies',
                             'value': [
                               'array/len',
@@ -4582,6 +5109,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                             ],
                           },
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'icon-star',
+                              'role': 'ui',
+                              'style': 'adventure',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-star.png',
+                              'variant': '',
+                            },
                             'label': 'Enemies',
                             'value': [
                               'array/len',
@@ -4617,6 +5156,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                             ],
                           },
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'btn-round',
+                              'role': 'ui',
+                              'style': 'adventure',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/btn-round.png',
+                              'variant': '',
+                            },
                             'label': 'Turns Played',
                             'value': '@entity.turn',
                           },
@@ -4625,7 +5176,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       },
                       {
                         'action': 'PLAY_AGAIN',
-                        'icon': 'refresh',
+                        'iconAsset': {
+                          'animations': [],
+                          'aspect': '1:1',
+                          'category': 'ui',
+                          'dimension': '2d',
+                          'name': 'icon-restart',
+                          'role': 'ui',
+                          'style': 'adventure',
+                          'thumbnailUrl': '',
+                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/icon-restart.png',
+                          'variant': '',
+                        },
                         'label': 'Play Again',
                         'type': 'button',
                         'variant': 'secondary',
@@ -4635,6 +5197,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     'gap': 'md',
                     'justify': 'between',
                     'type': 'stack',
+                  },
+                  'hudBackgroundAsset': {
+                    'animations': [],
+                    'aspect': '1:1',
+                    'category': 'ui',
+                    'dimension': '2d',
+                    'name': 'panel-frame',
+                    'role': 'ui',
+                    'style': 'adventure',
+                    'thumbnailUrl': '',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/ui/panel-frame.png',
+                    'variant': '',
                   },
                   'type': 'game-shell',
                 },

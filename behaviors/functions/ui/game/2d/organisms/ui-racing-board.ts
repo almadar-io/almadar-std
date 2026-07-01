@@ -30,7 +30,7 @@ const ALIAS = 'UiRacingBoard';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiRacingBoardEventKey = 'INIT' | 'LAP_COMPLETE' | 'MOVE' | 'PLAY_AGAIN' | 'POSITION_UPDATE' | 'RACE_END' | 'START' | 'TILE_CLICK' | 'UNIT_CLICK';
+export type StdUiRacingBoardEventKey = 'INIT' | 'LAP_COMPLETE' | 'MOVE' | 'MOVE_DOWN' | 'MOVE_LEFT' | 'MOVE_RIGHT' | 'MOVE_UP' | 'PLAY_AGAIN' | 'POSITION_UPDATE' | 'RACE_END' | 'START' | 'TILE_CLICK' | 'UNIT_CLICK';
 
 /**
  * Payload shape for the `TILE_CLICK` event.
@@ -54,6 +54,34 @@ export interface StdUiRacingBoardMovePayload {
   unitId: string;
   x: number;
   y: number;
+}
+
+/**
+ * Payload shape for the `MOVE_LEFT` event.
+ */
+export interface StdUiRacingBoardMoveLeftPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `MOVE_RIGHT` event.
+ */
+export interface StdUiRacingBoardMoveRightPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `MOVE_UP` event.
+ */
+export interface StdUiRacingBoardMoveUpPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `MOVE_DOWN` event.
+ */
+export interface StdUiRacingBoardMoveDownPayload {
+  id?: string;
 }
 
 /**
@@ -2959,7 +2987,7 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
             'tier': 'domain',
           },
           {
-            'description': 'Emitted when a car moves to a new tile',
+            'description': 'Emitted when a car moves to a new tile (click-to-move)',
             'event': 'MOVE',
             'payloadSchema': [
               {
@@ -2976,6 +3004,54 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                 'name': 'y',
                 'required': true,
                 'type': 'number',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Steer-left intent (keyboard keyMap)',
+            'event': 'MOVE_LEFT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Steer-right intent (keyboard keyMap)',
+            'event': 'MOVE_RIGHT',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Accelerate/up intent (keyboard keyMap)',
+            'event': 'MOVE_UP',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'domain',
+          },
+          {
+            'description': 'Brake/down intent (keyboard keyMap)',
+            'event': 'MOVE_DOWN',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
               },
             ],
             'scope': 'external',
@@ -3060,7 +3136,7 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
               'name': 'Initialize',
             },
             {
-              'description': 'Emitted when a car moves to a new tile',
+              'description': 'Emitted when a car moves to a new tile (click-to-move)',
               'key': 'MOVE',
               'name': 'Move',
               'payloadSchema': [
@@ -3078,6 +3154,54 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                   'name': 'y',
                   'required': true,
                   'type': 'number',
+                },
+              ],
+              'tier': 'domain',
+            },
+            {
+              'description': 'Steer-left intent (keyboard keyMap)',
+              'key': 'MOVE_LEFT',
+              'name': 'Move Left',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'tier': 'domain',
+            },
+            {
+              'description': 'Steer-right intent (keyboard keyMap)',
+              'key': 'MOVE_RIGHT',
+              'name': 'Move Right',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'tier': 'domain',
+            },
+            {
+              'description': 'Accelerate/up intent (keyboard keyMap)',
+              'key': 'MOVE_UP',
+              'name': 'Move Up',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'tier': 'domain',
+            },
+            {
+              'description': 'Brake/down intent (keyboard keyMap)',
+              'key': 'MOVE_DOWN',
+              'name': 'Move Down',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
                 },
               ],
               'tier': 'domain',
@@ -3223,11 +3347,33 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                        },
                         'projection': 'flat',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -3245,10 +3391,34 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lap',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-lap.png',
+                                'variant': '',
+                              },
                               'label': 'Lap',
                               'value': '@entity.lap',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-position',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-position.png',
+                                'variant': '',
+                              },
                               'label': 'Position',
                               'value': '@entity.position',
                             },
@@ -3261,23 +3431,37 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                           'type': 'score-display',
                         },
                         {
-                          'actions': [
+                          'actionEvent': 'GRID_ACTION',
+                          'buttons': [
                             {
-                              'action': 'MOVE',
+                              'id': 'MOVE',
                               'label': 'Move',
                             },
                             {
-                              'action': 'LAP_COMPLETE',
+                              'id': 'LAP_COMPLETE',
                               'label': 'Lap',
                             },
                           ],
-                          'type': 'action-buttons',
+                          'kind': 'actions',
+                          'type': 'control-grid',
                         },
                       ],
                       'direction': 'horizontal',
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -3333,11 +3517,33 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                        },
                         'projection': 'flat',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -3355,10 +3561,34 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lap',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-lap.png',
+                                'variant': '',
+                              },
                               'label': 'Lap',
                               'value': '@entity.lap',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-position',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-position.png',
+                                'variant': '',
+                              },
                               'label': 'Position',
                               'value': '@entity.position',
                             },
@@ -3371,23 +3601,37 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                           'type': 'score-display',
                         },
                         {
-                          'actions': [
+                          'actionEvent': 'GRID_ACTION',
+                          'buttons': [
                             {
-                              'action': 'MOVE',
+                              'id': 'MOVE',
                               'label': 'Move',
                             },
                             {
-                              'action': 'LAP_COMPLETE',
+                              'id': 'LAP_COMPLETE',
                               'label': 'Lap',
                             },
                           ],
-                          'type': 'action-buttons',
+                          'kind': 'actions',
+                          'type': 'control-grid',
                         },
                       ],
                       'direction': 'horizontal',
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -3450,11 +3694,33 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                        },
                         'projection': 'flat',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -3472,10 +3738,34 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lap',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-lap.png',
+                                'variant': '',
+                              },
                               'label': 'Lap',
                               'value': '@entity.lap',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-position',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-position.png',
+                                'variant': '',
+                              },
                               'label': 'Position',
                               'value': '@entity.position',
                             },
@@ -3488,17 +3778,19 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                           'type': 'score-display',
                         },
                         {
-                          'actions': [
+                          'actionEvent': 'GRID_ACTION',
+                          'buttons': [
                             {
-                              'action': 'MOVE',
+                              'id': 'MOVE',
                               'label': 'Move',
                             },
                             {
-                              'action': 'LAP_COMPLETE',
+                              'id': 'LAP_COMPLETE',
                               'label': 'Lap',
                             },
                           ],
-                          'type': 'action-buttons',
+                          'kind': 'actions',
+                          'type': 'control-grid',
                         },
                       ],
                       'direction': 'horizontal',
@@ -3506,11 +3798,227 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                       'justify': 'between',
                       'type': 'stack',
                     },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'type': 'game-shell',
                   },
                 ],
               ],
               'event': 'MOVE',
+              'from': 'racing',
+              'guard': [
+                '==',
+                '@entity.result',
+                'none',
+              ],
+              'to': 'racing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.units',
+                  [
+                    'array/map',
+                    '@entity.units',
+                    [
+                      'fn',
+                      'u',
+                      [
+                        'if',
+                        [
+                          '==',
+                          '@u.team',
+                          'player',
+                        ],
+                        [
+                          'object/merge',
+                          '@u',
+                          {
+                            'animation': 'walk',
+                            'position': {
+                              'x': [
+                                'math/max',
+                                0,
+                                [
+                                  '-',
+                                  '@u.position.x',
+                                  1,
+                                ],
+                              ],
+                              'y': '@u.position.y',
+                            },
+                            'previousPosition': '@u.position',
+                          },
+                        ],
+                        '@u',
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'MOVE_LEFT',
+              'from': 'racing',
+              'guard': [
+                '==',
+                '@entity.result',
+                'none',
+              ],
+              'to': 'racing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.units',
+                  [
+                    'array/map',
+                    '@entity.units',
+                    [
+                      'fn',
+                      'u',
+                      [
+                        'if',
+                        [
+                          '==',
+                          '@u.team',
+                          'player',
+                        ],
+                        [
+                          'object/merge',
+                          '@u',
+                          {
+                            'animation': 'walk',
+                            'position': {
+                              'x': [
+                                '+',
+                                '@u.position.x',
+                                1,
+                              ],
+                              'y': '@u.position.y',
+                            },
+                            'previousPosition': '@u.position',
+                          },
+                        ],
+                        '@u',
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'MOVE_RIGHT',
+              'from': 'racing',
+              'guard': [
+                '==',
+                '@entity.result',
+                'none',
+              ],
+              'to': 'racing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.units',
+                  [
+                    'array/map',
+                    '@entity.units',
+                    [
+                      'fn',
+                      'u',
+                      [
+                        'if',
+                        [
+                          '==',
+                          '@u.team',
+                          'player',
+                        ],
+                        [
+                          'object/merge',
+                          '@u',
+                          {
+                            'animation': 'walk',
+                            'position': {
+                              'x': '@u.position.x',
+                              'y': [
+                                'math/max',
+                                0,
+                                [
+                                  '-',
+                                  '@u.position.y',
+                                  1,
+                                ],
+                              ],
+                            },
+                            'previousPosition': '@u.position',
+                          },
+                        ],
+                        '@u',
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'MOVE_UP',
+              'from': 'racing',
+              'guard': [
+                '==',
+                '@entity.result',
+                'none',
+              ],
+              'to': 'racing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.units',
+                  [
+                    'array/map',
+                    '@entity.units',
+                    [
+                      'fn',
+                      'u',
+                      [
+                        'if',
+                        [
+                          '==',
+                          '@u.team',
+                          'player',
+                        ],
+                        [
+                          'object/merge',
+                          '@u',
+                          {
+                            'animation': 'walk',
+                            'position': {
+                              'x': '@u.position.x',
+                              'y': [
+                                '+',
+                                '@u.position.y',
+                                1,
+                              ],
+                            },
+                            'previousPosition': '@u.position',
+                          },
+                        ],
+                        '@u',
+                      ],
+                    ],
+                  ],
+                ],
+              ],
+              'event': 'MOVE_DOWN',
               'from': 'racing',
               'guard': [
                 '==',
@@ -3534,11 +4042,33 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                        },
                         'projection': 'flat',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -3556,10 +4086,34 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lap',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-lap.png',
+                                'variant': '',
+                              },
                               'label': 'Lap',
                               'value': '@entity.lap',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-position',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-position.png',
+                                'variant': '',
+                              },
                               'label': 'Position',
                               'value': '@entity.position',
                             },
@@ -3572,23 +4126,37 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                           'type': 'score-display',
                         },
                         {
-                          'actions': [
+                          'actionEvent': 'GRID_ACTION',
+                          'buttons': [
                             {
-                              'action': 'MOVE',
+                              'id': 'MOVE',
                               'label': 'Move',
                             },
                             {
-                              'action': 'LAP_COMPLETE',
+                              'id': 'LAP_COMPLETE',
                               'label': 'Lap',
                             },
                           ],
-                          'type': 'action-buttons',
+                          'kind': 'actions',
+                          'type': 'control-grid',
                         },
                       ],
                       'direction': 'horizontal',
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -3614,11 +4182,33 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                        },
                         'projection': 'flat',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -3636,10 +4226,34 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lap',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-lap.png',
+                                'variant': '',
+                              },
                               'label': 'Lap',
                               'value': '@entity.lap',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-position',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-position.png',
+                                'variant': '',
+                              },
                               'label': 'Position',
                               'value': '@entity.position',
                             },
@@ -3652,23 +4266,37 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                           'type': 'score-display',
                         },
                         {
-                          'actions': [
+                          'actionEvent': 'GRID_ACTION',
+                          'buttons': [
                             {
-                              'action': 'MOVE',
+                              'id': 'MOVE',
                               'label': 'Move',
                             },
                             {
-                              'action': 'LAP_COMPLETE',
+                              'id': 'LAP_COMPLETE',
                               'label': 'Lap',
                             },
                           ],
-                          'type': 'action-buttons',
+                          'kind': 'actions',
+                          'type': 'control-grid',
                         },
                       ],
                       'direction': 'horizontal',
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -3708,11 +4336,33 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                        },
                         'projection': 'flat',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -3730,10 +4380,34 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lap',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-lap.png',
+                                'variant': '',
+                              },
                               'label': 'Lap',
                               'value': '@entity.lap',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-position',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-position.png',
+                                'variant': '',
+                              },
                               'label': 'Position',
                               'value': '@entity.position',
                             },
@@ -3746,23 +4420,37 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                           'type': 'score-display',
                         },
                         {
-                          'actions': [
+                          'actionEvent': 'GRID_ACTION',
+                          'buttons': [
                             {
-                              'action': 'MOVE',
+                              'id': 'MOVE',
                               'label': 'Move',
                             },
                             {
-                              'action': 'LAP_COMPLETE',
+                              'id': 'LAP_COMPLETE',
                               'label': 'Lap',
                             },
                           ],
-                          'type': 'action-buttons',
+                          'kind': 'actions',
+                          'type': 'control-grid',
                         },
                       ],
                       'direction': 'horizontal',
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -3801,11 +4489,33 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                        },
                         'projection': 'flat',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -3823,10 +4533,34 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lap',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-lap.png',
+                                'variant': '',
+                              },
                               'label': 'Lap',
                               'value': '@entity.lap',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-position',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-position.png',
+                                'variant': '',
+                              },
                               'label': 'Position',
                               'value': '@entity.position',
                             },
@@ -3839,23 +4573,37 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                           'type': 'score-display',
                         },
                         {
-                          'actions': [
+                          'actionEvent': 'GRID_ACTION',
+                          'buttons': [
                             {
-                              'action': 'MOVE',
+                              'id': 'MOVE',
                               'label': 'Move',
                             },
                             {
-                              'action': 'LAP_COMPLETE',
+                              'id': 'LAP_COMPLETE',
                               'label': 'Lap',
                             },
                           ],
-                          'type': 'action-buttons',
+                          'kind': 'actions',
+                          'type': 'control-grid',
                         },
                       ],
                       'direction': 'horizontal',
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -3881,11 +4629,33 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                        },
                         'projection': 'flat',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -3903,10 +4673,34 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lap',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-lap.png',
+                                'variant': '',
+                              },
                               'label': 'Lap',
                               'value': '@entity.lap',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-position',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-position.png',
+                                'variant': '',
+                              },
                               'label': 'Position',
                               'value': '@entity.position',
                             },
@@ -3919,23 +4713,37 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                           'type': 'score-display',
                         },
                         {
-                          'actions': [
+                          'actionEvent': 'GRID_ACTION',
+                          'buttons': [
                             {
-                              'action': 'MOVE',
+                              'id': 'MOVE',
                               'label': 'Move',
                             },
                             {
-                              'action': 'LAP_COMPLETE',
+                              'id': 'LAP_COMPLETE',
                               'label': 'Lap',
                             },
                           ],
-                          'type': 'action-buttons',
+                          'kind': 'actions',
+                          'type': 'control-grid',
                         },
                       ],
                       'direction': 'horizontal',
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -3991,11 +4799,33 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                   'render-ui',
                   'main',
                   {
+                    'backgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
+                    },
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'keyMap': {
+                          'ArrowDown': 'MOVE_DOWN',
+                          'ArrowLeft': 'MOVE_LEFT',
+                          'ArrowRight': 'MOVE_RIGHT',
+                          'ArrowUp': 'MOVE_UP',
+                          'KeyA': 'MOVE_LEFT',
+                          'KeyD': 'MOVE_RIGHT',
+                          'KeyS': 'MOVE_DOWN',
+                          'KeyW': 'MOVE_UP',
+                        },
                         'projection': 'flat',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -4013,10 +4843,34 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                         {
                           'stats': [
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-lap',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-lap.png',
+                                'variant': '',
+                              },
                               'label': 'Lap',
                               'value': '@entity.lap',
                             },
                             {
+                              'iconUrl': {
+                                'animations': [],
+                                'aspect': '1:1',
+                                'category': 'ui',
+                                'dimension': '2d',
+                                'name': 'icon-position',
+                                'role': 'ui',
+                                'style': 'sci-fi',
+                                'thumbnailUrl': '',
+                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-position.png',
+                                'variant': '',
+                              },
                               'label': 'Position',
                               'value': '@entity.position',
                             },
@@ -4029,23 +4883,37 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                           'type': 'score-display',
                         },
                         {
-                          'actions': [
+                          'actionEvent': 'GRID_ACTION',
+                          'buttons': [
                             {
-                              'action': 'MOVE',
+                              'id': 'MOVE',
                               'label': 'Move',
                             },
                             {
-                              'action': 'LAP_COMPLETE',
+                              'id': 'LAP_COMPLETE',
                               'label': 'Lap',
                             },
                           ],
-                          'type': 'action-buttons',
+                          'kind': 'actions',
+                          'type': 'control-grid',
                         },
                       ],
                       'direction': 'horizontal',
                       'gap': 'md',
                       'justify': 'between',
                       'type': 'stack',
+                    },
+                    'hudBackgroundAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'panel-frame',
+                      'role': 'ui',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                      'variant': '',
                     },
                     'type': 'game-shell',
                   },
@@ -4064,11 +4932,33 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                 'render-ui',
                 'main',
                 {
+                  'backgroundAsset': {
+                    'animations': [],
+                    'aspect': '1:1',
+                    'category': 'ui',
+                    'dimension': '2d',
+                    'name': 'panel-frame',
+                    'role': 'ui',
+                    'style': 'sci-fi',
+                    'thumbnailUrl': '',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                    'variant': '',
+                  },
                   'children': [
                     {
                       'assetManifest': '@config.assetManifest',
                       'effects': '@entity.effects',
                       'features': '@config.features',
+                      'keyMap': {
+                        'ArrowDown': 'MOVE_DOWN',
+                        'ArrowLeft': 'MOVE_LEFT',
+                        'ArrowRight': 'MOVE_RIGHT',
+                        'ArrowUp': 'MOVE_UP',
+                        'KeyA': 'MOVE_LEFT',
+                        'KeyD': 'MOVE_RIGHT',
+                        'KeyS': 'MOVE_DOWN',
+                        'KeyW': 'MOVE_UP',
+                      },
                       'projection': 'flat',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
@@ -4086,10 +4976,34 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                       {
                         'stats': [
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'icon-lap',
+                              'role': 'ui',
+                              'style': 'sci-fi',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-lap.png',
+                              'variant': '',
+                            },
                             'label': 'Lap',
                             'value': '@entity.lap',
                           },
                           {
+                            'iconUrl': {
+                              'animations': [],
+                              'aspect': '1:1',
+                              'category': 'ui',
+                              'dimension': '2d',
+                              'name': 'icon-position',
+                              'role': 'ui',
+                              'style': 'sci-fi',
+                              'thumbnailUrl': '',
+                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/icon-position.png',
+                              'variant': '',
+                            },
                             'label': 'Position',
                             'value': '@entity.position',
                           },
@@ -4102,23 +5016,37 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                         'type': 'score-display',
                       },
                       {
-                        'actions': [
+                        'actionEvent': 'GRID_ACTION',
+                        'buttons': [
                           {
-                            'action': 'MOVE',
+                            'id': 'MOVE',
                             'label': 'Move',
                           },
                           {
-                            'action': 'LAP_COMPLETE',
+                            'id': 'LAP_COMPLETE',
                             'label': 'Lap',
                           },
                         ],
-                        'type': 'action-buttons',
+                        'kind': 'actions',
+                        'type': 'control-grid',
                       },
                     ],
                     'direction': 'horizontal',
                     'gap': 'md',
                     'justify': 'between',
                     'type': 'stack',
+                  },
+                  'hudBackgroundAsset': {
+                    'animations': [],
+                    'aspect': '1:1',
+                    'category': 'ui',
+                    'dimension': '2d',
+                    'name': 'panel-frame',
+                    'role': 'ui',
+                    'style': 'sci-fi',
+                    'thumbnailUrl': '',
+                    'url': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/panel-frame.png',
+                    'variant': '',
                   },
                   'type': 'game-shell',
                 },
