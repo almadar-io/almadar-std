@@ -41,8 +41,12 @@ export type StdUiGameShellEventKey = 'INIT';
 export interface StdUiGameShellConfig {
   /** Default: `"Game"` */
   appName?: string;
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"backgroundAsset","dimension":"2d","name":"backgroundAsset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"}` */
+  backgroundAsset?: EntityRow;
   /** Default: `""` */
   className?: string;
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"hudBackgroundAsset","dimension":"2d","name":"hudBackgroundAsset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"}` */
+  hudBackgroundAsset?: EntityRow;
   /** Default: `true` */
   showTopBar?: boolean;
 }

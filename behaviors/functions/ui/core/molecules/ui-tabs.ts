@@ -52,11 +52,11 @@ export interface StdUiTabsConfig {
   className?: string;
   /** Default: `"Default Active Tab"` */
   defaultActiveTab?: string;
-  /** Default: `[{"active":false,"badge":"Badge","content":"Content","disabled":false,"icon":"circle","id":"Id","label":"Label","value":"Value"},{"active":true,"badge":"Badge 2","content":"Content 2","disabled":true,"icon":"circle","id":"Id 2","label":"Label 2","value":"Value 2"}]` */
+  /** Default: `[{"active":false,"badge":"Badge","content":"Content","disabled":false,"icon":"circle","iconAsset":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"iconAsset","dimension":"2d","name":"iconAsset","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"id":"Id","label":"Label","value":"Value"},{"active":true,"badge":"Badge 2","content":"Content 2","disabled":true,"icon":"circle","iconAsset":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"iconAsset","dimension":"2d","name":"iconAsset","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"id":"Id 2","label":"Label 2","value":"Value 2"}]` */
   items?: EntityRow[];
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
-  /** Default: `[{"active":false,"badge":"Badge","content":"Content","disabled":false,"icon":"circle","id":"Id","label":"Label","value":"Value"},{"active":true,"badge":"Badge 2","content":"Content 2","disabled":true,"icon":"circle","id":"Id 2","label":"Label 2","value":"Value 2"}]` */
+  /** Default: `[{"active":false,"badge":"Badge","content":"Content","disabled":false,"icon":"circle","iconAsset":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"iconAsset","dimension":"2d","name":"iconAsset","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"id":"Id","label":"Label","value":"Value"},{"active":true,"badge":"Badge 2","content":"Content 2","disabled":true,"icon":"circle","iconAsset":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"iconAsset","dimension":"2d","name":"iconAsset","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"id":"Id 2","label":"Label 2","value":"Value 2"}]` */
   tabs?: EntityRow[];
   /** Default: `"default"` */
   variant?: 'default' | 'pills' | 'underline';

@@ -98,6 +98,11 @@
             },
             "name": "currentChoices",
             "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "revealedChars",
+            "type": "number"
           }
         ],
         "name": "VisualNovelBoardItem",
@@ -646,7 +651,8 @@
               "currentNodeId",
               "currentSpeaker",
               "currentText",
-              "nodes"
+              "nodes",
+              "revealedChars"
             ],
             "requires": []
           },
@@ -790,6 +796,11 @@
                     ]
                   ],
                   [
+                    "set",
+                    "@entity.revealedChars",
+                    0.0
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -843,6 +854,7 @@
                       "children": [
                         {
                           "portrait": "@config.portraitUrl",
+                          "revealedChars": "@entity.revealedChars",
                           "speaker": "@entity.currentSpeaker",
                           "text": "@entity.currentText",
                           "type": "dialogue-bubble"
@@ -962,100 +974,10 @@
                     ]
                   ],
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "backgroundAsset": [
-                        "let",
-                        [
-                          [
-                            "bg",
-                            [
-                              "object/get",
-                              [
-                                "array/first",
-                                [
-                                  "array/filter",
-                                  "@entity.nodes",
-                                  [
-                                    "fn",
-                                    "n",
-                                    [
-                                      "==",
-                                      "@n.id",
-                                      "@entity.currentNodeId"
-                                    ]
-                                  ]
-                                ]
-                              ],
-                              "backgroundKey"
-                            ]
-                          ]
-                        ],
-                        [
-                          "if",
-                          [
-                            "==",
-                            "@bg",
-                            "forge"
-                          ],
-                          "@config.forgeBg",
-                          [
-                            "if",
-                            [
-                              "==",
-                              "@bg",
-                              "core"
-                            ],
-                            "@config.coreBg",
-                            "@config.corridorBg"
-                          ]
-                        ]
-                      ],
-                      "children": [
-                        {
-                          "portrait": "@config.portraitUrl",
-                          "speaker": "@entity.currentSpeaker",
-                          "text": "@entity.currentText",
-                          "type": "dialogue-bubble"
-                        },
-                        {
-                          "entity": "@entity.currentChoices",
-                          "fields": [],
-                          "gap": "sm",
-                          "renderItem": [
-                            "fn",
-                            "c",
-                            {
-                              "action": "CHOOSE",
-                              "payload": {
-                                "nextId": [
-                                  "object/get",
-                                  "@c",
-                                  "nextId"
-                                ]
-                              },
-                              "text": [
-                                "object/get",
-                                "@c",
-                                "label"
-                              ],
-                              "type": "choice-button"
-                            }
-                          ],
-                          "type": "data-list"
-                        }
-                      ],
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "CHOOSE",
-                "from": "playing",
-                "to": "playing"
-              },
-              {
-                "effects": [
+                    "set",
+                    "@entity.revealedChars",
+                    0.0
+                  ],
                   [
                     "render-ui",
                     "main",
@@ -1110,6 +1032,111 @@
                       "children": [
                         {
                           "portrait": "@config.portraitUrl",
+                          "revealedChars": "@entity.revealedChars",
+                          "speaker": "@entity.currentSpeaker",
+                          "text": "@entity.currentText",
+                          "type": "dialogue-bubble"
+                        },
+                        {
+                          "entity": "@entity.currentChoices",
+                          "fields": [],
+                          "gap": "sm",
+                          "renderItem": [
+                            "fn",
+                            "c",
+                            {
+                              "action": "CHOOSE",
+                              "payload": {
+                                "nextId": [
+                                  "object/get",
+                                  "@c",
+                                  "nextId"
+                                ]
+                              },
+                              "text": [
+                                "object/get",
+                                "@c",
+                                "label"
+                              ],
+                              "type": "choice-button"
+                            }
+                          ],
+                          "type": "data-list"
+                        }
+                      ],
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "CHOOSE",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.revealedChars",
+                    [
+                      "str/len",
+                      "@entity.currentText"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundAsset": [
+                        "let",
+                        [
+                          [
+                            "bg",
+                            [
+                              "object/get",
+                              [
+                                "array/first",
+                                [
+                                  "array/filter",
+                                  "@entity.nodes",
+                                  [
+                                    "fn",
+                                    "n",
+                                    [
+                                      "==",
+                                      "@n.id",
+                                      "@entity.currentNodeId"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              "backgroundKey"
+                            ]
+                          ]
+                        ],
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@bg",
+                            "forge"
+                          ],
+                          "@config.forgeBg",
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@bg",
+                              "core"
+                            ],
+                            "@config.coreBg",
+                            "@config.corridorBg"
+                          ]
+                        ]
+                      ],
+                      "children": [
+                        {
+                          "portrait": "@config.portraitUrl",
+                          "revealedChars": "@entity.revealedChars",
                           "speaker": "@entity.currentSpeaker",
                           "text": "@entity.currentText",
                           "type": "dialogue-bubble"
@@ -1229,6 +1256,11 @@
                     ]
                   ],
                   [
+                    "set",
+                    "@entity.revealedChars",
+                    0.0
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -1282,6 +1314,7 @@
                       "children": [
                         {
                           "portrait": "@config.portraitUrl",
+                          "revealedChars": "@entity.revealedChars",
                           "speaker": "@entity.currentSpeaker",
                           "text": "@entity.currentText",
                           "type": "dialogue-bubble"
@@ -1322,7 +1355,121 @@
                 "to": "playing"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.revealedChars",
+                  [
+                    "+",
+                    "@entity.revealedChars",
+                    1.0
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundAsset": [
+                      "let",
+                      [
+                        [
+                          "bg",
+                          [
+                            "object/get",
+                            [
+                              "array/first",
+                              [
+                                "array/filter",
+                                "@entity.nodes",
+                                [
+                                  "fn",
+                                  "n",
+                                  [
+                                    "==",
+                                    "@n.id",
+                                    "@entity.currentNodeId"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "backgroundKey"
+                          ]
+                        ]
+                      ],
+                      [
+                        "if",
+                        [
+                          "==",
+                          "@bg",
+                          "forge"
+                        ],
+                        "@config.forgeBg",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@bg",
+                            "core"
+                          ],
+                          "@config.coreBg",
+                          "@config.corridorBg"
+                        ]
+                      ]
+                    ],
+                    "children": [
+                      {
+                        "portrait": "@config.portraitUrl",
+                        "revealedChars": "@entity.revealedChars",
+                        "speaker": "@entity.currentSpeaker",
+                        "text": "@entity.currentText",
+                        "type": "dialogue-bubble"
+                      },
+                      {
+                        "entity": "@entity.currentChoices",
+                        "fields": [],
+                        "gap": "sm",
+                        "renderItem": [
+                          "fn",
+                          "c",
+                          {
+                            "action": "CHOOSE",
+                            "payload": {
+                              "nextId": [
+                                "object/get",
+                                "@c",
+                                "nextId"
+                              ]
+                            },
+                            "text": [
+                              "object/get",
+                              "@c",
+                              "label"
+                            ],
+                            "type": "choice-button"
+                          }
+                        ],
+                        "type": "data-list"
+                      }
+                    ],
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "guard": [
+                "<",
+                "@entity.revealedChars",
+                [
+                  "str/len",
+                  "@entity.currentText"
+                ]
+              ],
+              "interval": 30.0,
+              "name": "typewriterTick"
+            }
+          ]
         }
       ]
     }

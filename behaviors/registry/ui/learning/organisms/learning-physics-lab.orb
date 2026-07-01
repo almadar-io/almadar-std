@@ -1,5 +1,5 @@
 {
-  "description": "Physics lab organism — waves, fields, ray diagrams, pendulums, and circuits on a physics-canvas.",
+  "description": "Physics lab organism — a live gravity + wall-bounce simulation on a physics-canvas; Start/Pause/Reset drive a per-tick integrator that advances each body's velocity and position.",
   "name": "learning-physics-lab",
   "orbitals": [
     {
@@ -265,6 +265,11 @@
             },
             "name": "shapes",
             "type": "array"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
           }
         ],
         "name": "PhysicsLabItem",
@@ -288,7 +293,7 @@
           "config": {
             "animate": {
               "default": false,
-              "description": "Enable continuous redraw loop.",
+              "description": "Enable the canvas's own redraw loop (independent of the physics tick).",
               "label": "Animate",
               "tier": "presentation",
               "type": "boolean"
@@ -303,26 +308,42 @@
               "default": [
                 {
                   "color": "#2563eb",
-                  "id": "source",
-                  "label": "source",
-                  "radius": 12.0,
-                  "vx": 0.0,
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "ball-a",
+                  "label": "A",
+                  "radius": 16.0,
+                  "vx": 5.0,
                   "vy": 0.0,
-                  "x": 80.0,
-                  "y": 200.0
+                  "x": 90.0,
+                  "y": 70.0
                 },
                 {
                   "color": "#16a34a",
-                  "id": "point",
-                  "label": "point",
-                  "radius": 8.0,
-                  "vx": 0.0,
-                  "vy": 0.0,
-                  "x": 300.0,
-                  "y": 200.0
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "ball-b",
+                  "label": "B",
+                  "radius": 11.0,
+                  "vx": -4.0,
+                  "vy": 3.0,
+                  "x": 320.0,
+                  "y": 50.0
+                },
+                {
+                  "color": "#dc2626",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "ball-c",
+                  "label": "C",
+                  "radius": 13.0,
+                  "vx": 2.0,
+                  "vy": -2.0,
+                  "x": 500.0,
+                  "y": 90.0
                 }
               ],
-              "description": "Bodies or particles to render.",
+              "description": "Bodies or particles to simulate; each carries position (x,y) and velocity (vx,vy).",
               "items": {
                 "properties": {
                   "color": {
@@ -384,7 +405,7 @@
             },
             "constraints": {
               "default": [],
-              "description": "Links between bodies.",
+              "description": "Links between bodies, drawn as connecting lines.",
               "items": {
                 "properties": {
                   "color": {
@@ -409,10 +430,24 @@
               "tier": "domain",
               "type": "[PhysicsLabConstraint]"
             },
+            "damping": {
+              "default": 0.995,
+              "description": "Fraction of velocity retained each tick, modelling air resistance.",
+              "label": "Damping",
+              "tier": "domain",
+              "type": "number"
+            },
             "forceScale": {
               "default": 30.0,
               "label": "Force Scale",
               "tier": "presentation",
+              "type": "number"
+            },
+            "gravity": {
+              "default": 0.4,
+              "description": "Downward acceleration added to each body's vy every tick.",
+              "label": "Gravity",
+              "tier": "domain",
               "type": "number"
             },
             "height": {
@@ -433,7 +468,7 @@
               "default": "wave",
               "description": "What kind of physics visualization to render.",
               "label": "Mode",
-              "synonyms": "oscillation, sine wave, sound wave, light, electric field, magnetic field, gravitational field, force, ray, lens, mirror, pendulum, swing, circuit, resistor, battery, current",
+              "synonyms": "oscillation, sine wave, sound wave, light, electric field, magnetic field, gravitational field, force, ray, lens, mirror, pendulum, swing, circuit, resistor, battery, current, projectile, bounce, gravity, kinematics, motion",
               "tier": "domain",
               "type": "string",
               "values": [
@@ -443,6 +478,13 @@
                 "pendulum",
                 "circuit"
               ]
+            },
+            "restitution": {
+              "default": 0.78,
+              "description": "Fraction of speed kept when a body bounces off a wall (0 = dead stop, 1 = perfectly elastic).",
+              "label": "Restitution",
+              "tier": "domain",
+              "type": "number"
             },
             "shapes": {
               "default": [],
@@ -624,7 +666,7 @@
               "type": "boolean"
             },
             "showVelocity": {
-              "default": false,
+              "default": true,
               "description": "Render velocity arrows for each body.",
               "label": "Show Velocity",
               "tier": "presentation",
@@ -638,7 +680,7 @@
               "type": "string"
             },
             "velocityScale": {
-              "default": 25.0,
+              "default": 8.0,
               "label": "Velocity Scale",
               "tier": "presentation",
               "type": "number"
@@ -651,10 +693,49 @@
               "type": "number"
             }
           },
+          "emits": [
+            {
+              "description": "startEvent prop — begins the physics integration loop",
+              "event": "START",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "pauseEvent prop — halts the integration loop, freezing the bodies",
+              "event": "PAUSE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "resetEvent prop — restores the bodies to their initial config state",
+              "event": "RESET",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
           "entityContract": {
             "provides": [
               "bodies",
               "constraints",
+              "running",
               "shapes",
               "title"
             ],
@@ -669,6 +750,42 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "startEvent prop — begins the physics integration loop",
+                "key": "START",
+                "name": "Start",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "pauseEvent prop — halts the integration loop, freezing the bodies",
+                "key": "PAUSE",
+                "name": "Pause",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "resetEvent prop — restores the bodies to their initial config state",
+                "key": "RESET",
+                "name": "Reset",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
               }
             ],
             "states": [
@@ -701,6 +818,11 @@
                     "@config.shapes"
                   ],
                   [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -711,6 +833,31 @@
                               "content": "@entity.title",
                               "type": "typography",
                               "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "START",
+                                  "label": "Start",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PAUSE",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
                             },
                             {
                               "animate": "@config.animate",
@@ -741,9 +888,488 @@
                 "event": "INIT",
                 "from": "idle",
                 "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.running",
+                    true
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "START",
+                                  "label": "Start",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PAUSE",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "constraints": "@entity.constraints",
+                              "forceScale": "@config.forceScale",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "shapes": "@entity.shapes",
+                              "showForces": "@config.showForces",
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "START",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "START",
+                                  "label": "Start",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PAUSE",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "constraints": "@entity.constraints",
+                              "forceScale": "@config.forceScale",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "shapes": "@entity.shapes",
+                              "showForces": "@config.showForces",
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "PAUSE",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bodies",
+                    "@config.bodies"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "action": "START",
+                                  "label": "Start",
+                                  "type": "button",
+                                  "variant": "primary"
+                                },
+                                {
+                                  "action": "PAUSE",
+                                  "label": "Pause",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "RESET",
+                                  "label": "Reset",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "animate": "@config.animate",
+                              "backgroundColor": "@config.backgroundColor",
+                              "bodies": "@entity.bodies",
+                              "constraints": "@entity.constraints",
+                              "forceScale": "@config.forceScale",
+                              "height": "@config.height",
+                              "interactive": "@config.interactive",
+                              "shapes": "@entity.shapes",
+                              "showForces": "@config.showForces",
+                              "showVelocity": "@config.showVelocity",
+                              "type": "physics-canvas",
+                              "velocityScale": "@config.velocityScale",
+                              "width": "@config.width"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "padding": "md",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "RESET",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.bodies",
+                  [
+                    "array/map",
+                    "@entity.bodies",
+                    [
+                      "fn",
+                      "b",
+                      [
+                        "let",
+                        [
+                          [
+                            "r",
+                            [
+                              "object/get",
+                              "@b",
+                              "radius"
+                            ]
+                          ],
+                          [
+                            "nvx",
+                            [
+                              "*",
+                              [
+                                "object/get",
+                                "@b",
+                                "vx"
+                              ],
+                              "@config.damping"
+                            ]
+                          ],
+                          [
+                            "nvy",
+                            [
+                              "*",
+                              [
+                                "+",
+                                [
+                                  "object/get",
+                                  "@b",
+                                  "vy"
+                                ],
+                                "@config.gravity"
+                              ],
+                              "@config.damping"
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "nx",
+                              [
+                                "+",
+                                [
+                                  "object/get",
+                                  "@b",
+                                  "x"
+                                ],
+                                "@nvx"
+                              ]
+                            ],
+                            [
+                              "ny",
+                              [
+                                "+",
+                                [
+                                  "object/get",
+                                  "@b",
+                                  "y"
+                                ],
+                                "@nvy"
+                              ]
+                            ]
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "hitx",
+                                [
+                                  "or",
+                                  [
+                                    "<",
+                                    "@nx",
+                                    "@r"
+                                  ],
+                                  [
+                                    ">",
+                                    "@nx",
+                                    [
+                                      "-",
+                                      "@config.width",
+                                      "@r"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "hity",
+                                [
+                                  "or",
+                                  [
+                                    "<",
+                                    "@ny",
+                                    "@r"
+                                  ],
+                                  [
+                                    ">",
+                                    "@ny",
+                                    [
+                                      "-",
+                                      "@config.height",
+                                      "@r"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "object/merge",
+                              "@b",
+                              {
+                                "vx": [
+                                  "if",
+                                  "@hitx",
+                                  [
+                                    "*",
+                                    "@nvx",
+                                    [
+                                      "*",
+                                      -1.0,
+                                      "@config.restitution"
+                                    ]
+                                  ],
+                                  "@nvx"
+                                ],
+                                "vy": [
+                                  "if",
+                                  "@hity",
+                                  [
+                                    "*",
+                                    "@nvy",
+                                    [
+                                      "*",
+                                      -1.0,
+                                      "@config.restitution"
+                                    ]
+                                  ],
+                                  "@nvy"
+                                ],
+                                "x": [
+                                  "math/clamp",
+                                  "@nx",
+                                  "@r",
+                                  [
+                                    "-",
+                                    "@config.width",
+                                    "@r"
+                                  ]
+                                ],
+                                "y": [
+                                  "math/clamp",
+                                  "@ny",
+                                  "@r",
+                                  [
+                                    "-",
+                                    "@config.height",
+                                    "@r"
+                                  ]
+                                ]
+                              }
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "children": [
+                          {
+                            "content": "@entity.title",
+                            "type": "typography",
+                            "variant": "h4"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "START",
+                                "label": "Start",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PAUSE",
+                                "label": "Pause",
+                                "type": "button",
+                                "variant": "secondary"
+                              },
+                              {
+                                "action": "RESET",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "ghost"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          {
+                            "animate": "@config.animate",
+                            "backgroundColor": "@config.backgroundColor",
+                            "bodies": "@entity.bodies",
+                            "constraints": "@entity.constraints",
+                            "forceScale": "@config.forceScale",
+                            "height": "@config.height",
+                            "interactive": "@config.interactive",
+                            "shapes": "@entity.shapes",
+                            "showForces": "@config.showForces",
+                            "showVelocity": "@config.showVelocity",
+                            "type": "physics-canvas",
+                            "velocityScale": "@config.velocityScale",
+                            "width": "@config.width"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "md",
+                        "type": "stack"
+                      }
+                    ],
+                    "padding": "md",
+                    "type": "box"
+                  }
+                ]
+              ],
+              "guard": "@entity.running",
+              "interval": 32.0,
+              "name": "physicsTick"
+            }
+          ]
         }
       ]
     }

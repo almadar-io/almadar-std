@@ -1,0 +1,96 @@
+app ui-sim-controls "1.0.0"
+"Simulation controls — a Start / Pause / Reset button row that emits START/PAUSE/RESET for a sim engine to listen to. Composed by learning orbitals via `uses`."
+orbital SimControlsOrbital {
+  entity SimControlsItem [runtime] {
+    id : string!
+  }
+
+  trait SimControlsRender -> @rebindable SimControlsItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          type: stack
+          direction: horizontal
+          gap: sm
+          children: [
+            { type: button, action: START, label: @config.startLabel, variant: primary },
+            { type: button, action: PAUSE, label: @config.pauseLabel, variant: secondary },
+            { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+          ]
+        })
+
+      START -> idle
+        (render-ui main {
+          type: stack
+          direction: horizontal
+          gap: sm
+          children: [
+            { type: button, action: START, label: @config.startLabel, variant: primary },
+            { type: button, action: PAUSE, label: @config.pauseLabel, variant: secondary },
+            { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+          ]
+        })
+
+      PAUSE -> idle
+        (render-ui main {
+          type: stack
+          direction: horizontal
+          gap: sm
+          children: [
+            { type: button, action: START, label: @config.startLabel, variant: primary },
+            { type: button, action: PAUSE, label: @config.pauseLabel, variant: secondary },
+            { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+          ]
+        })
+
+      RESET -> idle
+        (render-ui main {
+          type: stack
+          direction: horizontal
+          gap: sm
+          children: [
+            { type: button, action: START, label: @config.startLabel, variant: primary },
+            { type: button, action: PAUSE, label: @config.pauseLabel, variant: secondary },
+            { type: button, action: RESET, label: @config.resetLabel, variant: ghost }
+          ]
+        })
+    }
+
+    emits {
+      START -> external {
+        id : string
+      }
+        @description "Emitted when the player presses Start; a sim engine listens to begin its tick."
+        @tier "domain"
+      PAUSE -> external {
+        id : string
+      }
+        @description "Emitted when the player presses Pause; a sim engine listens to halt its tick."
+        @tier "domain"
+      RESET -> external {
+        id : string
+      }
+        @description "Emitted when the player presses Reset; a sim engine listens to restore initial state."
+        @tier "domain"
+    }
+
+    config {
+      startLabel : string = "Start"
+        @label "Start Label"
+        @description "Label for the start button."
+        @tier "presentation"
+      pauseLabel : string = "Pause"
+        @label "Pause Label"
+        @description "Label for the pause button."
+        @tier "presentation"
+      resetLabel : string = "Reset"
+        @label "Reset Label"
+        @description "Label for the reset button."
+        @tier "presentation"
+    }
+  }
+
+  page "/sim-controls" as SimControlsPage -> SimControlsRender
+}

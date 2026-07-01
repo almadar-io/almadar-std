@@ -7,12 +7,34 @@ orbital TraitSlotOrbital {
     category : string!
     description : string
     iconEmoji : string
-    iconUrl : asset
+    iconUrl : TraitSlotEquippedItemIconUrl
     stateMachine : json
+  }
+  type TraitSlotEquippedItemIconUrl = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
   }
   type TraitSlotCategoryColorsValue = {
     bg : string!
     border : string!
+  }
+  type TraitSlotTooltipFrameUrl = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
   }
   type TraitSlotError = {
     message : string!
@@ -26,8 +48,19 @@ orbital TraitSlotOrbital {
     category : string!
     description : string
     iconEmoji : string
-    iconUrl : asset
+    iconUrl : TraitSlotITEMDROPItemIconUrl
     stateMachine : json
+  }
+  type TraitSlotITEMDROPItemIconUrl = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
   }
   type TraitSlotDRAGSTARTItem = {
     id : string!
@@ -35,8 +68,19 @@ orbital TraitSlotOrbital {
     category : string!
     description : string
     iconEmoji : string
-    iconUrl : asset
+    iconUrl : TraitSlotDRAGSTARTItemIconUrl
     stateMachine : json
+  }
+  type TraitSlotDRAGSTARTItemIconUrl = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
   }
 
   entity TraitSlotItem [runtime] {
@@ -49,7 +93,6 @@ orbital TraitSlotOrbital {
 
     state idle {
       INIT -> idle
-        (fetch TraitSlotItem {})
         (set @entity.slotNumber @config.slotNumber)
         (render-ui main {
           slotNumber: @entity.slotNumber
@@ -64,7 +107,6 @@ orbital TraitSlotOrbital {
           className: @config.className
           isLoading: @config.isLoading
           error: @config.error
-          entity: TraitSlotItem
           onItemDrop: ITEM_DROP
           draggable: @config.draggable
           onDragStart: DRAG_START
@@ -73,6 +115,7 @@ orbital TraitSlotOrbital {
           onRemove: REMOVE
           clickEvent: CLICK
           removeEvent: REMOVE
+          dropEvent: DROP
           type: trait-slot
         })
       CLICK -> idle
@@ -90,7 +133,6 @@ orbital TraitSlotOrbital {
           className: @config.className
           isLoading: @config.isLoading
           error: @config.error
-          entity: TraitSlotItem
           onItemDrop: ITEM_DROP
           draggable: @config.draggable
           onDragStart: DRAG_START
@@ -99,6 +141,7 @@ orbital TraitSlotOrbital {
           onRemove: REMOVE
           clickEvent: CLICK
           removeEvent: REMOVE
+          dropEvent: DROP
           type: trait-slot
         })
       REMOVE -> idle
@@ -116,7 +159,6 @@ orbital TraitSlotOrbital {
           className: @config.className
           isLoading: @config.isLoading
           error: @config.error
-          entity: TraitSlotItem
           onItemDrop: ITEM_DROP
           draggable: @config.draggable
           onDragStart: DRAG_START
@@ -125,6 +167,33 @@ orbital TraitSlotOrbital {
           onRemove: REMOVE
           clickEvent: CLICK
           removeEvent: REMOVE
+          dropEvent: DROP
+          type: trait-slot
+        })
+      DROP -> idle
+        (set @entity.slotNumber ?slotNumber)
+        (render-ui main {
+          slotNumber: @entity.slotNumber
+          equippedItem: @config.equippedItem
+          locked: @config.locked
+          lockLabel: @config.lockLabel
+          selected: @config.selected
+          size: @config.size
+          showTooltip: @config.showTooltip
+          categoryColors: @config.categoryColors
+          tooltipFrameUrl: @config.tooltipFrameUrl
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          onItemDrop: ITEM_DROP
+          draggable: @config.draggable
+          onDragStart: DRAG_START
+          feedback: @config.feedback
+          onClick: CLICK
+          onRemove: REMOVE
+          clickEvent: CLICK
+          removeEvent: REMOVE
+          dropEvent: DROP
           type: trait-slot
         })
     }
@@ -150,6 +219,12 @@ orbital TraitSlotOrbital {
       }
         @description "Remove handler"
         @tier "essential"
+      DROP -> external {
+        slotNumber : number!
+        itemId : string!
+      }
+        @description "Emits UI:{dropEvent} with { slotNumber, itemId } when an item is dropped into this slot"
+        @tier "essential"
     }
 
     listens {
@@ -159,6 +234,10 @@ orbital TraitSlotOrbital {
       REMOVE {
         slotNumber : number!
       }
+      DROP {
+        slotNumber : number!
+        itemId : string!
+      }
     }
 
     config {
@@ -166,7 +245,7 @@ orbital TraitSlotOrbital {
         @label "Slot Number"
         @description "Slot index (1-based)"
         @tier "presentation"
-      equippedItem : TraitSlotEquippedItem = { id: "Id", name: "Name", category: "Category", description: "Description", iconEmoji: "Icon Emoji", iconUrl: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png" }
+      equippedItem : TraitSlotEquippedItem = { id: "Id", name: "Name", category: "Category", description: "Description", iconEmoji: "Icon Emoji", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png", role: "ui", category: "iconUrl", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "iconUrl", thumbnailUrl: "" } }
         @label "Equipped Item"
         @description "Currently equipped item, if any"
         @tier "presentation"
@@ -194,9 +273,9 @@ orbital TraitSlotOrbital {
         @label "Category Colors"
         @description "Category → color mapping"
         @tier "presentation"
-      tooltipFrameUrl : asset = "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"
+      tooltipFrameUrl : TraitSlotTooltipFrameUrl = { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "tooltipFrameUrl", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "tooltipFrameUrl", thumbnailUrl: "" }
         @label "Tooltip Frame Url"
-        @description "Optional tooltip frame image URL"
+        @description "Optional tooltip frame image asset"
         @tier "presentation"
       className : string = ""
         @label "Class Name"

@@ -177,7 +177,7 @@ export interface StdUiPirateBoardPirateBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'PirateBoardRender',
+    'PirateBoardAnimTick' | 'PirateBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -187,7 +187,12 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
   const canonicalName = params.entityName ?? 'PirateBoardItem';
   const built = makeOrbitalWithUses({
     name: 'PirateBoardOrbital',
-    uses: [],
+    uses: [
+      {
+        'as': 'AnimTick',
+        'from': 'std/behaviors/std-anim-tick',
+      },
+    ],
     entity: {
       name: canonicalName,
       persistence: 'runtime',
@@ -5692,80 +5697,6 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
           {
             'effects': [
               [
-                'set',
-                '@entity.ships',
-                [
-                  'array/map',
-                  '@entity.ships',
-                  [
-                    'fn',
-                    'u',
-                    [
-                      'object/merge',
-                      '@u',
-                      {
-                        'frame': [
-                          '%',
-                          [
-                            '+',
-                            [
-                              'object/get',
-                              '@u',
-                              'frame',
-                            ],
-                            1,
-                          ],
-                          8,
-                        ],
-                      },
-                    ],
-                  ],
-                ],
-              ],
-              [
-                'set',
-                '@entity.effects',
-                [
-                  'array/filter',
-                  [
-                    'array/map',
-                    '@entity.effects',
-                    [
-                      'fn',
-                      'e',
-                      [
-                        'object/merge',
-                        '@e',
-                        {
-                          'ttl': [
-                            '-',
-                            [
-                              'object/get',
-                              '@e',
-                              'ttl',
-                            ],
-                            1,
-                          ],
-                        },
-                      ],
-                    ],
-                  ],
-                  [
-                    'fn',
-                    'e',
-                    [
-                      '>',
-                      [
-                        'object/get',
-                        '@e',
-                        'ttl',
-                      ],
-                      0,
-                    ],
-                  ],
-                ],
-              ],
-              [
                 'render-ui',
                 'main',
                 {
@@ -5878,7 +5809,7 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
               ],
             ],
             'interval': 100,
-            'name': 'animTick',
+            'name': 'renderTick',
           },
           {
             'effects': [
@@ -6502,6 +6433,20 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
           },
         ],
       } as never, 'PirateBoardItem', canonicalName) as never,
+      makeTraitRef({
+        'config': {
+          'frameCount': {
+            'default': 8,
+            'type': 'unknown',
+          },
+        },
+        'fields': {
+          'units': 'ships',
+        },
+        'linkedEntity': canonicalName,
+        'name': 'PirateBoardAnimTick',
+        'ref': 'AnimTick.traits.AnimTick',
+      }),
     ],
     pages: [
       {
@@ -6510,6 +6455,9 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
         'traits': [
           {
             'ref': 'PirateBoardRender',
+          },
+          {
+            'ref': 'PirateBoardAnimTick',
           },
         ],
       } as never,
@@ -6564,6 +6512,7 @@ export const StdUiPirateBoardPirateBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
+    'PirateBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'PirateBoardRender',

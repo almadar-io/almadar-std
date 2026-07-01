@@ -30,12 +30,19 @@ const ALIAS = 'UiItemSlot';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiItemSlotEventKey = 'CLICK' | 'INIT';
+export type StdUiItemSlotEventKey = 'ACTION' | 'CLICK' | 'INIT';
 
 /**
  * Payload shape for the `CLICK` event.
  */
 export interface StdUiItemSlotClickPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ACTION` event.
+ */
+export interface StdUiItemSlotActionPayload {
   id?: string;
 }
 

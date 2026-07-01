@@ -72,6 +72,16 @@
             "name": "currentStep",
             "type": "number",
             "required": false
+          },
+          {
+            "name": "playing",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "slotFeedback",
+            "type": "array",
+            "required": false
           }
         ],
         "persistence": "runtime"
@@ -84,7 +94,6 @@
           "PLACE",
           "REMOVE",
           "PLAY",
-          "STEP",
           "CHECK",
           "PLAY_AGAIN"
         ],
@@ -93,31 +102,25 @@
           {
             "name": "PLACE",
             "direction": "emit",
-            "description": "placeEvent prop — emitted when player drops an action into a slot",
+            "description": "slotDropEvent prop — emitted when the player drops an action into a slot",
             "tier": "domain"
           },
           {
             "name": "REMOVE",
             "direction": "emit",
-            "description": "removeEvent prop — emitted when player removes an action from a slot",
+            "description": "slotRemoveEvent prop — emitted when the player clears a slot",
             "tier": "domain"
           },
           {
             "name": "PLAY",
             "direction": "emit",
-            "description": "playEvent prop — emitted with the current slot sequence on playback start",
-            "tier": "domain"
-          },
-          {
-            "name": "STEP",
-            "direction": "emit",
-            "description": "Advances playback one step; entity.currentStep increments until maxSlots-1 then returns to building",
+            "description": "playEvent prop — starts step-by-step playback of the current sequence",
             "tier": "domain"
           },
           {
             "name": "CHECK",
             "direction": "emit",
-            "description": "checkEvent prop — emitted when player submits the sequence for validation",
+            "description": "checkEvent prop — submits the sequence for validation",
             "tier": "domain"
           },
           {
@@ -125,10 +128,6 @@
             "direction": "emit",
             "description": "playAgainEvent prop — reset slots and restart",
             "tier": "domain"
-          },
-          {
-            "name": "START",
-            "direction": "listen"
           },
           {
             "name": "INIT",
@@ -552,7 +551,9 @@
             "headerImage",
             "hint",
             "maxSlots",
+            "playing",
             "result",
+            "slotFeedback",
             "slots",
             "solutions",
             "successMessage",
@@ -573,8 +574,7 @@
       "PLACE",
       "PLAY",
       "PLAY_AGAIN",
-      "REMOVE",
-      "STEP"
+      "REMOVE"
     ],
     "listenedEvents": []
   }

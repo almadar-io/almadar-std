@@ -30,7 +30,7 @@ const ALIAS = 'UiWizardContainer';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiWizardContainerEventKey = 'COMPLETE' | 'INIT' | 'STEP_CHANGE';
+export type StdUiWizardContainerEventKey = 'BACK' | 'COMPLETE' | 'INIT' | 'NEXT' | 'STEP_CHANGE';
 
 /**
  * Payload shape for the `STEP_CHANGE` event.
@@ -43,6 +43,20 @@ export interface StdUiWizardContainerStepChangePayload {
  * Payload shape for the `COMPLETE` event.
  */
 export interface StdUiWizardContainerCompletePayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `NEXT` event.
+ */
+export interface StdUiWizardContainerNextPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `BACK` event.
+ */
+export interface StdUiWizardContainerBackPayload {
   id?: string;
 }
 

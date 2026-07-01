@@ -30,7 +30,7 @@ const ALIAS = 'UiCanvas2d';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiCanvas2dEventKey = 'INIT' | 'KEY' | 'TILE_CLICK' | 'TILE_HOVER' | 'TILE_LEAVE' | 'UNIT_CLICK';
+export type StdUiCanvas2dEventKey = 'INIT' | 'TILE_CLICK' | 'TILE_HOVER' | 'TILE_LEAVE' | 'UNIT_CLICK';
 
 /**
  * Payload shape for the `TILE_CLICK` event.
@@ -60,13 +60,6 @@ export interface StdUiCanvas2dTileHoverPayload {
  */
 export interface StdUiCanvas2dTileLeavePayload {
   id?: string;
-}
-
-/**
- * Payload shape for the `KEY` event.
- */
-export interface StdUiCanvas2dKeyPayload {
-  key: string;
 }
 
 /**
@@ -105,6 +98,10 @@ export interface StdUiCanvas2dConfig {
   hoveredTile?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `{"item":"Item"}` */
+  keyMap?: Record<string, TraitConfig>;
+  /** Default: `{"item":"Item"}` */
+  keyUpMap?: Record<string, TraitConfig>;
   /** Default: `[{"height":1,"type":"ground","width":1,"x":1,"y":1},{"height":2,"type":"platform","width":2,"x":2,"y":2}]` */
   platforms?: EntityRow[];
   /** Default: `{"facingRight":false,"grounded":false,"height":1,"vx":1,"vy":1,"width":1,"x":1,"y":1}` */

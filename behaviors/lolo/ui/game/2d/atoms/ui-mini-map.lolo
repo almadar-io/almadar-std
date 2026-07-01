@@ -18,6 +18,28 @@ orbital MiniMapOrbital {
     w : number!
     h : number!
   }
+  type MiniMapTileAssetsValue = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type MiniMapUnitAssetsValue = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
 
   entity MiniMapItem [runtime] {
     id : string!
@@ -37,6 +59,8 @@ orbital MiniMapOrbital {
           mapHeight: @config.mapHeight
           viewportRect: @config.viewportRect
           className: @config.className
+          tileAssets: @config.tileAssets
+          unitAssets: @config.unitAssets
           type: mini-map
         })
     }
@@ -73,6 +97,14 @@ orbital MiniMapOrbital {
       className : string = ""
         @label "Class Name"
         @description "Additional CSS classes"
+        @tier "presentation"
+      tileAssets : Map string MiniMapTileAssetsValue = { item: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png", role: "item", category: "item", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "item", thumbnailUrl: "" } }
+        @label "Tile Assets"
+        @description "Map of terrain key → Asset; when present, draws sprites instead of flat hex colors for tiles."
+        @tier "presentation"
+      unitAssets : Map string MiniMapUnitAssetsValue = { item: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png", role: "item", category: "item", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "item", thumbnailUrl: "" } }
+        @label "Unit Assets"
+        @description "Map of unit id or unit type → Asset; when present, draws sprites instead of flat dots for units."
         @tier "presentation"
     }
   }

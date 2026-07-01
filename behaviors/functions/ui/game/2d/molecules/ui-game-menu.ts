@@ -50,8 +50,8 @@ export interface StdUiGameMenuConfig {
   background?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Logo"` */
-  logo?: string;
+  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"logo","dimension":"2d","name":"logo","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
+  logo?: EntityRow;
   /** Default: `[{"action":"Action","disabled":false,"id":"Id","label":"Label","navigatesTo":"Navigates To","subLabel":"Sub Label","variant":"primary"},{"action":"Action 2","disabled":true,"id":"Id 2","label":"Label 2","navigatesTo":"Navigates To 2","subLabel":"Sub Label 2","variant":"secondary"}]` */
   menuItems?: EntityRow[];
   /** Default: `[{"action":"Action","disabled":false,"id":"Id","label":"Label","navigatesTo":"Navigates To","subLabel":"Sub Label","variant":"primary"},{"action":"Action 2","disabled":true,"id":"Id 2","label":"Label 2","navigatesTo":"Navigates To 2","subLabel":"Sub Label 2","variant":"secondary"}]` */

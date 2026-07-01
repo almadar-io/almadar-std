@@ -46,6 +46,8 @@ export interface StdUiModalSlotConfig {
   isLoading?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  /** Default: `"Source Trait"` */
+  sourceTrait?: string;
   /** Default: `"Title"` */
   title?: string;
 }
@@ -172,6 +174,13 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
               'full',
             ],
           },
+          'sourceTrait': {
+            'default': 'Source Trait',
+            'description': 'Source trait name for qualified event emission',
+            'label': 'Source Trait',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'title': {
             'default': 'Title',
             'description': 'Override modal title (extracted from children if not provided)',
@@ -224,6 +233,7 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
                     'error': '@config.error',
                     'isLoading': '@config.isLoading',
                     'size': '@config.size',
+                    'sourceTrait': '@config.sourceTrait',
                     'title': '@config.title',
                     'type': 'modal-slot',
                   },

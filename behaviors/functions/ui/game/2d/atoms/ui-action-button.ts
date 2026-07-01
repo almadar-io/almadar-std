@@ -30,12 +30,19 @@ const ALIAS = 'UiActionButton';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiActionButtonEventKey = 'CLICK' | 'INIT';
+export type StdUiActionButtonEventKey = 'ACTION' | 'CLICK' | 'INIT';
 
 /**
  * Payload shape for the `CLICK` event.
  */
 export interface StdUiActionButtonClickPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `ACTION` event.
+ */
+export interface StdUiActionButtonActionPayload {
   id?: string;
 }
 

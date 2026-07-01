@@ -39,6 +39,7 @@ orbital VisualNovelBoardOrbital {
     currentSpeaker : string = ""
     currentText : string = ""
     currentChoices : [VisualNovelBoardChoicesItem] = []
+    revealedChars : int = 0
   }
 
   trait VisualNovelBoardRender -> @rebindable VisualNovelBoardItem [interaction, instance] {
@@ -51,11 +52,12 @@ orbital VisualNovelBoardOrbital {
         (set @entity.currentSpeaker (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) speaker))
         (set @entity.currentText (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) text))
         (set @entity.currentChoices (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) choices))
+        (set @entity.revealedChars 0)
         (render-ui main {
           type: game-shell
           backgroundAsset: (let ((bg (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) backgroundKey))) (if (== @bg "forge") @config.forgeBg (if (== @bg "core") @config.coreBg @config.corridorBg)))
           children: [
-            { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText, portrait: @config.portraitUrl },
+            { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText, portrait: @config.portraitUrl, revealedChars: @entity.revealedChars },
             { type: data-list, entity: @entity.currentChoices, fields: [], gap: sm, renderItem: (fn c { type: choice-button, text: (object/get @c label), action: CHOOSE, payload: { nextId: (object/get @c nextId) } }) }
           ]
         })
@@ -65,21 +67,23 @@ orbital VisualNovelBoardOrbital {
         (set @entity.currentSpeaker (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) speaker))
         (set @entity.currentText (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) text))
         (set @entity.currentChoices (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) choices))
+        (set @entity.revealedChars 0)
         (render-ui main {
           type: game-shell
           backgroundAsset: (let ((bg (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) backgroundKey))) (if (== @bg "forge") @config.forgeBg (if (== @bg "core") @config.coreBg @config.corridorBg)))
           children: [
-            { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText, portrait: @config.portraitUrl },
+            { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText, portrait: @config.portraitUrl, revealedChars: @entity.revealedChars },
             { type: data-list, entity: @entity.currentChoices, fields: [], gap: sm, renderItem: (fn c { type: choice-button, text: (object/get @c label), action: CHOOSE, payload: { nextId: (object/get @c nextId) } }) }
           ]
         })
 
       ADVANCE -> playing
+        (set @entity.revealedChars (str/len @entity.currentText))
         (render-ui main {
           type: game-shell
           backgroundAsset: (let ((bg (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) backgroundKey))) (if (== @bg "forge") @config.forgeBg (if (== @bg "core") @config.coreBg @config.corridorBg)))
           children: [
-            { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText, portrait: @config.portraitUrl },
+            { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText, portrait: @config.portraitUrl, revealedChars: @entity.revealedChars },
             { type: data-list, entity: @entity.currentChoices, fields: [], gap: sm, renderItem: (fn c { type: choice-button, text: (object/get @c label), action: CHOOSE, payload: { nextId: (object/get @c nextId) } }) }
           ]
         })
@@ -89,11 +93,26 @@ orbital VisualNovelBoardOrbital {
         (set @entity.currentSpeaker (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) speaker))
         (set @entity.currentText (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) text))
         (set @entity.currentChoices (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) choices))
+        (set @entity.revealedChars 0)
         (render-ui main {
           type: game-shell
           backgroundAsset: (let ((bg (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) backgroundKey))) (if (== @bg "forge") @config.forgeBg (if (== @bg "core") @config.coreBg @config.corridorBg)))
           children: [
-            { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText, portrait: @config.portraitUrl },
+            { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText, portrait: @config.portraitUrl, revealedChars: @entity.revealedChars },
+            { type: data-list, entity: @entity.currentChoices, fields: [], gap: sm, renderItem: (fn c { type: choice-button, text: (object/get @c label), action: CHOOSE, payload: { nextId: (object/get @c nextId) } }) }
+          ]
+        })
+    }
+
+    ticks {
+      typewriterTick every 30ms
+        when (< @entity.revealedChars (str/len @entity.currentText))
+        (set @entity.revealedChars (+ @entity.revealedChars 1))
+        (render-ui main {
+          type: game-shell
+          backgroundAsset: (let ((bg (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) backgroundKey))) (if (== @bg "forge") @config.forgeBg (if (== @bg "core") @config.coreBg @config.corridorBg)))
+          children: [
+            { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText, portrait: @config.portraitUrl, revealedChars: @entity.revealedChars },
             { type: data-list, entity: @entity.currentChoices, fields: [], gap: sm, renderItem: (fn c { type: choice-button, text: (object/get @c label), action: CHOOSE, payload: { nextId: (object/get @c nextId) } }) }
           ]
         })

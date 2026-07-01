@@ -1,6 +1,29 @@
 app ui-health-bar "1.0.0"
 "HealthBar — UI factory (1:1 with the @almadar/ui health-bar pattern)."
 orbital HealthBarOrbital {
+  type HealthBarFrameAsset = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type HealthBarFillAsset = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+
   entity HealthBarItem [runtime] {
     id : string!
   }
@@ -20,6 +43,8 @@ orbital HealthBarOrbital {
           size: @config.size
           className: @config.className
           animated: @config.animated
+          frameAsset: @config.frameAsset
+          fillAsset: @config.fillAsset
           type: health-bar
         })
     }
@@ -60,6 +85,14 @@ orbital HealthBarOrbital {
       animated : boolean = true
         @label "Animated"
         @description "Animation on change"
+        @tier "presentation"
+      frameAsset : HealthBarFrameAsset = { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "frameAsset", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "frameAsset", thumbnailUrl: "" }
+        @label "Frame Asset"
+        @description "Sprite image used as the bar track/frame border for bar/progress formats. Falls back to CSS rounded bg-muted."
+        @tier "presentation"
+      fillAsset : HealthBarFillAsset = { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "fillAsset", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "fillAsset", thumbnailUrl: "" }
+        @label "Fill Asset"
+        @description "Sprite image tiled across the filled portion of bar/progress formats. Falls back to CSS color gradient."
         @tier "presentation"
     }
   }

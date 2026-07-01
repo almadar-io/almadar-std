@@ -46,6 +46,8 @@ export interface StdUiToastSlotConfig {
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `"Source Trait"` */
+  sourceTrait?: string;
   /** Default: `"Title"` */
   title?: string;
   /** Default: `"success"` */
@@ -167,6 +169,13 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
             'tier': 'presentation',
             'type': 'boolean',
           },
+          'sourceTrait': {
+            'default': 'Source Trait',
+            'description': 'Source trait name for qualified event emission',
+            'label': 'Source Trait',
+            'tier': 'presentation',
+            'type': 'string',
+          },
           'title': {
             'default': 'Title',
             'description': 'Toast title',
@@ -232,6 +241,7 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
                     'entity': 'ToastSlotItem',
                     'error': '@config.error',
                     'isLoading': '@config.isLoading',
+                    'sourceTrait': '@config.sourceTrait',
                     'title': '@config.title',
                     'type': 'toast-slot',
                     'variant': '@config.variant',

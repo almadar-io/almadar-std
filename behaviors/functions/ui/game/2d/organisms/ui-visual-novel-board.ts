@@ -227,6 +227,11 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
             'name': 'currentChoices',
             'type': 'array',
           },
+          {
+            'default': 0,
+            'name': 'revealedChars',
+            'type': 'number',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -766,6 +771,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
             'currentSpeaker',
             'currentText',
             'nodes',
+            'revealedChars',
           ],
           'requires': [],
         },
@@ -909,6 +915,11 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   ],
                 ],
                 [
+                  'set',
+                  '@entity.revealedChars',
+                  0,
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -962,6 +973,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                     'children': [
                       {
                         'portrait': '@config.portraitUrl',
+                        'revealedChars': '@entity.revealedChars',
                         'speaker': '@entity.currentSpeaker',
                         'text': '@entity.currentText',
                         'type': 'dialogue-bubble',
@@ -1081,100 +1093,10 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   ],
                 ],
                 [
-                  'render-ui',
-                  'main',
-                  {
-                    'backgroundAsset': [
-                      'let',
-                      [
-                        [
-                          'bg',
-                          [
-                            'object/get',
-                            [
-                              'array/first',
-                              [
-                                'array/filter',
-                                '@entity.nodes',
-                                [
-                                  'fn',
-                                  'n',
-                                  [
-                                    '==',
-                                    '@n.id',
-                                    '@entity.currentNodeId',
-                                  ],
-                                ],
-                              ],
-                            ],
-                            'backgroundKey',
-                          ],
-                        ],
-                      ],
-                      [
-                        'if',
-                        [
-                          '==',
-                          '@bg',
-                          'forge',
-                        ],
-                        '@config.forgeBg',
-                        [
-                          'if',
-                          [
-                            '==',
-                            '@bg',
-                            'core',
-                          ],
-                          '@config.coreBg',
-                          '@config.corridorBg',
-                        ],
-                      ],
-                    ],
-                    'children': [
-                      {
-                        'portrait': '@config.portraitUrl',
-                        'speaker': '@entity.currentSpeaker',
-                        'text': '@entity.currentText',
-                        'type': 'dialogue-bubble',
-                      },
-                      {
-                        'entity': '@entity.currentChoices',
-                        'fields': [],
-                        'gap': 'sm',
-                        'renderItem': [
-                          'fn',
-                          'c',
-                          {
-                            'action': 'CHOOSE',
-                            'payload': {
-                              'nextId': [
-                                'object/get',
-                                '@c',
-                                'nextId',
-                              ],
-                            },
-                            'text': [
-                              'object/get',
-                              '@c',
-                              'label',
-                            ],
-                            'type': 'choice-button',
-                          },
-                        ],
-                        'type': 'data-list',
-                      },
-                    ],
-                    'type': 'game-shell',
-                  },
+                  'set',
+                  '@entity.revealedChars',
+                  0,
                 ],
-              ],
-              'event': 'CHOOSE',
-              'from': 'playing',
-              'to': 'playing',
-            },
-            {
-              'effects': [
                 [
                   'render-ui',
                   'main',
@@ -1229,6 +1151,111 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                     'children': [
                       {
                         'portrait': '@config.portraitUrl',
+                        'revealedChars': '@entity.revealedChars',
+                        'speaker': '@entity.currentSpeaker',
+                        'text': '@entity.currentText',
+                        'type': 'dialogue-bubble',
+                      },
+                      {
+                        'entity': '@entity.currentChoices',
+                        'fields': [],
+                        'gap': 'sm',
+                        'renderItem': [
+                          'fn',
+                          'c',
+                          {
+                            'action': 'CHOOSE',
+                            'payload': {
+                              'nextId': [
+                                'object/get',
+                                '@c',
+                                'nextId',
+                              ],
+                            },
+                            'text': [
+                              'object/get',
+                              '@c',
+                              'label',
+                            ],
+                            'type': 'choice-button',
+                          },
+                        ],
+                        'type': 'data-list',
+                      },
+                    ],
+                    'type': 'game-shell',
+                  },
+                ],
+              ],
+              'event': 'CHOOSE',
+              'from': 'playing',
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.revealedChars',
+                  [
+                    'str/len',
+                    '@entity.currentText',
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'backgroundAsset': [
+                      'let',
+                      [
+                        [
+                          'bg',
+                          [
+                            'object/get',
+                            [
+                              'array/first',
+                              [
+                                'array/filter',
+                                '@entity.nodes',
+                                [
+                                  'fn',
+                                  'n',
+                                  [
+                                    '==',
+                                    '@n.id',
+                                    '@entity.currentNodeId',
+                                  ],
+                                ],
+                              ],
+                            ],
+                            'backgroundKey',
+                          ],
+                        ],
+                      ],
+                      [
+                        'if',
+                        [
+                          '==',
+                          '@bg',
+                          'forge',
+                        ],
+                        '@config.forgeBg',
+                        [
+                          'if',
+                          [
+                            '==',
+                            '@bg',
+                            'core',
+                          ],
+                          '@config.coreBg',
+                          '@config.corridorBg',
+                        ],
+                      ],
+                    ],
+                    'children': [
+                      {
+                        'portrait': '@config.portraitUrl',
+                        'revealedChars': '@entity.revealedChars',
                         'speaker': '@entity.currentSpeaker',
                         'text': '@entity.currentText',
                         'type': 'dialogue-bubble',
@@ -1348,6 +1375,11 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   ],
                 ],
                 [
+                  'set',
+                  '@entity.revealedChars',
+                  0,
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -1401,6 +1433,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                     'children': [
                       {
                         'portrait': '@config.portraitUrl',
+                        'revealedChars': '@entity.revealedChars',
                         'speaker': '@entity.currentSpeaker',
                         'text': '@entity.currentText',
                         'type': 'dialogue-bubble',
@@ -1442,6 +1475,120 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
             },
           ],
         },
+        'ticks': [
+          {
+            'effects': [
+              [
+                'set',
+                '@entity.revealedChars',
+                [
+                  '+',
+                  '@entity.revealedChars',
+                  1,
+                ],
+              ],
+              [
+                'render-ui',
+                'main',
+                {
+                  'backgroundAsset': [
+                    'let',
+                    [
+                      [
+                        'bg',
+                        [
+                          'object/get',
+                          [
+                            'array/first',
+                            [
+                              'array/filter',
+                              '@entity.nodes',
+                              [
+                                'fn',
+                                'n',
+                                [
+                                  '==',
+                                  '@n.id',
+                                  '@entity.currentNodeId',
+                                ],
+                              ],
+                            ],
+                          ],
+                          'backgroundKey',
+                        ],
+                      ],
+                    ],
+                    [
+                      'if',
+                      [
+                        '==',
+                        '@bg',
+                        'forge',
+                      ],
+                      '@config.forgeBg',
+                      [
+                        'if',
+                        [
+                          '==',
+                          '@bg',
+                          'core',
+                        ],
+                        '@config.coreBg',
+                        '@config.corridorBg',
+                      ],
+                    ],
+                  ],
+                  'children': [
+                    {
+                      'portrait': '@config.portraitUrl',
+                      'revealedChars': '@entity.revealedChars',
+                      'speaker': '@entity.currentSpeaker',
+                      'text': '@entity.currentText',
+                      'type': 'dialogue-bubble',
+                    },
+                    {
+                      'entity': '@entity.currentChoices',
+                      'fields': [],
+                      'gap': 'sm',
+                      'renderItem': [
+                        'fn',
+                        'c',
+                        {
+                          'action': 'CHOOSE',
+                          'payload': {
+                            'nextId': [
+                              'object/get',
+                              '@c',
+                              'nextId',
+                            ],
+                          },
+                          'text': [
+                            'object/get',
+                            '@c',
+                            'label',
+                          ],
+                          'type': 'choice-button',
+                        },
+                      ],
+                      'type': 'data-list',
+                    },
+                  ],
+                  'type': 'game-shell',
+                },
+              ],
+            ],
+            'guard': [
+              '<',
+              '@entity.revealedChars',
+              [
+                'str/len',
+                '@entity.currentText',
+              ],
+            ],
+            'interval': 30,
+            'name': 'typewriterTick',
+          },
+        ],
       } as never, 'VisualNovelBoardItem', canonicalName) as never,
     ],
     pages: [

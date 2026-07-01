@@ -45,8 +45,12 @@ export interface StdUiHealthBarConfig {
   className?: string;
   /** Default: `3` */
   current?: number;
+  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"fillAsset","dimension":"2d","name":"fillAsset","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
+  fillAsset?: EntityRow;
   /** Default: `"hearts"` */
   format?: 'hearts' | 'bar' | 'numeric' | 'progress';
+  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"frameAsset","dimension":"2d","name":"frameAsset","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
+  frameAsset?: EntityRow;
   /** Default: `"Label Suffix"` */
   labelSuffix?: string;
   /** Default: `0` */
