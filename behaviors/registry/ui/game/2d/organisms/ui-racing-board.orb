@@ -2805,7 +2805,7 @@
               "tier": "domain"
             },
             {
-              "description": "Emitted when a car moves to a new tile",
+              "description": "Emitted when a car moves to a new tile (click-to-move)",
               "event": "MOVE",
               "payloadSchema": [
                 {
@@ -2822,6 +2822,54 @@
                   "name": "y",
                   "required": true,
                   "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Steer-left intent (keyboard keyMap)",
+              "event": "MOVE_LEFT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Steer-right intent (keyboard keyMap)",
+              "event": "MOVE_RIGHT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Accelerate/up intent (keyboard keyMap)",
+              "event": "MOVE_UP",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Brake/down intent (keyboard keyMap)",
+              "event": "MOVE_DOWN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
                 }
               ],
               "scope": "external",
@@ -2906,7 +2954,7 @@
                 "name": "Initialize"
               },
               {
-                "description": "Emitted when a car moves to a new tile",
+                "description": "Emitted when a car moves to a new tile (click-to-move)",
                 "key": "MOVE",
                 "name": "Move",
                 "payloadSchema": [
@@ -2924,6 +2972,54 @@
                     "name": "y",
                     "required": true,
                     "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Steer-left intent (keyboard keyMap)",
+                "key": "MOVE_LEFT",
+                "name": "Move Left",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Steer-right intent (keyboard keyMap)",
+                "key": "MOVE_RIGHT",
+                "name": "Move Right",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Accelerate/up intent (keyboard keyMap)",
+                "key": "MOVE_UP",
+                "name": "Move Up",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Brake/down intent (keyboard keyMap)",
+                "key": "MOVE_DOWN",
+                "name": "Move Down",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
                   }
                 ],
                 "tier": "domain"
@@ -3086,6 +3182,16 @@
                           "assetManifest": "@config.assetManifest",
                           "effects": "@entity.effects",
                           "features": "@config.features",
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP"
+                          },
                           "projection": "flat",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3246,6 +3352,16 @@
                           "assetManifest": "@config.assetManifest",
                           "effects": "@entity.effects",
                           "features": "@config.features",
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP"
+                          },
                           "projection": "flat",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3413,6 +3529,16 @@
                           "assetManifest": "@config.assetManifest",
                           "effects": "@entity.effects",
                           "features": "@config.features",
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP"
+                          },
                           "projection": "flat",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3519,6 +3645,210 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.team",
+                            "player"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": "walk",
+                              "position": {
+                                "x": [
+                                  "math/max",
+                                  0.0,
+                                  [
+                                    "-",
+                                    "@u.position.x",
+                                    1.0
+                                  ]
+                                ],
+                                "y": "@u.position.y"
+                              },
+                              "previousPosition": "@u.position"
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "MOVE_LEFT",
+                "from": "racing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.team",
+                            "player"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": "walk",
+                              "position": {
+                                "x": [
+                                  "+",
+                                  "@u.position.x",
+                                  1.0
+                                ],
+                                "y": "@u.position.y"
+                              },
+                              "previousPosition": "@u.position"
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "MOVE_RIGHT",
+                "from": "racing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.team",
+                            "player"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": "walk",
+                              "position": {
+                                "x": "@u.position.x",
+                                "y": [
+                                  "math/max",
+                                  0.0,
+                                  [
+                                    "-",
+                                    "@u.position.y",
+                                    1.0
+                                  ]
+                                ]
+                              },
+                              "previousPosition": "@u.position"
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "MOVE_UP",
+                "from": "racing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.team",
+                            "player"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": "walk",
+                              "position": {
+                                "x": "@u.position.x",
+                                "y": [
+                                  "+",
+                                  "@u.position.y",
+                                  1.0
+                                ]
+                              },
+                              "previousPosition": "@u.position"
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "MOVE_DOWN",
+                "from": "racing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
                     "@entity.lap",
                     [
                       "+",
@@ -3547,6 +3877,16 @@
                           "assetManifest": "@config.assetManifest",
                           "effects": "@entity.effects",
                           "features": "@config.features",
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP"
+                          },
                           "projection": "flat",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3677,6 +4017,16 @@
                           "assetManifest": "@config.assetManifest",
                           "effects": "@entity.effects",
                           "features": "@config.features",
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP"
+                          },
                           "projection": "flat",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3821,6 +4171,16 @@
                           "assetManifest": "@config.assetManifest",
                           "effects": "@entity.effects",
                           "features": "@config.features",
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP"
+                          },
                           "projection": "flat",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3964,6 +4324,16 @@
                           "assetManifest": "@config.assetManifest",
                           "effects": "@entity.effects",
                           "features": "@config.features",
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP"
+                          },
                           "projection": "flat",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -4094,6 +4464,16 @@
                           "assetManifest": "@config.assetManifest",
                           "effects": "@entity.effects",
                           "features": "@config.features",
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP"
+                          },
                           "projection": "flat",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -4254,6 +4634,16 @@
                           "assetManifest": "@config.assetManifest",
                           "effects": "@entity.effects",
                           "features": "@config.features",
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP"
+                          },
                           "projection": "flat",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -4377,6 +4767,16 @@
                         "assetManifest": "@config.assetManifest",
                         "effects": "@entity.effects",
                         "features": "@config.features",
+                        "keyMap": {
+                          "ArrowDown": "MOVE_DOWN",
+                          "ArrowLeft": "MOVE_LEFT",
+                          "ArrowRight": "MOVE_RIGHT",
+                          "ArrowUp": "MOVE_UP",
+                          "KeyA": "MOVE_LEFT",
+                          "KeyD": "MOVE_RIGHT",
+                          "KeyS": "MOVE_DOWN",
+                          "KeyW": "MOVE_UP"
+                        },
                         "projection": "flat",
                         "scale": "@config.scale",
                         "selectedUnitId": "@entity.selectedUnitId",
