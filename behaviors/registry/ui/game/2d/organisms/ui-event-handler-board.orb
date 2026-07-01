@@ -706,12 +706,161 @@
                     "render-ui",
                     "main",
                     {
-                      "completeEvent": "COMPLETE",
-                      "editRuleEvent": "EDIT_RULE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "playEvent": "PLAY",
-                      "type": "event-handler-board"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "entity": "@entity.objects",
+                          "fields": [],
+                          "gap": "sm",
+                          "renderItem": [
+                            "fn",
+                            "obj",
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@obj.name",
+                                      "type": "typography",
+                                      "variant": "label"
+                                    },
+                                    {
+                                      "label": "@obj.currentState",
+                                      "type": "badge"
+                                    },
+                                    {
+                                      "action": "EDIT_RULE",
+                                      "actionPayload": {
+                                        "objectId": "@obj.id",
+                                        "rules": []
+                                      },
+                                      "label": "Clear",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                },
+                                {
+                                  "entity": "@obj.rules",
+                                  "fields": [],
+                                  "gap": "xs",
+                                  "renderItem": [
+                                    "fn",
+                                    "r",
+                                    {
+                                      "label": "@r.thenAction",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                },
+                                {
+                                  "entity": "@obj.availableActions",
+                                  "fields": [],
+                                  "gap": "xs",
+                                  "renderItem": [
+                                    "fn",
+                                    "a",
+                                    {
+                                      "action": "EDIT_RULE",
+                                      "actionPayload": {
+                                        "objectId": "@obj.id",
+                                        "rules": [
+                                          {
+                                            "thenAction": "@a.id",
+                                            "whenEvent": [
+                                              "array/first",
+                                              "@entity.triggerEvents"
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      "label": "@a.label",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@a.id",
+                                          "@entity.goalEvent"
+                                        ],
+                                        "success",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                }
+                              ],
+                              "type": "card"
+                            }
+                          ],
+                          "type": "data-list"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Goal",
+                                "value": "@entity.goalEvent"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Status",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "PLAY",
+                                "label": "Play",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -770,12 +919,161 @@
                     "render-ui",
                     "main",
                     {
-                      "completeEvent": "COMPLETE",
-                      "editRuleEvent": "EDIT_RULE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "playEvent": "PLAY",
-                      "type": "event-handler-board"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "entity": "@entity.objects",
+                          "fields": [],
+                          "gap": "sm",
+                          "renderItem": [
+                            "fn",
+                            "obj",
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@obj.name",
+                                      "type": "typography",
+                                      "variant": "label"
+                                    },
+                                    {
+                                      "label": "@obj.currentState",
+                                      "type": "badge"
+                                    },
+                                    {
+                                      "action": "EDIT_RULE",
+                                      "actionPayload": {
+                                        "objectId": "@obj.id",
+                                        "rules": []
+                                      },
+                                      "label": "Clear",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                },
+                                {
+                                  "entity": "@obj.rules",
+                                  "fields": [],
+                                  "gap": "xs",
+                                  "renderItem": [
+                                    "fn",
+                                    "r",
+                                    {
+                                      "label": "@r.thenAction",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                },
+                                {
+                                  "entity": "@obj.availableActions",
+                                  "fields": [],
+                                  "gap": "xs",
+                                  "renderItem": [
+                                    "fn",
+                                    "a",
+                                    {
+                                      "action": "EDIT_RULE",
+                                      "actionPayload": {
+                                        "objectId": "@obj.id",
+                                        "rules": [
+                                          {
+                                            "thenAction": "@a.id",
+                                            "whenEvent": [
+                                              "array/first",
+                                              "@entity.triggerEvents"
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      "label": "@a.label",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@a.id",
+                                          "@entity.goalEvent"
+                                        ],
+                                        "success",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                }
+                              ],
+                              "type": "card"
+                            }
+                          ],
+                          "type": "data-list"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Goal",
+                                "value": "@entity.goalEvent"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Status",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "PLAY",
+                                "label": "Play",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -821,12 +1119,161 @@
                     "render-ui",
                     "main",
                     {
-                      "completeEvent": "COMPLETE",
-                      "editRuleEvent": "EDIT_RULE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "playEvent": "PLAY",
-                      "type": "event-handler-board"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "entity": "@entity.objects",
+                          "fields": [],
+                          "gap": "sm",
+                          "renderItem": [
+                            "fn",
+                            "obj",
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@obj.name",
+                                      "type": "typography",
+                                      "variant": "label"
+                                    },
+                                    {
+                                      "label": "@obj.currentState",
+                                      "type": "badge"
+                                    },
+                                    {
+                                      "action": "EDIT_RULE",
+                                      "actionPayload": {
+                                        "objectId": "@obj.id",
+                                        "rules": []
+                                      },
+                                      "label": "Clear",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                },
+                                {
+                                  "entity": "@obj.rules",
+                                  "fields": [],
+                                  "gap": "xs",
+                                  "renderItem": [
+                                    "fn",
+                                    "r",
+                                    {
+                                      "label": "@r.thenAction",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                },
+                                {
+                                  "entity": "@obj.availableActions",
+                                  "fields": [],
+                                  "gap": "xs",
+                                  "renderItem": [
+                                    "fn",
+                                    "a",
+                                    {
+                                      "action": "EDIT_RULE",
+                                      "actionPayload": {
+                                        "objectId": "@obj.id",
+                                        "rules": [
+                                          {
+                                            "thenAction": "@a.id",
+                                            "whenEvent": [
+                                              "array/first",
+                                              "@entity.triggerEvents"
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      "label": "@a.label",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@a.id",
+                                          "@entity.goalEvent"
+                                        ],
+                                        "success",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                }
+                              ],
+                              "type": "card"
+                            }
+                          ],
+                          "type": "data-list"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Goal",
+                                "value": "@entity.goalEvent"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Status",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "PLAY",
+                                "label": "Play",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -854,12 +1301,161 @@
                     "render-ui",
                     "main",
                     {
-                      "completeEvent": "COMPLETE",
-                      "editRuleEvent": "EDIT_RULE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "playEvent": "PLAY",
-                      "type": "event-handler-board"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "entity": "@entity.objects",
+                          "fields": [],
+                          "gap": "sm",
+                          "renderItem": [
+                            "fn",
+                            "obj",
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@obj.name",
+                                      "type": "typography",
+                                      "variant": "label"
+                                    },
+                                    {
+                                      "label": "@obj.currentState",
+                                      "type": "badge"
+                                    },
+                                    {
+                                      "action": "EDIT_RULE",
+                                      "actionPayload": {
+                                        "objectId": "@obj.id",
+                                        "rules": []
+                                      },
+                                      "label": "Clear",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                },
+                                {
+                                  "entity": "@obj.rules",
+                                  "fields": [],
+                                  "gap": "xs",
+                                  "renderItem": [
+                                    "fn",
+                                    "r",
+                                    {
+                                      "label": "@r.thenAction",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                },
+                                {
+                                  "entity": "@obj.availableActions",
+                                  "fields": [],
+                                  "gap": "xs",
+                                  "renderItem": [
+                                    "fn",
+                                    "a",
+                                    {
+                                      "action": "EDIT_RULE",
+                                      "actionPayload": {
+                                        "objectId": "@obj.id",
+                                        "rules": [
+                                          {
+                                            "thenAction": "@a.id",
+                                            "whenEvent": [
+                                              "array/first",
+                                              "@entity.triggerEvents"
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      "label": "@a.label",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@a.id",
+                                          "@entity.goalEvent"
+                                        ],
+                                        "success",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                }
+                              ],
+                              "type": "card"
+                            }
+                          ],
+                          "type": "data-list"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Goal",
+                                "value": "@entity.goalEvent"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Status",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "PLAY",
+                                "label": "Play",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -918,12 +1514,161 @@
                     "render-ui",
                     "main",
                     {
-                      "completeEvent": "COMPLETE",
-                      "editRuleEvent": "EDIT_RULE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "playEvent": "PLAY",
-                      "type": "event-handler-board"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "entity": "@entity.objects",
+                          "fields": [],
+                          "gap": "sm",
+                          "renderItem": [
+                            "fn",
+                            "obj",
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@obj.name",
+                                      "type": "typography",
+                                      "variant": "label"
+                                    },
+                                    {
+                                      "label": "@obj.currentState",
+                                      "type": "badge"
+                                    },
+                                    {
+                                      "action": "EDIT_RULE",
+                                      "actionPayload": {
+                                        "objectId": "@obj.id",
+                                        "rules": []
+                                      },
+                                      "label": "Clear",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                },
+                                {
+                                  "entity": "@obj.rules",
+                                  "fields": [],
+                                  "gap": "xs",
+                                  "renderItem": [
+                                    "fn",
+                                    "r",
+                                    {
+                                      "label": "@r.thenAction",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                },
+                                {
+                                  "entity": "@obj.availableActions",
+                                  "fields": [],
+                                  "gap": "xs",
+                                  "renderItem": [
+                                    "fn",
+                                    "a",
+                                    {
+                                      "action": "EDIT_RULE",
+                                      "actionPayload": {
+                                        "objectId": "@obj.id",
+                                        "rules": [
+                                          {
+                                            "thenAction": "@a.id",
+                                            "whenEvent": [
+                                              "array/first",
+                                              "@entity.triggerEvents"
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      "label": "@a.label",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@a.id",
+                                          "@entity.goalEvent"
+                                        ],
+                                        "success",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                }
+                              ],
+                              "type": "card"
+                            }
+                          ],
+                          "type": "data-list"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Goal",
+                                "value": "@entity.goalEvent"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Status",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "PLAY",
+                                "label": "Play",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -1018,12 +1763,161 @@
                     "render-ui",
                     "main",
                     {
-                      "completeEvent": "COMPLETE",
-                      "editRuleEvent": "EDIT_RULE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "playEvent": "PLAY",
-                      "type": "event-handler-board"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "entity": "@entity.objects",
+                          "fields": [],
+                          "gap": "sm",
+                          "renderItem": [
+                            "fn",
+                            "obj",
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@obj.name",
+                                      "type": "typography",
+                                      "variant": "label"
+                                    },
+                                    {
+                                      "label": "@obj.currentState",
+                                      "type": "badge"
+                                    },
+                                    {
+                                      "action": "EDIT_RULE",
+                                      "actionPayload": {
+                                        "objectId": "@obj.id",
+                                        "rules": []
+                                      },
+                                      "label": "Clear",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                },
+                                {
+                                  "entity": "@obj.rules",
+                                  "fields": [],
+                                  "gap": "xs",
+                                  "renderItem": [
+                                    "fn",
+                                    "r",
+                                    {
+                                      "label": "@r.thenAction",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                },
+                                {
+                                  "entity": "@obj.availableActions",
+                                  "fields": [],
+                                  "gap": "xs",
+                                  "renderItem": [
+                                    "fn",
+                                    "a",
+                                    {
+                                      "action": "EDIT_RULE",
+                                      "actionPayload": {
+                                        "objectId": "@obj.id",
+                                        "rules": [
+                                          {
+                                            "thenAction": "@a.id",
+                                            "whenEvent": [
+                                              "array/first",
+                                              "@entity.triggerEvents"
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      "label": "@a.label",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@a.id",
+                                          "@entity.goalEvent"
+                                        ],
+                                        "success",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                }
+                              ],
+                              "type": "card"
+                            }
+                          ],
+                          "type": "data-list"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Goal",
+                                "value": "@entity.goalEvent"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Status",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "PLAY",
+                                "label": "Play",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -1037,12 +1931,161 @@
                     "render-ui",
                     "main",
                     {
-                      "completeEvent": "COMPLETE",
-                      "editRuleEvent": "EDIT_RULE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "playEvent": "PLAY",
-                      "type": "event-handler-board"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "entity": "@entity.objects",
+                          "fields": [],
+                          "gap": "sm",
+                          "renderItem": [
+                            "fn",
+                            "obj",
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@obj.name",
+                                      "type": "typography",
+                                      "variant": "label"
+                                    },
+                                    {
+                                      "label": "@obj.currentState",
+                                      "type": "badge"
+                                    },
+                                    {
+                                      "action": "EDIT_RULE",
+                                      "actionPayload": {
+                                        "objectId": "@obj.id",
+                                        "rules": []
+                                      },
+                                      "label": "Clear",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                },
+                                {
+                                  "entity": "@obj.rules",
+                                  "fields": [],
+                                  "gap": "xs",
+                                  "renderItem": [
+                                    "fn",
+                                    "r",
+                                    {
+                                      "label": "@r.thenAction",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                },
+                                {
+                                  "entity": "@obj.availableActions",
+                                  "fields": [],
+                                  "gap": "xs",
+                                  "renderItem": [
+                                    "fn",
+                                    "a",
+                                    {
+                                      "action": "EDIT_RULE",
+                                      "actionPayload": {
+                                        "objectId": "@obj.id",
+                                        "rules": [
+                                          {
+                                            "thenAction": "@a.id",
+                                            "whenEvent": [
+                                              "array/first",
+                                              "@entity.triggerEvents"
+                                            ]
+                                          }
+                                        ]
+                                      },
+                                      "label": "@a.label",
+                                      "type": "button",
+                                      "variant": [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@a.id",
+                                          "@entity.goalEvent"
+                                        ],
+                                        "success",
+                                        "ghost"
+                                      ]
+                                    }
+                                  ],
+                                  "type": "data-list"
+                                }
+                              ],
+                              "type": "card"
+                            }
+                          ],
+                          "type": "data-list"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Goal",
+                                "value": "@entity.goalEvent"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Status",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "PLAY",
+                                "label": "Play",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],

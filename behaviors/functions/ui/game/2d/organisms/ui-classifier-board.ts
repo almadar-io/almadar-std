@@ -675,12 +675,130 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'render-ui',
                   'main',
                   {
-                    'assignEvent': 'ASSIGN',
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'type': 'classifier-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.items',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              'i',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@i.label',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@i.assignedCategory',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.categories',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'c',
+                                      {
+                                        'action': 'ASSIGN',
+                                        'actionPayload': {
+                                          'categoryId': '@c.id',
+                                          'itemId': '@i.id',
+                                        },
+                                        'label': '@c.label',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@i.assignedCategory',
+                                            '@c.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -729,12 +847,130 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'render-ui',
                   'main',
                   {
-                    'assignEvent': 'ASSIGN',
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'type': 'classifier-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.items',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              'i',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@i.label',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@i.assignedCategory',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.categories',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'c',
+                                      {
+                                        'action': 'ASSIGN',
+                                        'actionPayload': {
+                                          'categoryId': '@c.id',
+                                          'itemId': '@i.id',
+                                        },
+                                        'label': '@c.label',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@i.assignedCategory',
+                                            '@c.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -776,12 +1012,130 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'render-ui',
                   'main',
                   {
-                    'assignEvent': 'ASSIGN',
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'type': 'classifier-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.items',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              'i',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@i.label',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@i.assignedCategory',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.categories',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'c',
+                                      {
+                                        'action': 'ASSIGN',
+                                        'actionPayload': {
+                                          'categoryId': '@c.id',
+                                          'itemId': '@i.id',
+                                        },
+                                        'label': '@c.label',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@i.assignedCategory',
+                                            '@c.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -809,12 +1163,130 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'render-ui',
                   'main',
                   {
-                    'assignEvent': 'ASSIGN',
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'type': 'classifier-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.items',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              'i',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@i.label',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@i.assignedCategory',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.categories',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'c',
+                                      {
+                                        'action': 'ASSIGN',
+                                        'actionPayload': {
+                                          'categoryId': '@c.id',
+                                          'itemId': '@i.id',
+                                        },
+                                        'label': '@c.label',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@i.assignedCategory',
+                                            '@c.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -865,12 +1337,130 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'render-ui',
                   'main',
                   {
-                    'assignEvent': 'ASSIGN',
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'type': 'classifier-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.items',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              'i',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@i.label',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@i.assignedCategory',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.categories',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'c',
+                                      {
+                                        'action': 'ASSIGN',
+                                        'actionPayload': {
+                                          'categoryId': '@c.id',
+                                          'itemId': '@i.id',
+                                        },
+                                        'label': '@c.label',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@i.assignedCategory',
+                                            '@c.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -947,12 +1537,130 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'render-ui',
                   'main',
                   {
-                    'assignEvent': 'ASSIGN',
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'type': 'classifier-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.items',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              'i',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@i.label',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@i.assignedCategory',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.categories',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'c',
+                                      {
+                                        'action': 'ASSIGN',
+                                        'actionPayload': {
+                                          'categoryId': '@c.id',
+                                          'itemId': '@i.id',
+                                        },
+                                        'label': '@c.label',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@i.assignedCategory',
+                                            '@c.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],

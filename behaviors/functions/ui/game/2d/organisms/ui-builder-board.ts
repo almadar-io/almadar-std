@@ -793,12 +793,131 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'type': 'builder-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.id',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedComponentId',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.components',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'c',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'componentId': '@c.id',
+                                          'slotId': '@s.id',
+                                        },
+                                        'iconAsset': '@c.iconUrl',
+                                        'label': '@c.label',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedComponentId',
+                                            '@c.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -847,12 +966,131 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'type': 'builder-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.id',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedComponentId',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.components',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'c',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'componentId': '@c.id',
+                                          'slotId': '@s.id',
+                                        },
+                                        'iconAsset': '@c.iconUrl',
+                                        'label': '@c.label',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedComponentId',
+                                            '@c.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -894,12 +1132,131 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'type': 'builder-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.id',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedComponentId',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.components',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'c',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'componentId': '@c.id',
+                                          'slotId': '@s.id',
+                                        },
+                                        'iconAsset': '@c.iconUrl',
+                                        'label': '@c.label',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedComponentId',
+                                            '@c.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -927,12 +1284,131 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'type': 'builder-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.id',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedComponentId',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.components',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'c',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'componentId': '@c.id',
+                                          'slotId': '@s.id',
+                                        },
+                                        'iconAsset': '@c.iconUrl',
+                                        'label': '@c.label',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedComponentId',
+                                            '@c.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -983,12 +1459,131 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'type': 'builder-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.id',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedComponentId',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.components',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'c',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'componentId': '@c.id',
+                                          'slotId': '@s.id',
+                                        },
+                                        'iconAsset': '@c.iconUrl',
+                                        'label': '@c.label',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedComponentId',
+                                            '@c.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1045,12 +1640,131 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'type': 'builder-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.id',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedComponentId',
+                                        'type': 'badge',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.components',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'c',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'componentId': '@c.id',
+                                          'slotId': '@s.id',
+                                        },
+                                        'iconAsset': '@c.iconUrl',
+                                        'label': '@c.label',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedComponentId',
+                                            '@c.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],

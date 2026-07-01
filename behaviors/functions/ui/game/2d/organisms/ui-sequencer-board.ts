@@ -987,15 +987,140 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'render-ui',
                   'main',
                   {
-                    'categoryColors': '@config.categoryColors',
-                    'checkEvent': 'CHECK',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playEvent': 'PLAY',
-                    'removeEvent': 'REMOVE',
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'type': 'sequencer-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.index',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedActionId',
+                                        'type': 'badge',
+                                      },
+                                      {
+                                        'action': 'REMOVE',
+                                        'actionPayload': {
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'label': 'Clear',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.availableActions',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'a',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'actionId': '@a.id',
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'iconAsset': '@a.iconUrl',
+                                        'label': '@a.name',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedActionId',
+                                            '@a.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1074,15 +1199,140 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'render-ui',
                   'main',
                   {
-                    'categoryColors': '@config.categoryColors',
-                    'checkEvent': 'CHECK',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playEvent': 'PLAY',
-                    'removeEvent': 'REMOVE',
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'type': 'sequencer-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.index',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedActionId',
+                                        'type': 'badge',
+                                      },
+                                      {
+                                        'action': 'REMOVE',
+                                        'actionPayload': {
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'label': 'Clear',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.availableActions',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'a',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'actionId': '@a.id',
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'iconAsset': '@a.iconUrl',
+                                        'label': '@a.name',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedActionId',
+                                            '@a.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1128,15 +1378,140 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'render-ui',
                   'main',
                   {
-                    'categoryColors': '@config.categoryColors',
-                    'checkEvent': 'CHECK',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playEvent': 'PLAY',
-                    'removeEvent': 'REMOVE',
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'type': 'sequencer-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.index',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedActionId',
+                                        'type': 'badge',
+                                      },
+                                      {
+                                        'action': 'REMOVE',
+                                        'actionPayload': {
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'label': 'Clear',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.availableActions',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'a',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'actionId': '@a.id',
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'iconAsset': '@a.iconUrl',
+                                        'label': '@a.name',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedActionId',
+                                            '@a.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1182,15 +1557,140 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'render-ui',
                   'main',
                   {
-                    'categoryColors': '@config.categoryColors',
-                    'checkEvent': 'CHECK',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playEvent': 'PLAY',
-                    'removeEvent': 'REMOVE',
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'type': 'sequencer-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.index',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedActionId',
+                                        'type': 'badge',
+                                      },
+                                      {
+                                        'action': 'REMOVE',
+                                        'actionPayload': {
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'label': 'Clear',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.availableActions',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'a',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'actionId': '@a.id',
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'iconAsset': '@a.iconUrl',
+                                        'label': '@a.name',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedActionId',
+                                            '@a.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1209,15 +1709,140 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'render-ui',
                   'main',
                   {
-                    'categoryColors': '@config.categoryColors',
-                    'checkEvent': 'CHECK',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playEvent': 'PLAY',
-                    'removeEvent': 'REMOVE',
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'type': 'sequencer-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.index',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedActionId',
+                                        'type': 'badge',
+                                      },
+                                      {
+                                        'action': 'REMOVE',
+                                        'actionPayload': {
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'label': 'Clear',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.availableActions',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'a',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'actionId': '@a.id',
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'iconAsset': '@a.iconUrl',
+                                        'label': '@a.name',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedActionId',
+                                            '@a.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1245,15 +1870,140 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'render-ui',
                   'main',
                   {
-                    'categoryColors': '@config.categoryColors',
-                    'checkEvent': 'CHECK',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playEvent': 'PLAY',
-                    'removeEvent': 'REMOVE',
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'type': 'sequencer-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.index',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedActionId',
+                                        'type': 'badge',
+                                      },
+                                      {
+                                        'action': 'REMOVE',
+                                        'actionPayload': {
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'label': 'Clear',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.availableActions',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'a',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'actionId': '@a.id',
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'iconAsset': '@a.iconUrl',
+                                        'label': '@a.name',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedActionId',
+                                            '@a.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1301,15 +2051,140 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'render-ui',
                   'main',
                   {
-                    'categoryColors': '@config.categoryColors',
-                    'checkEvent': 'CHECK',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playEvent': 'PLAY',
-                    'removeEvent': 'REMOVE',
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'type': 'sequencer-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.index',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedActionId',
+                                        'type': 'badge',
+                                      },
+                                      {
+                                        'action': 'REMOVE',
+                                        'actionPayload': {
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'label': 'Clear',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.availableActions',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'a',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'actionId': '@a.id',
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'iconAsset': '@a.iconUrl',
+                                        'label': '@a.name',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedActionId',
+                                            '@a.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1328,15 +2203,140 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'render-ui',
                   'main',
                   {
-                    'categoryColors': '@config.categoryColors',
-                    'checkEvent': 'CHECK',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playEvent': 'PLAY',
-                    'removeEvent': 'REMOVE',
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'type': 'sequencer-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.index',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedActionId',
+                                        'type': 'badge',
+                                      },
+                                      {
+                                        'action': 'REMOVE',
+                                        'actionPayload': {
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'label': 'Clear',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.availableActions',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'a',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'actionId': '@a.id',
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'iconAsset': '@a.iconUrl',
+                                        'label': '@a.name',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedActionId',
+                                            '@a.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1368,15 +2368,140 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'render-ui',
                   'main',
                   {
-                    'categoryColors': '@config.categoryColors',
-                    'checkEvent': 'CHECK',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playEvent': 'PLAY',
-                    'removeEvent': 'REMOVE',
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'type': 'sequencer-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.index',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedActionId',
+                                        'type': 'badge',
+                                      },
+                                      {
+                                        'action': 'REMOVE',
+                                        'actionPayload': {
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'label': 'Clear',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.availableActions',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'a',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'actionId': '@a.id',
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'iconAsset': '@a.iconUrl',
+                                        'label': '@a.name',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedActionId',
+                                            '@a.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1410,15 +2535,140 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'render-ui',
                   'main',
                   {
-                    'categoryColors': '@config.categoryColors',
-                    'checkEvent': 'CHECK',
-                    'entity': '@entity',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playEvent': 'PLAY',
-                    'removeEvent': 'REMOVE',
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'type': 'sequencer-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.slots',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              's',
+                              {
+                                'children': [
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@s.index',
+                                        'type': 'typography',
+                                        'variant': 'label',
+                                      },
+                                      {
+                                        'label': '@s.placedActionId',
+                                        'type': 'badge',
+                                      },
+                                      {
+                                        'action': 'REMOVE',
+                                        'actionPayload': {
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'label': 'Clear',
+                                        'type': 'button',
+                                        'variant': 'ghost',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'gap': 'sm',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'entity': '@entity.availableActions',
+                                    'fields': [],
+                                    'gap': 'xs',
+                                    'renderItem': [
+                                      'fn',
+                                      'a',
+                                      {
+                                        'action': 'PLACE',
+                                        'actionPayload': {
+                                          'actionId': '@a.id',
+                                          'slotIndex': '@s.index',
+                                        },
+                                        'iconAsset': '@a.iconUrl',
+                                        'label': '@a.name',
+                                        'type': 'button',
+                                        'variant': [
+                                          'if',
+                                          [
+                                            '==',
+                                            '@s.placedActionId',
+                                            '@a.id',
+                                          ],
+                                          'success',
+                                          'ghost',
+                                        ],
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],

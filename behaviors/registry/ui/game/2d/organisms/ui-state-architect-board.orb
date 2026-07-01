@@ -1,5 +1,5 @@
 {
-  "description": "StateArchitectBoard — build a state machine whose transitions pass every test case.",
+  "description": "StateArchitectBoard — visual state-machine graph editor: wire transitions between state nodes so every test case reaches its expected state.",
   "name": "ui-state-architect-board",
   "orbitals": [
     {
@@ -19,6 +19,20 @@
           },
           {
             "name": "initialState",
+            "type": "string"
+          },
+          {
+            "name": "currentState",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "selectedState",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "addingFrom",
             "type": "string"
           },
           {
@@ -173,12 +187,6 @@
         {
           "category": "interaction",
           "config": {
-            "activeFilters": {
-              "description": "Active filters",
-              "label": "Active Filters",
-              "tier": "presentation",
-              "type": "json"
-            },
             "availableEvents": {
               "default": [
                 "ADVANCE",
@@ -261,56 +269,6 @@
               "label": "Is Loading",
               "tier": "presentation",
               "type": "boolean"
-            },
-            "pageProp": {
-              "default": 0.0,
-              "description": "Current page number",
-              "label": "Page",
-              "synonyms": "page",
-              "tier": "presentation",
-              "type": "number"
-            },
-            "pageSize": {
-              "default": 0.0,
-              "description": "Number of items per page",
-              "label": "Page Size",
-              "tier": "presentation",
-              "type": "number"
-            },
-            "searchValue": {
-              "default": "Search Value",
-              "description": "Current search query value",
-              "label": "Search Value",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "selectedIds": {
-              "default": [],
-              "description": "Currently selected item IDs",
-              "items": {
-                "type": "string"
-              },
-              "label": "Selected Ids",
-              "tier": "presentation",
-              "type": "[string]"
-            },
-            "sortBy": {
-              "default": "Sort By",
-              "description": "Current sort field",
-              "label": "Sort By",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "sortDirection": {
-              "default": "asc",
-              "description": "Current sort direction",
-              "label": "Sort Direction",
-              "tier": "presentation",
-              "type": "string",
-              "values": [
-                "asc",
-                "desc"
-              ]
             },
             "states": {
               "default": [
@@ -395,13 +353,6 @@
               "tier": "domain",
               "type": "string"
             },
-            "totalCount": {
-              "default": 0.0,
-              "description": "Total number of items",
-              "label": "Total Count",
-              "tier": "presentation",
-              "type": "number"
-            },
             "transitions": {
               "default": [],
               "description": "The player's current transition graph; empty at puzzle start so they must build it.",
@@ -475,26 +426,21 @@
           },
           "emits": [
             {
-              "description": "Emitted by the component when test-run completes; carries pass count.",
-              "event": "COMPLETE",
+              "description": "Player clicks a state node; FSM either selects it, cancels a pending connect, or wires a transition from the pending source.",
+              "event": "SELECT_NODE",
               "payloadSchema": [
                 {
-                  "name": "success",
+                  "name": "stateId",
                   "required": true,
-                  "type": "boolean"
-                },
-                {
-                  "name": "passedTests",
-                  "required": true,
-                  "type": "number"
+                  "type": "string"
                 }
               ],
               "scope": "external",
               "tier": "domain"
             },
             {
-              "description": "Player triggers the test runner; component evaluates each test case and fires COMPLETE.",
-              "event": "RUN_TESTS",
+              "description": "Player begins wiring a transition from the currently selected state node.",
+              "event": "START_CONNECT",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -505,14 +451,9 @@
               "tier": "domain"
             },
             {
-              "description": "Player wires a new transition in the graph editor.",
-              "event": "ADD_TRANSITION",
+              "description": "Player removes a transition, identified by its (from, to, event) triple.",
+              "event": "REMOVE_TRANSITION",
               "payloadSchema": [
-                {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
                 {
                   "name": "from",
                   "required": true,
@@ -533,12 +474,11 @@
               "tier": "domain"
             },
             {
-              "description": "Player removes a transition from the graph.",
-              "event": "REMOVE_TRANSITION",
+              "description": "Player runs the test suite; the FSM simulates each test case through the transition graph and scores passes.",
+              "event": "RUN_TESTS",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "required": true,
                   "type": "string"
                 }
               ],
@@ -560,14 +500,17 @@
           ],
           "entityContract": {
             "provides": [
+              "addingFrom",
               "attempts",
               "availableEvents",
+              "currentState",
               "description",
               "entityName",
               "hint",
               "initialState",
               "passedTests",
               "result",
+              "selectedState",
               "states",
               "testCases",
               "title",
@@ -592,15 +535,35 @@
                 "name": "Initialize"
               },
               {
-                "description": "Player wires a new transition in the graph editor.",
-                "key": "ADD_TRANSITION",
-                "name": "Add Transition",
+                "description": "Player clicks a state node; FSM either selects it, cancels a pending connect, or wires a transition from the pending source.",
+                "key": "SELECT_NODE",
+                "name": "Select Node",
+                "payloadSchema": [
+                  {
+                    "name": "stateId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Player begins wiring a transition from the currently selected state node.",
+                "key": "START_CONNECT",
+                "name": "Start Connect",
                 "payloadSchema": [
                   {
                     "name": "id",
-                    "required": true,
                     "type": "string"
-                  },
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Player removes a transition, identified by its (from, to, event) triple.",
+                "key": "REMOVE_TRANSITION",
+                "name": "Remove Transition",
+                "payloadSchema": [
                   {
                     "name": "from",
                     "required": true,
@@ -620,44 +583,13 @@
                 "tier": "domain"
               },
               {
-                "description": "Player removes a transition from the graph.",
-                "key": "REMOVE_TRANSITION",
-                "name": "Remove Transition",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "required": true,
-                    "type": "string"
-                  }
-                ],
-                "tier": "domain"
-              },
-              {
-                "description": "Player triggers the test runner; component evaluates each test case and fires COMPLETE.",
+                "description": "Player runs the test suite; the FSM simulates each test case through the transition graph and scores passes.",
                 "key": "RUN_TESTS",
                 "name": "Run Tests",
                 "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
-                  }
-                ],
-                "tier": "domain"
-              },
-              {
-                "description": "Emitted by the component when test-run completes; carries pass count.",
-                "key": "COMPLETE",
-                "name": "Complete",
-                "payloadSchema": [
-                  {
-                    "name": "success",
-                    "required": true,
-                    "type": "boolean"
-                  },
-                  {
-                    "name": "passedTests",
-                    "required": true,
-                    "type": "number"
                   }
                 ],
                 "tier": "domain"
@@ -702,6 +634,21 @@
                   ],
                   [
                     "set",
+                    "@entity.currentState",
+                    "@config.initialState"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedState",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.addingFrom",
+                    ""
+                  ],
+                  [
+                    "set",
                     "@entity.entityName",
                     "@config.entityName"
                   ],
@@ -767,13 +714,221 @@
                     "render-ui",
                     "main",
                     {
-                      "addTransitionEvent": "ADD_TRANSITION",
-                      "completeEvent": "COMPLETE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "removeTransitionEvent": "REMOVE_TRANSITION",
-                      "testEvent": "RUN_TESTS",
-                      "type": "state-architect-board"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "addingFrom": "@entity.addingFrom",
+                              "currentState": "@entity.currentState",
+                              "initialState": "@entity.initialState",
+                              "nodeClickEvent": "SELECT_NODE",
+                              "selectedState": "@entity.selectedState",
+                              "states": "@entity.states",
+                              "transitions": "@entity.transitions",
+                              "type": "state-graph"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Transitions",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.transitions",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "t",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@t.from",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.event",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.to",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "REMOVE_TRANSITION",
+                                      "actionPayload": {
+                                        "event": "@t.event",
+                                        "from": "@t.from",
+                                        "to": "@t.to"
+                                      },
+                                      "label": "Remove",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Test Cases",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.testCases",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "tc",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@tc.label",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@tc.expectedState",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Variables",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.variables",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "v",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@v.name",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@v.value",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Passed",
+                                "value": "@entity.passedTests"
+                              },
+                              {
+                                "label": "Total",
+                                "value": "@entity.totalTests"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "START_CONNECT",
+                                "label": "Add Transition",
+                                "type": "button",
+                                "variant": "ghost"
+                              },
+                              {
+                                "action": "RUN_TESTS",
+                                "label": "Run Tests",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -795,6 +950,21 @@
                   ],
                   [
                     "set",
+                    "@entity.currentState",
+                    "@config.initialState"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedState",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.addingFrom",
+                    ""
+                  ],
+                  [
+                    "set",
                     "@entity.entityName",
                     "@config.entityName"
                   ],
@@ -860,13 +1030,221 @@
                     "render-ui",
                     "main",
                     {
-                      "addTransitionEvent": "ADD_TRANSITION",
-                      "completeEvent": "COMPLETE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "removeTransitionEvent": "REMOVE_TRANSITION",
-                      "testEvent": "RUN_TESTS",
-                      "type": "state-architect-board"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "addingFrom": "@entity.addingFrom",
+                              "currentState": "@entity.currentState",
+                              "initialState": "@entity.initialState",
+                              "nodeClickEvent": "SELECT_NODE",
+                              "selectedState": "@entity.selectedState",
+                              "states": "@entity.states",
+                              "transitions": "@entity.transitions",
+                              "type": "state-graph"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Transitions",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.transitions",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "t",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@t.from",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.event",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.to",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "REMOVE_TRANSITION",
+                                      "actionPayload": {
+                                        "event": "@t.event",
+                                        "from": "@t.from",
+                                        "to": "@t.to"
+                                      },
+                                      "label": "Remove",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Test Cases",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.testCases",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "tc",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@tc.label",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@tc.expectedState",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Variables",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.variables",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "v",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@v.name",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@v.value",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Passed",
+                                "value": "@entity.passedTests"
+                              },
+                              {
+                                "label": "Total",
+                                "value": "@entity.totalTests"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "START_CONNECT",
+                                "label": "Add Transition",
+                                "type": "button",
+                                "variant": "ghost"
+                              },
+                              {
+                                "action": "RUN_TESTS",
+                                "label": "Run Tests",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -883,29 +1261,988 @@
                       "array/append",
                       "@entity.transitions",
                       {
-                        "event": "@payload.event",
-                        "from": "@payload.from",
-                        "id": "@payload.id",
-                        "to": "@payload.to"
+                        "event": [
+                          "array/first",
+                          "@entity.availableEvents"
+                        ],
+                        "from": "@entity.addingFrom",
+                        "id": [
+                          "array/first",
+                          "@entity.availableEvents"
+                        ],
+                        "to": "@payload.stateId"
                       }
                     ]
+                  ],
+                  [
+                    "set",
+                    "@entity.addingFrom",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedState",
+                    ""
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "addTransitionEvent": "ADD_TRANSITION",
-                      "completeEvent": "COMPLETE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "removeTransitionEvent": "REMOVE_TRANSITION",
-                      "testEvent": "RUN_TESTS",
-                      "type": "state-architect-board"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "addingFrom": "@entity.addingFrom",
+                              "currentState": "@entity.currentState",
+                              "initialState": "@entity.initialState",
+                              "nodeClickEvent": "SELECT_NODE",
+                              "selectedState": "@entity.selectedState",
+                              "states": "@entity.states",
+                              "transitions": "@entity.transitions",
+                              "type": "state-graph"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Transitions",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.transitions",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "t",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@t.from",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.event",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.to",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "REMOVE_TRANSITION",
+                                      "actionPayload": {
+                                        "event": "@t.event",
+                                        "from": "@t.from",
+                                        "to": "@t.to"
+                                      },
+                                      "label": "Remove",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Test Cases",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.testCases",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "tc",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@tc.label",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@tc.expectedState",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Variables",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.variables",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "v",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@v.name",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@v.value",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Passed",
+                                "value": "@entity.passedTests"
+                              },
+                              {
+                                "label": "Total",
+                                "value": "@entity.totalTests"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "START_CONNECT",
+                                "label": "Add Transition",
+                                "type": "button",
+                                "variant": "ghost"
+                              },
+                              {
+                                "action": "RUN_TESTS",
+                                "label": "Run Tests",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
-                "event": "ADD_TRANSITION",
+                "event": "SELECT_NODE",
                 "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "!=",
+                    "@entity.addingFrom",
+                    ""
+                  ],
+                  [
+                    "!=",
+                    "@entity.addingFrom",
+                    "@payload.stateId"
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.addingFrom",
+                    ""
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "addingFrom": "@entity.addingFrom",
+                              "currentState": "@entity.currentState",
+                              "initialState": "@entity.initialState",
+                              "nodeClickEvent": "SELECT_NODE",
+                              "selectedState": "@entity.selectedState",
+                              "states": "@entity.states",
+                              "transitions": "@entity.transitions",
+                              "type": "state-graph"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Transitions",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.transitions",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "t",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@t.from",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.event",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.to",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "REMOVE_TRANSITION",
+                                      "actionPayload": {
+                                        "event": "@t.event",
+                                        "from": "@t.from",
+                                        "to": "@t.to"
+                                      },
+                                      "label": "Remove",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Test Cases",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.testCases",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "tc",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@tc.label",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@tc.expectedState",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Variables",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.variables",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "v",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@v.name",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@v.value",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Passed",
+                                "value": "@entity.passedTests"
+                              },
+                              {
+                                "label": "Total",
+                                "value": "@entity.totalTests"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "START_CONNECT",
+                                "label": "Add Transition",
+                                "type": "button",
+                                "variant": "ghost"
+                              },
+                              {
+                                "action": "RUN_TESTS",
+                                "label": "Run Tests",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "SELECT_NODE",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "!=",
+                    "@entity.addingFrom",
+                    ""
+                  ],
+                  [
+                    "==",
+                    "@entity.addingFrom",
+                    "@payload.stateId"
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedState",
+                    "@payload.stateId"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "addingFrom": "@entity.addingFrom",
+                              "currentState": "@entity.currentState",
+                              "initialState": "@entity.initialState",
+                              "nodeClickEvent": "SELECT_NODE",
+                              "selectedState": "@entity.selectedState",
+                              "states": "@entity.states",
+                              "transitions": "@entity.transitions",
+                              "type": "state-graph"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Transitions",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.transitions",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "t",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@t.from",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.event",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.to",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "REMOVE_TRANSITION",
+                                      "actionPayload": {
+                                        "event": "@t.event",
+                                        "from": "@t.from",
+                                        "to": "@t.to"
+                                      },
+                                      "label": "Remove",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Test Cases",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.testCases",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "tc",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@tc.label",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@tc.expectedState",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Variables",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.variables",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "v",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@v.name",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@v.value",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Passed",
+                                "value": "@entity.passedTests"
+                              },
+                              {
+                                "label": "Total",
+                                "value": "@entity.totalTests"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "START_CONNECT",
+                                "label": "Add Transition",
+                                "type": "button",
+                                "variant": "ghost"
+                              },
+                              {
+                                "action": "RUN_TESTS",
+                                "label": "Run Tests",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "SELECT_NODE",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.addingFrom",
+                  ""
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.addingFrom",
+                    "@entity.selectedState"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "addingFrom": "@entity.addingFrom",
+                              "currentState": "@entity.currentState",
+                              "initialState": "@entity.initialState",
+                              "nodeClickEvent": "SELECT_NODE",
+                              "selectedState": "@entity.selectedState",
+                              "states": "@entity.states",
+                              "transitions": "@entity.transitions",
+                              "type": "state-graph"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Transitions",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.transitions",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "t",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@t.from",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.event",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.to",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "REMOVE_TRANSITION",
+                                      "actionPayload": {
+                                        "event": "@t.event",
+                                        "from": "@t.from",
+                                        "to": "@t.to"
+                                      },
+                                      "label": "Remove",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Test Cases",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.testCases",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "tc",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@tc.label",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@tc.expectedState",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Variables",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.variables",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "v",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@v.name",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@v.value",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Passed",
+                                "value": "@entity.passedTests"
+                              },
+                              {
+                                "label": "Total",
+                                "value": "@entity.totalTests"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "START_CONNECT",
+                                "label": "Add Transition",
+                                "type": "button",
+                                "variant": "ghost"
+                              },
+                              {
+                                "action": "RUN_TESTS",
+                                "label": "Run Tests",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "START_CONNECT",
+                "from": "playing",
+                "guard": [
+                  "!=",
+                  "@entity.selectedState",
+                  ""
+                ],
                 "to": "playing"
               },
               {
@@ -920,13 +2257,25 @@
                         "fn",
                         "t",
                         [
-                          "!=",
+                          "not",
                           [
-                            "object/get",
-                            "t",
-                            "id"
-                          ],
-                          "@payload.id"
+                            "and",
+                            [
+                              "==",
+                              "@t.from",
+                              "@payload.from"
+                            ],
+                            [
+                              "==",
+                              "@t.to",
+                              "@payload.to"
+                            ],
+                            [
+                              "==",
+                              "@t.event",
+                              "@payload.event"
+                            ]
+                          ]
                         ]
                       ]
                     ]
@@ -935,13 +2284,221 @@
                     "render-ui",
                     "main",
                     {
-                      "addTransitionEvent": "ADD_TRANSITION",
-                      "completeEvent": "COMPLETE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "removeTransitionEvent": "REMOVE_TRANSITION",
-                      "testEvent": "RUN_TESTS",
-                      "type": "state-architect-board"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "addingFrom": "@entity.addingFrom",
+                              "currentState": "@entity.currentState",
+                              "initialState": "@entity.initialState",
+                              "nodeClickEvent": "SELECT_NODE",
+                              "selectedState": "@entity.selectedState",
+                              "states": "@entity.states",
+                              "transitions": "@entity.transitions",
+                              "type": "state-graph"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Transitions",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.transitions",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "t",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@t.from",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.event",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.to",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "REMOVE_TRANSITION",
+                                      "actionPayload": {
+                                        "event": "@t.event",
+                                        "from": "@t.from",
+                                        "to": "@t.to"
+                                      },
+                                      "label": "Remove",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Test Cases",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.testCases",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "tc",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@tc.label",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@tc.expectedState",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Variables",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.variables",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "v",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@v.name",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@v.value",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Passed",
+                                "value": "@entity.passedTests"
+                              },
+                              {
+                                "label": "Total",
+                                "value": "@entity.totalTests"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "START_CONNECT",
+                                "label": "Add Transition",
+                                "type": "button",
+                                "variant": "ghost"
+                              },
+                              {
+                                "action": "RUN_TESTS",
+                                "label": "Run Tests",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -962,6 +2519,63 @@
                   ],
                   [
                     "set",
+                    "@entity.passedTests",
+                    [
+                      "array/len",
+                      [
+                        "array/filter",
+                        "@entity.testCases",
+                        [
+                          "fn",
+                          "tc",
+                          [
+                            "==",
+                            [
+                              "array/reduce",
+                              "@tc.events",
+                              [
+                                "fn",
+                                [
+                                  "st",
+                                  "e"
+                                ],
+                                [
+                                  "object/get",
+                                  [
+                                    "array/find",
+                                    "@entity.transitions",
+                                    [
+                                      "fn",
+                                      "t",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@t.from",
+                                          "@st"
+                                        ],
+                                        [
+                                          "==",
+                                          "@t.event",
+                                          "@e"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "to",
+                                  "@st"
+                                ]
+                              ],
+                              "@entity.initialState"
+                            ],
+                            "@tc.expectedState"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
                     "@entity.result",
                     "win"
                   ],
@@ -969,13 +2583,221 @@
                     "render-ui",
                     "main",
                     {
-                      "addTransitionEvent": "ADD_TRANSITION",
-                      "completeEvent": "COMPLETE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "removeTransitionEvent": "REMOVE_TRANSITION",
-                      "testEvent": "RUN_TESTS",
-                      "type": "state-architect-board"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "addingFrom": "@entity.addingFrom",
+                              "currentState": "@entity.currentState",
+                              "initialState": "@entity.initialState",
+                              "nodeClickEvent": "SELECT_NODE",
+                              "selectedState": "@entity.selectedState",
+                              "states": "@entity.states",
+                              "transitions": "@entity.transitions",
+                              "type": "state-graph"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Transitions",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.transitions",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "t",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@t.from",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.event",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.to",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "REMOVE_TRANSITION",
+                                      "actionPayload": {
+                                        "event": "@t.event",
+                                        "from": "@t.from",
+                                        "to": "@t.to"
+                                      },
+                                      "label": "Remove",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Test Cases",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.testCases",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "tc",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@tc.label",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@tc.expectedState",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Variables",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.variables",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "v",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@v.name",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@v.value",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Passed",
+                                "value": "@entity.passedTests"
+                              },
+                              {
+                                "label": "Total",
+                                "value": "@entity.totalTests"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "START_CONNECT",
+                                "label": "Add Transition",
+                                "type": "button",
+                                "variant": "ghost"
+                              },
+                              {
+                                "action": "RUN_TESTS",
+                                "label": "Run Tests",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -993,11 +2815,60 @@
                   ],
                   [
                     "==",
+                    "@entity.totalTests",
                     [
                       "array/len",
-                      "@entity.testCases"
-                    ],
-                    "@entity.passedTests"
+                      [
+                        "array/filter",
+                        "@entity.testCases",
+                        [
+                          "fn",
+                          "tc",
+                          [
+                            "==",
+                            [
+                              "array/reduce",
+                              "@tc.events",
+                              [
+                                "fn",
+                                [
+                                  "st",
+                                  "e"
+                                ],
+                                [
+                                  "object/get",
+                                  [
+                                    "array/find",
+                                    "@entity.transitions",
+                                    [
+                                      "fn",
+                                      "t",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@t.from",
+                                          "@st"
+                                        ],
+                                        [
+                                          "==",
+                                          "@t.event",
+                                          "@e"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "to",
+                                  "@st"
+                                ]
+                              ],
+                              "@entity.initialState"
+                            ],
+                            "@tc.expectedState"
+                          ]
+                        ]
+                      ]
+                    ]
                   ]
                 ],
                 "to": "complete"
@@ -1014,16 +2885,281 @@
                     ]
                   ],
                   [
+                    "set",
+                    "@entity.passedTests",
+                    [
+                      "array/len",
+                      [
+                        "array/filter",
+                        "@entity.testCases",
+                        [
+                          "fn",
+                          "tc",
+                          [
+                            "==",
+                            [
+                              "array/reduce",
+                              "@tc.events",
+                              [
+                                "fn",
+                                [
+                                  "st",
+                                  "e"
+                                ],
+                                [
+                                  "object/get",
+                                  [
+                                    "array/find",
+                                    "@entity.transitions",
+                                    [
+                                      "fn",
+                                      "t",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@t.from",
+                                          "@st"
+                                        ],
+                                        [
+                                          "==",
+                                          "@t.event",
+                                          "@e"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "to",
+                                  "@st"
+                                ]
+                              ],
+                              "@entity.initialState"
+                            ],
+                            "@tc.expectedState"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "addTransitionEvent": "ADD_TRANSITION",
-                      "completeEvent": "COMPLETE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "removeTransitionEvent": "REMOVE_TRANSITION",
-                      "testEvent": "RUN_TESTS",
-                      "type": "state-architect-board"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "addingFrom": "@entity.addingFrom",
+                              "currentState": "@entity.currentState",
+                              "initialState": "@entity.initialState",
+                              "nodeClickEvent": "SELECT_NODE",
+                              "selectedState": "@entity.selectedState",
+                              "states": "@entity.states",
+                              "transitions": "@entity.transitions",
+                              "type": "state-graph"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Transitions",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.transitions",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "t",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@t.from",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.event",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.to",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "REMOVE_TRANSITION",
+                                      "actionPayload": {
+                                        "event": "@t.event",
+                                        "from": "@t.from",
+                                        "to": "@t.to"
+                                      },
+                                      "label": "Remove",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Test Cases",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.testCases",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "tc",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@tc.label",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@tc.expectedState",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Variables",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.variables",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "v",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@v.name",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@v.value",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Passed",
+                                "value": "@entity.passedTests"
+                              },
+                              {
+                                "label": "Total",
+                                "value": "@entity.totalTests"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "START_CONNECT",
+                                "label": "Add Transition",
+                                "type": "button",
+                                "variant": "ghost"
+                              },
+                              {
+                                "action": "RUN_TESTS",
+                                "label": "Run Tests",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -1041,56 +3177,63 @@
                   ],
                   [
                     "!=",
+                    "@entity.totalTests",
                     [
                       "array/len",
-                      "@entity.testCases"
-                    ],
-                    "@entity.passedTests"
+                      [
+                        "array/filter",
+                        "@entity.testCases",
+                        [
+                          "fn",
+                          "tc",
+                          [
+                            "==",
+                            [
+                              "array/reduce",
+                              "@tc.events",
+                              [
+                                "fn",
+                                [
+                                  "st",
+                                  "e"
+                                ],
+                                [
+                                  "object/get",
+                                  [
+                                    "array/find",
+                                    "@entity.transitions",
+                                    [
+                                      "fn",
+                                      "t",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@t.from",
+                                          "@st"
+                                        ],
+                                        [
+                                          "==",
+                                          "@t.event",
+                                          "@e"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "to",
+                                  "@st"
+                                ]
+                              ],
+                              "@entity.initialState"
+                            ],
+                            "@tc.expectedState"
+                          ]
+                        ]
+                      ]
+                    ]
                   ]
                 ],
                 "to": "playing"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.passedTests",
-                    "@payload.passedTests"
-                  ],
-                  [
-                    "set",
-                    "@entity.result",
-                    [
-                      "if",
-                      [
-                        "==",
-                        "@payload.passedTests",
-                        [
-                          "array/len",
-                          "@entity.testCases"
-                        ]
-                      ],
-                      "win",
-                      "none"
-                    ]
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "addTransitionEvent": "ADD_TRANSITION",
-                      "completeEvent": "COMPLETE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "removeTransitionEvent": "REMOVE_TRANSITION",
-                      "testEvent": "RUN_TESTS",
-                      "type": "state-architect-board"
-                    }
-                  ]
-                ],
-                "event": "COMPLETE",
-                "from": "playing",
-                "to": "complete"
               },
               {
                 "effects": [
@@ -1103,6 +3246,21 @@
                     "set",
                     "@entity.initialState",
                     "@config.initialState"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentState",
+                    "@config.initialState"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedState",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.addingFrom",
+                    ""
                   ],
                   [
                     "set",
@@ -1171,13 +3329,221 @@
                     "render-ui",
                     "main",
                     {
-                      "addTransitionEvent": "ADD_TRANSITION",
-                      "completeEvent": "COMPLETE",
-                      "entity": "@entity",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "removeTransitionEvent": "REMOVE_TRANSITION",
-                      "testEvent": "RUN_TESTS",
-                      "type": "state-architect-board"
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "content": "@entity.title",
+                              "type": "typography",
+                              "variant": "h4"
+                            },
+                            {
+                              "content": "@entity.description",
+                              "type": "typography",
+                              "variant": "body"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "addingFrom": "@entity.addingFrom",
+                              "currentState": "@entity.currentState",
+                              "initialState": "@entity.initialState",
+                              "nodeClickEvent": "SELECT_NODE",
+                              "selectedState": "@entity.selectedState",
+                              "states": "@entity.states",
+                              "transitions": "@entity.transitions",
+                              "type": "state-graph"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Transitions",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.transitions",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "t",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@t.from",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.event",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "content": "@t.to",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "action": "REMOVE_TRANSITION",
+                                      "actionPayload": {
+                                        "event": "@t.event",
+                                        "from": "@t.from",
+                                        "to": "@t.to"
+                                      },
+                                      "label": "Remove",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Test Cases",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.testCases",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "tc",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@tc.label",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@tc.expectedState",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        },
+                        {
+                          "children": [
+                            {
+                              "content": "Variables",
+                              "type": "typography",
+                              "variant": "label"
+                            },
+                            {
+                              "entity": "@entity.variables",
+                              "fields": [],
+                              "gap": "xs",
+                              "renderItem": [
+                                "fn",
+                                "v",
+                                {
+                                  "children": [
+                                    {
+                                      "content": "@v.name",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "label": "@v.value",
+                                      "type": "badge"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                }
+                              ],
+                              "type": "data-list"
+                            }
+                          ],
+                          "type": "card"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Passed",
+                                "value": "@entity.passedTests"
+                              },
+                              {
+                                "label": "Total",
+                                "value": "@entity.totalTests"
+                              },
+                              {
+                                "label": "Attempts",
+                                "value": "@entity.attempts"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "children": [
+                              {
+                                "action": "START_CONNECT",
+                                "label": "Add Transition",
+                                "type": "button",
+                                "variant": "ghost"
+                              },
+                              {
+                                "action": "RUN_TESTS",
+                                "label": "Run Tests",
+                                "type": "button",
+                                "variant": "primary"
+                              },
+                              {
+                                "action": "PLAY_AGAIN",
+                                "label": "Reset",
+                                "type": "button",
+                                "variant": "secondary"
+                              }
+                            ],
+                            "direction": "horizontal",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],

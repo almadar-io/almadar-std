@@ -1,5 +1,5 @@
 app ui-state-architect-board "1.0.0"
-"StateArchitectBoard — build a state machine whose transitions pass every test case."
+"StateArchitectBoard — visual state-machine graph editor: wire transitions between state nodes so every test case reaches its expected state."
 orbital StateArchitectBoardOrbital {
   type StateArchitectBoardError = {
     message : string!
@@ -40,6 +40,9 @@ orbital StateArchitectBoardOrbital {
     id             : string!
     states         : [string]
     initialState   : string
+    currentState   : string
+    selectedState  : string = ""
+    addingFrom     : string = ""
     entityName     : string
     availableEvents: [string]
     transitions    : [StateArchitectBoardTransitionsItem]
@@ -61,6 +64,9 @@ orbital StateArchitectBoardOrbital {
       START -> playing
         (set @entity.states          @config.states)
         (set @entity.initialState    @config.initialState)
+        (set @entity.currentState    @config.initialState)
+        (set @entity.selectedState   "")
+        (set @entity.addingFrom      "")
         (set @entity.entityName      @config.entityName)
         (set @entity.availableEvents @config.availableEvents)
         (set @entity.transitions     @config.transitions)
@@ -74,13 +80,15 @@ orbital StateArchitectBoardOrbital {
         (set @entity.attempts        0)
         (set @entity.result          "none")
         (render-ui main {
-          entity              : @entity
-          completeEvent       : COMPLETE
-          testEvent           : RUN_TESTS
-          addTransitionEvent  : ADD_TRANSITION
-          removeTransitionEvent: REMOVE_TRANSITION
-          playAgainEvent      : PLAY_AGAIN
-          type                : state-architect-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Passed", value: @entity.passedTests }, { label: "Total", value: @entity.totalTests }, { label: "Attempts", value: @entity.attempts }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: START_CONNECT, label: "Add Transition", variant: ghost }, { type: button, action: RUN_TESTS, label: "Run Tests", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: state-graph, states: @entity.states, transitions: @entity.transitions, currentState: @entity.currentState, selectedState: @entity.selectedState, addingFrom: @entity.addingFrom, initialState: @entity.initialState, nodeClickEvent: SELECT_NODE } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Transitions" }, { type: data-list, entity: @entity.transitions, fields: [], gap: xs, renderItem: (fn t { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @t.from }, { type: typography, variant: caption, content: @t.event }, { type: typography, variant: caption, content: @t.to }, { type: button, action: REMOVE_TRANSITION, actionPayload: { from: @t.from, to: @t.to, event: @t.event }, label: "Remove", variant: ghost } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Test Cases" }, { type: data-list, entity: @entity.testCases, fields: [], gap: xs, renderItem: (fn tc { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @tc.label }, { type: badge, label: @tc.expectedState } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Variables" }, { type: data-list, entity: @entity.variables, fields: [], gap: xs, renderItem: (fn v { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @v.name }, { type: badge, label: @v.value } ] }) } ] }
+          ]
         })
     }
 
@@ -88,6 +96,9 @@ orbital StateArchitectBoardOrbital {
       INIT -> playing
         (set @entity.states          @config.states)
         (set @entity.initialState    @config.initialState)
+        (set @entity.currentState    @config.initialState)
+        (set @entity.selectedState   "")
+        (set @entity.addingFrom      "")
         (set @entity.entityName      @config.entityName)
         (set @entity.availableEvents @config.availableEvents)
         (set @entity.transitions     @config.transitions)
@@ -101,75 +112,118 @@ orbital StateArchitectBoardOrbital {
         (set @entity.attempts        0)
         (set @entity.result          "none")
         (render-ui main {
-          entity              : @entity
-          completeEvent       : COMPLETE
-          testEvent           : RUN_TESTS
-          addTransitionEvent  : ADD_TRANSITION
-          removeTransitionEvent: REMOVE_TRANSITION
-          playAgainEvent      : PLAY_AGAIN
-          type                : state-architect-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Passed", value: @entity.passedTests }, { label: "Total", value: @entity.totalTests }, { label: "Attempts", value: @entity.attempts }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: START_CONNECT, label: "Add Transition", variant: ghost }, { type: button, action: RUN_TESTS, label: "Run Tests", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: state-graph, states: @entity.states, transitions: @entity.transitions, currentState: @entity.currentState, selectedState: @entity.selectedState, addingFrom: @entity.addingFrom, initialState: @entity.initialState, nodeClickEvent: SELECT_NODE } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Transitions" }, { type: data-list, entity: @entity.transitions, fields: [], gap: xs, renderItem: (fn t { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @t.from }, { type: typography, variant: caption, content: @t.event }, { type: typography, variant: caption, content: @t.to }, { type: button, action: REMOVE_TRANSITION, actionPayload: { from: @t.from, to: @t.to, event: @t.event }, label: "Remove", variant: ghost } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Test Cases" }, { type: data-list, entity: @entity.testCases, fields: [], gap: xs, renderItem: (fn tc { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @tc.label }, { type: badge, label: @tc.expectedState } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Variables" }, { type: data-list, entity: @entity.variables, fields: [], gap: xs, renderItem: (fn v { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @v.name }, { type: badge, label: @v.value } ] }) } ] }
+          ]
         })
 
-      ADD_TRANSITION -> playing
-        (set @entity.transitions (array/append @entity.transitions { id: ?id, from: ?from, to: ?to, event: ?event }))
+      SELECT_NODE -> playing when (and (!= @entity.addingFrom "") (!= @entity.addingFrom ?stateId))
+        (set @entity.transitions (array/append @entity.transitions { id: (array/first @entity.availableEvents), from: @entity.addingFrom, to: ?stateId, event: (array/first @entity.availableEvents) }))
+        (set @entity.addingFrom "")
+        (set @entity.selectedState "")
         (render-ui main {
-          entity              : @entity
-          completeEvent       : COMPLETE
-          testEvent           : RUN_TESTS
-          addTransitionEvent  : ADD_TRANSITION
-          removeTransitionEvent: REMOVE_TRANSITION
-          playAgainEvent      : PLAY_AGAIN
-          type                : state-architect-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Passed", value: @entity.passedTests }, { label: "Total", value: @entity.totalTests }, { label: "Attempts", value: @entity.attempts }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: START_CONNECT, label: "Add Transition", variant: ghost }, { type: button, action: RUN_TESTS, label: "Run Tests", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: state-graph, states: @entity.states, transitions: @entity.transitions, currentState: @entity.currentState, selectedState: @entity.selectedState, addingFrom: @entity.addingFrom, initialState: @entity.initialState, nodeClickEvent: SELECT_NODE } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Transitions" }, { type: data-list, entity: @entity.transitions, fields: [], gap: xs, renderItem: (fn t { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @t.from }, { type: typography, variant: caption, content: @t.event }, { type: typography, variant: caption, content: @t.to }, { type: button, action: REMOVE_TRANSITION, actionPayload: { from: @t.from, to: @t.to, event: @t.event }, label: "Remove", variant: ghost } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Test Cases" }, { type: data-list, entity: @entity.testCases, fields: [], gap: xs, renderItem: (fn tc { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @tc.label }, { type: badge, label: @tc.expectedState } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Variables" }, { type: data-list, entity: @entity.variables, fields: [], gap: xs, renderItem: (fn v { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @v.name }, { type: badge, label: @v.value } ] }) } ] }
+          ]
+        })
+
+      SELECT_NODE -> playing when (and (!= @entity.addingFrom "") (== @entity.addingFrom ?stateId))
+        (set @entity.addingFrom "")
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Passed", value: @entity.passedTests }, { label: "Total", value: @entity.totalTests }, { label: "Attempts", value: @entity.attempts }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: START_CONNECT, label: "Add Transition", variant: ghost }, { type: button, action: RUN_TESTS, label: "Run Tests", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: state-graph, states: @entity.states, transitions: @entity.transitions, currentState: @entity.currentState, selectedState: @entity.selectedState, addingFrom: @entity.addingFrom, initialState: @entity.initialState, nodeClickEvent: SELECT_NODE } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Transitions" }, { type: data-list, entity: @entity.transitions, fields: [], gap: xs, renderItem: (fn t { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @t.from }, { type: typography, variant: caption, content: @t.event }, { type: typography, variant: caption, content: @t.to }, { type: button, action: REMOVE_TRANSITION, actionPayload: { from: @t.from, to: @t.to, event: @t.event }, label: "Remove", variant: ghost } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Test Cases" }, { type: data-list, entity: @entity.testCases, fields: [], gap: xs, renderItem: (fn tc { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @tc.label }, { type: badge, label: @tc.expectedState } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Variables" }, { type: data-list, entity: @entity.variables, fields: [], gap: xs, renderItem: (fn v { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @v.name }, { type: badge, label: @v.value } ] }) } ] }
+          ]
+        })
+
+      SELECT_NODE -> playing when (== @entity.addingFrom "")
+        (set @entity.selectedState ?stateId)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Passed", value: @entity.passedTests }, { label: "Total", value: @entity.totalTests }, { label: "Attempts", value: @entity.attempts }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: START_CONNECT, label: "Add Transition", variant: ghost }, { type: button, action: RUN_TESTS, label: "Run Tests", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: state-graph, states: @entity.states, transitions: @entity.transitions, currentState: @entity.currentState, selectedState: @entity.selectedState, addingFrom: @entity.addingFrom, initialState: @entity.initialState, nodeClickEvent: SELECT_NODE } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Transitions" }, { type: data-list, entity: @entity.transitions, fields: [], gap: xs, renderItem: (fn t { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @t.from }, { type: typography, variant: caption, content: @t.event }, { type: typography, variant: caption, content: @t.to }, { type: button, action: REMOVE_TRANSITION, actionPayload: { from: @t.from, to: @t.to, event: @t.event }, label: "Remove", variant: ghost } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Test Cases" }, { type: data-list, entity: @entity.testCases, fields: [], gap: xs, renderItem: (fn tc { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @tc.label }, { type: badge, label: @tc.expectedState } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Variables" }, { type: data-list, entity: @entity.variables, fields: [], gap: xs, renderItem: (fn v { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @v.name }, { type: badge, label: @v.value } ] }) } ] }
+          ]
+        })
+
+      START_CONNECT -> playing when (!= @entity.selectedState "")
+        (set @entity.addingFrom @entity.selectedState)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Passed", value: @entity.passedTests }, { label: "Total", value: @entity.totalTests }, { label: "Attempts", value: @entity.attempts }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: START_CONNECT, label: "Add Transition", variant: ghost }, { type: button, action: RUN_TESTS, label: "Run Tests", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: state-graph, states: @entity.states, transitions: @entity.transitions, currentState: @entity.currentState, selectedState: @entity.selectedState, addingFrom: @entity.addingFrom, initialState: @entity.initialState, nodeClickEvent: SELECT_NODE } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Transitions" }, { type: data-list, entity: @entity.transitions, fields: [], gap: xs, renderItem: (fn t { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @t.from }, { type: typography, variant: caption, content: @t.event }, { type: typography, variant: caption, content: @t.to }, { type: button, action: REMOVE_TRANSITION, actionPayload: { from: @t.from, to: @t.to, event: @t.event }, label: "Remove", variant: ghost } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Test Cases" }, { type: data-list, entity: @entity.testCases, fields: [], gap: xs, renderItem: (fn tc { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @tc.label }, { type: badge, label: @tc.expectedState } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Variables" }, { type: data-list, entity: @entity.variables, fields: [], gap: xs, renderItem: (fn v { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @v.name }, { type: badge, label: @v.value } ] }) } ] }
+          ]
         })
 
       REMOVE_TRANSITION -> playing
-        (set @entity.transitions (array/filter @entity.transitions (fn t (!= (object/get t id) ?id))))
+        (set @entity.transitions (array/filter @entity.transitions (fn t (not (and (== @t.from ?from) (== @t.to ?to) (== @t.event ?event))))))
         (render-ui main {
-          entity              : @entity
-          completeEvent       : COMPLETE
-          testEvent           : RUN_TESTS
-          addTransitionEvent  : ADD_TRANSITION
-          removeTransitionEvent: REMOVE_TRANSITION
-          playAgainEvent      : PLAY_AGAIN
-          type                : state-architect-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Passed", value: @entity.passedTests }, { label: "Total", value: @entity.totalTests }, { label: "Attempts", value: @entity.attempts }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: START_CONNECT, label: "Add Transition", variant: ghost }, { type: button, action: RUN_TESTS, label: "Run Tests", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: state-graph, states: @entity.states, transitions: @entity.transitions, currentState: @entity.currentState, selectedState: @entity.selectedState, addingFrom: @entity.addingFrom, initialState: @entity.initialState, nodeClickEvent: SELECT_NODE } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Transitions" }, { type: data-list, entity: @entity.transitions, fields: [], gap: xs, renderItem: (fn t { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @t.from }, { type: typography, variant: caption, content: @t.event }, { type: typography, variant: caption, content: @t.to }, { type: button, action: REMOVE_TRANSITION, actionPayload: { from: @t.from, to: @t.to, event: @t.event }, label: "Remove", variant: ghost } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Test Cases" }, { type: data-list, entity: @entity.testCases, fields: [], gap: xs, renderItem: (fn tc { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @tc.label }, { type: badge, label: @tc.expectedState } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Variables" }, { type: data-list, entity: @entity.variables, fields: [], gap: xs, renderItem: (fn v { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @v.name }, { type: badge, label: @v.value } ] }) } ] }
+          ]
         })
 
-      RUN_TESTS -> complete when (and (> (array/len @entity.transitions) 0) (== (array/len @entity.testCases) @entity.passedTests))
+      RUN_TESTS -> complete when (and (> (array/len @entity.transitions) 0) (== @entity.totalTests (array/len (array/filter @entity.testCases (fn tc (== (array/reduce @tc.events (fn st e (object/get (array/find @entity.transitions (fn t (and (== @t.from @st) (== @t.event @e)))) "to" @st)) @entity.initialState) @tc.expectedState))))))
         (set @entity.attempts (+ @entity.attempts 1))
+        (set @entity.passedTests (array/len (array/filter @entity.testCases (fn tc (== (array/reduce @tc.events (fn st e (object/get (array/find @entity.transitions (fn t (and (== @t.from @st) (== @t.event @e)))) "to" @st)) @entity.initialState) @tc.expectedState)))))
         (set @entity.result "win")
         (render-ui main {
-          entity              : @entity
-          completeEvent       : COMPLETE
-          testEvent           : RUN_TESTS
-          addTransitionEvent  : ADD_TRANSITION
-          removeTransitionEvent: REMOVE_TRANSITION
-          playAgainEvent      : PLAY_AGAIN
-          type                : state-architect-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Passed", value: @entity.passedTests }, { label: "Total", value: @entity.totalTests }, { label: "Attempts", value: @entity.attempts }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: START_CONNECT, label: "Add Transition", variant: ghost }, { type: button, action: RUN_TESTS, label: "Run Tests", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: state-graph, states: @entity.states, transitions: @entity.transitions, currentState: @entity.currentState, selectedState: @entity.selectedState, addingFrom: @entity.addingFrom, initialState: @entity.initialState, nodeClickEvent: SELECT_NODE } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Transitions" }, { type: data-list, entity: @entity.transitions, fields: [], gap: xs, renderItem: (fn t { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @t.from }, { type: typography, variant: caption, content: @t.event }, { type: typography, variant: caption, content: @t.to }, { type: button, action: REMOVE_TRANSITION, actionPayload: { from: @t.from, to: @t.to, event: @t.event }, label: "Remove", variant: ghost } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Test Cases" }, { type: data-list, entity: @entity.testCases, fields: [], gap: xs, renderItem: (fn tc { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @tc.label }, { type: badge, label: @tc.expectedState } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Variables" }, { type: data-list, entity: @entity.variables, fields: [], gap: xs, renderItem: (fn v { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @v.name }, { type: badge, label: @v.value } ] }) } ] }
+          ]
         })
 
-      RUN_TESTS -> playing when (or (== (array/len @entity.transitions) 0) (!= (array/len @entity.testCases) @entity.passedTests))
+      RUN_TESTS -> playing when (or (== (array/len @entity.transitions) 0) (!= @entity.totalTests (array/len (array/filter @entity.testCases (fn tc (== (array/reduce @tc.events (fn st e (object/get (array/find @entity.transitions (fn t (and (== @t.from @st) (== @t.event @e)))) "to" @st)) @entity.initialState) @tc.expectedState))))))
         (set @entity.attempts (+ @entity.attempts 1))
+        (set @entity.passedTests (array/len (array/filter @entity.testCases (fn tc (== (array/reduce @tc.events (fn st e (object/get (array/find @entity.transitions (fn t (and (== @t.from @st) (== @t.event @e)))) "to" @st)) @entity.initialState) @tc.expectedState)))))
         (render-ui main {
-          entity              : @entity
-          completeEvent       : COMPLETE
-          testEvent           : RUN_TESTS
-          addTransitionEvent  : ADD_TRANSITION
-          removeTransitionEvent: REMOVE_TRANSITION
-          playAgainEvent      : PLAY_AGAIN
-          type                : state-architect-board
-        })
-
-      COMPLETE -> complete
-        (set @entity.passedTests ?passedTests)
-        (set @entity.result (if (== ?passedTests (array/len @entity.testCases)) "win" "none"))
-        (render-ui main {
-          entity              : @entity
-          completeEvent       : COMPLETE
-          testEvent           : RUN_TESTS
-          addTransitionEvent  : ADD_TRANSITION
-          removeTransitionEvent: REMOVE_TRANSITION
-          playAgainEvent      : PLAY_AGAIN
-          type                : state-architect-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Passed", value: @entity.passedTests }, { label: "Total", value: @entity.totalTests }, { label: "Attempts", value: @entity.attempts }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: START_CONNECT, label: "Add Transition", variant: ghost }, { type: button, action: RUN_TESTS, label: "Run Tests", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: state-graph, states: @entity.states, transitions: @entity.transitions, currentState: @entity.currentState, selectedState: @entity.selectedState, addingFrom: @entity.addingFrom, initialState: @entity.initialState, nodeClickEvent: SELECT_NODE } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Transitions" }, { type: data-list, entity: @entity.transitions, fields: [], gap: xs, renderItem: (fn t { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @t.from }, { type: typography, variant: caption, content: @t.event }, { type: typography, variant: caption, content: @t.to }, { type: button, action: REMOVE_TRANSITION, actionPayload: { from: @t.from, to: @t.to, event: @t.event }, label: "Remove", variant: ghost } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Test Cases" }, { type: data-list, entity: @entity.testCases, fields: [], gap: xs, renderItem: (fn tc { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @tc.label }, { type: badge, label: @tc.expectedState } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Variables" }, { type: data-list, entity: @entity.variables, fields: [], gap: xs, renderItem: (fn v { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @v.name }, { type: badge, label: @v.value } ] }) } ] }
+          ]
         })
     }
 
@@ -177,6 +231,9 @@ orbital StateArchitectBoardOrbital {
       PLAY_AGAIN -> menu
         (set @entity.states          @config.states)
         (set @entity.initialState    @config.initialState)
+        (set @entity.currentState    @config.initialState)
+        (set @entity.selectedState   "")
+        (set @entity.addingFrom      "")
         (set @entity.entityName      @config.entityName)
         (set @entity.availableEvents @config.availableEvents)
         (set @entity.transitions     @config.transitions)
@@ -190,40 +247,40 @@ orbital StateArchitectBoardOrbital {
         (set @entity.attempts        0)
         (set @entity.result          "none")
         (render-ui main {
-          entity              : @entity
-          completeEvent       : COMPLETE
-          testEvent           : RUN_TESTS
-          addTransitionEvent  : ADD_TRANSITION
-          removeTransitionEvent: REMOVE_TRANSITION
-          playAgainEvent      : PLAY_AGAIN
-          type                : state-architect-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Passed", value: @entity.passedTests }, { label: "Total", value: @entity.totalTests }, { label: "Attempts", value: @entity.attempts }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: START_CONNECT, label: "Add Transition", variant: ghost }, { type: button, action: RUN_TESTS, label: "Run Tests", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: state-graph, states: @entity.states, transitions: @entity.transitions, currentState: @entity.currentState, selectedState: @entity.selectedState, addingFrom: @entity.addingFrom, initialState: @entity.initialState, nodeClickEvent: SELECT_NODE } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Transitions" }, { type: data-list, entity: @entity.transitions, fields: [], gap: xs, renderItem: (fn t { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @t.from }, { type: typography, variant: caption, content: @t.event }, { type: typography, variant: caption, content: @t.to }, { type: button, action: REMOVE_TRANSITION, actionPayload: { from: @t.from, to: @t.to, event: @t.event }, label: "Remove", variant: ghost } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Test Cases" }, { type: data-list, entity: @entity.testCases, fields: [], gap: xs, renderItem: (fn tc { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @tc.label }, { type: badge, label: @tc.expectedState } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Variables" }, { type: data-list, entity: @entity.variables, fields: [], gap: xs, renderItem: (fn v { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: caption, content: @v.name }, { type: badge, label: @v.value } ] }) } ] }
+          ]
         })
     }
 
     emits {
-      COMPLETE -> external {
-        success     : boolean!
-        passedTests : number!
+      SELECT_NODE -> external {
+        stateId : string!
       }
-        @description "Emitted by the component when test-run completes; carries pass count."
+        @description "Player clicks a state node; FSM either selects it, cancels a pending connect, or wires a transition from the pending source."
         @tier "domain"
-      RUN_TESTS -> external {
+      START_CONNECT -> external {
         id : string
       }
-        @description "Player triggers the test runner; component evaluates each test case and fires COMPLETE."
+        @description "Player begins wiring a transition from the currently selected state node."
         @tier "domain"
-      ADD_TRANSITION -> external {
-        id    : string!
+      REMOVE_TRANSITION -> external {
         from  : string!
         to    : string!
         event : string!
       }
-        @description "Player wires a new transition in the graph editor."
+        @description "Player removes a transition, identified by its (from, to, event) triple."
         @tier "domain"
-      REMOVE_TRANSITION -> external {
-        id : string!
+      RUN_TESTS -> external {
+        id : string
       }
-        @description "Player removes a transition from the graph."
+        @description "Player runs the test suite; the FSM simulates each test case through the transition graph and scores passes."
         @tier "domain"
       PLAY_AGAIN -> external {
         id : string
@@ -244,39 +301,6 @@ orbital StateArchitectBoardOrbital {
       error : StateArchitectBoardError
         @label "Error"
         @description "Error state (UiError)"
-        @tier "presentation"
-      sortBy : string = "Sort By"
-        @label "Sort By"
-        @description "Current sort field"
-        @tier "presentation"
-      sortDirection : "asc" | "desc" = asc
-        @label "Sort Direction"
-        @description "Current sort direction"
-        @tier "presentation"
-      searchValue : string = "Search Value"
-        @label "Search Value"
-        @description "Current search query value"
-        @tier "presentation"
-      pageProp : number = 0
-        @label "Page"
-        @description "Current page number"
-        @synonyms "page"
-        @tier "presentation"
-      pageSize : number = 0
-        @label "Page Size"
-        @description "Number of items per page"
-        @tier "presentation"
-      totalCount : number = 0
-        @label "Total Count"
-        @description "Total number of items"
-        @tier "presentation"
-      activeFilters : json
-        @label "Active Filters"
-        @description "Active filters"
-        @tier "presentation"
-      selectedIds : [string] = []
-        @label "Selected Ids"
-        @description "Currently selected item IDs"
         @tier "presentation"
       stepDurationMs : number = 600
         @label "Step Duration Ms"

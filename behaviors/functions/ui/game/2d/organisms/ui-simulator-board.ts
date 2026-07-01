@@ -698,13 +698,209 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'setAEvent': 'SET_A',
-                    'setBEvent': 'SET_B',
-                    'type': 'simulator-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'content': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'label',
+                                    ],
+                                    'type': 'typography',
+                                    'variant': 'label',
+                                  },
+                                  {
+                                    'action': 'SET_A',
+                                    'max': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'max',
+                                    ],
+                                    'min': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'min',
+                                    ],
+                                    'showTooltip': true,
+                                    'step': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'step',
+                                    ],
+                                    'type': 'range-slider',
+                                    'value': '@entity.paramA',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'xs',
+                                'type': 'stack',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'content': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'label',
+                                    ],
+                                    'type': 'typography',
+                                    'variant': 'label',
+                                  },
+                                  {
+                                    'action': 'SET_B',
+                                    'max': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'max',
+                                    ],
+                                    'min': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'min',
+                                    ],
+                                    'showTooltip': true,
+                                    'step': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'step',
+                                    ],
+                                    'type': 'range-slider',
+                                    'value': '@entity.paramB',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'xs',
+                                'type': 'stack',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'lg',
+                            'type': 'stack',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.outputLabel',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'content': '@entity.output',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'A',
+                              'value': '@entity.paramA',
+                            },
+                            {
+                              'label': 'B',
+                              'value': '@entity.paramB',
+                            },
+                            {
+                              'label': 'Output',
+                              'value': '@entity.output',
+                            },
+                            {
+                              'label': 'Target',
+                              'value': '@entity.target',
+                            },
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Simulate',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -768,13 +964,209 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'setAEvent': 'SET_A',
-                    'setBEvent': 'SET_B',
-                    'type': 'simulator-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'content': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'label',
+                                    ],
+                                    'type': 'typography',
+                                    'variant': 'label',
+                                  },
+                                  {
+                                    'action': 'SET_A',
+                                    'max': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'max',
+                                    ],
+                                    'min': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'min',
+                                    ],
+                                    'showTooltip': true,
+                                    'step': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'step',
+                                    ],
+                                    'type': 'range-slider',
+                                    'value': '@entity.paramA',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'xs',
+                                'type': 'stack',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'content': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'label',
+                                    ],
+                                    'type': 'typography',
+                                    'variant': 'label',
+                                  },
+                                  {
+                                    'action': 'SET_B',
+                                    'max': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'max',
+                                    ],
+                                    'min': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'min',
+                                    ],
+                                    'showTooltip': true,
+                                    'step': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'step',
+                                    ],
+                                    'type': 'range-slider',
+                                    'value': '@entity.paramB',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'xs',
+                                'type': 'stack',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'lg',
+                            'type': 'stack',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.outputLabel',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'content': '@entity.output',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'A',
+                              'value': '@entity.paramA',
+                            },
+                            {
+                              'label': 'B',
+                              'value': '@entity.paramB',
+                            },
+                            {
+                              'label': 'Output',
+                              'value': '@entity.output',
+                            },
+                            {
+                              'label': 'Target',
+                              'value': '@entity.target',
+                            },
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Simulate',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -793,13 +1185,209 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'setAEvent': 'SET_A',
-                    'setBEvent': 'SET_B',
-                    'type': 'simulator-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'content': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'label',
+                                    ],
+                                    'type': 'typography',
+                                    'variant': 'label',
+                                  },
+                                  {
+                                    'action': 'SET_A',
+                                    'max': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'max',
+                                    ],
+                                    'min': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'min',
+                                    ],
+                                    'showTooltip': true,
+                                    'step': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'step',
+                                    ],
+                                    'type': 'range-slider',
+                                    'value': '@entity.paramA',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'xs',
+                                'type': 'stack',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'content': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'label',
+                                    ],
+                                    'type': 'typography',
+                                    'variant': 'label',
+                                  },
+                                  {
+                                    'action': 'SET_B',
+                                    'max': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'max',
+                                    ],
+                                    'min': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'min',
+                                    ],
+                                    'showTooltip': true,
+                                    'step': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'step',
+                                    ],
+                                    'type': 'range-slider',
+                                    'value': '@entity.paramB',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'xs',
+                                'type': 'stack',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'lg',
+                            'type': 'stack',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.outputLabel',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'content': '@entity.output',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'A',
+                              'value': '@entity.paramA',
+                            },
+                            {
+                              'label': 'B',
+                              'value': '@entity.paramB',
+                            },
+                            {
+                              'label': 'Output',
+                              'value': '@entity.output',
+                            },
+                            {
+                              'label': 'Target',
+                              'value': '@entity.target',
+                            },
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Simulate',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -823,13 +1411,209 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'setAEvent': 'SET_A',
-                    'setBEvent': 'SET_B',
-                    'type': 'simulator-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'content': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'label',
+                                    ],
+                                    'type': 'typography',
+                                    'variant': 'label',
+                                  },
+                                  {
+                                    'action': 'SET_A',
+                                    'max': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'max',
+                                    ],
+                                    'min': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'min',
+                                    ],
+                                    'showTooltip': true,
+                                    'step': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'step',
+                                    ],
+                                    'type': 'range-slider',
+                                    'value': '@entity.paramA',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'xs',
+                                'type': 'stack',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'content': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'label',
+                                    ],
+                                    'type': 'typography',
+                                    'variant': 'label',
+                                  },
+                                  {
+                                    'action': 'SET_B',
+                                    'max': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'max',
+                                    ],
+                                    'min': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'min',
+                                    ],
+                                    'showTooltip': true,
+                                    'step': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'step',
+                                    ],
+                                    'type': 'range-slider',
+                                    'value': '@entity.paramB',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'xs',
+                                'type': 'stack',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'lg',
+                            'type': 'stack',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.outputLabel',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'content': '@entity.output',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'A',
+                              'value': '@entity.paramA',
+                            },
+                            {
+                              'label': 'B',
+                              'value': '@entity.paramB',
+                            },
+                            {
+                              'label': 'Output',
+                              'value': '@entity.output',
+                            },
+                            {
+                              'label': 'Target',
+                              'value': '@entity.target',
+                            },
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Simulate',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -862,13 +1646,209 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'setAEvent': 'SET_A',
-                    'setBEvent': 'SET_B',
-                    'type': 'simulator-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'content': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'label',
+                                    ],
+                                    'type': 'typography',
+                                    'variant': 'label',
+                                  },
+                                  {
+                                    'action': 'SET_A',
+                                    'max': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'max',
+                                    ],
+                                    'min': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'min',
+                                    ],
+                                    'showTooltip': true,
+                                    'step': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'step',
+                                    ],
+                                    'type': 'range-slider',
+                                    'value': '@entity.paramA',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'xs',
+                                'type': 'stack',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'content': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'label',
+                                    ],
+                                    'type': 'typography',
+                                    'variant': 'label',
+                                  },
+                                  {
+                                    'action': 'SET_B',
+                                    'max': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'max',
+                                    ],
+                                    'min': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'min',
+                                    ],
+                                    'showTooltip': true,
+                                    'step': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'step',
+                                    ],
+                                    'type': 'range-slider',
+                                    'value': '@entity.paramB',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'xs',
+                                'type': 'stack',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'lg',
+                            'type': 'stack',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.outputLabel',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'content': '@entity.output',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'A',
+                              'value': '@entity.paramA',
+                            },
+                            {
+                              'label': 'B',
+                              'value': '@entity.paramB',
+                            },
+                            {
+                              'label': 'Output',
+                              'value': '@entity.output',
+                            },
+                            {
+                              'label': 'Target',
+                              'value': '@entity.target',
+                            },
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Simulate',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -903,13 +1883,209 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'setAEvent': 'SET_A',
-                    'setBEvent': 'SET_B',
-                    'type': 'simulator-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'content': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'label',
+                                    ],
+                                    'type': 'typography',
+                                    'variant': 'label',
+                                  },
+                                  {
+                                    'action': 'SET_A',
+                                    'max': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'max',
+                                    ],
+                                    'min': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'min',
+                                    ],
+                                    'showTooltip': true,
+                                    'step': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'step',
+                                    ],
+                                    'type': 'range-slider',
+                                    'value': '@entity.paramA',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'xs',
+                                'type': 'stack',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'content': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'label',
+                                    ],
+                                    'type': 'typography',
+                                    'variant': 'label',
+                                  },
+                                  {
+                                    'action': 'SET_B',
+                                    'max': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'max',
+                                    ],
+                                    'min': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'min',
+                                    ],
+                                    'showTooltip': true,
+                                    'step': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'step',
+                                    ],
+                                    'type': 'range-slider',
+                                    'value': '@entity.paramB',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'xs',
+                                'type': 'stack',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'lg',
+                            'type': 'stack',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.outputLabel',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'content': '@entity.output',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'A',
+                              'value': '@entity.paramA',
+                            },
+                            {
+                              'label': 'B',
+                              'value': '@entity.paramB',
+                            },
+                            {
+                              'label': 'Output',
+                              'value': '@entity.output',
+                            },
+                            {
+                              'label': 'Target',
+                              'value': '@entity.target',
+                            },
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Simulate',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -975,13 +2151,209 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'setAEvent': 'SET_A',
-                    'setBEvent': 'SET_B',
-                    'type': 'simulator-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'children': [
+                              {
+                                'children': [
+                                  {
+                                    'content': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'label',
+                                    ],
+                                    'type': 'typography',
+                                    'variant': 'label',
+                                  },
+                                  {
+                                    'action': 'SET_A',
+                                    'max': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'max',
+                                    ],
+                                    'min': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'min',
+                                    ],
+                                    'showTooltip': true,
+                                    'step': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        0,
+                                      ],
+                                      'step',
+                                    ],
+                                    'type': 'range-slider',
+                                    'value': '@entity.paramA',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'xs',
+                                'type': 'stack',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'content': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'label',
+                                    ],
+                                    'type': 'typography',
+                                    'variant': 'label',
+                                  },
+                                  {
+                                    'action': 'SET_B',
+                                    'max': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'max',
+                                    ],
+                                    'min': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'min',
+                                    ],
+                                    'showTooltip': true,
+                                    'step': [
+                                      'object/get',
+                                      [
+                                        'array/nth',
+                                        '@entity.parameters',
+                                        1,
+                                      ],
+                                      'step',
+                                    ],
+                                    'type': 'range-slider',
+                                    'value': '@entity.paramB',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'xs',
+                                'type': 'stack',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'lg',
+                            'type': 'stack',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.outputLabel',
+                            'type': 'typography',
+                            'variant': 'caption',
+                          },
+                          {
+                            'content': '@entity.output',
+                            'type': 'typography',
+                            'variant': 'h2',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'A',
+                              'value': '@entity.paramA',
+                            },
+                            {
+                              'label': 'B',
+                              'value': '@entity.paramB',
+                            },
+                            {
+                              'label': 'Output',
+                              'value': '@entity.output',
+                            },
+                            {
+                              'label': 'Target',
+                              'value': '@entity.target',
+                            },
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Simulate',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],

@@ -66,12 +66,14 @@ orbital NegotiatorBoardOrbital {
         (set @entity.lastOpponentAction "")
         (set @entity.lastPayoff 0)
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          playRoundEvent: PLAY_ROUND
-          finishEvent: FINISH
-          playAgainEvent: PLAY_AGAIN
-          type: negotiator-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Target", value: @entity.targetScore }, { label: "Round", value: @entity.round }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: FINISH, label: "Finish", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Payoff Matrix" }, { type: data-list, entity: @entity.payoffMatrix, fields: [], gap: xs, renderItem: (fn p { type: card, children: [ { type: game-hud, stats: [ { label: @p.playerAction, value: @p.playerPayoff }, { label: @p.opponentAction, value: @p.opponentPayoff } ] } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Last Round" }, { type: game-hud, stats: [ { label: "You", value: @entity.lastPlayerAction }, { label: "Them", value: @entity.lastOpponentAction }, { label: "Payoff", value: @entity.lastPayoff } ] } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.actions, fields: [], gap: sm, renderItem: (fn a { type: button, action: PLAY_ROUND, actionPayload: { playerAction: @a.id }, label: @a.label, variant: primary }) } ] }
+          ]
         })
     }
 
@@ -91,12 +93,14 @@ orbital NegotiatorBoardOrbital {
         (set @entity.lastOpponentAction "")
         (set @entity.lastPayoff 0)
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          playRoundEvent: PLAY_ROUND
-          finishEvent: FINISH
-          playAgainEvent: PLAY_AGAIN
-          type: negotiator-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Target", value: @entity.targetScore }, { label: "Round", value: @entity.round }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: FINISH, label: "Finish", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Payoff Matrix" }, { type: data-list, entity: @entity.payoffMatrix, fields: [], gap: xs, renderItem: (fn p { type: card, children: [ { type: game-hud, stats: [ { label: @p.playerAction, value: @p.playerPayoff }, { label: @p.opponentAction, value: @p.opponentPayoff } ] } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Last Round" }, { type: game-hud, stats: [ { label: "You", value: @entity.lastPlayerAction }, { label: "Them", value: @entity.lastOpponentAction }, { label: "Payoff", value: @entity.lastPayoff } ] } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.actions, fields: [], gap: sm, renderItem: (fn a { type: button, action: PLAY_ROUND, actionPayload: { playerAction: @a.id }, label: @a.label, variant: primary }) } ] }
+          ]
         })
       PLAY_ROUND -> playing when (< @entity.round @entity.maxRounds)
         # compute opponent move: tit-for-tat copies last player action (first round = cooperate); always-cooperate/always-defect are static
@@ -107,34 +111,40 @@ orbital NegotiatorBoardOrbital {
         (set @entity.round (+ @entity.round 1))
         (set @entity.lastPlayerAction ?playerAction)
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          playRoundEvent: PLAY_ROUND
-          finishEvent: FINISH
-          playAgainEvent: PLAY_AGAIN
-          type: negotiator-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Target", value: @entity.targetScore }, { label: "Round", value: @entity.round }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: FINISH, label: "Finish", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Payoff Matrix" }, { type: data-list, entity: @entity.payoffMatrix, fields: [], gap: xs, renderItem: (fn p { type: card, children: [ { type: game-hud, stats: [ { label: @p.playerAction, value: @p.playerPayoff }, { label: @p.opponentAction, value: @p.opponentPayoff } ] } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Last Round" }, { type: game-hud, stats: [ { label: "You", value: @entity.lastPlayerAction }, { label: "Them", value: @entity.lastOpponentAction }, { label: "Payoff", value: @entity.lastPayoff } ] } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.actions, fields: [], gap: sm, renderItem: (fn a { type: button, action: PLAY_ROUND, actionPayload: { playerAction: @a.id }, label: @a.label, variant: primary }) } ] }
+          ]
         })
 
       FINISH -> complete when (>= @entity.score @entity.targetScore)
         (set @entity.result "win")
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          playRoundEvent: PLAY_ROUND
-          finishEvent: FINISH
-          playAgainEvent: PLAY_AGAIN
-          type: negotiator-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Target", value: @entity.targetScore }, { label: "Round", value: @entity.round }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: FINISH, label: "Finish", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Payoff Matrix" }, { type: data-list, entity: @entity.payoffMatrix, fields: [], gap: xs, renderItem: (fn p { type: card, children: [ { type: game-hud, stats: [ { label: @p.playerAction, value: @p.playerPayoff }, { label: @p.opponentAction, value: @p.opponentPayoff } ] } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Last Round" }, { type: game-hud, stats: [ { label: "You", value: @entity.lastPlayerAction }, { label: "Them", value: @entity.lastOpponentAction }, { label: "Payoff", value: @entity.lastPayoff } ] } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.actions, fields: [], gap: sm, renderItem: (fn a { type: button, action: PLAY_ROUND, actionPayload: { playerAction: @a.id }, label: @a.label, variant: primary }) } ] }
+          ]
         })
 
       FINISH -> complete when (< @entity.score @entity.targetScore)
         (set @entity.result "lose")
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          playRoundEvent: PLAY_ROUND
-          finishEvent: FINISH
-          playAgainEvent: PLAY_AGAIN
-          type: negotiator-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Target", value: @entity.targetScore }, { label: "Round", value: @entity.round }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: FINISH, label: "Finish", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Payoff Matrix" }, { type: data-list, entity: @entity.payoffMatrix, fields: [], gap: xs, renderItem: (fn p { type: card, children: [ { type: game-hud, stats: [ { label: @p.playerAction, value: @p.playerPayoff }, { label: @p.opponentAction, value: @p.opponentPayoff } ] } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Last Round" }, { type: game-hud, stats: [ { label: "You", value: @entity.lastPlayerAction }, { label: "Them", value: @entity.lastOpponentAction }, { label: "Payoff", value: @entity.lastPayoff } ] } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.actions, fields: [], gap: sm, renderItem: (fn a { type: button, action: PLAY_ROUND, actionPayload: { playerAction: @a.id }, label: @a.label, variant: primary }) } ] }
+          ]
         })
     }
 
@@ -149,12 +159,14 @@ orbital NegotiatorBoardOrbital {
         (set @entity.lastOpponentAction "")
         (set @entity.lastPayoff 0)
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          playRoundEvent: PLAY_ROUND
-          finishEvent: FINISH
-          playAgainEvent: PLAY_AGAIN
-          type: negotiator-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Target", value: @entity.targetScore }, { label: "Round", value: @entity.round }, { label: "Result", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: FINISH, label: "Finish", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Payoff Matrix" }, { type: data-list, entity: @entity.payoffMatrix, fields: [], gap: xs, renderItem: (fn p { type: card, children: [ { type: game-hud, stats: [ { label: @p.playerAction, value: @p.playerPayoff }, { label: @p.opponentAction, value: @p.opponentPayoff } ] } ] }) } ] },
+            { type: card, children: [ { type: typography, variant: label, content: "Last Round" }, { type: game-hud, stats: [ { label: "You", value: @entity.lastPlayerAction }, { label: "Them", value: @entity.lastOpponentAction }, { label: "Payoff", value: @entity.lastPayoff } ] } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.actions, fields: [], gap: sm, renderItem: (fn a { type: button, action: PLAY_ROUND, actionPayload: { playerAction: @a.id }, label: @a.label, variant: primary }) } ] }
+          ]
         })
     }
 

@@ -614,12 +614,97 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'toggleFlagEvent': 'TOGGLE_FLAG',
-                    'type': 'debugger-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.lines',
+                            'fields': [],
+                            'gap': 'xs',
+                            'renderItem': [
+                              'fn',
+                              'l',
+                              {
+                                'action': 'TOGGLE_FLAG',
+                                'actionPayload': {
+                                  'lineId': '@l.id',
+                                },
+                                'label': '@l.content',
+                                'type': 'button',
+                                'variant': [
+                                  'if',
+                                  [
+                                    'object/get',
+                                    '@l',
+                                    'isFlagged',
+                                  ],
+                                  'danger',
+                                  'ghost',
+                                ],
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -663,12 +748,97 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'toggleFlagEvent': 'TOGGLE_FLAG',
-                    'type': 'debugger-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.lines',
+                            'fields': [],
+                            'gap': 'xs',
+                            'renderItem': [
+                              'fn',
+                              'l',
+                              {
+                                'action': 'TOGGLE_FLAG',
+                                'actionPayload': {
+                                  'lineId': '@l.id',
+                                },
+                                'label': '@l.content',
+                                'type': 'button',
+                                'variant': [
+                                  'if',
+                                  [
+                                    'object/get',
+                                    '@l',
+                                    'isFlagged',
+                                  ],
+                                  'danger',
+                                  'ghost',
+                                ],
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -721,12 +891,97 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'toggleFlagEvent': 'TOGGLE_FLAG',
-                    'type': 'debugger-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.lines',
+                            'fields': [],
+                            'gap': 'xs',
+                            'renderItem': [
+                              'fn',
+                              'l',
+                              {
+                                'action': 'TOGGLE_FLAG',
+                                'actionPayload': {
+                                  'lineId': '@l.id',
+                                },
+                                'label': '@l.content',
+                                'type': 'button',
+                                'variant': [
+                                  'if',
+                                  [
+                                    'object/get',
+                                    '@l',
+                                    'isFlagged',
+                                  ],
+                                  'danger',
+                                  'ghost',
+                                ],
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -754,12 +1009,97 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'toggleFlagEvent': 'TOGGLE_FLAG',
-                    'type': 'debugger-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.lines',
+                            'fields': [],
+                            'gap': 'xs',
+                            'renderItem': [
+                              'fn',
+                              'l',
+                              {
+                                'action': 'TOGGLE_FLAG',
+                                'actionPayload': {
+                                  'lineId': '@l.id',
+                                },
+                                'label': '@l.content',
+                                'type': 'button',
+                                'variant': [
+                                  'if',
+                                  [
+                                    'object/get',
+                                    '@l',
+                                    'isFlagged',
+                                  ],
+                                  'danger',
+                                  'ghost',
+                                ],
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -847,12 +1187,97 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'toggleFlagEvent': 'TOGGLE_FLAG',
-                    'type': 'debugger-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.lines',
+                            'fields': [],
+                            'gap': 'xs',
+                            'renderItem': [
+                              'fn',
+                              'l',
+                              {
+                                'action': 'TOGGLE_FLAG',
+                                'actionPayload': {
+                                  'lineId': '@l.id',
+                                },
+                                'label': '@l.content',
+                                'type': 'button',
+                                'variant': [
+                                  'if',
+                                  [
+                                    'object/get',
+                                    '@l',
+                                    'isFlagged',
+                                  ],
+                                  'danger',
+                                  'ghost',
+                                ],
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -961,12 +1386,97 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'render-ui',
                   'main',
                   {
-                    'checkEvent': 'CHECK',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'toggleFlagEvent': 'TOGGLE_FLAG',
-                    'type': 'debugger-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.lines',
+                            'fields': [],
+                            'gap': 'xs',
+                            'renderItem': [
+                              'fn',
+                              'l',
+                              {
+                                'action': 'TOGGLE_FLAG',
+                                'actionPayload': {
+                                  'lineId': '@l.id',
+                                },
+                                'label': '@l.content',
+                                'type': 'button',
+                                'variant': [
+                                  'if',
+                                  [
+                                    'object/get',
+                                    '@l',
+                                    'isFlagged',
+                                  ],
+                                  'danger',
+                                  'ghost',
+                                ],
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Attempts',
+                              'value': '@entity.attempts',
+                            },
+                            {
+                              'label': 'Status',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'CHECK',
+                              'label': 'Check',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],

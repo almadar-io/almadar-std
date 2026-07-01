@@ -54,12 +54,12 @@ orbital ClassifierBoardOrbital {
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          assignEvent: ASSIGN
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: classifier-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.items, fields: [], gap: sm, renderItem: (fn i { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @i.label }, { type: badge, label: @i.assignedCategory } ] }, { type: data-list, entity: @entity.categories, fields: [], gap: xs, renderItem: (fn c { type: button, action: ASSIGN, actionPayload: { itemId: @i.id, categoryId: @c.id }, label: @c.label, variant: (if (== @i.assignedCategory @c.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
     }
 
@@ -73,45 +73,45 @@ orbital ClassifierBoardOrbital {
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          assignEvent: ASSIGN
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: classifier-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.items, fields: [], gap: sm, renderItem: (fn i { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @i.label }, { type: badge, label: @i.assignedCategory } ] }, { type: data-list, entity: @entity.categories, fields: [], gap: xs, renderItem: (fn c { type: button, action: ASSIGN, actionPayload: { itemId: @i.id, categoryId: @c.id }, label: @c.label, variant: (if (== @i.assignedCategory @c.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
       ASSIGN -> playing
         (set @entity.items (array/map @entity.items (fn i (if (== @i.id ?itemId) (object/merge @i { assignedCategory: ?categoryId }) @i))))
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          assignEvent: ASSIGN
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: classifier-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.items, fields: [], gap: sm, renderItem: (fn i { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @i.label }, { type: badge, label: @i.assignedCategory } ] }, { type: data-list, entity: @entity.categories, fields: [], gap: xs, renderItem: (fn c { type: button, action: ASSIGN, actionPayload: { itemId: @i.id, categoryId: @c.id }, label: @c.label, variant: (if (== @i.assignedCategory @c.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
 
       CHECK -> complete when (== (array/len (array/filter @entity.items (fn i (!= (object/get @i assignedCategory) (object/get @i correctCategory))))) 0)
         (set @entity.attempts (+ @entity.attempts 1))
         (set @entity.result "win")
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          assignEvent: ASSIGN
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: classifier-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.items, fields: [], gap: sm, renderItem: (fn i { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @i.label }, { type: badge, label: @i.assignedCategory } ] }, { type: data-list, entity: @entity.categories, fields: [], gap: xs, renderItem: (fn c { type: button, action: ASSIGN, actionPayload: { itemId: @i.id, categoryId: @c.id }, label: @c.label, variant: (if (== @i.assignedCategory @c.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
 
       CHECK -> playing when (> (array/len (array/filter @entity.items (fn i (!= (object/get @i assignedCategory) (object/get @i correctCategory))))) 0)
         (set @entity.attempts (+ @entity.attempts 1))
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          assignEvent: ASSIGN
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: classifier-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.items, fields: [], gap: sm, renderItem: (fn i { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @i.label }, { type: badge, label: @i.assignedCategory } ] }, { type: data-list, entity: @entity.categories, fields: [], gap: xs, renderItem: (fn c { type: button, action: ASSIGN, actionPayload: { itemId: @i.id, categoryId: @c.id }, label: @c.label, variant: (if (== @i.assignedCategory @c.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
     }
 
@@ -125,12 +125,12 @@ orbital ClassifierBoardOrbital {
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          assignEvent: ASSIGN
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: classifier-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.items, fields: [], gap: sm, renderItem: (fn i { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @i.label }, { type: badge, label: @i.assignedCategory } ] }, { type: data-list, entity: @entity.categories, fields: [], gap: xs, renderItem: (fn c { type: button, action: ASSIGN, actionPayload: { itemId: @i.id, categoryId: @c.id }, label: @c.label, variant: (if (== @i.assignedCategory @c.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
     }
 
