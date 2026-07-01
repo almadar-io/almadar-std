@@ -48,12 +48,12 @@ orbital DebuggerBoardOrbital {
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          toggleFlagEvent: TOGGLE_FLAG
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: debugger-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.lines, fields: [], gap: xs, renderItem: (fn l { type: button, action: TOGGLE_FLAG, actionPayload: { lineId: @l.id }, label: @l.content, variant: (if (object/get @l isFlagged) "danger" "ghost") }) } ] }
+          ]
         })
     }
 
@@ -66,45 +66,45 @@ orbital DebuggerBoardOrbital {
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          toggleFlagEvent: TOGGLE_FLAG
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: debugger-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.lines, fields: [], gap: xs, renderItem: (fn l { type: button, action: TOGGLE_FLAG, actionPayload: { lineId: @l.id }, label: @l.content, variant: (if (object/get @l isFlagged) "danger" "ghost") }) } ] }
+          ]
         })
       TOGGLE_FLAG -> playing
         (set @entity.lines (array/map @entity.lines (fn l (if (== (object/get l id) ?lineId) (object/merge l { isFlagged: (not (object/get l isFlagged)) }) l))))
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          toggleFlagEvent: TOGGLE_FLAG
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: debugger-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.lines, fields: [], gap: xs, renderItem: (fn l { type: button, action: TOGGLE_FLAG, actionPayload: { lineId: @l.id }, label: @l.content, variant: (if (object/get @l isFlagged) "danger" "ghost") }) } ] }
+          ]
         })
 
       CHECK -> complete when (and (== (array/len (array/filter @entity.lines (fn l (and (object/get l isBug) (not (object/get l isFlagged)))))) 0) (== (array/len (array/filter @entity.lines (fn l (and (not (object/get l isBug)) (object/get l isFlagged))))) 0))
         (set @entity.attempts (+ @entity.attempts 1))
         (set @entity.result "win")
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          toggleFlagEvent: TOGGLE_FLAG
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: debugger-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.lines, fields: [], gap: xs, renderItem: (fn l { type: button, action: TOGGLE_FLAG, actionPayload: { lineId: @l.id }, label: @l.content, variant: (if (object/get @l isFlagged) "danger" "ghost") }) } ] }
+          ]
         })
 
       CHECK -> playing when (or (> (array/len (array/filter @entity.lines (fn l (and (object/get l isBug) (not (object/get l isFlagged)))))) 0) (> (array/len (array/filter @entity.lines (fn l (and (not (object/get l isBug)) (object/get l isFlagged))))) 0))
         (set @entity.attempts (+ @entity.attempts 1))
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          toggleFlagEvent: TOGGLE_FLAG
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: debugger-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.lines, fields: [], gap: xs, renderItem: (fn l { type: button, action: TOGGLE_FLAG, actionPayload: { lineId: @l.id }, label: @l.content, variant: (if (object/get @l isFlagged) "danger" "ghost") }) } ] }
+          ]
         })
     }
 
@@ -117,12 +117,12 @@ orbital DebuggerBoardOrbital {
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          toggleFlagEvent: TOGGLE_FLAG
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: debugger-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.lines, fields: [], gap: xs, renderItem: (fn l { type: button, action: TOGGLE_FLAG, actionPayload: { lineId: @l.id }, label: @l.content, variant: (if (object/get @l isFlagged) "danger" "ghost") }) } ] }
+          ]
         })
     }
 

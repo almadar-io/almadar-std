@@ -65,15 +65,12 @@ orbital SequencerBoardOrbital {
         (set @entity.result "none")
         (set @entity.currentStep -1)
         (render-ui main {
-          entity: @entity
-          categoryColors: @config.categoryColors
-          stepDurationMs: @config.stepDurationMs
-          placeEvent: PLACE
-          removeEvent: REMOVE
-          playEvent: PLAY
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: sequencer-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
     }
 
@@ -93,86 +90,68 @@ orbital SequencerBoardOrbital {
         (set @entity.result "none")
         (set @entity.currentStep -1)
         (render-ui main {
-          entity: @entity
-          categoryColors: @config.categoryColors
-          stepDurationMs: @config.stepDurationMs
-          placeEvent: PLACE
-          removeEvent: REMOVE
-          playEvent: PLAY
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: sequencer-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
 
       PLACE -> building
         (set @entity.slots (array/map @entity.slots (fn s (if (== (object/get s index) ?slotIndex) (object/merge s { placedActionId: ?actionId }) s))))
         (render-ui main {
-          entity: @entity
-          categoryColors: @config.categoryColors
-          stepDurationMs: @config.stepDurationMs
-          placeEvent: PLACE
-          removeEvent: REMOVE
-          playEvent: PLAY
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: sequencer-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
 
       REMOVE -> building
         (set @entity.slots (array/map @entity.slots (fn s (if (== (object/get s index) ?slotIndex) (object/merge s { placedActionId: "" }) s))))
         (render-ui main {
-          entity: @entity
-          categoryColors: @config.categoryColors
-          stepDurationMs: @config.stepDurationMs
-          placeEvent: PLACE
-          removeEvent: REMOVE
-          playEvent: PLAY
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: sequencer-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
 
       PLAY -> playing-back
         (set @entity.currentStep 0)
         (render-ui main {
-          entity: @entity
-          categoryColors: @config.categoryColors
-          stepDurationMs: @config.stepDurationMs
-          placeEvent: PLACE
-          removeEvent: REMOVE
-          playEvent: PLAY
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: sequencer-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
 
       CHECK -> complete when (array/some @entity.solutions (fn sol (== (array/map @entity.slots (fn s (object/get s placedActionId))) sol)))
         (set @entity.attempts (+ @entity.attempts 1))
         (set @entity.result "win")
         (render-ui main {
-          entity: @entity
-          categoryColors: @config.categoryColors
-          stepDurationMs: @config.stepDurationMs
-          placeEvent: PLACE
-          removeEvent: REMOVE
-          playEvent: PLAY
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: sequencer-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
 
       CHECK -> building
         (set @entity.attempts (+ @entity.attempts 1))
         (render-ui main {
-          entity: @entity
-          categoryColors: @config.categoryColors
-          stepDurationMs: @config.stepDurationMs
-          placeEvent: PLACE
-          removeEvent: REMOVE
-          playEvent: PLAY
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: sequencer-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
     }
 
@@ -180,29 +159,23 @@ orbital SequencerBoardOrbital {
       STEP -> building when (>= @entity.currentStep (- @entity.maxSlots 1))
         (set @entity.currentStep -1)
         (render-ui main {
-          entity: @entity
-          categoryColors: @config.categoryColors
-          stepDurationMs: @config.stepDurationMs
-          placeEvent: PLACE
-          removeEvent: REMOVE
-          playEvent: PLAY
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: sequencer-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
 
       STEP -> playing-back
         (set @entity.currentStep (+ @entity.currentStep 1))
         (render-ui main {
-          entity: @entity
-          categoryColors: @config.categoryColors
-          stepDurationMs: @config.stepDurationMs
-          placeEvent: PLACE
-          removeEvent: REMOVE
-          playEvent: PLAY
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: sequencer-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
     }
 
@@ -213,15 +186,12 @@ orbital SequencerBoardOrbital {
         (set @entity.result "none")
         (set @entity.currentStep -1)
         (render-ui main {
-          entity: @entity
-          categoryColors: @config.categoryColors
-          stepDurationMs: @config.stepDurationMs
-          placeEvent: PLACE
-          removeEvent: REMOVE
-          playEvent: PLAY
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: sequencer-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+          ]
         })
     }
 

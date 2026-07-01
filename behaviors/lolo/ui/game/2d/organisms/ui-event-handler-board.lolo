@@ -66,12 +66,12 @@ orbital EventHandlerBoardOrbital {
         (set @entity.attempts     0)
         (set @entity.result       "none")
         (render-ui main {
-          entity        : @entity
-          completeEvent : COMPLETE
-          playEvent     : PLAY
-          editRuleEvent : EDIT_RULE
-          playAgainEvent: PLAY_AGAIN
-          type          : event-handler-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Goal", value: @entity.goalEvent }, { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @obj.name }, { type: badge, label: @obj.currentState }, { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [] }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @obj.rules, fields: [], gap: xs, renderItem: (fn r { type: badge, label: @r.thenAction }) }, { type: data-list, entity: @obj.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [{ whenEvent: (array/first @entity.triggerEvents), thenAction: @a.id }] }, label: @a.label, variant: (if (== @a.id @entity.goalEvent) "success" "ghost") }) } ] }) }
+          ]
         })
     }
 
@@ -87,46 +87,46 @@ orbital EventHandlerBoardOrbital {
         (set @entity.attempts     0)
         (set @entity.result       "none")
         (render-ui main {
-          entity        : @entity
-          completeEvent : COMPLETE
-          playEvent     : PLAY
-          editRuleEvent : EDIT_RULE
-          playAgainEvent: PLAY_AGAIN
-          type          : event-handler-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Goal", value: @entity.goalEvent }, { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @obj.name }, { type: badge, label: @obj.currentState }, { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [] }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @obj.rules, fields: [], gap: xs, renderItem: (fn r { type: badge, label: @r.thenAction }) }, { type: data-list, entity: @obj.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [{ whenEvent: (array/first @entity.triggerEvents), thenAction: @a.id }] }, label: @a.label, variant: (if (== @a.id @entity.goalEvent) "success" "ghost") }) } ] }) }
+          ]
         })
 
       EDIT_RULE -> playing
         (set @entity.objects (array/map @entity.objects (fn obj (if (== (object/get obj id) ?objectId) (object/merge obj { rules: ?rules }) obj))))
         (render-ui main {
-          entity        : @entity
-          completeEvent : COMPLETE
-          playEvent     : PLAY
-          editRuleEvent : EDIT_RULE
-          playAgainEvent: PLAY_AGAIN
-          type          : event-handler-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Goal", value: @entity.goalEvent }, { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @obj.name }, { type: badge, label: @obj.currentState }, { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [] }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @obj.rules, fields: [], gap: xs, renderItem: (fn r { type: badge, label: @r.thenAction }) }, { type: data-list, entity: @obj.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [{ whenEvent: (array/first @entity.triggerEvents), thenAction: @a.id }] }, label: @a.label, variant: (if (== @a.id @entity.goalEvent) "success" "ghost") }) } ] }) }
+          ]
         })
 
       PLAY -> complete when (> (array/len (array/filter @entity.objects (fn obj (array/some (object/get obj rules) (fn rule (== (object/get rule thenAction) @entity.goalEvent)))))) 0)
         (set @entity.attempts (+ @entity.attempts 1))
         (set @entity.result "win")
         (render-ui main {
-          entity        : @entity
-          completeEvent : COMPLETE
-          playEvent     : PLAY
-          editRuleEvent : EDIT_RULE
-          playAgainEvent: PLAY_AGAIN
-          type          : event-handler-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Goal", value: @entity.goalEvent }, { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @obj.name }, { type: badge, label: @obj.currentState }, { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [] }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @obj.rules, fields: [], gap: xs, renderItem: (fn r { type: badge, label: @r.thenAction }) }, { type: data-list, entity: @obj.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [{ whenEvent: (array/first @entity.triggerEvents), thenAction: @a.id }] }, label: @a.label, variant: (if (== @a.id @entity.goalEvent) "success" "ghost") }) } ] }) }
+          ]
         })
 
       PLAY -> playing when (== (array/len (array/filter @entity.objects (fn obj (array/some (object/get obj rules) (fn rule (== (object/get rule thenAction) @entity.goalEvent)))))) 0)
         (set @entity.attempts (+ @entity.attempts 1))
         (render-ui main {
-          entity        : @entity
-          completeEvent : COMPLETE
-          playEvent     : PLAY
-          editRuleEvent : EDIT_RULE
-          playAgainEvent: PLAY_AGAIN
-          type          : event-handler-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Goal", value: @entity.goalEvent }, { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @obj.name }, { type: badge, label: @obj.currentState }, { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [] }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @obj.rules, fields: [], gap: xs, renderItem: (fn r { type: badge, label: @r.thenAction }) }, { type: data-list, entity: @obj.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [{ whenEvent: (array/first @entity.triggerEvents), thenAction: @a.id }] }, label: @a.label, variant: (if (== @a.id @entity.goalEvent) "success" "ghost") }) } ] }) }
+          ]
         })
     }
 
@@ -142,22 +142,22 @@ orbital EventHandlerBoardOrbital {
         (set @entity.attempts     0)
         (set @entity.result       "none")
         (render-ui main {
-          entity        : @entity
-          completeEvent : COMPLETE
-          playEvent     : PLAY
-          editRuleEvent : EDIT_RULE
-          playAgainEvent: PLAY_AGAIN
-          type          : event-handler-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Goal", value: @entity.goalEvent }, { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @obj.name }, { type: badge, label: @obj.currentState }, { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [] }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @obj.rules, fields: [], gap: xs, renderItem: (fn r { type: badge, label: @r.thenAction }) }, { type: data-list, entity: @obj.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [{ whenEvent: (array/first @entity.triggerEvents), thenAction: @a.id }] }, label: @a.label, variant: (if (== @a.id @entity.goalEvent) "success" "ghost") }) } ] }) }
+          ]
         })
 
       COMPLETE -> complete
         (render-ui main {
-          entity        : @entity
-          completeEvent : COMPLETE
-          playEvent     : PLAY
-          editRuleEvent : EDIT_RULE
-          playAgainEvent: PLAY_AGAIN
-          type          : event-handler-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Goal", value: @entity.goalEvent }, { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @obj.name }, { type: badge, label: @obj.currentState }, { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [] }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @obj.rules, fields: [], gap: xs, renderItem: (fn r { type: badge, label: @r.thenAction }) }, { type: data-list, entity: @obj.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [{ whenEvent: (array/first @entity.triggerEvents), thenAction: @a.id }] }, label: @a.label, variant: (if (== @a.id @entity.goalEvent) "success" "ghost") }) } ] }) }
+          ]
         })
     }
 

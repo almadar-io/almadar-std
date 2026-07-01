@@ -761,12 +761,161 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'render-ui',
                   'main',
                   {
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'finishEvent': 'FINISH',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playRoundEvent': 'PLAY_ROUND',
-                    'type': 'negotiator-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Payoff Matrix',
+                            'type': 'typography',
+                            'variant': 'label',
+                          },
+                          {
+                            'entity': '@entity.payoffMatrix',
+                            'fields': [],
+                            'gap': 'xs',
+                            'renderItem': [
+                              'fn',
+                              'p',
+                              {
+                                'children': [
+                                  {
+                                    'stats': [
+                                      {
+                                        'label': '@p.playerAction',
+                                        'value': '@p.playerPayoff',
+                                      },
+                                      {
+                                        'label': '@p.opponentAction',
+                                        'value': '@p.opponentPayoff',
+                                      },
+                                    ],
+                                    'type': 'game-hud',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Last Round',
+                            'type': 'typography',
+                            'variant': 'label',
+                          },
+                          {
+                            'stats': [
+                              {
+                                'label': 'You',
+                                'value': '@entity.lastPlayerAction',
+                              },
+                              {
+                                'label': 'Them',
+                                'value': '@entity.lastOpponentAction',
+                              },
+                              {
+                                'label': 'Payoff',
+                                'value': '@entity.lastPayoff',
+                              },
+                            ],
+                            'type': 'game-hud',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.actions',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              'a',
+                              {
+                                'action': 'PLAY_ROUND',
+                                'actionPayload': {
+                                  'playerAction': '@a.id',
+                                },
+                                'label': '@a.label',
+                                'type': 'button',
+                                'variant': 'primary',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                            {
+                              'label': 'Target',
+                              'value': '@entity.targetScore',
+                            },
+                            {
+                              'label': 'Round',
+                              'value': '@entity.round',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'FINISH',
+                              'label': 'Finish',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -845,12 +994,161 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'render-ui',
                   'main',
                   {
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'finishEvent': 'FINISH',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playRoundEvent': 'PLAY_ROUND',
-                    'type': 'negotiator-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Payoff Matrix',
+                            'type': 'typography',
+                            'variant': 'label',
+                          },
+                          {
+                            'entity': '@entity.payoffMatrix',
+                            'fields': [],
+                            'gap': 'xs',
+                            'renderItem': [
+                              'fn',
+                              'p',
+                              {
+                                'children': [
+                                  {
+                                    'stats': [
+                                      {
+                                        'label': '@p.playerAction',
+                                        'value': '@p.playerPayoff',
+                                      },
+                                      {
+                                        'label': '@p.opponentAction',
+                                        'value': '@p.opponentPayoff',
+                                      },
+                                    ],
+                                    'type': 'game-hud',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Last Round',
+                            'type': 'typography',
+                            'variant': 'label',
+                          },
+                          {
+                            'stats': [
+                              {
+                                'label': 'You',
+                                'value': '@entity.lastPlayerAction',
+                              },
+                              {
+                                'label': 'Them',
+                                'value': '@entity.lastOpponentAction',
+                              },
+                              {
+                                'label': 'Payoff',
+                                'value': '@entity.lastPayoff',
+                              },
+                            ],
+                            'type': 'game-hud',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.actions',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              'a',
+                              {
+                                'action': 'PLAY_ROUND',
+                                'actionPayload': {
+                                  'playerAction': '@a.id',
+                                },
+                                'label': '@a.label',
+                                'type': 'button',
+                                'variant': 'primary',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                            {
+                              'label': 'Target',
+                              'value': '@entity.targetScore',
+                            },
+                            {
+                              'label': 'Round',
+                              'value': '@entity.round',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'FINISH',
+                              'label': 'Finish',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -949,12 +1247,161 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'render-ui',
                   'main',
                   {
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'finishEvent': 'FINISH',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playRoundEvent': 'PLAY_ROUND',
-                    'type': 'negotiator-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Payoff Matrix',
+                            'type': 'typography',
+                            'variant': 'label',
+                          },
+                          {
+                            'entity': '@entity.payoffMatrix',
+                            'fields': [],
+                            'gap': 'xs',
+                            'renderItem': [
+                              'fn',
+                              'p',
+                              {
+                                'children': [
+                                  {
+                                    'stats': [
+                                      {
+                                        'label': '@p.playerAction',
+                                        'value': '@p.playerPayoff',
+                                      },
+                                      {
+                                        'label': '@p.opponentAction',
+                                        'value': '@p.opponentPayoff',
+                                      },
+                                    ],
+                                    'type': 'game-hud',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Last Round',
+                            'type': 'typography',
+                            'variant': 'label',
+                          },
+                          {
+                            'stats': [
+                              {
+                                'label': 'You',
+                                'value': '@entity.lastPlayerAction',
+                              },
+                              {
+                                'label': 'Them',
+                                'value': '@entity.lastOpponentAction',
+                              },
+                              {
+                                'label': 'Payoff',
+                                'value': '@entity.lastPayoff',
+                              },
+                            ],
+                            'type': 'game-hud',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.actions',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              'a',
+                              {
+                                'action': 'PLAY_ROUND',
+                                'actionPayload': {
+                                  'playerAction': '@a.id',
+                                },
+                                'label': '@a.label',
+                                'type': 'button',
+                                'variant': 'primary',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                            {
+                              'label': 'Target',
+                              'value': '@entity.targetScore',
+                            },
+                            {
+                              'label': 'Round',
+                              'value': '@entity.round',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'FINISH',
+                              'label': 'Finish',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -978,12 +1425,161 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'render-ui',
                   'main',
                   {
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'finishEvent': 'FINISH',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playRoundEvent': 'PLAY_ROUND',
-                    'type': 'negotiator-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Payoff Matrix',
+                            'type': 'typography',
+                            'variant': 'label',
+                          },
+                          {
+                            'entity': '@entity.payoffMatrix',
+                            'fields': [],
+                            'gap': 'xs',
+                            'renderItem': [
+                              'fn',
+                              'p',
+                              {
+                                'children': [
+                                  {
+                                    'stats': [
+                                      {
+                                        'label': '@p.playerAction',
+                                        'value': '@p.playerPayoff',
+                                      },
+                                      {
+                                        'label': '@p.opponentAction',
+                                        'value': '@p.opponentPayoff',
+                                      },
+                                    ],
+                                    'type': 'game-hud',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Last Round',
+                            'type': 'typography',
+                            'variant': 'label',
+                          },
+                          {
+                            'stats': [
+                              {
+                                'label': 'You',
+                                'value': '@entity.lastPlayerAction',
+                              },
+                              {
+                                'label': 'Them',
+                                'value': '@entity.lastOpponentAction',
+                              },
+                              {
+                                'label': 'Payoff',
+                                'value': '@entity.lastPayoff',
+                              },
+                            ],
+                            'type': 'game-hud',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.actions',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              'a',
+                              {
+                                'action': 'PLAY_ROUND',
+                                'actionPayload': {
+                                  'playerAction': '@a.id',
+                                },
+                                'label': '@a.label',
+                                'type': 'button',
+                                'variant': 'primary',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                            {
+                              'label': 'Target',
+                              'value': '@entity.targetScore',
+                            },
+                            {
+                              'label': 'Round',
+                              'value': '@entity.round',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'FINISH',
+                              'label': 'Finish',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1007,12 +1603,161 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'render-ui',
                   'main',
                   {
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'finishEvent': 'FINISH',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playRoundEvent': 'PLAY_ROUND',
-                    'type': 'negotiator-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Payoff Matrix',
+                            'type': 'typography',
+                            'variant': 'label',
+                          },
+                          {
+                            'entity': '@entity.payoffMatrix',
+                            'fields': [],
+                            'gap': 'xs',
+                            'renderItem': [
+                              'fn',
+                              'p',
+                              {
+                                'children': [
+                                  {
+                                    'stats': [
+                                      {
+                                        'label': '@p.playerAction',
+                                        'value': '@p.playerPayoff',
+                                      },
+                                      {
+                                        'label': '@p.opponentAction',
+                                        'value': '@p.opponentPayoff',
+                                      },
+                                    ],
+                                    'type': 'game-hud',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Last Round',
+                            'type': 'typography',
+                            'variant': 'label',
+                          },
+                          {
+                            'stats': [
+                              {
+                                'label': 'You',
+                                'value': '@entity.lastPlayerAction',
+                              },
+                              {
+                                'label': 'Them',
+                                'value': '@entity.lastOpponentAction',
+                              },
+                              {
+                                'label': 'Payoff',
+                                'value': '@entity.lastPayoff',
+                              },
+                            ],
+                            'type': 'game-hud',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.actions',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              'a',
+                              {
+                                'action': 'PLAY_ROUND',
+                                'actionPayload': {
+                                  'playerAction': '@a.id',
+                                },
+                                'label': '@a.label',
+                                'type': 'button',
+                                'variant': 'primary',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                            {
+                              'label': 'Target',
+                              'value': '@entity.targetScore',
+                            },
+                            {
+                              'label': 'Round',
+                              'value': '@entity.round',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'FINISH',
+                              'label': 'Finish',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],
@@ -1071,12 +1816,161 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'render-ui',
                   'main',
                   {
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'finishEvent': 'FINISH',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playRoundEvent': 'PLAY_ROUND',
-                    'type': 'negotiator-board',
+                    'children': [
+                      {
+                        'children': [
+                          {
+                            'content': '@entity.title',
+                            'type': 'typography',
+                            'variant': 'h4',
+                          },
+                          {
+                            'content': '@entity.description',
+                            'type': 'typography',
+                            'variant': 'body',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Payoff Matrix',
+                            'type': 'typography',
+                            'variant': 'label',
+                          },
+                          {
+                            'entity': '@entity.payoffMatrix',
+                            'fields': [],
+                            'gap': 'xs',
+                            'renderItem': [
+                              'fn',
+                              'p',
+                              {
+                                'children': [
+                                  {
+                                    'stats': [
+                                      {
+                                        'label': '@p.playerAction',
+                                        'value': '@p.playerPayoff',
+                                      },
+                                      {
+                                        'label': '@p.opponentAction',
+                                        'value': '@p.opponentPayoff',
+                                      },
+                                    ],
+                                    'type': 'game-hud',
+                                  },
+                                ],
+                                'type': 'card',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'content': 'Last Round',
+                            'type': 'typography',
+                            'variant': 'label',
+                          },
+                          {
+                            'stats': [
+                              {
+                                'label': 'You',
+                                'value': '@entity.lastPlayerAction',
+                              },
+                              {
+                                'label': 'Them',
+                                'value': '@entity.lastOpponentAction',
+                              },
+                              {
+                                'label': 'Payoff',
+                                'value': '@entity.lastPayoff',
+                              },
+                            ],
+                            'type': 'game-hud',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                      {
+                        'children': [
+                          {
+                            'entity': '@entity.actions',
+                            'fields': [],
+                            'gap': 'sm',
+                            'renderItem': [
+                              'fn',
+                              'a',
+                              {
+                                'action': 'PLAY_ROUND',
+                                'actionPayload': {
+                                  'playerAction': '@a.id',
+                                },
+                                'label': '@a.label',
+                                'type': 'button',
+                                'variant': 'primary',
+                              },
+                            ],
+                            'type': 'data-list',
+                          },
+                        ],
+                        'type': 'card',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                            {
+                              'label': 'Target',
+                              'value': '@entity.targetScore',
+                            },
+                            {
+                              'label': 'Round',
+                              'value': '@entity.round',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                        {
+                          'children': [
+                            {
+                              'action': 'FINISH',
+                              'label': 'Finish',
+                              'type': 'button',
+                              'variant': 'primary',
+                            },
+                            {
+                              'action': 'PLAY_AGAIN',
+                              'label': 'Reset',
+                              'type': 'button',
+                              'variant': 'secondary',
+                            },
+                          ],
+                          'direction': 'horizontal',
+                          'gap': 'sm',
+                          'type': 'stack',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
                   },
                 ],
               ],

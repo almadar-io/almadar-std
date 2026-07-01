@@ -56,13 +56,16 @@ orbital SimulatorBoardOrbital {
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          setAEvent: SET_A
-          setBEvent: SET_B
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: simulator-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "A", value: @entity.paramA }, { label: "B", value: @entity.paramB }, { label: "Output", value: @entity.output }, { label: "Target", value: @entity.target }, { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Simulate", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: stack, direction: vertical, gap: lg, children: [
+              { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: label, content: (object/get (array/nth @entity.parameters 0) label) }, { type: range-slider, value: @entity.paramA, min: (object/get (array/nth @entity.parameters 0) min), max: (object/get (array/nth @entity.parameters 0) max), step: (object/get (array/nth @entity.parameters 0) step), showTooltip: true, action: SET_A } ] },
+              { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: label, content: (object/get (array/nth @entity.parameters 1) label) }, { type: range-slider, value: @entity.paramB, min: (object/get (array/nth @entity.parameters 1) min), max: (object/get (array/nth @entity.parameters 1) max), step: (object/get (array/nth @entity.parameters 1) step), showTooltip: true, action: SET_B } ] }
+            ] } ] },
+            { type: card, children: [ { type: typography, variant: caption, content: @entity.outputLabel }, { type: typography, variant: h2, content: @entity.output } ] }
+          ]
         })
     }
 
@@ -79,61 +82,76 @@ orbital SimulatorBoardOrbital {
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          setAEvent: SET_A
-          setBEvent: SET_B
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: simulator-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "A", value: @entity.paramA }, { label: "B", value: @entity.paramB }, { label: "Output", value: @entity.output }, { label: "Target", value: @entity.target }, { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Simulate", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: stack, direction: vertical, gap: lg, children: [
+              { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: label, content: (object/get (array/nth @entity.parameters 0) label) }, { type: range-slider, value: @entity.paramA, min: (object/get (array/nth @entity.parameters 0) min), max: (object/get (array/nth @entity.parameters 0) max), step: (object/get (array/nth @entity.parameters 0) step), showTooltip: true, action: SET_A } ] },
+              { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: label, content: (object/get (array/nth @entity.parameters 1) label) }, { type: range-slider, value: @entity.paramB, min: (object/get (array/nth @entity.parameters 1) min), max: (object/get (array/nth @entity.parameters 1) max), step: (object/get (array/nth @entity.parameters 1) step), showTooltip: true, action: SET_B } ] }
+            ] } ] },
+            { type: card, children: [ { type: typography, variant: caption, content: @entity.outputLabel }, { type: typography, variant: h2, content: @entity.output } ] }
+          ]
         })
       SET_A -> playing when (== @entity.result "none")
         (set @entity.paramA ?value)
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          setAEvent: SET_A
-          setBEvent: SET_B
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: simulator-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "A", value: @entity.paramA }, { label: "B", value: @entity.paramB }, { label: "Output", value: @entity.output }, { label: "Target", value: @entity.target }, { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Simulate", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: stack, direction: vertical, gap: lg, children: [
+              { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: label, content: (object/get (array/nth @entity.parameters 0) label) }, { type: range-slider, value: @entity.paramA, min: (object/get (array/nth @entity.parameters 0) min), max: (object/get (array/nth @entity.parameters 0) max), step: (object/get (array/nth @entity.parameters 0) step), showTooltip: true, action: SET_A } ] },
+              { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: label, content: (object/get (array/nth @entity.parameters 1) label) }, { type: range-slider, value: @entity.paramB, min: (object/get (array/nth @entity.parameters 1) min), max: (object/get (array/nth @entity.parameters 1) max), step: (object/get (array/nth @entity.parameters 1) step), showTooltip: true, action: SET_B } ] }
+            ] } ] },
+            { type: card, children: [ { type: typography, variant: caption, content: @entity.outputLabel }, { type: typography, variant: h2, content: @entity.output } ] }
+          ]
         })
 
       SET_B -> playing when (== @entity.result "none")
         (set @entity.paramB ?value)
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          setAEvent: SET_A
-          setBEvent: SET_B
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: simulator-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "A", value: @entity.paramA }, { label: "B", value: @entity.paramB }, { label: "Output", value: @entity.output }, { label: "Target", value: @entity.target }, { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Simulate", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: stack, direction: vertical, gap: lg, children: [
+              { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: label, content: (object/get (array/nth @entity.parameters 0) label) }, { type: range-slider, value: @entity.paramA, min: (object/get (array/nth @entity.parameters 0) min), max: (object/get (array/nth @entity.parameters 0) max), step: (object/get (array/nth @entity.parameters 0) step), showTooltip: true, action: SET_A } ] },
+              { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: label, content: (object/get (array/nth @entity.parameters 1) label) }, { type: range-slider, value: @entity.paramB, min: (object/get (array/nth @entity.parameters 1) min), max: (object/get (array/nth @entity.parameters 1) max), step: (object/get (array/nth @entity.parameters 1) step), showTooltip: true, action: SET_B } ] }
+            ] } ] },
+            { type: card, children: [ { type: typography, variant: caption, content: @entity.outputLabel }, { type: typography, variant: h2, content: @entity.output } ] }
+          ]
         })
 
       CHECK -> complete when (<= (math/abs (- @entity.output @entity.target)) @entity.tolerance)
         (set @entity.attempts (+ @entity.attempts 1))
         (set @entity.result "win")
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          setAEvent: SET_A
-          setBEvent: SET_B
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: simulator-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "A", value: @entity.paramA }, { label: "B", value: @entity.paramB }, { label: "Output", value: @entity.output }, { label: "Target", value: @entity.target }, { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Simulate", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: stack, direction: vertical, gap: lg, children: [
+              { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: label, content: (object/get (array/nth @entity.parameters 0) label) }, { type: range-slider, value: @entity.paramA, min: (object/get (array/nth @entity.parameters 0) min), max: (object/get (array/nth @entity.parameters 0) max), step: (object/get (array/nth @entity.parameters 0) step), showTooltip: true, action: SET_A } ] },
+              { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: label, content: (object/get (array/nth @entity.parameters 1) label) }, { type: range-slider, value: @entity.paramB, min: (object/get (array/nth @entity.parameters 1) min), max: (object/get (array/nth @entity.parameters 1) max), step: (object/get (array/nth @entity.parameters 1) step), showTooltip: true, action: SET_B } ] }
+            ] } ] },
+            { type: card, children: [ { type: typography, variant: caption, content: @entity.outputLabel }, { type: typography, variant: h2, content: @entity.output } ] }
+          ]
         })
 
       CHECK -> playing when (> (math/abs (- @entity.output @entity.target)) @entity.tolerance)
         (set @entity.attempts (+ @entity.attempts 1))
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          setAEvent: SET_A
-          setBEvent: SET_B
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: simulator-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "A", value: @entity.paramA }, { label: "B", value: @entity.paramB }, { label: "Output", value: @entity.output }, { label: "Target", value: @entity.target }, { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Simulate", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: stack, direction: vertical, gap: lg, children: [
+              { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: label, content: (object/get (array/nth @entity.parameters 0) label) }, { type: range-slider, value: @entity.paramA, min: (object/get (array/nth @entity.parameters 0) min), max: (object/get (array/nth @entity.parameters 0) max), step: (object/get (array/nth @entity.parameters 0) step), showTooltip: true, action: SET_A } ] },
+              { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: label, content: (object/get (array/nth @entity.parameters 1) label) }, { type: range-slider, value: @entity.paramB, min: (object/get (array/nth @entity.parameters 1) min), max: (object/get (array/nth @entity.parameters 1) max), step: (object/get (array/nth @entity.parameters 1) step), showTooltip: true, action: SET_B } ] }
+            ] } ] },
+            { type: card, children: [ { type: typography, variant: caption, content: @entity.outputLabel }, { type: typography, variant: h2, content: @entity.output } ] }
+          ]
         })
     }
 
@@ -148,13 +166,16 @@ orbital SimulatorBoardOrbital {
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
-          entity: @entity
-          completeEvent: COMPLETE
-          setAEvent: SET_A
-          setBEvent: SET_B
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: simulator-board
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "A", value: @entity.paramA }, { label: "B", value: @entity.paramB }, { label: "Output", value: @entity.output }, { label: "Target", value: @entity.target }, { label: "Attempts", value: @entity.attempts } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Simulate", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
+          children: [
+            { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
+            { type: card, children: [ { type: stack, direction: vertical, gap: lg, children: [
+              { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: label, content: (object/get (array/nth @entity.parameters 0) label) }, { type: range-slider, value: @entity.paramA, min: (object/get (array/nth @entity.parameters 0) min), max: (object/get (array/nth @entity.parameters 0) max), step: (object/get (array/nth @entity.parameters 0) step), showTooltip: true, action: SET_A } ] },
+              { type: stack, direction: vertical, gap: xs, children: [ { type: typography, variant: label, content: (object/get (array/nth @entity.parameters 1) label) }, { type: range-slider, value: @entity.paramB, min: (object/get (array/nth @entity.parameters 1) min), max: (object/get (array/nth @entity.parameters 1) max), step: (object/get (array/nth @entity.parameters 1) step), showTooltip: true, action: SET_B } ] }
+            ] } ] },
+            { type: card, children: [ { type: typography, variant: caption, content: @entity.outputLabel }, { type: typography, variant: h2, content: @entity.output } ] }
+          ]
         })
     }
 
