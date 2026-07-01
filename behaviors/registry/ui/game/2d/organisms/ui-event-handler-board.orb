@@ -78,6 +78,41 @@
                   "required": false,
                   "type": "string"
                 },
+                "options": {
+                  "items": {
+                    "properties": {
+                      "actionId": {
+                        "name": "actionId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "isGoal": {
+                        "name": "isGoal",
+                        "required": false,
+                        "type": "boolean"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "objectId": {
+                        "name": "objectId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "whenEvent": {
+                        "name": "whenEvent",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "options",
+                  "required": false,
+                  "type": "array"
+                },
                 "rules": {
                   "items": {
                     "properties": {
@@ -384,6 +419,41 @@
                     "required": false,
                     "type": "string"
                   },
+                  "options": {
+                    "items": {
+                      "properties": {
+                        "actionId": {
+                          "name": "actionId",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "isGoal": {
+                          "name": "isGoal",
+                          "required": false,
+                          "type": "boolean"
+                        },
+                        "label": {
+                          "name": "label",
+                          "required": false,
+                          "type": "string"
+                        },
+                        "objectId": {
+                          "name": "objectId",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "whenEvent": {
+                          "name": "whenEvent",
+                          "required": false,
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "options",
+                    "required": false,
+                    "type": "array"
+                  },
                   "rules": {
                     "items": {
                       "properties": {
@@ -660,7 +730,62 @@
                   [
                     "set",
                     "@entity.objects",
-                    "@config.objects"
+                    [
+                      "array/map",
+                      "@config.objects",
+                      [
+                        "fn",
+                        "obj",
+                        [
+                          "object/merge",
+                          "@obj",
+                          {
+                            "options": [
+                              "array/map",
+                              [
+                                "object/get",
+                                "@obj",
+                                "availableActions"
+                              ],
+                              [
+                                "fn",
+                                "a",
+                                {
+                                  "actionId": [
+                                    "object/get",
+                                    "@a",
+                                    "id"
+                                  ],
+                                  "isGoal": [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "@a",
+                                      "id"
+                                    ],
+                                    "@config.goalEvent"
+                                  ],
+                                  "label": [
+                                    "object/get",
+                                    "@a",
+                                    "label"
+                                  ],
+                                  "objectId": [
+                                    "object/get",
+                                    "@obj",
+                                    "id"
+                                  ],
+                                  "whenEvent": [
+                                    "array/first",
+                                    "@config.triggerEvents"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
                   ],
                   [
                     "set",
@@ -773,38 +898,26 @@
                                   "type": "data-list"
                                 },
                                 {
-                                  "entity": "@obj.availableActions",
+                                  "entity": "@obj.options",
                                   "fields": [],
                                   "gap": "xs",
                                   "renderItem": [
                                     "fn",
-                                    "a",
+                                    "opt",
                                     {
                                       "action": "EDIT_RULE",
                                       "actionPayload": {
-                                        "objectId": "@obj.id",
+                                        "objectId": "@opt.objectId",
                                         "rules": [
                                           {
-                                            "thenAction": "@a.id",
-                                            "whenEvent": [
-                                              "array/first",
-                                              "@entity.triggerEvents"
-                                            ]
+                                            "thenAction": "@opt.actionId",
+                                            "whenEvent": "@opt.whenEvent"
                                           }
                                         ]
                                       },
-                                      "label": "@a.label",
+                                      "label": "@opt.label",
                                       "type": "button",
-                                      "variant": [
-                                        "if",
-                                        [
-                                          "==",
-                                          "@a.id",
-                                          "@entity.goalEvent"
-                                        ],
-                                        "success",
-                                        "ghost"
-                                      ]
+                                      "variant": "primary"
                                     }
                                   ],
                                   "type": "data-list"
@@ -873,7 +986,62 @@
                   [
                     "set",
                     "@entity.objects",
-                    "@config.objects"
+                    [
+                      "array/map",
+                      "@config.objects",
+                      [
+                        "fn",
+                        "obj",
+                        [
+                          "object/merge",
+                          "@obj",
+                          {
+                            "options": [
+                              "array/map",
+                              [
+                                "object/get",
+                                "@obj",
+                                "availableActions"
+                              ],
+                              [
+                                "fn",
+                                "a",
+                                {
+                                  "actionId": [
+                                    "object/get",
+                                    "@a",
+                                    "id"
+                                  ],
+                                  "isGoal": [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "@a",
+                                      "id"
+                                    ],
+                                    "@config.goalEvent"
+                                  ],
+                                  "label": [
+                                    "object/get",
+                                    "@a",
+                                    "label"
+                                  ],
+                                  "objectId": [
+                                    "object/get",
+                                    "@obj",
+                                    "id"
+                                  ],
+                                  "whenEvent": [
+                                    "array/first",
+                                    "@config.triggerEvents"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
                   ],
                   [
                     "set",
@@ -986,38 +1154,26 @@
                                   "type": "data-list"
                                 },
                                 {
-                                  "entity": "@obj.availableActions",
+                                  "entity": "@obj.options",
                                   "fields": [],
                                   "gap": "xs",
                                   "renderItem": [
                                     "fn",
-                                    "a",
+                                    "opt",
                                     {
                                       "action": "EDIT_RULE",
                                       "actionPayload": {
-                                        "objectId": "@obj.id",
+                                        "objectId": "@opt.objectId",
                                         "rules": [
                                           {
-                                            "thenAction": "@a.id",
-                                            "whenEvent": [
-                                              "array/first",
-                                              "@entity.triggerEvents"
-                                            ]
+                                            "thenAction": "@opt.actionId",
+                                            "whenEvent": "@opt.whenEvent"
                                           }
                                         ]
                                       },
-                                      "label": "@a.label",
+                                      "label": "@opt.label",
                                       "type": "button",
-                                      "variant": [
-                                        "if",
-                                        [
-                                          "==",
-                                          "@a.id",
-                                          "@entity.goalEvent"
-                                        ],
-                                        "success",
-                                        "ghost"
-                                      ]
+                                      "variant": "primary"
                                     }
                                   ],
                                   "type": "data-list"
@@ -1098,19 +1254,19 @@
                             "==",
                             [
                               "object/get",
-                              "obj",
+                              "@obj",
                               "id"
                             ],
                             "@payload.objectId"
                           ],
                           [
                             "object/merge",
-                            "obj",
+                            "@obj",
                             {
                               "rules": "@payload.rules"
                             }
                           ],
-                          "obj"
+                          "@obj"
                         ]
                       ]
                     ]
@@ -1186,38 +1342,26 @@
                                   "type": "data-list"
                                 },
                                 {
-                                  "entity": "@obj.availableActions",
+                                  "entity": "@obj.options",
                                   "fields": [],
                                   "gap": "xs",
                                   "renderItem": [
                                     "fn",
-                                    "a",
+                                    "opt",
                                     {
                                       "action": "EDIT_RULE",
                                       "actionPayload": {
-                                        "objectId": "@obj.id",
+                                        "objectId": "@opt.objectId",
                                         "rules": [
                                           {
-                                            "thenAction": "@a.id",
-                                            "whenEvent": [
-                                              "array/first",
-                                              "@entity.triggerEvents"
-                                            ]
+                                            "thenAction": "@opt.actionId",
+                                            "whenEvent": "@opt.whenEvent"
                                           }
                                         ]
                                       },
-                                      "label": "@a.label",
+                                      "label": "@opt.label",
                                       "type": "button",
-                                      "variant": [
-                                        "if",
-                                        [
-                                          "==",
-                                          "@a.id",
-                                          "@entity.goalEvent"
-                                        ],
-                                        "success",
-                                        "ghost"
-                                      ]
+                                      "variant": "primary"
                                     }
                                   ],
                                   "type": "data-list"
@@ -1368,38 +1512,26 @@
                                   "type": "data-list"
                                 },
                                 {
-                                  "entity": "@obj.availableActions",
+                                  "entity": "@obj.options",
                                   "fields": [],
                                   "gap": "xs",
                                   "renderItem": [
                                     "fn",
-                                    "a",
+                                    "opt",
                                     {
                                       "action": "EDIT_RULE",
                                       "actionPayload": {
-                                        "objectId": "@obj.id",
+                                        "objectId": "@opt.objectId",
                                         "rules": [
                                           {
-                                            "thenAction": "@a.id",
-                                            "whenEvent": [
-                                              "array/first",
-                                              "@entity.triggerEvents"
-                                            ]
+                                            "thenAction": "@opt.actionId",
+                                            "whenEvent": "@opt.whenEvent"
                                           }
                                         ]
                                       },
-                                      "label": "@a.label",
+                                      "label": "@opt.label",
                                       "type": "button",
-                                      "variant": [
-                                        "if",
-                                        [
-                                          "==",
-                                          "@a.id",
-                                          "@entity.goalEvent"
-                                        ],
-                                        "success",
-                                        "ghost"
-                                      ]
+                                      "variant": "primary"
                                     }
                                   ],
                                   "type": "data-list"
@@ -1475,7 +1607,7 @@
                           "array/some",
                           [
                             "object/get",
-                            "obj",
+                            "@obj",
                             "rules"
                           ],
                           [
@@ -1485,7 +1617,7 @@
                               "==",
                               [
                                 "object/get",
-                                "rule",
+                                "@rule",
                                 "thenAction"
                               ],
                               "@entity.goalEvent"
@@ -1581,38 +1713,26 @@
                                   "type": "data-list"
                                 },
                                 {
-                                  "entity": "@obj.availableActions",
+                                  "entity": "@obj.options",
                                   "fields": [],
                                   "gap": "xs",
                                   "renderItem": [
                                     "fn",
-                                    "a",
+                                    "opt",
                                     {
                                       "action": "EDIT_RULE",
                                       "actionPayload": {
-                                        "objectId": "@obj.id",
+                                        "objectId": "@opt.objectId",
                                         "rules": [
                                           {
-                                            "thenAction": "@a.id",
-                                            "whenEvent": [
-                                              "array/first",
-                                              "@entity.triggerEvents"
-                                            ]
+                                            "thenAction": "@opt.actionId",
+                                            "whenEvent": "@opt.whenEvent"
                                           }
                                         ]
                                       },
-                                      "label": "@a.label",
+                                      "label": "@opt.label",
                                       "type": "button",
-                                      "variant": [
-                                        "if",
-                                        [
-                                          "==",
-                                          "@a.id",
-                                          "@entity.goalEvent"
-                                        ],
-                                        "success",
-                                        "ghost"
-                                      ]
+                                      "variant": "primary"
                                     }
                                   ],
                                   "type": "data-list"
@@ -1688,7 +1808,7 @@
                           "array/some",
                           [
                             "object/get",
-                            "obj",
+                            "@obj",
                             "rules"
                           ],
                           [
@@ -1698,7 +1818,7 @@
                               "==",
                               [
                                 "object/get",
-                                "rule",
+                                "@rule",
                                 "thenAction"
                               ],
                               "@entity.goalEvent"
@@ -1717,7 +1837,62 @@
                   [
                     "set",
                     "@entity.objects",
-                    "@config.objects"
+                    [
+                      "array/map",
+                      "@config.objects",
+                      [
+                        "fn",
+                        "obj",
+                        [
+                          "object/merge",
+                          "@obj",
+                          {
+                            "options": [
+                              "array/map",
+                              [
+                                "object/get",
+                                "@obj",
+                                "availableActions"
+                              ],
+                              [
+                                "fn",
+                                "a",
+                                {
+                                  "actionId": [
+                                    "object/get",
+                                    "@a",
+                                    "id"
+                                  ],
+                                  "isGoal": [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "@a",
+                                      "id"
+                                    ],
+                                    "@config.goalEvent"
+                                  ],
+                                  "label": [
+                                    "object/get",
+                                    "@a",
+                                    "label"
+                                  ],
+                                  "objectId": [
+                                    "object/get",
+                                    "@obj",
+                                    "id"
+                                  ],
+                                  "whenEvent": [
+                                    "array/first",
+                                    "@config.triggerEvents"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
                   ],
                   [
                     "set",
@@ -1830,38 +2005,26 @@
                                   "type": "data-list"
                                 },
                                 {
-                                  "entity": "@obj.availableActions",
+                                  "entity": "@obj.options",
                                   "fields": [],
                                   "gap": "xs",
                                   "renderItem": [
                                     "fn",
-                                    "a",
+                                    "opt",
                                     {
                                       "action": "EDIT_RULE",
                                       "actionPayload": {
-                                        "objectId": "@obj.id",
+                                        "objectId": "@opt.objectId",
                                         "rules": [
                                           {
-                                            "thenAction": "@a.id",
-                                            "whenEvent": [
-                                              "array/first",
-                                              "@entity.triggerEvents"
-                                            ]
+                                            "thenAction": "@opt.actionId",
+                                            "whenEvent": "@opt.whenEvent"
                                           }
                                         ]
                                       },
-                                      "label": "@a.label",
+                                      "label": "@opt.label",
                                       "type": "button",
-                                      "variant": [
-                                        "if",
-                                        [
-                                          "==",
-                                          "@a.id",
-                                          "@entity.goalEvent"
-                                        ],
-                                        "success",
-                                        "ghost"
-                                      ]
+                                      "variant": "primary"
                                     }
                                   ],
                                   "type": "data-list"
@@ -1998,38 +2161,26 @@
                                   "type": "data-list"
                                 },
                                 {
-                                  "entity": "@obj.availableActions",
+                                  "entity": "@obj.options",
                                   "fields": [],
                                   "gap": "xs",
                                   "renderItem": [
                                     "fn",
-                                    "a",
+                                    "opt",
                                     {
                                       "action": "EDIT_RULE",
                                       "actionPayload": {
-                                        "objectId": "@obj.id",
+                                        "objectId": "@opt.objectId",
                                         "rules": [
                                           {
-                                            "thenAction": "@a.id",
-                                            "whenEvent": [
-                                              "array/first",
-                                              "@entity.triggerEvents"
-                                            ]
+                                            "thenAction": "@opt.actionId",
+                                            "whenEvent": "@opt.whenEvent"
                                           }
                                         ]
                                       },
-                                      "label": "@a.label",
+                                      "label": "@opt.label",
                                       "type": "button",
-                                      "variant": [
-                                        "if",
-                                        [
-                                          "==",
-                                          "@a.id",
-                                          "@entity.goalEvent"
-                                        ],
-                                        "success",
-                                        "ghost"
-                                      ]
+                                      "variant": "primary"
                                     }
                                   ],
                                   "type": "data-list"

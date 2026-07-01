@@ -20,9 +20,16 @@ orbital SequencerBoardOrbital {
       name : string
       thumbnailUrl : string
     }
+  type SequencerBoardSlotOption = {
+    slotIndex : number!
+    actionId : string!
+    label : string
+    iconUrl : Asset
+  }
   type SequencerBoardSlotsItem = {
     index : number!
     placedActionId : string
+    options : [SequencerBoardSlotOption]
   }
   type SequencerBoardCategoryColorsValue = {
     bg : string!
@@ -51,7 +58,7 @@ orbital SequencerBoardOrbital {
 
     state menu {
       START -> building
-        (set @entity.slots @config.slots)
+        (set @entity.slots (array/map @config.slots (fn s (object/merge @s { options: (array/map @config.availableActions (fn a { slotIndex: (object/get @s index), actionId: (object/get @a id), label: (object/get @a name), iconUrl: (object/get @a iconUrl) })) }))))
         (set @entity.availableActions @config.availableActions)
         (set @entity.solutions @config.solutions)
         (set @entity.maxSlots @config.maxSlots)
@@ -69,14 +76,14 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
           ]
         })
     }
 
     state building {
       INIT -> building
-        (set @entity.slots @config.slots)
+        (set @entity.slots (array/map @config.slots (fn s (object/merge @s { options: (array/map @config.availableActions (fn a { slotIndex: (object/get @s index), actionId: (object/get @a id), label: (object/get @a name), iconUrl: (object/get @a iconUrl) })) }))))
         (set @entity.availableActions @config.availableActions)
         (set @entity.solutions @config.solutions)
         (set @entity.maxSlots @config.maxSlots)
@@ -94,7 +101,7 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
           ]
         })
 
@@ -105,7 +112,7 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
           ]
         })
 
@@ -116,7 +123,7 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
           ]
         })
 
@@ -127,7 +134,7 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
           ]
         })
 
@@ -139,7 +146,7 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
           ]
         })
 
@@ -150,7 +157,7 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
           ]
         })
     }
@@ -163,7 +170,7 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
           ]
         })
 
@@ -174,14 +181,14 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
           ]
         })
     }
 
     state complete {
       PLAY_AGAIN -> menu
-        (set @entity.slots @config.slots)
+        (set @entity.slots (array/map @config.slots (fn s (object/merge @s { options: (array/map @config.availableActions (fn a { slotIndex: (object/get @s index), actionId: (object/get @a id), label: (object/get @a name), iconUrl: (object/get @a iconUrl) })) }))))
         (set @entity.attempts 0)
         (set @entity.result "none")
         (set @entity.currentStep -1)
@@ -190,7 +197,7 @@ orbital SequencerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: CHECK, label: "Check", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @entity.availableActions, fields: [], gap: xs, renderItem: (fn a { type: button, action: PLACE, actionPayload: { slotIndex: @s.index, actionId: @a.id }, label: @a.name, iconAsset: @a.iconUrl, variant: (if (== @s.placedActionId @a.id) "success" "ghost") }) } ] }) } ] }
+            { type: card, children: [ { type: data-list, entity: @entity.slots, fields: [], gap: sm, renderItem: (fn s { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @s.index }, { type: badge, label: @s.placedActionId }, { type: button, action: REMOVE, actionPayload: { slotIndex: @s.index }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @s.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: PLACE, actionPayload: { slotIndex: @opt.slotIndex, actionId: @opt.actionId }, label: @opt.label, iconAsset: @opt.iconUrl, variant: primary }) } ] }) } ] }
           ]
         })
     }

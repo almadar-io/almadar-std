@@ -32,6 +32,31 @@
                   "name": "label",
                   "required": false,
                   "type": "string"
+                },
+                "options": {
+                  "items": {
+                    "properties": {
+                      "categoryId": {
+                        "name": "categoryId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "itemId": {
+                        "name": "itemId",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "options",
+                  "required": false,
+                  "type": "array"
                 }
               },
               "type": "object"
@@ -256,6 +281,31 @@
                     "name": "label",
                     "required": false,
                     "type": "string"
+                  },
+                  "options": {
+                    "items": {
+                      "properties": {
+                        "categoryId": {
+                          "name": "categoryId",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "itemId": {
+                          "name": "itemId",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "label": {
+                          "name": "label",
+                          "required": false,
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "options",
+                    "required": false,
+                    "type": "array"
                   }
                 },
                 "type": "object"
@@ -496,7 +546,45 @@
                   [
                     "set",
                     "@entity.items",
-                    "@config.items"
+                    [
+                      "array/map",
+                      "@config.items",
+                      [
+                        "fn",
+                        "i",
+                        [
+                          "object/merge",
+                          "@i",
+                          {
+                            "options": [
+                              "array/map",
+                              "@config.categories",
+                              [
+                                "fn",
+                                "c",
+                                {
+                                  "categoryId": [
+                                    "object/get",
+                                    "@c",
+                                    "id"
+                                  ],
+                                  "itemId": [
+                                    "object/get",
+                                    "@i",
+                                    "id"
+                                  ],
+                                  "label": [
+                                    "object/get",
+                                    "@c",
+                                    "label"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
                   ],
                   [
                     "set",
@@ -577,30 +665,21 @@
                                       "type": "stack"
                                     },
                                     {
-                                      "entity": "@entity.categories",
+                                      "entity": "@i.options",
                                       "fields": [],
                                       "gap": "xs",
                                       "renderItem": [
                                         "fn",
-                                        "c",
+                                        "opt",
                                         {
                                           "action": "ASSIGN",
                                           "actionPayload": {
-                                            "categoryId": "@c.id",
-                                            "itemId": "@i.id"
+                                            "categoryId": "@opt.categoryId",
+                                            "itemId": "@opt.itemId"
                                           },
-                                          "label": "@c.label",
+                                          "label": "@opt.label",
                                           "type": "button",
-                                          "variant": [
-                                            "if",
-                                            [
-                                              "==",
-                                              "@i.assignedCategory",
-                                              "@c.id"
-                                            ],
-                                            "success",
-                                            "ghost"
-                                          ]
+                                          "variant": "primary"
                                         }
                                       ],
                                       "type": "data-list"
@@ -668,7 +747,45 @@
                   [
                     "set",
                     "@entity.items",
-                    "@config.items"
+                    [
+                      "array/map",
+                      "@config.items",
+                      [
+                        "fn",
+                        "i",
+                        [
+                          "object/merge",
+                          "@i",
+                          {
+                            "options": [
+                              "array/map",
+                              "@config.categories",
+                              [
+                                "fn",
+                                "c",
+                                {
+                                  "categoryId": [
+                                    "object/get",
+                                    "@c",
+                                    "id"
+                                  ],
+                                  "itemId": [
+                                    "object/get",
+                                    "@i",
+                                    "id"
+                                  ],
+                                  "label": [
+                                    "object/get",
+                                    "@c",
+                                    "label"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
                   ],
                   [
                     "set",
@@ -749,30 +866,21 @@
                                       "type": "stack"
                                     },
                                     {
-                                      "entity": "@entity.categories",
+                                      "entity": "@i.options",
                                       "fields": [],
                                       "gap": "xs",
                                       "renderItem": [
                                         "fn",
-                                        "c",
+                                        "opt",
                                         {
                                           "action": "ASSIGN",
                                           "actionPayload": {
-                                            "categoryId": "@c.id",
-                                            "itemId": "@i.id"
+                                            "categoryId": "@opt.categoryId",
+                                            "itemId": "@opt.itemId"
                                           },
-                                          "label": "@c.label",
+                                          "label": "@opt.label",
                                           "type": "button",
-                                          "variant": [
-                                            "if",
-                                            [
-                                              "==",
-                                              "@i.assignedCategory",
-                                              "@c.id"
-                                            ],
-                                            "success",
-                                            "ghost"
-                                          ]
+                                          "variant": "primary"
                                         }
                                       ],
                                       "type": "data-list"
@@ -914,30 +1022,21 @@
                                       "type": "stack"
                                     },
                                     {
-                                      "entity": "@entity.categories",
+                                      "entity": "@i.options",
                                       "fields": [],
                                       "gap": "xs",
                                       "renderItem": [
                                         "fn",
-                                        "c",
+                                        "opt",
                                         {
                                           "action": "ASSIGN",
                                           "actionPayload": {
-                                            "categoryId": "@c.id",
-                                            "itemId": "@i.id"
+                                            "categoryId": "@opt.categoryId",
+                                            "itemId": "@opt.itemId"
                                           },
-                                          "label": "@c.label",
+                                          "label": "@opt.label",
                                           "type": "button",
-                                          "variant": [
-                                            "if",
-                                            [
-                                              "==",
-                                              "@i.assignedCategory",
-                                              "@c.id"
-                                            ],
-                                            "success",
-                                            "ghost"
-                                          ]
+                                          "variant": "primary"
                                         }
                                       ],
                                       "type": "data-list"
@@ -1065,30 +1164,21 @@
                                       "type": "stack"
                                     },
                                     {
-                                      "entity": "@entity.categories",
+                                      "entity": "@i.options",
                                       "fields": [],
                                       "gap": "xs",
                                       "renderItem": [
                                         "fn",
-                                        "c",
+                                        "opt",
                                         {
                                           "action": "ASSIGN",
                                           "actionPayload": {
-                                            "categoryId": "@c.id",
-                                            "itemId": "@i.id"
+                                            "categoryId": "@opt.categoryId",
+                                            "itemId": "@opt.itemId"
                                           },
-                                          "label": "@c.label",
+                                          "label": "@opt.label",
                                           "type": "button",
-                                          "variant": [
-                                            "if",
-                                            [
-                                              "==",
-                                              "@i.assignedCategory",
-                                              "@c.id"
-                                            ],
-                                            "success",
-                                            "ghost"
-                                          ]
+                                          "variant": "primary"
                                         }
                                       ],
                                       "type": "data-list"
@@ -1239,30 +1329,21 @@
                                       "type": "stack"
                                     },
                                     {
-                                      "entity": "@entity.categories",
+                                      "entity": "@i.options",
                                       "fields": [],
                                       "gap": "xs",
                                       "renderItem": [
                                         "fn",
-                                        "c",
+                                        "opt",
                                         {
                                           "action": "ASSIGN",
                                           "actionPayload": {
-                                            "categoryId": "@c.id",
-                                            "itemId": "@i.id"
+                                            "categoryId": "@opt.categoryId",
+                                            "itemId": "@opt.itemId"
                                           },
-                                          "label": "@c.label",
+                                          "label": "@opt.label",
                                           "type": "button",
-                                          "variant": [
-                                            "if",
-                                            [
-                                              "==",
-                                              "@i.assignedCategory",
-                                              "@c.id"
-                                            ],
-                                            "success",
-                                            "ghost"
-                                          ]
+                                          "variant": "primary"
                                         }
                                       ],
                                       "type": "data-list"
@@ -1358,7 +1439,45 @@
                   [
                     "set",
                     "@entity.items",
-                    "@config.items"
+                    [
+                      "array/map",
+                      "@config.items",
+                      [
+                        "fn",
+                        "i",
+                        [
+                          "object/merge",
+                          "@i",
+                          {
+                            "options": [
+                              "array/map",
+                              "@config.categories",
+                              [
+                                "fn",
+                                "c",
+                                {
+                                  "categoryId": [
+                                    "object/get",
+                                    "@c",
+                                    "id"
+                                  ],
+                                  "itemId": [
+                                    "object/get",
+                                    "@i",
+                                    "id"
+                                  ],
+                                  "label": [
+                                    "object/get",
+                                    "@c",
+                                    "label"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
                   ],
                   [
                     "set",
@@ -1439,30 +1558,21 @@
                                       "type": "stack"
                                     },
                                     {
-                                      "entity": "@entity.categories",
+                                      "entity": "@i.options",
                                       "fields": [],
                                       "gap": "xs",
                                       "renderItem": [
                                         "fn",
-                                        "c",
+                                        "opt",
                                         {
                                           "action": "ASSIGN",
                                           "actionPayload": {
-                                            "categoryId": "@c.id",
-                                            "itemId": "@i.id"
+                                            "categoryId": "@opt.categoryId",
+                                            "itemId": "@opt.itemId"
                                           },
-                                          "label": "@c.label",
+                                          "label": "@opt.label",
                                           "type": "button",
-                                          "variant": [
-                                            "if",
-                                            [
-                                              "==",
-                                              "@i.assignedCategory",
-                                              "@c.id"
-                                            ],
-                                            "success",
-                                            "ghost"
-                                          ]
+                                          "variant": "primary"
                                         }
                                       ],
                                       "type": "data-list"
