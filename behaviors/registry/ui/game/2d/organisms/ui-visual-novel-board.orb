@@ -603,14 +603,9 @@
           },
           "emits": [
             {
-              "description": "Emits UI:{chooseEvent} with {choiceIndex} when the player selects a branching choice",
+              "description": "Emits UI:{chooseEvent} with {nextId} when the player selects a branching choice",
               "event": "CHOOSE",
               "payloadSchema": [
-                {
-                  "name": "choiceIndex",
-                  "required": true,
-                  "type": "number"
-                },
                 {
                   "name": "nextId",
                   "required": true,
@@ -666,15 +661,10 @@
                 "name": "Initialize"
               },
               {
-                "description": "Emits UI:{chooseEvent} with {choiceIndex} when the player selects a branching choice",
+                "description": "Emits UI:{chooseEvent} with {nextId} when the player selects a branching choice",
                 "key": "CHOOSE",
                 "name": "Choose",
                 "payloadSchema": [
-                  {
-                    "name": "choiceIndex",
-                    "required": true,
-                    "type": "number"
-                  },
                   {
                     "name": "nextId",
                     "required": true,
@@ -803,25 +793,91 @@
                     "render-ui",
                     "main",
                     {
-                      "advanceEvent": "ADVANCE",
-                      "assetManifest": {
-                        "backgrounds": {
-                          "core": "@config.coreBg",
-                          "corridor": "@config.corridorBg",
-                          "forge": "@config.forgeBg"
+                      "backgroundAsset": [
+                        "let",
+                        [
+                          [
+                            "bg",
+                            [
+                              "object/get",
+                              [
+                                "array/first",
+                                [
+                                  "array/filter",
+                                  "@entity.nodes",
+                                  [
+                                    "fn",
+                                    "n",
+                                    [
+                                      "==",
+                                      "@n.id",
+                                      "@entity.currentNodeId"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              "backgroundKey"
+                            ]
+                          ]
+                        ],
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@bg",
+                            "forge"
+                          ],
+                          "@config.forgeBg",
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@bg",
+                              "core"
+                            ],
+                            "@config.coreBg",
+                            "@config.corridorBg"
+                          ]
+                        ]
+                      ],
+                      "children": [
+                        {
+                          "portrait": "@config.portraitUrl",
+                          "speaker": "@entity.currentSpeaker",
+                          "text": "@entity.currentText",
+                          "type": "dialogue-bubble"
                         },
-                        "portraits": {
-                          "guide": "@config.portraitUrl",
-                          "rival": "@config.portraitUrl"
+                        {
+                          "children": [
+                            "array/map",
+                            "@entity.currentChoices",
+                            [
+                              "fn",
+                              "c",
+                              {
+                                "action": "CHOOSE",
+                                "payload": {
+                                  "nextId": [
+                                    "object/get",
+                                    "@c",
+                                    "nextId"
+                                  ]
+                                },
+                                "text": [
+                                  "object/get",
+                                  "@c",
+                                  "label"
+                                ],
+                                "type": "choice-button"
+                              }
+                            ]
+                          ],
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack"
                         }
-                      },
-                      "chooseEvent": "CHOOSE",
-                      "currentNodeId": "@entity.currentNodeId",
-                      "nodes": "@entity.nodes",
-                      "portraitScale": "@config.portraitScale",
-                      "restartEvent": "RESTART",
-                      "type": "visual-novel-board",
-                      "typewriterSpeed": "@config.typewriterSpeed"
+                      ],
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -912,25 +968,91 @@
                     "render-ui",
                     "main",
                     {
-                      "advanceEvent": "ADVANCE",
-                      "assetManifest": {
-                        "backgrounds": {
-                          "core": "@config.coreBg",
-                          "corridor": "@config.corridorBg",
-                          "forge": "@config.forgeBg"
+                      "backgroundAsset": [
+                        "let",
+                        [
+                          [
+                            "bg",
+                            [
+                              "object/get",
+                              [
+                                "array/first",
+                                [
+                                  "array/filter",
+                                  "@entity.nodes",
+                                  [
+                                    "fn",
+                                    "n",
+                                    [
+                                      "==",
+                                      "@n.id",
+                                      "@entity.currentNodeId"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              "backgroundKey"
+                            ]
+                          ]
+                        ],
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@bg",
+                            "forge"
+                          ],
+                          "@config.forgeBg",
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@bg",
+                              "core"
+                            ],
+                            "@config.coreBg",
+                            "@config.corridorBg"
+                          ]
+                        ]
+                      ],
+                      "children": [
+                        {
+                          "portrait": "@config.portraitUrl",
+                          "speaker": "@entity.currentSpeaker",
+                          "text": "@entity.currentText",
+                          "type": "dialogue-bubble"
                         },
-                        "portraits": {
-                          "guide": "@config.portraitUrl",
-                          "rival": "@config.portraitUrl"
+                        {
+                          "children": [
+                            "array/map",
+                            "@entity.currentChoices",
+                            [
+                              "fn",
+                              "c",
+                              {
+                                "action": "CHOOSE",
+                                "payload": {
+                                  "nextId": [
+                                    "object/get",
+                                    "@c",
+                                    "nextId"
+                                  ]
+                                },
+                                "text": [
+                                  "object/get",
+                                  "@c",
+                                  "label"
+                                ],
+                                "type": "choice-button"
+                              }
+                            ]
+                          ],
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack"
                         }
-                      },
-                      "chooseEvent": "CHOOSE",
-                      "currentNodeId": "@entity.currentNodeId",
-                      "nodes": "@entity.nodes",
-                      "portraitScale": "@config.portraitScale",
-                      "restartEvent": "RESTART",
-                      "type": "visual-novel-board",
-                      "typewriterSpeed": "@config.typewriterSpeed"
+                      ],
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -944,25 +1066,91 @@
                     "render-ui",
                     "main",
                     {
-                      "advanceEvent": "ADVANCE",
-                      "assetManifest": {
-                        "backgrounds": {
-                          "core": "@config.coreBg",
-                          "corridor": "@config.corridorBg",
-                          "forge": "@config.forgeBg"
+                      "backgroundAsset": [
+                        "let",
+                        [
+                          [
+                            "bg",
+                            [
+                              "object/get",
+                              [
+                                "array/first",
+                                [
+                                  "array/filter",
+                                  "@entity.nodes",
+                                  [
+                                    "fn",
+                                    "n",
+                                    [
+                                      "==",
+                                      "@n.id",
+                                      "@entity.currentNodeId"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              "backgroundKey"
+                            ]
+                          ]
+                        ],
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@bg",
+                            "forge"
+                          ],
+                          "@config.forgeBg",
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@bg",
+                              "core"
+                            ],
+                            "@config.coreBg",
+                            "@config.corridorBg"
+                          ]
+                        ]
+                      ],
+                      "children": [
+                        {
+                          "portrait": "@config.portraitUrl",
+                          "speaker": "@entity.currentSpeaker",
+                          "text": "@entity.currentText",
+                          "type": "dialogue-bubble"
                         },
-                        "portraits": {
-                          "guide": "@config.portraitUrl",
-                          "rival": "@config.portraitUrl"
+                        {
+                          "children": [
+                            "array/map",
+                            "@entity.currentChoices",
+                            [
+                              "fn",
+                              "c",
+                              {
+                                "action": "CHOOSE",
+                                "payload": {
+                                  "nextId": [
+                                    "object/get",
+                                    "@c",
+                                    "nextId"
+                                  ]
+                                },
+                                "text": [
+                                  "object/get",
+                                  "@c",
+                                  "label"
+                                ],
+                                "type": "choice-button"
+                              }
+                            ]
+                          ],
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack"
                         }
-                      },
-                      "chooseEvent": "CHOOSE",
-                      "currentNodeId": "@entity.currentNodeId",
-                      "nodes": "@entity.nodes",
-                      "portraitScale": "@config.portraitScale",
-                      "restartEvent": "RESTART",
-                      "type": "visual-novel-board",
-                      "typewriterSpeed": "@config.typewriterSpeed"
+                      ],
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -1053,25 +1241,91 @@
                     "render-ui",
                     "main",
                     {
-                      "advanceEvent": "ADVANCE",
-                      "assetManifest": {
-                        "backgrounds": {
-                          "core": "@config.coreBg",
-                          "corridor": "@config.corridorBg",
-                          "forge": "@config.forgeBg"
+                      "backgroundAsset": [
+                        "let",
+                        [
+                          [
+                            "bg",
+                            [
+                              "object/get",
+                              [
+                                "array/first",
+                                [
+                                  "array/filter",
+                                  "@entity.nodes",
+                                  [
+                                    "fn",
+                                    "n",
+                                    [
+                                      "==",
+                                      "@n.id",
+                                      "@entity.currentNodeId"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              "backgroundKey"
+                            ]
+                          ]
+                        ],
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@bg",
+                            "forge"
+                          ],
+                          "@config.forgeBg",
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@bg",
+                              "core"
+                            ],
+                            "@config.coreBg",
+                            "@config.corridorBg"
+                          ]
+                        ]
+                      ],
+                      "children": [
+                        {
+                          "portrait": "@config.portraitUrl",
+                          "speaker": "@entity.currentSpeaker",
+                          "text": "@entity.currentText",
+                          "type": "dialogue-bubble"
                         },
-                        "portraits": {
-                          "guide": "@config.portraitUrl",
-                          "rival": "@config.portraitUrl"
+                        {
+                          "children": [
+                            "array/map",
+                            "@entity.currentChoices",
+                            [
+                              "fn",
+                              "c",
+                              {
+                                "action": "CHOOSE",
+                                "payload": {
+                                  "nextId": [
+                                    "object/get",
+                                    "@c",
+                                    "nextId"
+                                  ]
+                                },
+                                "text": [
+                                  "object/get",
+                                  "@c",
+                                  "label"
+                                ],
+                                "type": "choice-button"
+                              }
+                            ]
+                          ],
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack"
                         }
-                      },
-                      "chooseEvent": "CHOOSE",
-                      "currentNodeId": "@entity.currentNodeId",
-                      "nodes": "@entity.nodes",
-                      "portraitScale": "@config.portraitScale",
-                      "restartEvent": "RESTART",
-                      "type": "visual-novel-board",
-                      "typewriterSpeed": "@config.typewriterSpeed"
+                      ],
+                      "type": "game-shell"
                     }
                   ]
                 ],
