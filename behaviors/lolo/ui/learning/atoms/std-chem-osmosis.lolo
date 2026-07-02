@@ -1,0 +1,136 @@
+app std-chem-osmosis "1.0.0"
+"Osmosis engine — water random-walks freely while trapped solute stays right of a semipermeable membrane, so water net-crosses toward the solute to equalize concentration."
+orbital ChemOsmosisEngineOrbital {
+  type ChemAtom = {
+    id : string
+    x : number!
+    y : number!
+    element : string
+    radius : number
+    color : string
+  }
+
+  type ChemShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    color : string
+    lineWidth : number
+  }
+
+  entity ChemOsmosisState [runtime] {
+    id : string!
+    atoms : [ChemAtom]
+    running : boolean = false
+  }
+
+  trait ChemOsmosisSim -> @rebindable ChemOsmosisState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.atoms @config.atoms)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: chemistry-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          atoms: @entity.atoms
+          shapes: @config.shapes
+        })
+        (emit ATOMS_UPDATED { atoms: @entity.atoms })
+    }
+
+    ticks {
+      osmosisTick every 32ms
+        when @entity.running
+        (set @entity.atoms (array/map @entity.atoms (fn a
+          (let (
+            (r (object/get @a radius))
+            (mx (/ @config.width 2))
+            (isWater (= (object/get @a element) "W"))
+          )
+          (let (
+            (bias (if @isWater 0.4 0))
+            (loX (if @isWater @r (+ @mx @r)))
+            (ny (math/clamp (+ (object/get @a y) (- (* (math/random) 6) 3)) @r (- @config.height @r)))
+          )
+          (let (
+            (nx (math/clamp (+ (+ (object/get @a x) (- (* (math/random) 6) 3)) @bias) @loX (- @config.width @r)))
+          )
+          (object/merge @a { x: @nx, y: @ny })))))))
+        (render-ui main {
+          type: chemistry-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          atoms: @entity.atoms
+          shapes: @config.shapes
+        })
+        (emit ATOMS_UPDATED { atoms: @entity.atoms })
+    }
+
+    emits {
+      ATOMS_UPDATED -> external {
+        atoms : [ChemAtom]
+      }
+        @description "The current atom scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick random-walks every atom; toggle to start/pause osmosis."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Simulation width in pixels; the membrane sits at width/2."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Simulation height in pixels; bounds the random walk."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      atoms : [ChemAtom] = [
+        { id: "s1", x: 360, y: 80, element: "S", radius: 13, color: "#7c3aed" },
+        { id: "s2", x: 480, y: 130, element: "S", radius: 13, color: "#7c3aed" },
+        { id: "s3", x: 400, y: 200, element: "S", radius: 13, color: "#7c3aed" },
+        { id: "s4", x: 520, y: 260, element: "S", radius: 13, color: "#7c3aed" },
+        { id: "s5", x: 360, y: 320, element: "S", radius: 13, color: "#7c3aed" },
+        { id: "s6", x: 470, y: 360, element: "S", radius: 13, color: "#7c3aed" },
+        { id: "w1", x: 60, y: 60, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w2", x: 140, y: 120, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w3", x: 90, y: 200, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w4", x: 200, y: 280, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w5", x: 120, y: 340, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w6", x: 240, y: 80, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w7", x: 260, y: 180, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w8", x: 180, y: 360, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w9", x: 360, y: 120, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w10", x: 440, y: 300, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w11", x: 520, y: 180, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w12", x: 400, y: 60, element: "W", radius: 6, color: "#2563eb" }
+      ]
+        @label "Atoms"
+        @description "Six large purple solute (S) atoms confined right of the membrane plus twelve small blue water (W) atoms that cross freely; water biases rightward each tick, so it accumulates on the solute side."
+        @tier "domain"
+      shapes : [ChemShape] = [
+        { type: line, id: "membrane", x1: 300, y1: 20, x2: 300, y2: 380, color: "#64748b", lineWidth: 4 }
+      ]
+        @label "Shapes"
+        @description "The vertical semipermeable membrane down the canvas middle (x=width/2); solute cannot cross it, water can."
+        @tier "domain"
+    }
+  }
+
+  page "/chem-osmosis" as ChemOsmosisEnginePage -> ChemOsmosisSim
+}

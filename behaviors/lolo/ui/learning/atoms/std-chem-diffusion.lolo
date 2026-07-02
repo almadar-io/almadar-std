@@ -1,0 +1,109 @@
+app std-chem-diffusion "1.0.0"
+"Diffusion engine — two color-coded gases random-walk toward each other, mixing to illustrate entropy."
+orbital ChemDiffusionOrbital {
+  type ChemAtom = {
+    id : string
+    x : number!
+    y : number!
+    element : string
+    radius : number
+    color : string
+  }
+
+  entity ChemDiffusionState [runtime] {
+    id : string!
+    atoms : [ChemAtom]
+    running : boolean = false
+  }
+
+  trait ChemDiffusionSim -> @rebindable ChemDiffusionState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.atoms @config.atoms)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: chemistry-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          atoms: @entity.atoms
+        })
+        (emit ATOMS_UPDATED { atoms: @entity.atoms })
+    }
+
+    ticks {
+      diffusionTick every 32ms
+        when @entity.running
+        (set @entity.atoms (array/map @entity.atoms (fn a
+          (let (
+            (r (object/get @a radius))
+          )
+          (let (
+            (nx (math/clamp (+ (object/get @a x) (- (* (math/random) 6) 3)) @r (- @config.width @r)))
+            (ny (math/clamp (+ (object/get @a y) (- (* (math/random) 6) 3)) @r (- @config.height @r)))
+          )
+          (object/merge @a { x: @nx, y: @ny }))))))
+        (render-ui main {
+          type: chemistry-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          atoms: @entity.atoms
+        })
+        (emit ATOMS_UPDATED { atoms: @entity.atoms })
+    }
+
+    emits {
+      ATOMS_UPDATED -> external {
+        atoms : [ChemAtom]
+      }
+        @description "The current atom scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick random-walks every atom; toggle to start/pause diffusion."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Simulation width in pixels; bounds the random walk."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Simulation height in pixels; bounds the random walk."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      atoms : [ChemAtom] = [
+        { id: "a1", x: 60, y: 60, element: "A", radius: 10, color: "#dc2626" },
+        { id: "a2", x: 100, y: 100, element: "A", radius: 10, color: "#dc2626" },
+        { id: "a3", x: 60, y: 140, element: "A", radius: 10, color: "#dc2626" },
+        { id: "a4", x: 100, y: 180, element: "A", radius: 10, color: "#dc2626" },
+        { id: "a5", x: 60, y: 220, element: "A", radius: 10, color: "#dc2626" },
+        { id: "a6", x: 100, y: 260, element: "A", radius: 10, color: "#dc2626" },
+        { id: "a7", x: 60, y: 300, element: "A", radius: 10, color: "#dc2626" },
+        { id: "a8", x: 100, y: 340, element: "A", radius: 10, color: "#dc2626" },
+        { id: "b1", x: 540, y: 60, element: "B", radius: 10, color: "#2563eb" },
+        { id: "b2", x: 500, y: 100, element: "B", radius: 10, color: "#2563eb" },
+        { id: "b3", x: 540, y: 140, element: "B", radius: 10, color: "#2563eb" },
+        { id: "b4", x: 500, y: 180, element: "B", radius: 10, color: "#2563eb" },
+        { id: "b5", x: 540, y: 220, element: "B", radius: 10, color: "#2563eb" },
+        { id: "b6", x: 500, y: 260, element: "B", radius: 10, color: "#2563eb" },
+        { id: "b7", x: 540, y: 300, element: "B", radius: 10, color: "#2563eb" },
+        { id: "b8", x: 500, y: 340, element: "B", radius: 10, color: "#2563eb" }
+      ]
+        @label "Atoms"
+        @description "16 particles — 8 red gas A on the left, 8 blue gas B on the right — random-walk and mix over time."
+        @tier "domain"
+    }
+  }
+
+  page "/chem-diffusion" as ChemDiffusionEnginePage -> ChemDiffusionSim
+}

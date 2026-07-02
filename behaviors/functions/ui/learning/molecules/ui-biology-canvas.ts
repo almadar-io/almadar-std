@@ -30,7 +30,7 @@ const ALIAS = 'UiBiologyCanvas';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiBiologyCanvasEventKey = 'INIT' | 'SHAPE_CLICK';
+export type StdUiBiologyCanvasEventKey = 'INIT' | 'SHAPE_CLICK' | 'UPDATE';
 
 /**
  * Payload shape for the `SHAPE_CLICK` event.

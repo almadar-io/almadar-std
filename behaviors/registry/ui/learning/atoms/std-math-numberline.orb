@@ -1,0 +1,594 @@
+{
+  "description": "Integer number-line engine — a marker hops integer-by-integer along y=0 on math-canvas, sweeping -9..9 via a phase-driven step.",
+  "name": "std-math-numberline",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "phase",
+            "type": "number"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "samples": {
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "samples",
+                  "required": false,
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "name": "curves",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "points",
+            "type": "array"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "MathNumberlineState",
+        "persistence": "runtime"
+      },
+      "name": "MathNumberlineEngineOrbital",
+      "pages": [
+        {
+          "name": "MathNumberlineEnginePage",
+          "path": "/math-numberline",
+          "traits": [
+            {
+              "ref": "MathNumberlineSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "curves": {
+              "default": [
+                {
+                  "color": "#94a3b8",
+                  "label": "",
+                  "samples": [
+                    {
+                      "x": -9.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 9.0,
+                      "y": 0.0
+                    }
+                  ]
+                }
+              ],
+              "description": "The number line itself: a single horizontal segment along y=0 from x=-9 to x=9 in data coordinates.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "samples": {
+                    "items": {
+                      "properties": {
+                        "x": {
+                          "name": "x",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "y": {
+                          "name": "y",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "samples",
+                    "required": false,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Curves",
+              "tier": "domain",
+              "type": "[MathCurve]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "points": {
+              "default": [
+                {
+                  "color": "#94a3b8",
+                  "label": "-9",
+                  "radius": 2.0,
+                  "x": -9.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "-8",
+                  "radius": 2.0,
+                  "x": -8.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "-7",
+                  "radius": 2.0,
+                  "x": -7.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "-6",
+                  "radius": 2.0,
+                  "x": -6.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "-5",
+                  "radius": 2.0,
+                  "x": -5.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "-4",
+                  "radius": 2.0,
+                  "x": -4.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "-3",
+                  "radius": 2.0,
+                  "x": -3.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "-2",
+                  "radius": 2.0,
+                  "x": -2.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "-1",
+                  "radius": 2.0,
+                  "x": -1.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "0",
+                  "radius": 2.0,
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "1",
+                  "radius": 2.0,
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "2",
+                  "radius": 2.0,
+                  "x": 2.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "3",
+                  "radius": 2.0,
+                  "x": 3.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "4",
+                  "radius": 2.0,
+                  "x": 4.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "5",
+                  "radius": 2.0,
+                  "x": 5.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "6",
+                  "radius": 2.0,
+                  "x": 6.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "7",
+                  "radius": 2.0,
+                  "x": 7.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "8",
+                  "radius": 2.0,
+                  "x": 8.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#94a3b8",
+                  "label": "9",
+                  "radius": 2.0,
+                  "x": 9.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#dc2626",
+                  "label": "n",
+                  "radius": 6.0,
+                  "x": -9.0,
+                  "y": 0.0
+                }
+              ],
+              "description": "19 gray integer tick dots along y=0 plus one bold red marker 'n' that hops between them each tick.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Points",
+              "tier": "domain",
+              "type": "[MathPoint]"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick advances the phase and hops the marker to the next integer; toggle to start/pause.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "LINE_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "curves",
+                  "type": "[MathCurve]"
+                },
+                {
+                  "name": "points",
+                  "type": "[MathPoint]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "curves",
+              "phase",
+              "points",
+              "running"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "MathNumberlineState",
+          "name": "MathNumberlineSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+                "key": "LINE_UPDATED",
+                "name": "Line Updated",
+                "payloadSchema": [
+                  {
+                    "name": "curves",
+                    "type": "[MathCurve]"
+                  },
+                  {
+                    "name": "points",
+                    "type": "[MathPoint]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.phase",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.curves",
+                    "@config.curves"
+                  ],
+                  [
+                    "set",
+                    "@entity.points",
+                    "@config.points"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "curves": "@entity.curves",
+                      "height": "@config.height",
+                      "points": "@entity.points",
+                      "type": "math-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "LINE_UPDATED",
+                    {
+                      "curves": "@entity.curves",
+                      "points": "@entity.points"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "let",
+                  [
+                    [
+                      "nphase",
+                      [
+                        "+",
+                        "@entity.phase",
+                        3.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "pos",
+                        [
+                          "-",
+                          [
+                            "math/mod",
+                            [
+                              "math/round",
+                              [
+                                "/",
+                                "@nphase",
+                                10.0
+                              ]
+                            ],
+                            19.0
+                          ],
+                          9.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.phase",
+                        "@nphase"
+                      ],
+                      [
+                        "set",
+                        "@entity.points",
+                        [
+                          "array/map",
+                          "@entity.points",
+                          [
+                            "fn",
+                            "p",
+                            [
+                              "if",
+                              [
+                                "=",
+                                [
+                                  "object/get",
+                                  "@p",
+                                  "label"
+                                ],
+                                "n"
+                              ],
+                              [
+                                "object/merge",
+                                "@p",
+                                {
+                                  "x": "@pos"
+                                }
+                              ],
+                              "@p"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "render-ui",
+                        "main",
+                        {
+                          "curves": "@entity.curves",
+                          "height": "@config.height",
+                          "points": "@entity.points",
+                          "type": "math-canvas",
+                          "width": "@config.width"
+                        }
+                      ],
+                      [
+                        "emit",
+                        "LINE_UPDATED",
+                        {
+                          "curves": "@entity.curves",
+                          "points": "@entity.points"
+                        }
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              "guard": "@entity.running",
+              "interval": 32.0,
+              "name": "numberlineTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

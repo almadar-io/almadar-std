@@ -1,0 +1,197 @@
+[
+  {
+    "organism": "std-bio-mitosis",
+    "orbital": "BioMitosisEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-bio-mitosis.ts",
+    "entities": [
+      {
+        "name": "BioMitosisState",
+        "fields": [
+          {
+            "name": "phase",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "nodes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "BioMitosisSim",
+        "emittedEvents": [
+          "CELLS_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CELLS_UPDATED",
+            "direction": "emit",
+            "description": "The current mitosis scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tick, frame, step, redraw",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f0fdf4",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "nodes",
+            "type": "[BioNode]",
+            "default": [
+              {
+                "color": "#2563eb",
+                "id": "cellA",
+                "kind": "cell",
+                "label": "Cell A",
+                "radius": 24,
+                "x": 300,
+                "y": 200
+              },
+              {
+                "color": "#7c3aed",
+                "id": "cellB",
+                "kind": "cell",
+                "label": "Cell B",
+                "radius": 24,
+                "x": 300,
+                "y": 200
+              }
+            ],
+            "label": "Nodes",
+            "description": "The two daughter-cell nodes, seeded overlapping at the canvas center so frame 0 reads as a single parent cell.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "period",
+            "type": "number",
+            "default": 200,
+            "label": "Period",
+            "description": "Ticks per full division cycle; cells separate to the max at mid-cycle and rejoin at the ends.",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick advances the phase and recomputes both cell positions and radii; toggle to start/pause.",
+            "tier": "domain"
+          },
+          {
+            "key": "separation",
+            "type": "number",
+            "default": 90,
+            "label": "Separation",
+            "description": "Maximum horizontal half-distance in pixels each daughter cell travels from the shared center.",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "nodes",
+            "phase",
+            "running"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "BioMitosisEnginePage",
+        "defaultPath": "/bio-mitosis",
+        "primaryEntity": "BioMitosisState"
+      }
+    ],
+    "emittedEvents": [
+      "CELLS_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

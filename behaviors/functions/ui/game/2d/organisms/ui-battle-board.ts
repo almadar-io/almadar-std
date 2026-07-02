@@ -7384,14 +7384,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
-                        'damageNumbers': '@entity.effects',
                         'effects': '@entity.effects',
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
-                        'statusEffects': '@entity.selectedUnitEffects',
                         'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
@@ -7622,14 +7620,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
-                        'damageNumbers': '@entity.effects',
                         'effects': '@entity.effects',
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
-                        'statusEffects': '@entity.selectedUnitEffects',
                         'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
@@ -7790,14 +7786,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
-                        'damageNumbers': '@entity.effects',
                         'effects': '@entity.effects',
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
-                        'statusEffects': '@entity.selectedUnitEffects',
                         'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
@@ -8139,14 +8133,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
-                        'damageNumbers': '@entity.effects',
                         'effects': '@entity.effects',
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
-                        'statusEffects': '@entity.selectedUnitEffects',
                         'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
@@ -8378,14 +8370,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
-                        'damageNumbers': '@entity.effects',
                         'effects': '@entity.effects',
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
-                        'statusEffects': '@entity.selectedUnitEffects',
                         'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
@@ -8861,14 +8851,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
-                        'damageNumbers': '@entity.effects',
                         'effects': '@entity.effects',
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
-                        'statusEffects': '@entity.selectedUnitEffects',
                         'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
@@ -9149,14 +9137,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
-                        'damageNumbers': '@entity.effects',
                         'effects': '@entity.effects',
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
-                        'statusEffects': '@entity.selectedUnitEffects',
                         'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
@@ -9332,14 +9318,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
-                        'damageNumbers': '@entity.effects',
                         'effects': '@entity.effects',
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
-                        'statusEffects': '@entity.selectedUnitEffects',
                         'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
@@ -9546,14 +9530,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
-                        'damageNumbers': '@entity.effects',
                         'effects': '@entity.effects',
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
-                        'statusEffects': '@entity.selectedUnitEffects',
                         'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
@@ -9816,14 +9798,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                     'children': [
                       {
                         'assetManifest': '@config.assetManifest',
-                        'damageNumbers': '@entity.effects',
                         'effects': '@entity.effects',
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
-                        'statusEffects': '@entity.selectedUnitEffects',
                         'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
@@ -9982,14 +9962,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'children': [
                     {
                       'assetManifest': '@config.assetManifest',
-                      'damageNumbers': '@entity.effects',
                       'effects': '@entity.effects',
                       'features': '@config.features',
                       'projection': 'isometric',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
                       'showMinimap': true,
-                      'statusEffects': '@entity.selectedUnitEffects',
                       'tileClickEvent': 'TILE_CLICK',
                       'tiles': '@config.tiles',
                       'type': 'canvas-2d',
@@ -10633,14 +10611,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'children': [
                     {
                       'assetManifest': '@config.assetManifest',
-                      'damageNumbers': '@entity.effects',
                       'effects': '@entity.effects',
                       'features': '@config.features',
                       'projection': 'isometric',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
                       'showMinimap': true,
-                      'statusEffects': '@entity.selectedUnitEffects',
                       'tileClickEvent': 'TILE_CLICK',
                       'tiles': '@config.tiles',
                       'type': 'canvas-2d',

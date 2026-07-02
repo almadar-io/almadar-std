@@ -1,0 +1,123 @@
+app std-bio-foodweb "1.0.0"
+"Food-web / ecosystem engine — five trophic species whose radii breathe at staggered phases (trophic lag) on biology-canvas."
+orbital BioFoodwebEngineOrbital {
+  type BioNode = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    kind : "cell" | "organelle" | "molecule" | "organism"
+  }
+
+  type BioEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+
+  entity BioFoodwebState [runtime] {
+    id : string!
+    phase : number = 0
+    nodes : [BioNode]
+    running : boolean = false
+  }
+
+  trait BioFoodwebSim -> @rebindable BioFoodwebState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.phase 0)
+        (set @entity.nodes @config.nodes)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: biology-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          nodes: @entity.nodes
+          edges: @config.edges
+        })
+        (emit POPULATION_UPDATED { nodes: @entity.nodes })
+    }
+
+    ticks {
+      foodwebTick every 32ms
+        when @entity.running
+        (set @entity.phase (+ @entity.phase 3))
+        (set @entity.nodes (array/map @entity.nodes (fn n
+          (let (
+            (off (if (= (object/get @n id) "grass") 0 (if (= (object/get @n id) "rabbit") 48 (if (= (object/get @n id) "insect") 96 (if (= (object/get @n id) "fox") 144 192)))))
+          )
+          (let (
+            (tw (math/abs (- (math/mod (+ @entity.phase @off) 240) 120)))
+          )
+          (let (
+            (nr (+ 12 (* @tw 0.2)))
+          )
+          (object/merge @n { radius: @nr })))))))
+        (render-ui main {
+          type: biology-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          nodes: @entity.nodes
+          edges: @config.edges
+        })
+        (emit POPULATION_UPDATED { nodes: @entity.nodes })
+    }
+
+    emits {
+      POPULATION_UPDATED -> external {
+        nodes : [BioNode]
+      }
+        @description "The current food-web scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick advances the phase and recomputes every species radius; toggle to start/pause."
+        @tier "domain"
+      nodes : [BioNode] = [
+        { id: "grass", x: 300, y: 340, radius: 20, color: "#16a34a", label: "Grass", kind: organism },
+        { id: "rabbit", x: 180, y: 220, radius: 18, color: "#a16207", label: "Rabbit", kind: organism },
+        { id: "insect", x: 420, y: 220, radius: 14, color: "#0891b2", label: "Insect", kind: organism },
+        { id: "fox", x: 220, y: 90, radius: 20, color: "#dc2626", label: "Fox", kind: organism },
+        { id: "hawk", x: 400, y: 60, radius: 22, color: "#7c3aed", label: "Hawk", kind: organism }
+      ]
+        @label "Nodes"
+        @description "Five trophic species — producer (grass), herbivores (rabbit, insect), carnivore (fox), apex (hawk); radius encodes population size."
+        @tier "domain"
+      edges : [BioEdge] = [
+        { from: "rabbit", to: "grass", color: "#94a3b8", label: "eats" },
+        { from: "insect", to: "grass", color: "#94a3b8", label: "eats" },
+        { from: "fox", to: "rabbit", color: "#94a3b8", label: "eats" },
+        { from: "fox", to: "insect", color: "#94a3b8", label: "eats" },
+        { from: "hawk", to: "fox", color: "#94a3b8", label: "eats" }
+      ]
+        @label "Edges"
+        @description "Directed predation links (from eater to prey) forming the food web."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f0fdf4"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+    }
+  }
+
+  page "/bio-foodweb" as BioFoodwebEnginePage -> BioFoodwebSim
+}

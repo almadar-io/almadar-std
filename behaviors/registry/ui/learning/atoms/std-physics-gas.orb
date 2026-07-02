@@ -1,0 +1,970 @@
+{
+  "description": "Ideal-gas kinetic-theory engine — many equal-mass particles bounce elastically off walls and each other in a box.",
+  "name": "std-physics-gas",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fx": {
+                  "name": "fx",
+                  "required": false,
+                  "type": "number"
+                },
+                "fy": {
+                  "name": "fy",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "bodies",
+            "type": "array"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "GasState",
+        "persistence": "runtime"
+      },
+      "name": "GasEngineOrbital",
+      "pages": [
+        {
+          "name": "GasEnginePage",
+          "path": "/physics-gas",
+          "traits": [
+            {
+              "ref": "GasSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bodies": {
+              "default": [
+                {
+                  "color": "#2563eb",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p1",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": 3.0,
+                  "vy": -2.0,
+                  "x": 80.0,
+                  "y": 80.0
+                },
+                {
+                  "color": "#16a34a",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p2",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": -4.0,
+                  "vy": 5.0,
+                  "x": 220.0,
+                  "y": 80.0
+                },
+                {
+                  "color": "#dc2626",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p3",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": 5.0,
+                  "vy": 3.0,
+                  "x": 360.0,
+                  "y": 80.0
+                },
+                {
+                  "color": "#f59e0b",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p4",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": -3.0,
+                  "vy": -4.0,
+                  "x": 500.0,
+                  "y": 80.0
+                },
+                {
+                  "color": "#16a34a",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p5",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": 6.0,
+                  "vy": 1.0,
+                  "x": 80.0,
+                  "y": 160.0
+                },
+                {
+                  "color": "#dc2626",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p6",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": -5.0,
+                  "vy": -3.0,
+                  "x": 220.0,
+                  "y": 160.0
+                },
+                {
+                  "color": "#f59e0b",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p7",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": 2.0,
+                  "vy": 6.0,
+                  "x": 360.0,
+                  "y": 160.0
+                },
+                {
+                  "color": "#2563eb",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p8",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": -6.0,
+                  "vy": 2.0,
+                  "x": 500.0,
+                  "y": 160.0
+                },
+                {
+                  "color": "#dc2626",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p9",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": 4.0,
+                  "vy": -5.0,
+                  "x": 80.0,
+                  "y": 240.0
+                },
+                {
+                  "color": "#f59e0b",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p10",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": -2.0,
+                  "vy": 4.0,
+                  "x": 220.0,
+                  "y": 240.0
+                },
+                {
+                  "color": "#2563eb",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p11",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": 3.0,
+                  "vy": -6.0,
+                  "x": 360.0,
+                  "y": 240.0
+                },
+                {
+                  "color": "#16a34a",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p12",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": -4.0,
+                  "vy": 3.0,
+                  "x": 500.0,
+                  "y": 240.0
+                },
+                {
+                  "color": "#f59e0b",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p13",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": 5.0,
+                  "vy": 2.0,
+                  "x": 80.0,
+                  "y": 320.0
+                },
+                {
+                  "color": "#2563eb",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p14",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": -3.0,
+                  "vy": -2.0,
+                  "x": 220.0,
+                  "y": 320.0
+                },
+                {
+                  "color": "#16a34a",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p15",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": 6.0,
+                  "vy": -1.0,
+                  "x": 360.0,
+                  "y": 320.0
+                },
+                {
+                  "color": "#dc2626",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "p16",
+                  "label": "",
+                  "radius": 9.0,
+                  "vx": -5.0,
+                  "vy": 4.0,
+                  "x": 500.0,
+                  "y": 320.0
+                }
+              ],
+              "description": "16 small equal-mass particles spread across the box with varied velocities — the ideal-gas ensemble.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fx": {
+                    "name": "fx",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "fy": {
+                    "name": "fy",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vx": {
+                    "name": "vx",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vy": {
+                    "name": "vy",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bodies",
+              "tier": "domain",
+              "type": "[GasBody]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Simulation height in pixels; bounds the wall bounce.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick integrates; toggle to start/pause the sim.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "showVelocity": {
+              "default": true,
+              "description": "Draw each body's velocity vector as an arrow.",
+              "label": "Show Velocity",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "velocityScale": {
+              "default": 6.0,
+              "description": "Length multiplier for the velocity arrows.",
+              "label": "Velocity Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Simulation width in pixels; bounds the wall bounce.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "BODIES_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "bodies",
+                  "type": "[GasBody]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "bodies",
+              "running"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "GasState",
+          "name": "GasSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+                "key": "BODIES_UPDATED",
+                "name": "Bodies Updated",
+                "payloadSchema": [
+                  {
+                    "name": "bodies",
+                    "type": "[GasBody]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bodies",
+                    "@config.bodies"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "bodies": "@entity.bodies",
+                      "height": "@config.height",
+                      "showForces": false,
+                      "showVelocity": "@config.showVelocity",
+                      "type": "physics-canvas",
+                      "velocityScale": "@config.velocityScale",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BODIES_UPDATED",
+                    {
+                      "bodies": "@entity.bodies"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.bodies",
+                  [
+                    "array/map",
+                    "@entity.bodies",
+                    [
+                      "fn",
+                      "b",
+                      [
+                        "let",
+                        [
+                          [
+                            "r",
+                            [
+                              "object/get",
+                              "@b",
+                              "radius"
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "cv",
+                              [
+                                "array/reduce",
+                                "@entity.bodies",
+                                [
+                                  "fn",
+                                  [
+                                    "acc",
+                                    "o"
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "=",
+                                      [
+                                        "object/get",
+                                        "@o",
+                                        "id"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@b",
+                                        "id"
+                                      ]
+                                    ],
+                                    "@acc",
+                                    [
+                                      "let",
+                                      [
+                                        [
+                                          "dx",
+                                          [
+                                            "-",
+                                            [
+                                              "object/get",
+                                              "@o",
+                                              "x"
+                                            ],
+                                            [
+                                              "object/get",
+                                              "@b",
+                                              "x"
+                                            ]
+                                          ]
+                                        ],
+                                        [
+                                          "dy",
+                                          [
+                                            "-",
+                                            [
+                                              "object/get",
+                                              "@o",
+                                              "y"
+                                            ],
+                                            [
+                                              "object/get",
+                                              "@b",
+                                              "y"
+                                            ]
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "let",
+                                        [
+                                          [
+                                            "dist",
+                                            [
+                                              "math/sqrt",
+                                              [
+                                                "+",
+                                                [
+                                                  "*",
+                                                  "@dx",
+                                                  "@dx"
+                                                ],
+                                                [
+                                                  "*",
+                                                  "@dy",
+                                                  "@dy"
+                                                ]
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "sumr",
+                                            [
+                                              "+",
+                                              [
+                                                "object/get",
+                                                "@b",
+                                                "radius"
+                                              ],
+                                              [
+                                                "object/get",
+                                                "@o",
+                                                "radius"
+                                              ]
+                                            ]
+                                          ]
+                                        ],
+                                        [
+                                          "if",
+                                          [
+                                            "and",
+                                            [
+                                              "<",
+                                              "@dist",
+                                              "@sumr"
+                                            ],
+                                            [
+                                              ">",
+                                              "@dist",
+                                              0.0
+                                            ]
+                                          ],
+                                          [
+                                            "let",
+                                            [
+                                              [
+                                                "nx",
+                                                [
+                                                  "/",
+                                                  "@dx",
+                                                  "@dist"
+                                                ]
+                                              ],
+                                              [
+                                                "ny",
+                                                [
+                                                  "/",
+                                                  "@dy",
+                                                  "@dist"
+                                                ]
+                                              ]
+                                            ],
+                                            [
+                                              "let",
+                                              [
+                                                [
+                                                  "vrel",
+                                                  [
+                                                    "+",
+                                                    [
+                                                      "*",
+                                                      [
+                                                        "-",
+                                                        [
+                                                          "object/get",
+                                                          "@acc",
+                                                          "vx"
+                                                        ],
+                                                        [
+                                                          "object/get",
+                                                          "@o",
+                                                          "vx"
+                                                        ]
+                                                      ],
+                                                      "@nx"
+                                                    ],
+                                                    [
+                                                      "*",
+                                                      [
+                                                        "-",
+                                                        [
+                                                          "object/get",
+                                                          "@acc",
+                                                          "vy"
+                                                        ],
+                                                        [
+                                                          "object/get",
+                                                          "@o",
+                                                          "vy"
+                                                        ]
+                                                      ],
+                                                      "@ny"
+                                                    ]
+                                                  ]
+                                                ]
+                                              ],
+                                              [
+                                                "if",
+                                                [
+                                                  ">",
+                                                  "@vrel",
+                                                  0.0
+                                                ],
+                                                [
+                                                  "object/merge",
+                                                  "@acc",
+                                                  {
+                                                    "vx": [
+                                                      "-",
+                                                      [
+                                                        "object/get",
+                                                        "@acc",
+                                                        "vx"
+                                                      ],
+                                                      [
+                                                        "*",
+                                                        "@vrel",
+                                                        "@nx"
+                                                      ]
+                                                    ],
+                                                    "vy": [
+                                                      "-",
+                                                      [
+                                                        "object/get",
+                                                        "@acc",
+                                                        "vy"
+                                                      ],
+                                                      [
+                                                        "*",
+                                                        "@vrel",
+                                                        "@ny"
+                                                      ]
+                                                    ]
+                                                  }
+                                                ],
+                                                "@acc"
+                                              ]
+                                            ]
+                                          ],
+                                          "@acc"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "vx": [
+                                    "object/get",
+                                    "@b",
+                                    "vx"
+                                  ],
+                                  "vy": [
+                                    "object/get",
+                                    "@b",
+                                    "vy"
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "bvx",
+                                [
+                                  "object/get",
+                                  "@cv",
+                                  "vx"
+                                ]
+                              ],
+                              [
+                                "bvy",
+                                [
+                                  "object/get",
+                                  "@cv",
+                                  "vy"
+                                ]
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "newvx",
+                                  [
+                                    "if",
+                                    [
+                                      "or",
+                                      [
+                                        "<",
+                                        [
+                                          "+",
+                                          [
+                                            "object/get",
+                                            "@b",
+                                            "x"
+                                          ],
+                                          "@bvx"
+                                        ],
+                                        "@r"
+                                      ],
+                                      [
+                                        ">",
+                                        [
+                                          "+",
+                                          [
+                                            "object/get",
+                                            "@b",
+                                            "x"
+                                          ],
+                                          "@bvx"
+                                        ],
+                                        [
+                                          "-",
+                                          "@config.width",
+                                          "@r"
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "*",
+                                      "@bvx",
+                                      -1.0
+                                    ],
+                                    "@bvx"
+                                  ]
+                                ],
+                                [
+                                  "newvy",
+                                  [
+                                    "if",
+                                    [
+                                      "or",
+                                      [
+                                        "<",
+                                        [
+                                          "+",
+                                          [
+                                            "object/get",
+                                            "@b",
+                                            "y"
+                                          ],
+                                          "@bvy"
+                                        ],
+                                        "@r"
+                                      ],
+                                      [
+                                        ">",
+                                        [
+                                          "+",
+                                          [
+                                            "object/get",
+                                            "@b",
+                                            "y"
+                                          ],
+                                          "@bvy"
+                                        ],
+                                        [
+                                          "-",
+                                          "@config.height",
+                                          "@r"
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "*",
+                                      "@bvy",
+                                      -1.0
+                                    ],
+                                    "@bvy"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "nx",
+                                    [
+                                      "math/clamp",
+                                      [
+                                        "+",
+                                        [
+                                          "object/get",
+                                          "@b",
+                                          "x"
+                                        ],
+                                        "@newvx"
+                                      ],
+                                      "@r",
+                                      [
+                                        "-",
+                                        "@config.width",
+                                        "@r"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "ny",
+                                    [
+                                      "math/clamp",
+                                      [
+                                        "+",
+                                        [
+                                          "object/get",
+                                          "@b",
+                                          "y"
+                                        ],
+                                        "@newvy"
+                                      ],
+                                      "@r",
+                                      [
+                                        "-",
+                                        "@config.height",
+                                        "@r"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "object/merge",
+                                  "@b",
+                                  {
+                                    "vx": "@newvx",
+                                    "vy": "@newvy",
+                                    "x": "@nx",
+                                    "y": "@ny"
+                                  }
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "bodies": "@entity.bodies",
+                    "height": "@config.height",
+                    "showForces": false,
+                    "showVelocity": "@config.showVelocity",
+                    "type": "physics-canvas",
+                    "velocityScale": "@config.velocityScale",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "BODIES_UPDATED",
+                  {
+                    "bodies": "@entity.bodies"
+                  }
+                ]
+              ],
+              "guard": "@entity.running",
+              "interval": 32.0,
+              "name": "gasTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

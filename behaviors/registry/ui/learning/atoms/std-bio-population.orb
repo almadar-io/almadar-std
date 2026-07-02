@@ -1,0 +1,454 @@
+{
+  "description": "Predator-prey population engine — Lotka-Volterra cycle via two out-of-phase oscillating node radii on biology-canvas.",
+  "name": "std-bio-population",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "phase",
+            "type": "number"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "nodes",
+            "type": "array"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "BioPopulationState",
+        "persistence": "runtime"
+      },
+      "name": "BioPopulationEngineOrbital",
+      "pages": [
+        {
+          "name": "BioPopulationEnginePage",
+          "path": "/bio-population",
+          "traits": [
+            {
+              "ref": "BioPopulationSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f0fdf4",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "edges": {
+              "default": [
+                {
+                  "color": "#94a3b8",
+                  "from": "predator",
+                  "label": "eats",
+                  "to": "prey"
+                }
+              ],
+              "description": "Predation relationship linking the two populations.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Edges",
+              "tier": "domain",
+              "type": "[BioEdge]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "nodes": {
+              "default": [
+                {
+                  "color": "#16a34a",
+                  "id": "prey",
+                  "kind": "organism",
+                  "label": "Prey",
+                  "radius": 20.0,
+                  "x": 210.0,
+                  "y": 200.0
+                },
+                {
+                  "color": "#dc2626",
+                  "id": "predator",
+                  "kind": "organism",
+                  "label": "Predator",
+                  "radius": 20.0,
+                  "x": 400.0,
+                  "y": 200.0
+                }
+              ],
+              "description": "Initial prey and predator population nodes; radius encodes population size.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "name": "kind",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "cell",
+                      "organelle",
+                      "molecule",
+                      "organism"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Nodes",
+              "tier": "domain",
+              "type": "[BioNode]"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick advances the phase and recomputes both population radii; toggle to start/pause.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current population scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "POPULATION_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "nodes",
+                  "type": "[BioNode]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "nodes",
+              "phase",
+              "running"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "BioPopulationState",
+          "name": "BioPopulationSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current population scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+                "key": "POPULATION_UPDATED",
+                "name": "Population Updated",
+                "payloadSchema": [
+                  {
+                    "name": "nodes",
+                    "type": "[BioNode]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.phase",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.nodes",
+                    "@config.nodes"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "edges": "@config.edges",
+                      "height": "@config.height",
+                      "nodes": "@entity.nodes",
+                      "type": "biology-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "POPULATION_UPDATED",
+                    {
+                      "nodes": "@entity.nodes"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.phase",
+                  [
+                    "+",
+                    "@entity.phase",
+                    3.0
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.nodes",
+                  [
+                    "array/map",
+                    "@entity.nodes",
+                    [
+                      "fn",
+                      "n",
+                      [
+                        "let",
+                        [
+                          [
+                            "p",
+                            [
+                              "if",
+                              [
+                                "=",
+                                [
+                                  "object/get",
+                                  "@n",
+                                  "id"
+                                ],
+                                "predator"
+                              ],
+                              [
+                                "+",
+                                "@entity.phase",
+                                80.0
+                              ],
+                              "@entity.phase"
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "tw",
+                              [
+                                "math/abs",
+                                [
+                                  "-",
+                                  [
+                                    "math/mod",
+                                    "@p",
+                                    240.0
+                                  ],
+                                  120.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "nr",
+                                [
+                                  "+",
+                                  12.0,
+                                  [
+                                    "*",
+                                    "@tw",
+                                    0.2
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "object/merge",
+                              "@n",
+                              {
+                                "radius": "@nr"
+                              }
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "edges": "@config.edges",
+                    "height": "@config.height",
+                    "nodes": "@entity.nodes",
+                    "type": "biology-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "POPULATION_UPDATED",
+                  {
+                    "nodes": "@entity.nodes"
+                  }
+                ]
+              ],
+              "guard": "@entity.running",
+              "interval": 32.0,
+              "name": "populationTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

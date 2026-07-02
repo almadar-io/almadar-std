@@ -1,0 +1,365 @@
+[
+  {
+    "organism": "std-chem-osmosis",
+    "orbital": "ChemOsmosisEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-chem-osmosis.ts",
+    "entities": [
+      {
+        "name": "ChemOsmosisState",
+        "fields": [
+          {
+            "name": "atoms",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ChemOsmosisSim",
+        "emittedEvents": [
+          "ATOMS_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "ATOMS_UPDATED",
+            "direction": "emit",
+            "description": "The current atom scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tick, frame, step, redraw",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "atoms",
+            "type": "[ChemAtom]",
+            "default": [
+              {
+                "color": "#7c3aed",
+                "element": "S",
+                "id": "s1",
+                "radius": 13,
+                "x": 360,
+                "y": 80
+              },
+              {
+                "color": "#7c3aed",
+                "element": "S",
+                "id": "s2",
+                "radius": 13,
+                "x": 480,
+                "y": 130
+              },
+              {
+                "color": "#7c3aed",
+                "element": "S",
+                "id": "s3",
+                "radius": 13,
+                "x": 400,
+                "y": 200
+              },
+              {
+                "color": "#7c3aed",
+                "element": "S",
+                "id": "s4",
+                "radius": 13,
+                "x": 520,
+                "y": 260
+              },
+              {
+                "color": "#7c3aed",
+                "element": "S",
+                "id": "s5",
+                "radius": 13,
+                "x": 360,
+                "y": 320
+              },
+              {
+                "color": "#7c3aed",
+                "element": "S",
+                "id": "s6",
+                "radius": 13,
+                "x": 470,
+                "y": 360
+              },
+              {
+                "color": "#2563eb",
+                "element": "W",
+                "id": "w1",
+                "radius": 6,
+                "x": 60,
+                "y": 60
+              },
+              {
+                "color": "#2563eb",
+                "element": "W",
+                "id": "w2",
+                "radius": 6,
+                "x": 140,
+                "y": 120
+              },
+              {
+                "color": "#2563eb",
+                "element": "W",
+                "id": "w3",
+                "radius": 6,
+                "x": 90,
+                "y": 200
+              },
+              {
+                "color": "#2563eb",
+                "element": "W",
+                "id": "w4",
+                "radius": 6,
+                "x": 200,
+                "y": 280
+              },
+              {
+                "color": "#2563eb",
+                "element": "W",
+                "id": "w5",
+                "radius": 6,
+                "x": 120,
+                "y": 340
+              },
+              {
+                "color": "#2563eb",
+                "element": "W",
+                "id": "w6",
+                "radius": 6,
+                "x": 240,
+                "y": 80
+              },
+              {
+                "color": "#2563eb",
+                "element": "W",
+                "id": "w7",
+                "radius": 6,
+                "x": 260,
+                "y": 180
+              },
+              {
+                "color": "#2563eb",
+                "element": "W",
+                "id": "w8",
+                "radius": 6,
+                "x": 180,
+                "y": 360
+              },
+              {
+                "color": "#2563eb",
+                "element": "W",
+                "id": "w9",
+                "radius": 6,
+                "x": 360,
+                "y": 120
+              },
+              {
+                "color": "#2563eb",
+                "element": "W",
+                "id": "w10",
+                "radius": 6,
+                "x": 440,
+                "y": 300
+              },
+              {
+                "color": "#2563eb",
+                "element": "W",
+                "id": "w11",
+                "radius": 6,
+                "x": 520,
+                "y": 180
+              },
+              {
+                "color": "#2563eb",
+                "element": "W",
+                "id": "w12",
+                "radius": 6,
+                "x": 400,
+                "y": 60
+              }
+            ],
+            "label": "Atoms",
+            "description": "Six large purple solute (S) atoms confined right of the membrane plus twelve small blue water (W) atoms that cross freely; water biases rightward each tick, so it accumulates on the solute side.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "element": {
+                  "name": "element",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Simulation height in pixels; bounds the random walk.",
+            "tier": "presentation"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick random-walks every atom; toggle to start/pause osmosis.",
+            "tier": "domain"
+          },
+          {
+            "key": "shapes",
+            "type": "[ChemShape]",
+            "default": [
+              {
+                "color": "#64748b",
+                "id": "membrane",
+                "lineWidth": 4,
+                "type": "line",
+                "x1": 300,
+                "x2": 300,
+                "y1": 20,
+                "y2": 380
+              }
+            ],
+            "label": "Shapes",
+            "description": "The vertical semipermeable membrane down the canvas middle (x=width/2); solute cannot cross it, water can.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "lineWidth": {
+                  "name": "lineWidth",
+                  "required": false,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "line",
+                    "arrow",
+                    "circle",
+                    "rect",
+                    "polygon",
+                    "path",
+                    "text",
+                    "axis",
+                    "grid"
+                  ]
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": false,
+                  "type": "number"
+                },
+                "x2": {
+                  "name": "x2",
+                  "required": false,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": false,
+                  "type": "number"
+                },
+                "y2": {
+                  "name": "y2",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Simulation width in pixels; the membrane sits at width/2.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "atoms",
+            "running"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ChemOsmosisEnginePage",
+        "defaultPath": "/chem-osmosis",
+        "primaryEntity": "ChemOsmosisState"
+      }
+    ],
+    "emittedEvents": [
+      "ATOMS_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

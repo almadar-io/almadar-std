@@ -1,0 +1,144 @@
+app std-math-linear "1.0.0"
+"Linear-systems engine — line A's slope animates on a Cartesian plot; the two lines' intersection point slides with it."
+orbital MathLinearEngineOrbital {
+  type MathSample = {
+    x : number!
+    y : number!
+  }
+
+  type MathCurve = {
+    label : string
+    color : string
+    samples : [MathSample]
+  }
+
+  type MathPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity MathLinearState [runtime] {
+    id : string!
+    phase : number = 0
+    curves : [MathCurve]
+    points : [MathPoint]
+    running : boolean = false
+  }
+
+  trait MathLinearSim -> @rebindable MathLinearState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.phase 0)
+        (set @entity.curves @config.curves)
+        (set @entity.points @config.points)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: math-canvas
+          width: @config.width
+          height: @config.height
+          curves: @entity.curves
+          points: @entity.points
+        })
+        (emit SYSTEM_UPDATED { curves: @entity.curves, points: @entity.points })
+    }
+
+    ticks {
+      linearTick every 32ms
+        when @entity.running
+        (let (
+          (nphase (+ @entity.phase 3))
+        )
+        (let (
+          (tw (- (/ (math/abs (- (math/mod @nphase 240) 120)) 120) 0.5))
+        )
+        (let (
+          (mA (* @tw 1.2))
+          (mB @config.mB)
+        )
+        (let (
+          (denom (if (< (math/abs (- @mA @mB)) 0.05) 0.05 (- @mA @mB)))
+        )
+        (let (
+          (aInt (+ -2 (* 3 @mA)))
+          (bInt (- 2 (* 3 @mB)))
+        )
+        (let (
+          (xstar (/ (- @bInt @aInt) @denom))
+        )
+        (let (
+          (ystar (+ -2 (* @mA (+ @xstar 3))))
+        )
+        (let (
+          (lineA { label: "A", color: "#2563eb", samples: [{ x: -9, y: (+ -2 (* @mA -6)) }, { x: 9, y: (+ -2 (* @mA 12)) }] })
+        )
+        (let (
+          (lineB { label: "B", color: "#16a34a", samples: [{ x: -9, y: (+ 2 (* @mB -12)) }, { x: 9, y: (+ 2 (* @mB 6)) }] })
+        )
+        (let (
+          (solutionPoint { x: @xstar, y: @ystar, label: "solution", color: "#dc2626", radius: 6 })
+        )
+        (do
+          (set @entity.phase @nphase)
+          (set @entity.curves [ @lineA @lineB ])
+          (set @entity.points [ @solutionPoint ])
+          (render-ui main {
+            type: math-canvas
+            width: @config.width
+            height: @config.height
+            curves: @entity.curves
+            points: @entity.points
+          })
+          (emit SYSTEM_UPDATED { curves: @entity.curves, points: @entity.points })
+        )))))))))))
+    }
+
+    emits {
+      SYSTEM_UPDATED -> external {
+        curves : [MathCurve]
+        points : [MathPoint]
+      }
+        @description "The current scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      mB : number = -0.6
+        @label "Line B Slope"
+        @description "Fixed slope of line B through data point (3,2); line A's slope animates and the intersection tracks it."
+        @tier "domain"
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick animates line A's slope and recomputes the intersection; toggle to start/pause."
+        @tier "domain"
+      curves : [MathCurve] = [
+        { label: "A", color: "#2563eb", samples: [{ x: -9, y: -5 }, { x: 9, y: 4 }] },
+        { label: "B", color: "#16a34a", samples: [{ x: -9, y: 9.2 }, { x: 9, y: -1.6 }] }
+      ]
+        @label "Curves"
+        @description "Initial pair of lines in data coordinates: A through (-3,-2), B through (3,2)."
+        @tier "domain"
+      points : [MathPoint] = [
+        { x: 3.9, y: 1.45, label: "solution", color: "#dc2626", radius: 6 }
+      ]
+        @label "Points"
+        @description "Initial intersection point of the two lines in data coordinates."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+    }
+  }
+
+  page "/math-linear" as MathLinearEnginePage -> MathLinearSim
+}

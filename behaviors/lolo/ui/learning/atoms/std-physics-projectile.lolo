@@ -1,5 +1,5 @@
 app std-physics-projectile "1.0.0"
-"Projectile-motion engine — integrates bodies under constant gravity with wall-bounce every tick and slots a canvas + controls. Composed by a learning orbital via `uses`."
+"Projectile-motion engine — integrates bodies under constant gravity with wall-bounce every tick and renders a physics-canvas; composed by a learning orbital via `uses`, controls auto-derived from @config."
 orbital ProjectileEngineOrbital {
   type ProjectileBody = {
     id : string
@@ -26,77 +26,18 @@ orbital ProjectileEngineOrbital {
     state idle {
       INIT -> idle
         (set @entity.bodies @config.bodies)
-        (set @entity.running false)
+        (set @entity.running @config.running)
         (render-ui main {
-          type: box
-          padding: md
-          children: [
-            { type: stack, direction: vertical, gap: md, children: [
-              { type: typography, variant: h4, content: @config.title },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                { type: button, action: START, label: "Start", variant: primary },
-                { type: button, action: PAUSE, label: "Pause", variant: secondary },
-                { type: button, action: RESET, label: "Reset", variant: ghost }
-              ] },
-              { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: "#f8fafc", bodies: @entity.bodies, showVelocity: true, showForces: false, velocityScale: 8 }
-            ] }
-          ]
+          type: physics-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          bodies: @entity.bodies
+          showVelocity: @config.showVelocity
+          showForces: false
+          velocityScale: @config.velocityScale
         })
-
-      START -> idle
-        (set @entity.running true)
-        (render-ui main {
-          type: box
-          padding: md
-          children: [
-            { type: stack, direction: vertical, gap: md, children: [
-              { type: typography, variant: h4, content: @config.title },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                { type: button, action: START, label: "Start", variant: primary },
-                { type: button, action: PAUSE, label: "Pause", variant: secondary },
-                { type: button, action: RESET, label: "Reset", variant: ghost }
-              ] },
-              { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: "#f8fafc", bodies: @entity.bodies, showVelocity: true, showForces: false, velocityScale: 8 }
-            ] }
-          ]
-        })
-
-      PAUSE -> idle
-        (set @entity.running false)
-        (render-ui main {
-          type: box
-          padding: md
-          children: [
-            { type: stack, direction: vertical, gap: md, children: [
-              { type: typography, variant: h4, content: @config.title },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                { type: button, action: START, label: "Start", variant: primary },
-                { type: button, action: PAUSE, label: "Pause", variant: secondary },
-                { type: button, action: RESET, label: "Reset", variant: ghost }
-              ] },
-              { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: "#f8fafc", bodies: @entity.bodies, showVelocity: true, showForces: false, velocityScale: 8 }
-            ] }
-          ]
-        })
-
-      RESET -> idle
-        (set @entity.bodies @config.bodies)
-        (set @entity.running false)
-        (render-ui main {
-          type: box
-          padding: md
-          children: [
-            { type: stack, direction: vertical, gap: md, children: [
-              { type: typography, variant: h4, content: @config.title },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                { type: button, action: START, label: "Start", variant: primary },
-                { type: button, action: PAUSE, label: "Pause", variant: secondary },
-                { type: button, action: RESET, label: "Reset", variant: ghost }
-              ] },
-              { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: "#f8fafc", bodies: @entity.bodies, showVelocity: true, showForces: false, velocityScale: 8 }
-            ] }
-          ]
-        })
+        (emit BODIES_UPDATED { bodies: @entity.bodies })
     }
 
     ticks {
@@ -123,27 +64,28 @@ orbital ProjectileEngineOrbital {
             vy: (if @hity (* @nvy (* -1 @config.restitution)) @nvy)
           })))))))
         (render-ui main {
-          type: box
-          padding: md
-          children: [
-            { type: stack, direction: vertical, gap: md, children: [
-              { type: typography, variant: h4, content: @config.title },
-              { type: stack, direction: horizontal, gap: sm, children: [
-                { type: button, action: START, label: "Start", variant: primary },
-                { type: button, action: PAUSE, label: "Pause", variant: secondary },
-                { type: button, action: RESET, label: "Reset", variant: ghost }
-              ] },
-              { type: physics-canvas, width: @config.width, height: @config.height, backgroundColor: "#f8fafc", bodies: @entity.bodies, showVelocity: true, showForces: false, velocityScale: 8 }
-            ] }
-          ]
+          type: physics-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          bodies: @entity.bodies
+          showVelocity: @config.showVelocity
+          showForces: false
+          velocityScale: @config.velocityScale
         })
+        (emit BODIES_UPDATED { bodies: @entity.bodies })
+    }
+
+    emits {
+      BODIES_UPDATED -> external {
+        bodies : [ProjectileBody]
+      }
+        @description "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
     }
 
     config {
-      title : string = "Projectile Motion"
-        @label "Title"
-        @description "Heading shown above the simulation."
-        @tier "presentation"
       gravity : number = 0.4
         @label "Gravity"
         @description "Downward acceleration added to each body's vy every tick."
@@ -156,14 +98,30 @@ orbital ProjectileEngineOrbital {
         @label "Damping"
         @description "Fraction of velocity retained each tick (air resistance)."
         @tier "domain"
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick integrates; toggle to start/pause the sim."
+        @tier "domain"
       width : number = 600
         @label "Width"
         @description "Simulation width in pixels; bounds the bounce."
-        @tier "domain"
+        @tier "presentation"
       height : number = 400
         @label "Height"
         @description "Simulation height in pixels; bounds the bounce."
-        @tier "domain"
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      showVelocity : boolean = true
+        @label "Show Velocity"
+        @description "Draw each body's velocity vector as an arrow."
+        @tier "presentation"
+      velocityScale : number = 8
+        @label "Velocity Scale"
+        @description "Length multiplier for the velocity arrows."
+        @tier "presentation"
       bodies : [ProjectileBody] = [
         { id: "ball-a", x: 90, y: 70, radius: 16, color: "#2563eb", label: "A", vx: 5, vy: 0, fx: 0, fy: 0 },
         { id: "ball-b", x: 320, y: 50, radius: 11, color: "#16a34a", label: "B", vx: -4, vy: 3, fx: 0, fy: 0 }

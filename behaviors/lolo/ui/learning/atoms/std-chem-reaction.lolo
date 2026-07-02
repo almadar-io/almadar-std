@@ -1,0 +1,126 @@
+app std-chem-reaction "1.0.0"
+"Reversible reaction engine — four A+B pairs oscillate together and apart, forming and breaking a bond on chemistry-canvas."
+orbital ChemReactionEngineOrbital {
+  type ChemAtom = {
+    id : string
+    x : number!
+    y : number!
+    element : string
+    radius : number
+    color : string
+    home : number
+  }
+
+  type ChemBond = {
+    from : string!
+    to : string!
+    type : "single" | "double" | "triple"
+    color : string
+  }
+
+  entity ChemReactionState [runtime] {
+    id : string!
+    phase : number = 0
+    atoms : [ChemAtom]
+    running : boolean = false
+  }
+
+  trait ChemReactionSim -> @rebindable ChemReactionState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.phase 0)
+        (set @entity.atoms @config.atoms)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: chemistry-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          atoms: @entity.atoms
+          bonds: @config.bonds
+        })
+        (emit ATOMS_UPDATED { atoms: @entity.atoms })
+    }
+
+    ticks {
+      reactionTick every 32ms
+        when @entity.running
+        (set @entity.phase (+ @entity.phase 4))
+        (set @entity.atoms (array/map @entity.atoms (fn a
+          (let (
+            (t (/ (math/abs (- (math/mod @entity.phase @config.period) (/ @config.period 2))) (/ @config.period 2)))
+          )
+          (let (
+            (nx (+ (object/get @a home) (* (- (/ @config.width 2) (object/get @a home)) @t)))
+          )
+          (object/merge @a { x: @nx }))))))
+        (render-ui main {
+          type: chemistry-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          atoms: @entity.atoms
+          bonds: @config.bonds
+        })
+        (emit ATOMS_UPDATED { atoms: @entity.atoms })
+    }
+
+    emits {
+      ATOMS_UPDATED -> external {
+        atoms : [ChemAtom]
+      }
+        @description "The current atom scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      period : number = 200
+        @label "Period"
+        @description "Phase units per full bond form-and-break cycle; larger is slower."
+        @tier "domain"
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick oscillates each pair between dissociated and bonded; toggle to start/pause."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels; the bond center is width/2."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      atoms : [ChemAtom] = [
+        { id: "a1", x: 150, y: 90, element: "A", radius: 12, color: "#dc2626", home: 150 },
+        { id: "b1", x: 450, y: 90, element: "B", radius: 12, color: "#2563eb", home: 450 },
+        { id: "a2", x: 150, y: 170, element: "A", radius: 12, color: "#dc2626", home: 150 },
+        { id: "b2", x: 450, y: 170, element: "B", radius: 12, color: "#2563eb", home: 450 },
+        { id: "a3", x: 150, y: 250, element: "A", radius: 12, color: "#dc2626", home: 150 },
+        { id: "b3", x: 450, y: 250, element: "B", radius: 12, color: "#2563eb", home: 450 },
+        { id: "a4", x: 150, y: 330, element: "A", radius: 12, color: "#dc2626", home: 150 },
+        { id: "b4", x: 450, y: 330, element: "B", radius: 12, color: "#2563eb", home: 450 }
+      ]
+        @label "Atoms"
+        @description "Eight atoms — four red A on the left and four blue B on the right; each pair slides to the center (width/2) to bond, then back to its home to dissociate."
+        @tier "domain"
+      bonds : [ChemBond] = [
+        { from: "a1", to: "b1", type: single, color: "#94a3b8" },
+        { from: "a2", to: "b2", type: single, color: "#94a3b8" },
+        { from: "a3", to: "b3", type: single, color: "#94a3b8" },
+        { from: "a4", to: "b4", type: single, color: "#94a3b8" }
+      ]
+        @label "Bonds"
+        @description "Four A-B bonds — the canvas draws a line between each pair whose length shrinks as the atoms converge and grows as they separate."
+        @tier "domain"
+    }
+  }
+
+  page "/chem-reaction" as ChemReactionEnginePage -> ChemReactionSim
+}

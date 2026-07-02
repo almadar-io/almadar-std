@@ -1,0 +1,310 @@
+[
+  {
+    "organism": "std-math-sequence",
+    "orbital": "MathSequenceEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-math-sequence.ts",
+    "entities": [
+      {
+        "name": "MathSequenceState",
+        "fields": [
+          {
+            "name": "phase",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "points",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "MathSequenceSim",
+        "emittedEvents": [
+          "SEQUENCE_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SEQUENCE_UPDATED",
+            "direction": "emit",
+            "description": "The current sequence scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tick, frame, step, redraw",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "a0",
+            "type": "number",
+            "default": -7,
+            "label": "First Term",
+            "description": "The first term a₀ of the arithmetic sequence; the marker term is recomputed as a₀ + n·d.",
+            "tier": "domain"
+          },
+          {
+            "key": "curves",
+            "type": "[MathCurve]",
+            "default": [
+              {
+                "color": "#94a3b8",
+                "label": "seq",
+                "samples": [
+                  {
+                    "x": 0,
+                    "y": -7
+                  },
+                  {
+                    "x": 1,
+                    "y": -5.3
+                  },
+                  {
+                    "x": 2,
+                    "y": -3.6
+                  },
+                  {
+                    "x": 3,
+                    "y": -1.9
+                  },
+                  {
+                    "x": 4,
+                    "y": -0.2
+                  },
+                  {
+                    "x": 5,
+                    "y": 1.5
+                  },
+                  {
+                    "x": 6,
+                    "y": 3.2
+                  },
+                  {
+                    "x": 7,
+                    "y": 4.9
+                  },
+                  {
+                    "x": 8,
+                    "y": 6.6
+                  }
+                ]
+              }
+            ],
+            "label": "Curves",
+            "description": "The connecting line through every term in data coordinates; its constant slope is the common difference d.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "samples": {
+                  "name": "samples",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "d",
+            "type": "number",
+            "default": 1.7,
+            "label": "Common Difference",
+            "description": "The constant step d between consecutive terms; a straight line of dots makes it visible as slope.",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "points",
+            "type": "[MathPoint]",
+            "default": [
+              {
+                "color": "#2563eb",
+                "label": "a0",
+                "radius": 5,
+                "x": 0,
+                "y": -7
+              },
+              {
+                "color": "#2563eb",
+                "label": "a1",
+                "radius": 5,
+                "x": 1,
+                "y": -5.3
+              },
+              {
+                "color": "#2563eb",
+                "label": "a2",
+                "radius": 5,
+                "x": 2,
+                "y": -3.6
+              },
+              {
+                "color": "#2563eb",
+                "label": "a3",
+                "radius": 5,
+                "x": 3,
+                "y": -1.9
+              },
+              {
+                "color": "#2563eb",
+                "label": "a4",
+                "radius": 5,
+                "x": 4,
+                "y": -0.2
+              },
+              {
+                "color": "#2563eb",
+                "label": "a5",
+                "radius": 5,
+                "x": 5,
+                "y": 1.5
+              },
+              {
+                "color": "#2563eb",
+                "label": "a6",
+                "radius": 5,
+                "x": 6,
+                "y": 3.2
+              },
+              {
+                "color": "#2563eb",
+                "label": "a7",
+                "radius": 5,
+                "x": 7,
+                "y": 4.9
+              },
+              {
+                "color": "#2563eb",
+                "label": "a8",
+                "radius": 5,
+                "x": 8,
+                "y": 6.6
+              }
+            ],
+            "label": "Points",
+            "description": "The nine static term dots {x:n, y:a₀+n·d} in data coordinates; the sweeping marker highlights the current one.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick sweeps the highlighted marker term-by-term along the sequence; toggle to start/pause.",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "curves",
+            "phase",
+            "points",
+            "running"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MathSequenceEnginePage",
+        "defaultPath": "/math-sequence",
+        "primaryEntity": "MathSequenceState"
+      }
+    ],
+    "emittedEvents": [
+      "SEQUENCE_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

@@ -1,0 +1,151 @@
+app std-physics-orbit "1.0.0"
+"Orbital-motion engine — integrates bodies under inverse-square gravity toward a fixed central mass every tick and renders a physics-canvas via `uses`."
+orbital OrbitEngineOrbital {
+  type OrbitBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    vx : number
+    vy : number
+    fx : number
+    fy : number
+  }
+
+  entity OrbitState [runtime] {
+    id : string!
+    bodies : [OrbitBody]
+    running : boolean = false
+  }
+
+  trait OrbitSim -> @rebindable OrbitState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.bodies @config.bodies)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: physics-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          bodies: @entity.bodies
+          showVelocity: @config.showVelocity
+          showForces: false
+          velocityScale: @config.velocityScale
+        })
+        (emit BODIES_UPDATED { bodies: @entity.bodies })
+    }
+
+    ticks {
+      orbitTick every 32ms
+        when @entity.running
+        (set @entity.bodies (array/map @entity.bodies (fn b
+          (if (= (object/get @b id) "sun")
+            @b
+            (let (
+              (dx (- @config.centerX (object/get @b x)))
+              (dy (- @config.centerY (object/get @b y)))
+            )
+            (let (
+              (dist (math/sqrt (+ (* @dx @dx) (* @dy @dy))))
+            )
+            (let (
+              (distSafe (math/max @dist 6))
+            )
+            (let (
+              (invCube (/ @config.gm (* @distSafe (* @distSafe @distSafe))))
+            )
+            (let (
+              (ax (* @invCube @dx))
+              (ay (* @invCube @dy))
+            )
+            (let (
+              (nvx (+ (object/get @b vx) @ax))
+              (nvy (+ (object/get @b vy) @ay))
+            )
+            (let (
+              (nx (+ (object/get @b x) @nvx))
+              (ny (+ (object/get @b y) @nvy))
+            )
+            (object/merge @b {
+              x: @nx,
+              y: @ny,
+              vx: @nvx,
+              vy: @nvy
+            }))))))))))))
+        (render-ui main {
+          type: physics-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          bodies: @entity.bodies
+          showVelocity: @config.showVelocity
+          showForces: false
+          velocityScale: @config.velocityScale
+        })
+        (emit BODIES_UPDATED { bodies: @entity.bodies })
+    }
+
+    emits {
+      BODIES_UPDATED -> external {
+        bodies : [OrbitBody]
+      }
+        @description "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      gm : number = 600
+        @label "Gravitational Parameter"
+        @description "GM of the central mass; scales the inverse-square acceleration toward the center."
+        @tier "domain"
+      centerX : number = 300
+        @label "Center X"
+        @description "X coordinate of the fixed central mass planets orbit."
+        @tier "domain"
+      centerY : number = 200
+        @label "Center Y"
+        @description "Y coordinate of the fixed central mass planets orbit."
+        @tier "domain"
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick integrates; toggle to start/pause the sim."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Simulation width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Simulation height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      showVelocity : boolean = true
+        @label "Show Velocity"
+        @description "Draw each body's velocity vector as an arrow."
+        @tier "presentation"
+      velocityScale : number = 14
+        @label "Velocity Scale"
+        @description "Length multiplier for the velocity arrows."
+        @tier "presentation"
+      bodies : [OrbitBody] = [
+        { id: "sun", x: 300, y: 200, radius: 20, color: "#f59e0b", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "planet-a", x: 300, y: 80, radius: 10, color: "#2563eb", label: "", vx: 2.24, vy: 0, fx: 0, fy: 0 },
+        { id: "planet-b", x: 470, y: 200, radius: 8, color: "#16a34a", label: "", vx: 0, vy: 1.88, fx: 0, fy: 0 }
+      ]
+        @label "Bodies"
+        @description "Initial bodies; the sun is static, each planet starts with velocity perpendicular to its radius vector for a near-circular orbit."
+        @tier "domain"
+    }
+  }
+
+  page "/physics-orbit" as OrbitEnginePage -> OrbitSim
+}

@@ -1,0 +1,625 @@
+{
+  "description": "Pendulum engine — swings a bob about a fixed pivot via rigid-length projection; renders physics-canvas via uses.",
+  "name": "std-physics-pendulum",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fx": {
+                  "name": "fx",
+                  "required": false,
+                  "type": "number"
+                },
+                "fy": {
+                  "name": "fy",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "bodies",
+            "type": "array"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "PendulumState",
+        "persistence": "runtime"
+      },
+      "name": "PendulumEngineOrbital",
+      "pages": [
+        {
+          "name": "PendulumEnginePage",
+          "path": "/physics-pendulum",
+          "traits": [
+            {
+              "ref": "PendulumSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bodies": {
+              "default": [
+                {
+                  "color": "#334155",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "pivot",
+                  "label": "",
+                  "radius": 6.0,
+                  "vx": 0.0,
+                  "vy": 0.0,
+                  "x": 300.0,
+                  "y": 70.0
+                },
+                {
+                  "color": "#2563eb",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "bob",
+                  "label": "",
+                  "radius": 18.0,
+                  "vx": 0.0,
+                  "vy": 0.0,
+                  "x": 450.0,
+                  "y": 110.0
+                }
+              ],
+              "description": "Initial bodies; the pivot is static, the bob starts off to the side so it swings.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fx": {
+                    "name": "fx",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "fy": {
+                    "name": "fy",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vx": {
+                    "name": "vx",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vy": {
+                    "name": "vy",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bodies",
+              "tier": "domain",
+              "type": "[PendulumBody]"
+            },
+            "constraints": {
+              "default": [
+                {
+                  "color": "#94a3b8",
+                  "from": "pivot",
+                  "to": "bob"
+                }
+              ],
+              "description": "String linking the pivot to the bob, drawn by the physics-canvas.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Constraints",
+              "tier": "domain",
+              "type": "[PendulumConstraint]"
+            },
+            "damping": {
+              "default": 0.995,
+              "description": "Fraction of the bob's velocity retained each tick (air resistance).",
+              "label": "Damping",
+              "tier": "domain",
+              "type": "number"
+            },
+            "gravity": {
+              "default": 0.5,
+              "description": "Downward acceleration added to the bob's vy every tick before the length projection.",
+              "label": "Gravity",
+              "tier": "domain",
+              "type": "number"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Simulation height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "length": {
+              "default": 170.0,
+              "description": "Rigid string length — the radius the bob is projected back onto each tick.",
+              "label": "Length",
+              "tier": "domain",
+              "type": "number"
+            },
+            "pivotX": {
+              "default": 300.0,
+              "description": "X coordinate of the fixed pivot the bob swings about.",
+              "label": "Pivot X",
+              "tier": "domain",
+              "type": "number"
+            },
+            "pivotY": {
+              "default": 70.0,
+              "description": "Y coordinate of the fixed pivot the bob swings about.",
+              "label": "Pivot Y",
+              "tier": "domain",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick integrates; toggle to start/pause the sim.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "showVelocity": {
+              "default": true,
+              "description": "Draw each body's velocity vector as an arrow.",
+              "label": "Show Velocity",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "velocityScale": {
+              "default": 5.0,
+              "description": "Length multiplier for the velocity arrows.",
+              "label": "Velocity Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Simulation width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "BODIES_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "bodies",
+                  "type": "[PendulumBody]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "bodies",
+              "running"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "PendulumState",
+          "name": "PendulumSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+                "key": "BODIES_UPDATED",
+                "name": "Bodies Updated",
+                "payloadSchema": [
+                  {
+                    "name": "bodies",
+                    "type": "[PendulumBody]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bodies",
+                    "@config.bodies"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "bodies": "@entity.bodies",
+                      "constraints": "@config.constraints",
+                      "height": "@config.height",
+                      "showForces": false,
+                      "showVelocity": "@config.showVelocity",
+                      "type": "physics-canvas",
+                      "velocityScale": "@config.velocityScale",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BODIES_UPDATED",
+                    {
+                      "bodies": "@entity.bodies"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.bodies",
+                  [
+                    "array/map",
+                    "@entity.bodies",
+                    [
+                      "fn",
+                      "b",
+                      [
+                        "if",
+                        [
+                          "=",
+                          [
+                            "object/get",
+                            "@b",
+                            "id"
+                          ],
+                          "pivot"
+                        ],
+                        "@b",
+                        [
+                          "let",
+                          [
+                            [
+                              "nvy",
+                              [
+                                "*",
+                                [
+                                  "+",
+                                  [
+                                    "object/get",
+                                    "@b",
+                                    "vy"
+                                  ],
+                                  "@config.gravity"
+                                ],
+                                "@config.damping"
+                              ]
+                            ],
+                            [
+                              "nvx",
+                              [
+                                "*",
+                                [
+                                  "object/get",
+                                  "@b",
+                                  "vx"
+                                ],
+                                "@config.damping"
+                              ]
+                            ]
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "px",
+                                [
+                                  "+",
+                                  [
+                                    "object/get",
+                                    "@b",
+                                    "x"
+                                  ],
+                                  "@nvx"
+                                ]
+                              ],
+                              [
+                                "py",
+                                [
+                                  "+",
+                                  [
+                                    "object/get",
+                                    "@b",
+                                    "y"
+                                  ],
+                                  "@nvy"
+                                ]
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "dx",
+                                  [
+                                    "-",
+                                    "@px",
+                                    "@config.pivotX"
+                                  ]
+                                ],
+                                [
+                                  "dy",
+                                  [
+                                    "-",
+                                    "@py",
+                                    "@config.pivotY"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "dist",
+                                    [
+                                      "math/sqrt",
+                                      [
+                                        "+",
+                                        [
+                                          "*",
+                                          "@dx",
+                                          "@dx"
+                                        ],
+                                        [
+                                          "*",
+                                          "@dy",
+                                          "@dy"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "s",
+                                      [
+                                        "/",
+                                        "@config.length",
+                                        "@dist"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "cxp",
+                                        [
+                                          "+",
+                                          "@config.pivotX",
+                                          [
+                                            "*",
+                                            "@dx",
+                                            "@s"
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "cyp",
+                                        [
+                                          "+",
+                                          "@config.pivotY",
+                                          [
+                                            "*",
+                                            "@dy",
+                                            "@s"
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "object/merge",
+                                      "@b",
+                                      {
+                                        "vx": [
+                                          "-",
+                                          "@cxp",
+                                          [
+                                            "object/get",
+                                            "@b",
+                                            "x"
+                                          ]
+                                        ],
+                                        "vy": [
+                                          "-",
+                                          "@cyp",
+                                          [
+                                            "object/get",
+                                            "@b",
+                                            "y"
+                                          ]
+                                        ],
+                                        "x": "@cxp",
+                                        "y": "@cyp"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "bodies": "@entity.bodies",
+                    "constraints": "@config.constraints",
+                    "height": "@config.height",
+                    "showForces": false,
+                    "showVelocity": "@config.showVelocity",
+                    "type": "physics-canvas",
+                    "velocityScale": "@config.velocityScale",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "BODIES_UPDATED",
+                  {
+                    "bodies": "@entity.bodies"
+                  }
+                ]
+              ],
+              "guard": "@entity.running",
+              "interval": 32.0,
+              "name": "pendulumTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

@@ -1,0 +1,482 @@
+{
+  "description": "Cell-division engine — two daughter cells separate from and rejoin a shared center each mitosis cycle via a phase-driven triangle wave on biology-canvas.",
+  "name": "std-bio-mitosis",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "phase",
+            "type": "number"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "nodes",
+            "type": "array"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "BioMitosisState",
+        "persistence": "runtime"
+      },
+      "name": "BioMitosisEngineOrbital",
+      "pages": [
+        {
+          "name": "BioMitosisEnginePage",
+          "path": "/bio-mitosis",
+          "traits": [
+            {
+              "ref": "BioMitosisSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f0fdf4",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "nodes": {
+              "default": [
+                {
+                  "color": "#2563eb",
+                  "id": "cellA",
+                  "kind": "cell",
+                  "label": "Cell A",
+                  "radius": 24.0,
+                  "x": 300.0,
+                  "y": 200.0
+                },
+                {
+                  "color": "#7c3aed",
+                  "id": "cellB",
+                  "kind": "cell",
+                  "label": "Cell B",
+                  "radius": 24.0,
+                  "x": 300.0,
+                  "y": 200.0
+                }
+              ],
+              "description": "The two daughter-cell nodes, seeded overlapping at the canvas center so frame 0 reads as a single parent cell.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "name": "kind",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "cell",
+                      "organelle",
+                      "molecule",
+                      "organism"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Nodes",
+              "tier": "domain",
+              "type": "[BioNode]"
+            },
+            "period": {
+              "default": 200.0,
+              "description": "Ticks per full division cycle; cells separate to the max at mid-cycle and rejoin at the ends.",
+              "label": "Period",
+              "tier": "domain",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick advances the phase and recomputes both cell positions and radii; toggle to start/pause.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "separation": {
+              "default": 90.0,
+              "description": "Maximum horizontal half-distance in pixels each daughter cell travels from the shared center.",
+              "label": "Separation",
+              "tier": "domain",
+              "type": "number"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current mitosis scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "CELLS_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "nodes",
+                  "type": "[BioNode]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "nodes",
+              "phase",
+              "running"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "BioMitosisState",
+          "name": "BioMitosisSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current mitosis scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+                "key": "CELLS_UPDATED",
+                "name": "Cells Updated",
+                "payloadSchema": [
+                  {
+                    "name": "nodes",
+                    "type": "[BioNode]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.phase",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.nodes",
+                    "@config.nodes"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "height": "@config.height",
+                      "nodes": "@entity.nodes",
+                      "type": "biology-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "CELLS_UPDATED",
+                    {
+                      "nodes": "@entity.nodes"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.phase",
+                  [
+                    "+",
+                    "@entity.phase",
+                    3.0
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.nodes",
+                  [
+                    "array/map",
+                    "@entity.nodes",
+                    [
+                      "fn",
+                      "n",
+                      [
+                        "let",
+                        [
+                          [
+                            "m",
+                            [
+                              "math/mod",
+                              "@entity.phase",
+                              "@config.period"
+                            ]
+                          ],
+                          [
+                            "half",
+                            [
+                              "/",
+                              "@config.period",
+                              2.0
+                            ]
+                          ],
+                          [
+                            "cx",
+                            [
+                              "/",
+                              "@config.width",
+                              2.0
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "tri",
+                              [
+                                "-",
+                                "@half",
+                                [
+                                  "math/abs",
+                                  [
+                                    "-",
+                                    "@m",
+                                    "@half"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "frac",
+                                [
+                                  "/",
+                                  "@tri",
+                                  "@half"
+                                ]
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "sep",
+                                  [
+                                    "*",
+                                    "@config.separation",
+                                    "@frac"
+                                  ]
+                                ],
+                                [
+                                  "nr",
+                                  [
+                                    "-",
+                                    24.0,
+                                    [
+                                      "*",
+                                      "@frac",
+                                      6.0
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "nx",
+                                    [
+                                      "if",
+                                      [
+                                        "=",
+                                        [
+                                          "object/get",
+                                          "@n",
+                                          "id"
+                                        ],
+                                        "cellA"
+                                      ],
+                                      [
+                                        "-",
+                                        "@cx",
+                                        "@sep"
+                                      ],
+                                      [
+                                        "+",
+                                        "@cx",
+                                        "@sep"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "object/merge",
+                                  "@n",
+                                  {
+                                    "radius": "@nr",
+                                    "x": "@nx"
+                                  }
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "height": "@config.height",
+                    "nodes": "@entity.nodes",
+                    "type": "biology-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "CELLS_UPDATED",
+                  {
+                    "nodes": "@entity.nodes"
+                  }
+                ]
+              ],
+              "guard": "@entity.running",
+              "interval": 32.0,
+              "name": "mitosisTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

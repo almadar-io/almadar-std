@@ -1,0 +1,242 @@
+[
+  {
+    "organism": "std-physics-freefall",
+    "orbital": "FreeFallEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-physics-freefall.ts",
+    "entities": [
+      {
+        "name": "FreeFallState",
+        "fields": [
+          {
+            "name": "bodies",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "FreeFallSim",
+        "emittedEvents": [
+          "BODIES_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BODIES_UPDATED",
+            "direction": "emit",
+            "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tick, frame, step, redraw",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "bodies",
+            "type": "[FreeFallBody]",
+            "default": [
+              {
+                "color": "#2563eb",
+                "fx": 0,
+                "fy": 0,
+                "id": "ball-a",
+                "label": "A",
+                "radius": 16,
+                "vx": 0,
+                "vy": 0,
+                "x": 100,
+                "y": 40
+              },
+              {
+                "color": "#16a34a",
+                "fx": 0,
+                "fy": 0,
+                "id": "ball-b",
+                "label": "B",
+                "radius": 13,
+                "vx": 0,
+                "vy": 0,
+                "x": 300,
+                "y": 70
+              },
+              {
+                "color": "#dc2626",
+                "fx": 0,
+                "fy": 0,
+                "id": "ball-c",
+                "label": "C",
+                "radius": 10,
+                "vx": 0,
+                "vy": 0,
+                "x": 480,
+                "y": 100
+              }
+            ],
+            "label": "Bodies",
+            "description": "Initial bodies; each starts high with zero velocity so it drops straight down and bounces.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fx": {
+                  "name": "fx",
+                  "required": false,
+                  "type": "number"
+                },
+                "fy": {
+                  "name": "fy",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "damping",
+            "type": "number",
+            "default": 0.995,
+            "label": "Damping",
+            "description": "Fraction of velocity retained each tick (air resistance).",
+            "tier": "domain"
+          },
+          {
+            "key": "gravity",
+            "type": "number",
+            "default": 0.5,
+            "label": "Gravity",
+            "description": "Downward acceleration added to each body's vy every tick.",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Simulation height in pixels; bounds the bounce.",
+            "tier": "presentation"
+          },
+          {
+            "key": "restitution",
+            "type": "number",
+            "default": 0.8,
+            "label": "Restitution",
+            "description": "Fraction of speed kept when a body bounces off the floor or a wall.",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick integrates; toggle to start/pause the sim.",
+            "tier": "domain"
+          },
+          {
+            "key": "showVelocity",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Velocity",
+            "description": "Draw each body's velocity vector as an arrow.",
+            "tier": "presentation"
+          },
+          {
+            "key": "velocityScale",
+            "type": "number",
+            "default": 8,
+            "label": "Velocity Scale",
+            "description": "Length multiplier for the velocity arrows.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Simulation width in pixels; bounds the bounce.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "bodies",
+            "running"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "FreeFallEnginePage",
+        "defaultPath": "/physics-freefall",
+        "primaryEntity": "FreeFallState"
+      }
+    ],
+    "emittedEvents": [
+      "BODIES_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

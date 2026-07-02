@@ -1,0 +1,116 @@
+app std-bio-population "1.0.0"
+"Predator-prey population engine — Lotka-Volterra cycle via two out-of-phase oscillating node radii on biology-canvas."
+orbital BioPopulationEngineOrbital {
+  type BioNode = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    kind : "cell" | "organelle" | "molecule" | "organism"
+  }
+
+  type BioEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+
+  entity BioPopulationState [runtime] {
+    id : string!
+    phase : number = 0
+    nodes : [BioNode]
+    running : boolean = false
+  }
+
+  trait BioPopulationSim -> @rebindable BioPopulationState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.phase 0)
+        (set @entity.nodes @config.nodes)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: biology-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          nodes: @entity.nodes
+          edges: @config.edges
+        })
+        (emit POPULATION_UPDATED { nodes: @entity.nodes })
+    }
+
+    ticks {
+      populationTick every 32ms
+        when @entity.running
+        (set @entity.phase (+ @entity.phase 3))
+        (set @entity.nodes (array/map @entity.nodes (fn n
+          (let (
+            (p (if (= (object/get @n id) "predator") (+ @entity.phase 80) @entity.phase))
+          )
+          (let (
+            (tw (math/abs (- (math/mod @p 240) 120)))
+          )
+          (let (
+            (nr (+ 12 (* @tw 0.2)))
+          )
+          (object/merge @n { radius: @nr })))))))
+        (render-ui main {
+          type: biology-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          nodes: @entity.nodes
+          edges: @config.edges
+        })
+        (emit POPULATION_UPDATED { nodes: @entity.nodes })
+    }
+
+    emits {
+      POPULATION_UPDATED -> external {
+        nodes : [BioNode]
+      }
+        @description "The current population scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick advances the phase and recomputes both population radii; toggle to start/pause."
+        @tier "domain"
+      nodes : [BioNode] = [
+        { id: "prey", x: 210, y: 200, radius: 20, color: "#16a34a", label: "Prey", kind: organism },
+        { id: "predator", x: 400, y: 200, radius: 20, color: "#dc2626", label: "Predator", kind: organism }
+      ]
+        @label "Nodes"
+        @description "Initial prey and predator population nodes; radius encodes population size."
+        @tier "domain"
+      edges : [BioEdge] = [
+        { from: "predator", to: "prey", color: "#94a3b8", label: "eats" }
+      ]
+        @label "Edges"
+        @description "Predation relationship linking the two populations."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f0fdf4"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+    }
+  }
+
+  page "/bio-population" as BioPopulationEnginePage -> BioPopulationSim
+}

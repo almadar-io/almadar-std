@@ -1,0 +1,118 @@
+app std-bio-mitosis "1.0.0"
+"Cell-division engine — two daughter cells separate from and rejoin a shared center each mitosis cycle via a phase-driven triangle wave on biology-canvas."
+orbital BioMitosisEngineOrbital {
+  type BioNode = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    kind : "cell" | "organelle" | "molecule" | "organism"
+  }
+
+  entity BioMitosisState [runtime] {
+    id : string!
+    phase : number = 0
+    nodes : [BioNode]
+    running : boolean = false
+  }
+
+  trait BioMitosisSim -> @rebindable BioMitosisState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.phase 0)
+        (set @entity.nodes @config.nodes)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: biology-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          nodes: @entity.nodes
+        })
+        (emit CELLS_UPDATED { nodes: @entity.nodes })
+    }
+
+    ticks {
+      mitosisTick every 32ms
+        when @entity.running
+        (set @entity.phase (+ @entity.phase 3))
+        (set @entity.nodes (array/map @entity.nodes (fn n
+          (let (
+            (m (math/mod @entity.phase @config.period))
+            (half (/ @config.period 2))
+            (cx (/ @config.width 2))
+          )
+          (let (
+            (tri (- @half (math/abs (- @m @half))))
+          )
+          (let (
+            (frac (/ @tri @half))
+          )
+          (let (
+            (sep (* @config.separation @frac))
+            (nr (- 24 (* @frac 6)))
+          )
+          (let (
+            (nx (if (= (object/get @n id) "cellA") (- @cx @sep) (+ @cx @sep)))
+          )
+          (object/merge @n { x: @nx, radius: @nr })))))))))
+        (render-ui main {
+          type: biology-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          nodes: @entity.nodes
+        })
+        (emit CELLS_UPDATED { nodes: @entity.nodes })
+    }
+
+    emits {
+      CELLS_UPDATED -> external {
+        nodes : [BioNode]
+      }
+        @description "The current mitosis scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      period : number = 200
+        @label "Period"
+        @description "Ticks per full division cycle; cells separate to the max at mid-cycle and rejoin at the ends."
+        @tier "domain"
+      separation : number = 90
+        @label "Separation"
+        @description "Maximum horizontal half-distance in pixels each daughter cell travels from the shared center."
+        @tier "domain"
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick advances the phase and recomputes both cell positions and radii; toggle to start/pause."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f0fdf4"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      nodes : [BioNode] = [
+        { id: "cellA", x: 300, y: 200, radius: 24, color: "#2563eb", label: "Cell A", kind: cell },
+        { id: "cellB", x: 300, y: 200, radius: 24, color: "#7c3aed", label: "Cell B", kind: cell }
+      ]
+        @label "Nodes"
+        @description "The two daughter-cell nodes, seeded overlapping at the canvas center so frame 0 reads as a single parent cell."
+        @tier "domain"
+    }
+  }
+
+  page "/bio-mitosis" as BioMitosisEnginePage -> BioMitosisSim
+}

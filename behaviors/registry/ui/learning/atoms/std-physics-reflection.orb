@@ -1,0 +1,625 @@
+{
+  "description": "Reflection engine — photons travel straight, bouncing off box walls at equal angles; composed via `uses`.",
+  "name": "std-physics-reflection",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fx": {
+                  "name": "fx",
+                  "required": false,
+                  "type": "number"
+                },
+                "fy": {
+                  "name": "fy",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "bodies",
+            "type": "array"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "ReflectionState",
+        "persistence": "runtime"
+      },
+      "name": "ReflectionEngineOrbital",
+      "pages": [
+        {
+          "name": "ReflectionEnginePage",
+          "path": "/physics-reflection",
+          "traits": [
+            {
+              "ref": "ReflectionSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bodies": {
+              "default": [
+                {
+                  "color": "#f59e0b",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "ray-a",
+                  "label": "",
+                  "radius": 7.0,
+                  "vx": 6.0,
+                  "vy": 4.0,
+                  "x": 120.0,
+                  "y": 120.0
+                },
+                {
+                  "color": "#2563eb",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "ray-b",
+                  "label": "",
+                  "radius": 7.0,
+                  "vx": -5.0,
+                  "vy": 5.0,
+                  "x": 480.0,
+                  "y": 150.0
+                }
+              ],
+              "description": "Initial photons; each travels in a straight line at constant speed and bounces off the box walls.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fx": {
+                    "name": "fx",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "fy": {
+                    "name": "fy",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vx": {
+                    "name": "vx",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vy": {
+                    "name": "vy",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bodies",
+              "tier": "domain",
+              "type": "[ReflectionBody]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Simulation height in pixels; bounds the reflecting box.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick integrates; toggle to start/pause the sim.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "shapes": {
+              "default": [
+                {
+                  "color": "#334155",
+                  "lineWidth": 3.0,
+                  "type": "line",
+                  "x1": 20.0,
+                  "x2": 580.0,
+                  "y1": 380.0,
+                  "y2": 380.0
+                }
+              ],
+              "description": "Static reflecting frame line drawn by the physics-canvas — the mirror surface the photons bounce off.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "lineWidth": {
+                    "name": "lineWidth",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "x1": {
+                    "name": "x1",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "x2": {
+                    "name": "x2",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y1": {
+                    "name": "y1",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y2": {
+                    "name": "y2",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Shapes",
+              "tier": "domain",
+              "type": "[ReflectionShape]"
+            },
+            "showVelocity": {
+              "default": true,
+              "description": "Draw each photon's velocity vector as an arrow.",
+              "label": "Show Velocity",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "velocityScale": {
+              "default": 10.0,
+              "description": "Length multiplier for the velocity arrows.",
+              "label": "Velocity Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Simulation width in pixels; bounds the reflecting box.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "BODIES_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "bodies",
+                  "type": "[ReflectionBody]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "bodies",
+              "running"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ReflectionState",
+          "name": "ReflectionSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+                "key": "BODIES_UPDATED",
+                "name": "Bodies Updated",
+                "payloadSchema": [
+                  {
+                    "name": "bodies",
+                    "type": "[ReflectionBody]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bodies",
+                    "@config.bodies"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "bodies": "@entity.bodies",
+                      "height": "@config.height",
+                      "shapes": "@config.shapes",
+                      "showForces": false,
+                      "showVelocity": "@config.showVelocity",
+                      "type": "physics-canvas",
+                      "velocityScale": "@config.velocityScale",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BODIES_UPDATED",
+                    {
+                      "bodies": "@entity.bodies"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.bodies",
+                  [
+                    "array/map",
+                    "@entity.bodies",
+                    [
+                      "fn",
+                      "b",
+                      [
+                        "let",
+                        [
+                          [
+                            "r",
+                            [
+                              "object/get",
+                              "@b",
+                              "radius"
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "nvx0",
+                              [
+                                "object/get",
+                                "@b",
+                                "vx"
+                              ]
+                            ],
+                            [
+                              "nvy0",
+                              [
+                                "object/get",
+                                "@b",
+                                "vy"
+                              ]
+                            ]
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "hitx",
+                                [
+                                  "or",
+                                  [
+                                    "<",
+                                    [
+                                      "+",
+                                      [
+                                        "object/get",
+                                        "@b",
+                                        "x"
+                                      ],
+                                      "@nvx0"
+                                    ],
+                                    "@r"
+                                  ],
+                                  [
+                                    ">",
+                                    [
+                                      "+",
+                                      [
+                                        "object/get",
+                                        "@b",
+                                        "x"
+                                      ],
+                                      "@nvx0"
+                                    ],
+                                    [
+                                      "-",
+                                      "@config.width",
+                                      "@r"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "hity",
+                                [
+                                  "or",
+                                  [
+                                    "<",
+                                    [
+                                      "+",
+                                      [
+                                        "object/get",
+                                        "@b",
+                                        "y"
+                                      ],
+                                      "@nvy0"
+                                    ],
+                                    "@r"
+                                  ],
+                                  [
+                                    ">",
+                                    [
+                                      "+",
+                                      [
+                                        "object/get",
+                                        "@b",
+                                        "y"
+                                      ],
+                                      "@nvy0"
+                                    ],
+                                    [
+                                      "-",
+                                      "@config.height",
+                                      "@r"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "nvx",
+                                  [
+                                    "if",
+                                    "@hitx",
+                                    [
+                                      "*",
+                                      "@nvx0",
+                                      -1.0
+                                    ],
+                                    "@nvx0"
+                                  ]
+                                ],
+                                [
+                                  "nvy",
+                                  [
+                                    "if",
+                                    "@hity",
+                                    [
+                                      "*",
+                                      "@nvy0",
+                                      -1.0
+                                    ],
+                                    "@nvy0"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "nx",
+                                    [
+                                      "math/clamp",
+                                      [
+                                        "+",
+                                        [
+                                          "object/get",
+                                          "@b",
+                                          "x"
+                                        ],
+                                        "@nvx"
+                                      ],
+                                      "@r",
+                                      [
+                                        "-",
+                                        "@config.width",
+                                        "@r"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "ny",
+                                    [
+                                      "math/clamp",
+                                      [
+                                        "+",
+                                        [
+                                          "object/get",
+                                          "@b",
+                                          "y"
+                                        ],
+                                        "@nvy"
+                                      ],
+                                      "@r",
+                                      [
+                                        "-",
+                                        "@config.height",
+                                        "@r"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "object/merge",
+                                  "@b",
+                                  {
+                                    "vx": "@nvx",
+                                    "vy": "@nvy",
+                                    "x": "@nx",
+                                    "y": "@ny"
+                                  }
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "bodies": "@entity.bodies",
+                    "height": "@config.height",
+                    "shapes": "@config.shapes",
+                    "showForces": false,
+                    "showVelocity": "@config.showVelocity",
+                    "type": "physics-canvas",
+                    "velocityScale": "@config.velocityScale",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "BODIES_UPDATED",
+                  {
+                    "bodies": "@entity.bodies"
+                  }
+                ]
+              ],
+              "guard": "@entity.running",
+              "interval": 32.0,
+              "name": "reflectionTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

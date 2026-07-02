@@ -1,0 +1,232 @@
+[
+  {
+    "organism": "std-math-linear",
+    "orbital": "MathLinearEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-math-linear.ts",
+    "entities": [
+      {
+        "name": "MathLinearState",
+        "fields": [
+          {
+            "name": "phase",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "points",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "MathLinearSim",
+        "emittedEvents": [
+          "SYSTEM_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SYSTEM_UPDATED",
+            "direction": "emit",
+            "description": "The current scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tick, frame, step, redraw",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "curves",
+            "type": "[MathCurve]",
+            "default": [
+              {
+                "color": "#2563eb",
+                "label": "A",
+                "samples": [
+                  {
+                    "x": -9,
+                    "y": -5
+                  },
+                  {
+                    "x": 9,
+                    "y": 4
+                  }
+                ]
+              },
+              {
+                "color": "#16a34a",
+                "label": "B",
+                "samples": [
+                  {
+                    "x": -9,
+                    "y": 9.2
+                  },
+                  {
+                    "x": 9,
+                    "y": -1.6
+                  }
+                ]
+              }
+            ],
+            "label": "Curves",
+            "description": "Initial pair of lines in data coordinates: A through (-3,-2), B through (3,2).",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "samples": {
+                  "name": "samples",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "mB",
+            "type": "number",
+            "default": -0.6,
+            "label": "Line B Slope",
+            "description": "Fixed slope of line B through data point (3,2); line A's slope animates and the intersection tracks it.",
+            "tier": "domain"
+          },
+          {
+            "key": "points",
+            "type": "[MathPoint]",
+            "default": [
+              {
+                "color": "#dc2626",
+                "label": "solution",
+                "radius": 6,
+                "x": 3.9,
+                "y": 1.45
+              }
+            ],
+            "label": "Points",
+            "description": "Initial intersection point of the two lines in data coordinates.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick animates line A's slope and recomputes the intersection; toggle to start/pause.",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "curves",
+            "phase",
+            "points",
+            "running"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MathLinearEnginePage",
+        "defaultPath": "/math-linear",
+        "primaryEntity": "MathLinearState"
+      }
+    ],
+    "emittedEvents": [
+      "SYSTEM_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

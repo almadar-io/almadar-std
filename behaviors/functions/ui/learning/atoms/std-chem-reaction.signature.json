@@ -1,0 +1,300 @@
+[
+  {
+    "organism": "std-chem-reaction",
+    "orbital": "ChemReactionEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-chem-reaction.ts",
+    "entities": [
+      {
+        "name": "ChemReactionState",
+        "fields": [
+          {
+            "name": "phase",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "atoms",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ChemReactionSim",
+        "emittedEvents": [
+          "ATOMS_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "ATOMS_UPDATED",
+            "direction": "emit",
+            "description": "The current atom scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tick, frame, step, redraw",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "atoms",
+            "type": "[ChemAtom]",
+            "default": [
+              {
+                "color": "#dc2626",
+                "element": "A",
+                "home": 150,
+                "id": "a1",
+                "radius": 12,
+                "x": 150,
+                "y": 90
+              },
+              {
+                "color": "#2563eb",
+                "element": "B",
+                "home": 450,
+                "id": "b1",
+                "radius": 12,
+                "x": 450,
+                "y": 90
+              },
+              {
+                "color": "#dc2626",
+                "element": "A",
+                "home": 150,
+                "id": "a2",
+                "radius": 12,
+                "x": 150,
+                "y": 170
+              },
+              {
+                "color": "#2563eb",
+                "element": "B",
+                "home": 450,
+                "id": "b2",
+                "radius": 12,
+                "x": 450,
+                "y": 170
+              },
+              {
+                "color": "#dc2626",
+                "element": "A",
+                "home": 150,
+                "id": "a3",
+                "radius": 12,
+                "x": 150,
+                "y": 250
+              },
+              {
+                "color": "#2563eb",
+                "element": "B",
+                "home": 450,
+                "id": "b3",
+                "radius": 12,
+                "x": 450,
+                "y": 250
+              },
+              {
+                "color": "#dc2626",
+                "element": "A",
+                "home": 150,
+                "id": "a4",
+                "radius": 12,
+                "x": 150,
+                "y": 330
+              },
+              {
+                "color": "#2563eb",
+                "element": "B",
+                "home": 450,
+                "id": "b4",
+                "radius": 12,
+                "x": 450,
+                "y": 330
+              }
+            ],
+            "label": "Atoms",
+            "description": "Eight atoms — four red A on the left and four blue B on the right; each pair slides to the center (width/2) to bond, then back to its home to dissociate.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "element": {
+                  "name": "element",
+                  "required": false,
+                  "type": "string"
+                },
+                "home": {
+                  "name": "home",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "bonds",
+            "type": "[ChemBond]",
+            "default": [
+              {
+                "color": "#94a3b8",
+                "from": "a1",
+                "to": "b1",
+                "type": "single"
+              },
+              {
+                "color": "#94a3b8",
+                "from": "a2",
+                "to": "b2",
+                "type": "single"
+              },
+              {
+                "color": "#94a3b8",
+                "from": "a3",
+                "to": "b3",
+                "type": "single"
+              },
+              {
+                "color": "#94a3b8",
+                "from": "a4",
+                "to": "b4",
+                "type": "single"
+              }
+            ],
+            "label": "Bonds",
+            "description": "Four A-B bonds — the canvas draws a line between each pair whose length shrinks as the atoms converge and grows as they separate.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "single",
+                    "double",
+                    "triple"
+                  ]
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "period",
+            "type": "number",
+            "default": 200,
+            "label": "Period",
+            "description": "Phase units per full bond form-and-break cycle; larger is slower.",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick oscillates each pair between dissociated and bonded; toggle to start/pause.",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels; the bond center is width/2.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "atoms",
+            "phase",
+            "running"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ChemReactionEnginePage",
+        "defaultPath": "/chem-reaction",
+        "primaryEntity": "ChemReactionState"
+      }
+    ],
+    "emittedEvents": [
+      "ATOMS_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

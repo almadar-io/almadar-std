@@ -1,0 +1,528 @@
+{
+  "description": "Reversible reaction engine — four A+B pairs oscillate together and apart, forming and breaking a bond on chemistry-canvas.",
+  "name": "std-chem-reaction",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "phase",
+            "type": "number"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "element": {
+                  "name": "element",
+                  "required": false,
+                  "type": "string"
+                },
+                "home": {
+                  "name": "home",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "atoms",
+            "type": "array"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "ChemReactionState",
+        "persistence": "runtime"
+      },
+      "name": "ChemReactionEngineOrbital",
+      "pages": [
+        {
+          "name": "ChemReactionEnginePage",
+          "path": "/chem-reaction",
+          "traits": [
+            {
+              "ref": "ChemReactionSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "atoms": {
+              "default": [
+                {
+                  "color": "#dc2626",
+                  "element": "A",
+                  "home": 150.0,
+                  "id": "a1",
+                  "radius": 12.0,
+                  "x": 150.0,
+                  "y": 90.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "B",
+                  "home": 450.0,
+                  "id": "b1",
+                  "radius": 12.0,
+                  "x": 450.0,
+                  "y": 90.0
+                },
+                {
+                  "color": "#dc2626",
+                  "element": "A",
+                  "home": 150.0,
+                  "id": "a2",
+                  "radius": 12.0,
+                  "x": 150.0,
+                  "y": 170.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "B",
+                  "home": 450.0,
+                  "id": "b2",
+                  "radius": 12.0,
+                  "x": 450.0,
+                  "y": 170.0
+                },
+                {
+                  "color": "#dc2626",
+                  "element": "A",
+                  "home": 150.0,
+                  "id": "a3",
+                  "radius": 12.0,
+                  "x": 150.0,
+                  "y": 250.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "B",
+                  "home": 450.0,
+                  "id": "b3",
+                  "radius": 12.0,
+                  "x": 450.0,
+                  "y": 250.0
+                },
+                {
+                  "color": "#dc2626",
+                  "element": "A",
+                  "home": 150.0,
+                  "id": "a4",
+                  "radius": 12.0,
+                  "x": 150.0,
+                  "y": 330.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "B",
+                  "home": 450.0,
+                  "id": "b4",
+                  "radius": 12.0,
+                  "x": 450.0,
+                  "y": 330.0
+                }
+              ],
+              "description": "Eight atoms — four red A on the left and four blue B on the right; each pair slides to the center (width/2) to bond, then back to its home to dissociate.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "element": {
+                    "name": "element",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "home": {
+                    "name": "home",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Atoms",
+              "tier": "domain",
+              "type": "[ChemAtom]"
+            },
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bonds": {
+              "default": [
+                {
+                  "color": "#94a3b8",
+                  "from": "a1",
+                  "to": "b1",
+                  "type": "single"
+                },
+                {
+                  "color": "#94a3b8",
+                  "from": "a2",
+                  "to": "b2",
+                  "type": "single"
+                },
+                {
+                  "color": "#94a3b8",
+                  "from": "a3",
+                  "to": "b3",
+                  "type": "single"
+                },
+                {
+                  "color": "#94a3b8",
+                  "from": "a4",
+                  "to": "b4",
+                  "type": "single"
+                }
+              ],
+              "description": "Four A-B bonds — the canvas draws a line between each pair whose length shrinks as the atoms converge and grows as they separate.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "single",
+                      "double",
+                      "triple"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bonds",
+              "tier": "domain",
+              "type": "[ChemBond]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "period": {
+              "default": 200.0,
+              "description": "Phase units per full bond form-and-break cycle; larger is slower.",
+              "label": "Period",
+              "tier": "domain",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick oscillates each pair between dissociated and bonded; toggle to start/pause.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels; the bond center is width/2.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current atom scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "ATOMS_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "atoms",
+                  "type": "[ChemAtom]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "atoms",
+              "phase",
+              "running"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ChemReactionState",
+          "name": "ChemReactionSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current atom scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+                "key": "ATOMS_UPDATED",
+                "name": "Atoms Updated",
+                "payloadSchema": [
+                  {
+                    "name": "atoms",
+                    "type": "[ChemAtom]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.phase",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.atoms",
+                    "@config.atoms"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "atoms": "@entity.atoms",
+                      "backgroundColor": "@config.backgroundColor",
+                      "bonds": "@config.bonds",
+                      "height": "@config.height",
+                      "type": "chemistry-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "ATOMS_UPDATED",
+                    {
+                      "atoms": "@entity.atoms"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.phase",
+                  [
+                    "+",
+                    "@entity.phase",
+                    4.0
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.atoms",
+                  [
+                    "array/map",
+                    "@entity.atoms",
+                    [
+                      "fn",
+                      "a",
+                      [
+                        "let",
+                        [
+                          [
+                            "t",
+                            [
+                              "/",
+                              [
+                                "math/abs",
+                                [
+                                  "-",
+                                  [
+                                    "math/mod",
+                                    "@entity.phase",
+                                    "@config.period"
+                                  ],
+                                  [
+                                    "/",
+                                    "@config.period",
+                                    2.0
+                                  ]
+                                ]
+                              ],
+                              [
+                                "/",
+                                "@config.period",
+                                2.0
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "nx",
+                              [
+                                "+",
+                                [
+                                  "object/get",
+                                  "@a",
+                                  "home"
+                                ],
+                                [
+                                  "*",
+                                  [
+                                    "-",
+                                    [
+                                      "/",
+                                      "@config.width",
+                                      2.0
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@a",
+                                      "home"
+                                    ]
+                                  ],
+                                  "@t"
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "object/merge",
+                            "@a",
+                            {
+                              "x": "@nx"
+                            }
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "atoms": "@entity.atoms",
+                    "backgroundColor": "@config.backgroundColor",
+                    "bonds": "@config.bonds",
+                    "height": "@config.height",
+                    "type": "chemistry-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "ATOMS_UPDATED",
+                  {
+                    "atoms": "@entity.atoms"
+                  }
+                ]
+              ],
+              "guard": "@entity.running",
+              "interval": 32.0,
+              "name": "reactionTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

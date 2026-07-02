@@ -1,0 +1,168 @@
+app learning-chemistry "1.0.0"
+"Chemistry learning app — a fat organism whose orbitals are individual chemistry topics, each composed via `uses` from a per-topic engine atom on the chemistry-canvas."
+orbital DiffusionOrbital {
+  uses ChemDiffusion from "std/behaviors/std-chem-diffusion"
+
+  type ChemAtom = {
+    id : string
+    x : number!
+    y : number!
+    element : string
+    radius : number
+    color : string
+  }
+
+  entity DiffusionScene [runtime] {
+    id : string!
+    atoms : [ChemAtom]
+    running : boolean = false
+  }
+
+  trait DiffusionEngine = ChemDiffusion.traits.ChemDiffusionSim -> DiffusionScene {
+    config {
+      running: true
+      width: 600
+      height: 400
+      atoms: [
+        { id: "a1", x: 60, y: 60, element: "A", radius: 10, color: "#dc2626" },
+        { id: "a2", x: 100, y: 100, element: "A", radius: 10, color: "#dc2626" },
+        { id: "a3", x: 60, y: 140, element: "A", radius: 10, color: "#dc2626" },
+        { id: "a4", x: 100, y: 180, element: "A", radius: 10, color: "#dc2626" },
+        { id: "a5", x: 60, y: 220, element: "A", radius: 10, color: "#dc2626" },
+        { id: "a6", x: 100, y: 260, element: "A", radius: 10, color: "#dc2626" },
+        { id: "a7", x: 60, y: 300, element: "A", radius: 10, color: "#dc2626" },
+        { id: "a8", x: 100, y: 340, element: "A", radius: 10, color: "#dc2626" },
+        { id: "b1", x: 540, y: 60, element: "B", radius: 10, color: "#2563eb" },
+        { id: "b2", x: 500, y: 100, element: "B", radius: 10, color: "#2563eb" },
+        { id: "b3", x: 540, y: 140, element: "B", radius: 10, color: "#2563eb" },
+        { id: "b4", x: 500, y: 180, element: "B", radius: 10, color: "#2563eb" },
+        { id: "b5", x: 540, y: 220, element: "B", radius: 10, color: "#2563eb" },
+        { id: "b6", x: 500, y: 260, element: "B", radius: 10, color: "#2563eb" },
+        { id: "b7", x: 540, y: 300, element: "B", radius: 10, color: "#2563eb" },
+        { id: "b8", x: 500, y: 340, element: "B", radius: 10, color: "#2563eb" }
+      ]
+    }
+  }
+
+  page "/chem/diffusion" as DiffusionPage -> DiffusionEngine
+}
+
+orbital ReactionOrbital {
+  uses ChemReaction from "std/behaviors/std-chem-reaction"
+
+  type ChemAtom = {
+    id : string
+    x : number!
+    y : number!
+    element : string
+    radius : number
+    color : string
+    home : number
+  }
+
+  type ChemBond = {
+    from : string!
+    to : string!
+    type : "single" | "double" | "triple"
+    color : string
+  }
+
+  entity ReactionScene [runtime] {
+    id : string!
+    phase : number = 0
+    atoms : [ChemAtom]
+    running : boolean = false
+  }
+
+  trait ReactionEngine = ChemReaction.traits.ChemReactionSim -> ReactionScene {
+    config {
+      running: true
+      period: 200
+      width: 600
+      height: 400
+      backgroundColor: "#f8fafc"
+      atoms: [
+        { id: "a1", x: 150, y: 90, element: "A", radius: 12, color: "#dc2626", home: 150 },
+        { id: "b1", x: 450, y: 90, element: "B", radius: 12, color: "#2563eb", home: 450 },
+        { id: "a2", x: 150, y: 170, element: "A", radius: 12, color: "#dc2626", home: 150 },
+        { id: "b2", x: 450, y: 170, element: "B", radius: 12, color: "#2563eb", home: 450 },
+        { id: "a3", x: 150, y: 250, element: "A", radius: 12, color: "#dc2626", home: 150 },
+        { id: "b3", x: 450, y: 250, element: "B", radius: 12, color: "#2563eb", home: 450 },
+        { id: "a4", x: 150, y: 330, element: "A", radius: 12, color: "#dc2626", home: 150 },
+        { id: "b4", x: 450, y: 330, element: "B", radius: 12, color: "#2563eb", home: 450 }
+      ]
+      bonds: [
+        { from: "a1", to: "b1", type: single, color: "#94a3b8" },
+        { from: "a2", to: "b2", type: single, color: "#94a3b8" },
+        { from: "a3", to: "b3", type: single, color: "#94a3b8" },
+        { from: "a4", to: "b4", type: single, color: "#94a3b8" }
+      ]
+    }
+  }
+
+  page "/chem/reaction" as ReactionPage -> ReactionEngine
+}
+
+orbital OsmosisOrbital {
+  uses ChemOsmosis from "std/behaviors/std-chem-osmosis"
+
+  type ChemAtom = {
+    id : string
+    x : number!
+    y : number!
+    element : string
+    radius : number
+    color : string
+  }
+
+  type ChemShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    color : string
+    lineWidth : number
+  }
+
+  entity OsmosisScene [runtime] {
+    id : string!
+    atoms : [ChemAtom]
+    running : boolean = false
+  }
+
+  trait OsmosisEngine = ChemOsmosis.traits.ChemOsmosisSim -> OsmosisScene {
+    config {
+      running: true
+      width: 600
+      height: 400
+      backgroundColor: "#f8fafc"
+      atoms: [
+        { id: "s1", x: 360, y: 80, element: "S", radius: 13, color: "#7c3aed" },
+        { id: "s2", x: 480, y: 130, element: "S", radius: 13, color: "#7c3aed" },
+        { id: "s3", x: 400, y: 200, element: "S", radius: 13, color: "#7c3aed" },
+        { id: "s4", x: 520, y: 260, element: "S", radius: 13, color: "#7c3aed" },
+        { id: "s5", x: 360, y: 320, element: "S", radius: 13, color: "#7c3aed" },
+        { id: "s6", x: 470, y: 360, element: "S", radius: 13, color: "#7c3aed" },
+        { id: "w1", x: 60, y: 60, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w2", x: 140, y: 120, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w3", x: 90, y: 200, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w4", x: 200, y: 280, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w5", x: 120, y: 340, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w6", x: 240, y: 80, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w7", x: 260, y: 180, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w8", x: 180, y: 360, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w9", x: 360, y: 120, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w10", x: 440, y: 300, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w11", x: 520, y: 180, element: "W", radius: 6, color: "#2563eb" },
+        { id: "w12", x: 400, y: 60, element: "W", radius: 6, color: "#2563eb" }
+      ]
+      shapes: [
+        { type: line, id: "membrane", x1: 300, y1: 20, x2: 300, y2: 380, color: "#64748b", lineWidth: 4 }
+      ]
+    }
+  }
+
+  page "/chem/osmosis" as OsmosisPage -> OsmosisEngine
+}

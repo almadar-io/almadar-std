@@ -30,7 +30,7 @@ const ALIAS = 'UiLearningCanvas';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiLearningCanvasEventKey = 'INIT' | 'SHAPE_CLICK' | 'SHAPE_HOVER';
+export type StdUiLearningCanvasEventKey = 'INIT' | 'SHAPE_CLICK' | 'SHAPE_HOVER' | 'UPDATE';
 
 /**
  * Payload shape for the `SHAPE_CLICK` event.

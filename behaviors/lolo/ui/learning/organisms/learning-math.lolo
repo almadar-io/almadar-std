@@ -1,0 +1,269 @@
+app learning-math "1.0.0"
+"Math learning app — a fat organism whose orbitals are individual math topics, each composed via `uses` from a per-topic engine atom on the math-canvas."
+orbital VectorAdditionOrbital {
+  uses MathVectors from "std/behaviors/std-math-vectors"
+
+  type MathVector = { x:number! y:number! vx:number! vy:number! color:string label:string }
+
+  entity VectorScene [runtime] {
+    id : string!
+    phase : number = 0
+    vectors : [MathVector]
+    running : boolean = false
+  }
+
+  trait VectorEngine = MathVectors.traits.MathVectorsSim -> VectorScene {
+    config {
+      running: true
+      width: 600
+      height: 400
+      vectors: [
+        { x: 0, y: 0, vx: 4, vy: 3, color: "#2563eb", label: "A" },
+        { x: 4, y: 3, vx: 3, vy: 2, color: "#16a34a", label: "B" },
+        { x: 0, y: 0, vx: 7, vy: 5, color: "#dc2626", label: "A+B" }
+      ]
+    }
+  }
+
+  page "/math/vectors" as VectorAdditionPage -> VectorEngine
+}
+
+orbital LinearSystemsOrbital {
+  uses MathLinear from "std/behaviors/std-math-linear"
+
+  type MathSample = {
+    x : number!
+    y : number!
+  }
+
+  type MathCurve = {
+    label : string
+    color : string
+    samples : [MathSample]
+  }
+
+  type MathPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity LinearScene [runtime] {
+    id : string!
+    phase : number = 0
+    curves : [MathCurve]
+    points : [MathPoint]
+    running : boolean = false
+  }
+
+  trait LinearEngine = MathLinear.traits.MathLinearSim -> LinearScene {
+    config {
+      mB: -0.6
+      running: true
+      width: 600
+      height: 400
+      curves: [
+        { label: "A", color: "#2563eb", samples: [{ x: -9, y: -5 }, { x: 9, y: 4 }] },
+        { label: "B", color: "#16a34a", samples: [{ x: -9, y: 9.2 }, { x: 9, y: -1.6 }] }
+      ]
+      points: [ { x: 3.9, y: 1.45, label: "solution", color: "#dc2626", radius: 6 } ]
+    }
+  }
+
+  page "/math/linear" as LinearSystemsPage -> LinearEngine
+}
+
+orbital NumberLineOrbital {
+  uses MathNumberline from "std/behaviors/std-math-numberline"
+
+  type MathSample = {
+    x : number!
+    y : number!
+  }
+
+  type MathCurve = {
+    label : string
+    color : string
+    samples : [MathSample]
+  }
+
+  type MathPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity NumberlineScene [runtime] {
+    id : string!
+    phase : number = 0
+    curves : [MathCurve]
+    points : [MathPoint]
+    running : boolean = false
+  }
+
+  trait NumberlineEngine = MathNumberline.traits.MathNumberlineSim -> NumberlineScene {
+    config {
+      running: true
+      width: 600
+      height: 400
+      curves: [
+        { label: "", color: "#94a3b8", samples: [{ x: -9, y: 0 }, { x: 9, y: 0 }] }
+      ]
+      points: [
+        { x: -9, y: 0, label: "-9", color: "#94a3b8", radius: 2 },
+        { x: -8, y: 0, label: "-8", color: "#94a3b8", radius: 2 },
+        { x: -7, y: 0, label: "-7", color: "#94a3b8", radius: 2 },
+        { x: -6, y: 0, label: "-6", color: "#94a3b8", radius: 2 },
+        { x: -5, y: 0, label: "-5", color: "#94a3b8", radius: 2 },
+        { x: -4, y: 0, label: "-4", color: "#94a3b8", radius: 2 },
+        { x: -3, y: 0, label: "-3", color: "#94a3b8", radius: 2 },
+        { x: -2, y: 0, label: "-2", color: "#94a3b8", radius: 2 },
+        { x: -1, y: 0, label: "-1", color: "#94a3b8", radius: 2 },
+        { x: 0, y: 0, label: "0", color: "#94a3b8", radius: 2 },
+        { x: 1, y: 0, label: "1", color: "#94a3b8", radius: 2 },
+        { x: 2, y: 0, label: "2", color: "#94a3b8", radius: 2 },
+        { x: 3, y: 0, label: "3", color: "#94a3b8", radius: 2 },
+        { x: 4, y: 0, label: "4", color: "#94a3b8", radius: 2 },
+        { x: 5, y: 0, label: "5", color: "#94a3b8", radius: 2 },
+        { x: 6, y: 0, label: "6", color: "#94a3b8", radius: 2 },
+        { x: 7, y: 0, label: "7", color: "#94a3b8", radius: 2 },
+        { x: 8, y: 0, label: "8", color: "#94a3b8", radius: 2 },
+        { x: 9, y: 0, label: "9", color: "#94a3b8", radius: 2 },
+        { x: -9, y: 0, label: "n", color: "#dc2626", radius: 6 }
+      ]
+    }
+  }
+
+  page "/math/numberline" as NumberLinePage -> NumberlineEngine
+}
+
+orbital ArithmeticSequenceOrbital {
+  uses MathSequence from "std/behaviors/std-math-sequence"
+
+  type MathSample = {
+    x : number!
+    y : number!
+  }
+
+  type MathCurve = {
+    label : string
+    color : string
+    samples : [MathSample]
+  }
+
+  type MathPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity SequenceScene [runtime] {
+    id : string!
+    phase : number = 0
+    curves : [MathCurve]
+    points : [MathPoint]
+    running : boolean = false
+  }
+
+  trait SequenceEngine = MathSequence.traits.MathSequenceSim -> SequenceScene {
+    config {
+      a0: -7
+      d: 1.7
+      running: true
+      width: 600
+      height: 400
+      curves: [
+        { label: "seq", color: "#94a3b8", samples: [{ x: 0, y: -7 }, { x: 1, y: -5.3 }, { x: 2, y: -3.6 }, { x: 3, y: -1.9 }, { x: 4, y: -0.2 }, { x: 5, y: 1.5 }, { x: 6, y: 3.2 }, { x: 7, y: 4.9 }, { x: 8, y: 6.6 }] }
+      ]
+      points: [
+        { x: 0, y: -7, label: "a0", color: "#2563eb", radius: 5 },
+        { x: 1, y: -5.3, label: "a1", color: "#2563eb", radius: 5 },
+        { x: 2, y: -3.6, label: "a2", color: "#2563eb", radius: 5 },
+        { x: 3, y: -1.9, label: "a3", color: "#2563eb", radius: 5 },
+        { x: 4, y: -0.2, label: "a4", color: "#2563eb", radius: 5 },
+        { x: 5, y: 1.5, label: "a5", color: "#2563eb", radius: 5 },
+        { x: 6, y: 3.2, label: "a6", color: "#2563eb", radius: 5 },
+        { x: 7, y: 4.9, label: "a7", color: "#2563eb", radius: 5 },
+        { x: 8, y: 6.6, label: "a8", color: "#2563eb", radius: 5 }
+      ]
+    }
+  }
+
+  page "/math/sequence" as ArithmeticSequencePage -> SequenceEngine
+}
+
+orbital UnitCircleOrbital {
+  uses MathUnitCircle from "std/behaviors/std-math-unitcircle"
+
+  type MathSample = {
+    x : number!
+    y : number!
+  }
+
+  type MathCurve = {
+    label : string
+    color : string
+    samples : [MathSample]
+  }
+
+  type MathPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity UnitCircleScene [runtime] {
+    id : string!
+    phase : number = 0
+    curves : [MathCurve]
+    points : [MathPoint]
+    running : boolean = false
+  }
+
+  trait UnitCircleEngine = MathUnitCircle.traits.MathUnitCircleSim -> UnitCircleScene {
+    config {
+      running: true
+      width: 600
+      height: 400
+    }
+  }
+
+  page "/math/unitcircle" as UnitCirclePage -> UnitCircleEngine
+}
+
+orbital SineWaveOrbital {
+  uses MathSineWave from "std/behaviors/std-math-sinewave"
+
+  type MathPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity SineWaveScene [runtime] {
+    id : string!
+    phase : number = 0
+    points : [MathPoint]
+    running : boolean = false
+  }
+
+  trait SineWaveEngine = MathSineWave.traits.MathSineWaveSim -> SineWaveScene {
+    config {
+      running: true
+      width: 600
+      height: 400
+    }
+  }
+
+  page "/math/sinewave" as SineWavePage -> SineWaveEngine
+}

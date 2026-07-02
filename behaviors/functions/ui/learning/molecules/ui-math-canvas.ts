@@ -30,7 +30,7 @@ const ALIAS = 'UiMathCanvas';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiMathCanvasEventKey = 'INIT' | 'SHAPE_CLICK';
+export type StdUiMathCanvasEventKey = 'INIT' | 'SHAPE_CLICK' | 'UPDATE';
 
 /**
  * Payload shape for the `SHAPE_CLICK` event.

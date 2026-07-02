@@ -1,0 +1,188 @@
+app learning-biology "1.0.0"
+"Biology learning app — a fat organism whose orbitals are individual biology topics, each composed via `uses` from a per-topic engine atom on the biology-canvas."
+orbital PredatorPreyOrbital {
+  uses BioPopulation from "std/behaviors/std-bio-population"
+
+  type BioNode = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    kind : "cell" | "organelle" | "molecule" | "organism"
+  }
+
+  type BioEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+
+  entity PopulationScene [runtime] {
+    id : string!
+    phase : number = 0
+    nodes : [BioNode]
+    running : boolean = false
+  }
+
+  trait PopulationEngine = BioPopulation.traits.BioPopulationSim -> PopulationScene {
+    config {
+      running: true
+      width: 600
+      height: 400
+      nodes: [
+        { id: "prey", x: 210, y: 200, radius: 20, color: "#16a34a", label: "Prey", kind: organism },
+        { id: "predator", x: 400, y: 200, radius: 20, color: "#dc2626", label: "Predator", kind: organism }
+      ]
+      edges: [
+        { from: "predator", to: "prey", color: "#94a3b8", label: "eats" }
+      ]
+    }
+  }
+
+  page "/bio/population" as PredatorPreyPage -> PopulationEngine
+}
+
+orbital FoodwebOrbital {
+  uses BioFoodweb from "std/behaviors/std-bio-foodweb"
+
+  type BioNode = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    kind : "cell" | "organelle" | "molecule" | "organism"
+  }
+
+  type BioEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+
+  entity FoodwebScene [runtime] {
+    id : string!
+    phase : number = 0
+    nodes : [BioNode]
+    running : boolean = false
+  }
+
+  trait FoodwebEngine = BioFoodweb.traits.BioFoodwebSim -> FoodwebScene {
+    config {
+      running: true
+      width: 600
+      height: 400
+      nodes: [
+        { id: "grass", x: 300, y: 340, radius: 20, color: "#16a34a", label: "Grass", kind: organism },
+        { id: "rabbit", x: 180, y: 220, radius: 18, color: "#a16207", label: "Rabbit", kind: organism },
+        { id: "insect", x: 420, y: 220, radius: 14, color: "#0891b2", label: "Insect", kind: organism },
+        { id: "fox", x: 220, y: 90, radius: 20, color: "#dc2626", label: "Fox", kind: organism },
+        { id: "hawk", x: 400, y: 60, radius: 22, color: "#7c3aed", label: "Hawk", kind: organism }
+      ]
+      edges: [
+        { from: "rabbit", to: "grass", color: "#94a3b8", label: "eats" },
+        { from: "insect", to: "grass", color: "#94a3b8", label: "eats" },
+        { from: "fox", to: "rabbit", color: "#94a3b8", label: "eats" },
+        { from: "fox", to: "insect", color: "#94a3b8", label: "eats" },
+        { from: "hawk", to: "fox", color: "#94a3b8", label: "eats" }
+      ]
+    }
+  }
+
+  page "/bio/foodweb" as FoodwebPage -> FoodwebEngine
+}
+
+orbital MitosisOrbital {
+  uses BioMitosis from "std/behaviors/std-bio-mitosis"
+
+  type BioNode = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    kind : "cell" | "organelle" | "molecule" | "organism"
+  }
+
+  entity MitosisScene [runtime] {
+    id : string!
+    phase : number = 0
+    nodes : [BioNode]
+    running : boolean = false
+  }
+
+  trait MitosisEngine = BioMitosis.traits.BioMitosisSim -> MitosisScene {
+    config {
+      running: true
+      period: 200
+      separation: 90
+      width: 600
+      height: 400
+      nodes: [
+        { id: "cellA", x: 300, y: 200, radius: 24, color: "#2563eb", label: "Cell A", kind: cell },
+        { id: "cellB", x: 300, y: 200, radius: 24, color: "#7c3aed", label: "Cell B", kind: cell }
+      ]
+    }
+  }
+
+  page "/bio/mitosis" as MitosisPage -> MitosisEngine
+}
+
+orbital CellStructureOrbital {
+  uses BioCell from "std/behaviors/std-bio-cell"
+
+  type BioNode = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    kind : "cell" | "organelle" | "molecule" | "organism"
+  }
+
+  type BioEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+
+  entity CellScene [runtime] {
+    id : string!
+    phase : number = 0
+    nodes : [BioNode]
+    running : boolean = false
+  }
+
+  trait CellEngine = BioCell.traits.BioCellSim -> CellScene {
+    config {
+      running: true
+      width: 600
+      height: 400
+      nodes: [
+        { id: "nucleus", x: 300, y: 200, radius: 34, color: "#2563eb", label: "Nucleus", kind: cell },
+        { id: "mitochondria", x: 170, y: 120, radius: 14, color: "#dc2626", label: "Mitochondria", kind: organelle },
+        { id: "ribosome", x: 440, y: 120, radius: 14, color: "#f59e0b", label: "Ribosome", kind: organelle },
+        { id: "golgi", x: 150, y: 290, radius: 14, color: "#7c3aed", label: "Golgi", kind: organelle },
+        { id: "vacuole", x: 450, y: 290, radius: 14, color: "#0891b2", label: "Vacuole", kind: organelle },
+        { id: "chloroplast", x: 300, y: 330, radius: 14, color: "#16a34a", label: "Chloroplast", kind: organelle }
+      ]
+      edges: [
+        { from: "mitochondria", to: "nucleus", color: "#e2e8f0", label: "" },
+        { from: "ribosome", to: "nucleus", color: "#e2e8f0", label: "" },
+        { from: "golgi", to: "nucleus", color: "#e2e8f0", label: "" },
+        { from: "vacuole", to: "nucleus", color: "#e2e8f0", label: "" },
+        { from: "chloroplast", to: "nucleus", color: "#e2e8f0", label: "" }
+      ]
+    }
+  }
+
+  page "/bio/cell" as CellStructurePage -> CellEngine
+}

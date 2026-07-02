@@ -1,0 +1,230 @@
+[
+  {
+    "organism": "std-physics-circular",
+    "orbital": "CircularEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-physics-circular.ts",
+    "entities": [
+      {
+        "name": "CircularState",
+        "fields": [
+          {
+            "name": "bodies",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CircularSim",
+        "emittedEvents": [
+          "BODIES_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BODIES_UPDATED",
+            "direction": "emit",
+            "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tick, frame, step, redraw",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "bodies",
+            "type": "[CircularBody]",
+            "default": [
+              {
+                "color": "#2563eb",
+                "fx": 0,
+                "fy": 0,
+                "id": "orbit-a",
+                "label": "A",
+                "radius": 14,
+                "vx": 3.9,
+                "vy": 0,
+                "x": 300,
+                "y": 70
+              },
+              {
+                "color": "#dc2626",
+                "fx": 0,
+                "fy": 0,
+                "id": "orbit-b",
+                "label": "B",
+                "radius": 10,
+                "vx": 0,
+                "vy": 5.1,
+                "x": 470,
+                "y": 200
+              }
+            ],
+            "label": "Bodies",
+            "description": "Initial bodies; each orbits the center with velocity perpendicular to its radius vector.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fx": {
+                  "name": "fx",
+                  "required": false,
+                  "type": "number"
+                },
+                "fy": {
+                  "name": "fy",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "centerK",
+            "type": "number",
+            "default": 0.0009,
+            "label": "Center Attraction",
+            "description": "Linear central-force constant; acceleration toward the center scales with distance times this value.",
+            "tier": "domain"
+          },
+          {
+            "key": "centerX",
+            "type": "number",
+            "default": 300,
+            "label": "Center X",
+            "description": "X coordinate of the central attractor bodies orbit around.",
+            "tier": "domain"
+          },
+          {
+            "key": "centerY",
+            "type": "number",
+            "default": 200,
+            "label": "Center Y",
+            "description": "Y coordinate of the central attractor bodies orbit around.",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Simulation height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick integrates; toggle to start/pause the sim.",
+            "tier": "domain"
+          },
+          {
+            "key": "showVelocity",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Velocity",
+            "description": "Draw each body's velocity vector as an arrow.",
+            "tier": "presentation"
+          },
+          {
+            "key": "velocityScale",
+            "type": "number",
+            "default": 12,
+            "label": "Velocity Scale",
+            "description": "Length multiplier for the velocity arrows.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Simulation width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "bodies",
+            "running"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "CircularEnginePage",
+        "defaultPath": "/physics-circular",
+        "primaryEntity": "CircularState"
+      }
+    ],
+    "emittedEvents": [
+      "BODIES_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

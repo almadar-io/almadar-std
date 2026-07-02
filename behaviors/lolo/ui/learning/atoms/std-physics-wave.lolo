@@ -1,0 +1,160 @@
+app std-physics-wave "1.0.0"
+"Wave engine — coupled oscillators; each interior point accelerates toward its neighbors' average height."
+orbital WaveEngineOrbital {
+  type WaveBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    vx : number
+    vy : number
+    fx : number
+    fy : number
+  }
+
+  entity WaveState [runtime] {
+    id : string!
+    bodies : [WaveBody]
+    running : boolean = false
+  }
+
+  trait WaveSim -> @rebindable WaveState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.bodies @config.bodies)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: physics-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          bodies: @entity.bodies
+          showVelocity: @config.showVelocity
+          showForces: false
+          velocityScale: @config.velocityScale
+        })
+        (emit BODIES_UPDATED { bodies: @entity.bodies })
+    }
+
+    ticks {
+      waveTick every 32ms
+        when @entity.running
+        (set @entity.bodies (array/map @entity.bodies (fn b
+          (let (
+            (i (math/round (/ (- (object/get @b x) @config.x0) @config.spacing)))
+            (last (- (array/len @entity.bodies) 1))
+          )
+          (if (or (= @i 0) (= @i @last))
+            @b
+            (let (
+              (left (array/nth @entity.bodies (- @i 1)))
+              (right (array/nth @entity.bodies (+ @i 1)))
+            )
+            (let (
+              (accel (- (* @config.tension (+ (object/get @left y) (object/get @right y))) (* @config.tension (* 2 (object/get @b y)))))
+            )
+            (let (
+              (nvy (* (+ (object/get @b vy) @accel) @config.damping))
+            )
+            (let (
+              (ny (+ (object/get @b y) @nvy))
+            )
+            (object/merge @b { y: @ny, vy: @nvy }))))))))))
+        (render-ui main {
+          type: physics-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          bodies: @entity.bodies
+          showVelocity: @config.showVelocity
+          showForces: false
+          velocityScale: @config.velocityScale
+        })
+        (emit BODIES_UPDATED { bodies: @entity.bodies })
+    }
+
+    emits {
+      BODIES_UPDATED -> external {
+        bodies : [WaveBody]
+      }
+        @description "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      tension : number = 0.3
+        @label "Tension"
+        @description "Coupling strength (k) pulling each point toward its neighbors' average height — the discrete wave equation's spring constant."
+        @tier "domain"
+      damping : number = 0.997
+        @label "Damping"
+        @description "Fraction of vertical velocity retained each tick (energy loss as the wave propagates)."
+        @tier "domain"
+      x0 : number = 40
+        @label "X Origin"
+        @description "X coordinate of the first (fixed) point; used to derive each point's index from its x."
+        @tier "domain"
+      spacing : number = 26
+        @label "Spacing"
+        @description "Horizontal distance between adjacent points."
+        @tier "domain"
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick integrates; toggle to start/pause the sim."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Simulation width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Simulation height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      showVelocity : boolean = false
+        @label "Show Velocity"
+        @description "Draw each point's velocity vector as an arrow — off by default since 21 arrows clutter the waveform."
+        @tier "presentation"
+      velocityScale : number = 6
+        @label "Velocity Scale"
+        @description "Length multiplier for the velocity arrows, when shown."
+        @tier "presentation"
+      bodies : [WaveBody] = [
+        { id: "p0", x: 40, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p1", x: 66, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p2", x: 92, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p3", x: 118, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p4", x: 144, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p5", x: 170, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p6", x: 196, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p7", x: 222, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p8", x: 248, y: 190, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p9", x: 274, y: 175, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p10", x: 300, y: 150, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p11", x: 326, y: 175, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p12", x: 352, y: 190, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p13", x: 378, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p14", x: 404, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p15", x: 430, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p16", x: 456, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p17", x: 482, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p18", x: 508, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p19", x: 534, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p20", x: 560, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 }
+      ]
+        @label "Bodies"
+        @description "21 fixed-x points at rest height 200, with a triangular pulse near the center (p8..p12)."
+        @tier "domain"
+    }
+  }
+
+  page "/physics-wave" as WaveEnginePage -> WaveSim
+}

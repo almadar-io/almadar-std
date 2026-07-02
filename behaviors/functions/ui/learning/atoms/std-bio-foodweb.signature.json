@@ -1,0 +1,272 @@
+[
+  {
+    "organism": "std-bio-foodweb",
+    "orbital": "BioFoodwebEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-bio-foodweb.ts",
+    "entities": [
+      {
+        "name": "BioFoodwebState",
+        "fields": [
+          {
+            "name": "phase",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "nodes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "BioFoodwebSim",
+        "emittedEvents": [
+          "POPULATION_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "POPULATION_UPDATED",
+            "direction": "emit",
+            "description": "The current food-web scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tick, frame, step, redraw",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f0fdf4",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "edges",
+            "type": "[BioEdge]",
+            "default": [
+              {
+                "color": "#94a3b8",
+                "from": "rabbit",
+                "label": "eats",
+                "to": "grass"
+              },
+              {
+                "color": "#94a3b8",
+                "from": "insect",
+                "label": "eats",
+                "to": "grass"
+              },
+              {
+                "color": "#94a3b8",
+                "from": "fox",
+                "label": "eats",
+                "to": "rabbit"
+              },
+              {
+                "color": "#94a3b8",
+                "from": "fox",
+                "label": "eats",
+                "to": "insect"
+              },
+              {
+                "color": "#94a3b8",
+                "from": "hawk",
+                "label": "eats",
+                "to": "fox"
+              }
+            ],
+            "label": "Edges",
+            "description": "Directed predation links (from eater to prey) forming the food web.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "nodes",
+            "type": "[BioNode]",
+            "default": [
+              {
+                "color": "#16a34a",
+                "id": "grass",
+                "kind": "organism",
+                "label": "Grass",
+                "radius": 20,
+                "x": 300,
+                "y": 340
+              },
+              {
+                "color": "#a16207",
+                "id": "rabbit",
+                "kind": "organism",
+                "label": "Rabbit",
+                "radius": 18,
+                "x": 180,
+                "y": 220
+              },
+              {
+                "color": "#0891b2",
+                "id": "insect",
+                "kind": "organism",
+                "label": "Insect",
+                "radius": 14,
+                "x": 420,
+                "y": 220
+              },
+              {
+                "color": "#dc2626",
+                "id": "fox",
+                "kind": "organism",
+                "label": "Fox",
+                "radius": 20,
+                "x": 220,
+                "y": 90
+              },
+              {
+                "color": "#7c3aed",
+                "id": "hawk",
+                "kind": "organism",
+                "label": "Hawk",
+                "radius": 22,
+                "x": 400,
+                "y": 60
+              }
+            ],
+            "label": "Nodes",
+            "description": "Five trophic species — producer (grass), herbivores (rabbit, insect), carnivore (fox), apex (hawk); radius encodes population size.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick advances the phase and recomputes every species radius; toggle to start/pause.",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "nodes",
+            "phase",
+            "running"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "BioFoodwebEnginePage",
+        "defaultPath": "/bio-foodweb",
+        "primaryEntity": "BioFoodwebState"
+      }
+    ],
+    "emittedEvents": [
+      "POPULATION_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

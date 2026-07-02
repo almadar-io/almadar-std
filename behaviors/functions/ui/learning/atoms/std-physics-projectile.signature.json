@@ -25,27 +25,32 @@
     "traits": [
       {
         "name": "ProjectileSim",
-        "emittedEvents": [],
+        "emittedEvents": [
+          "BODIES_UPDATED"
+        ],
         "listenedEvents": [],
         "events": [
           {
+            "name": "BODIES_UPDATED",
+            "direction": "emit",
+            "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tick, frame, step, redraw",
+            "tier": "domain"
+          },
+          {
             "name": "INIT",
-            "direction": "listen"
-          },
-          {
-            "name": "START",
-            "direction": "listen"
-          },
-          {
-            "name": "PAUSE",
-            "direction": "listen"
-          },
-          {
-            "name": "RESET",
             "direction": "listen"
           }
         ],
         "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
           {
             "key": "bodies",
             "type": "[ProjectileBody]",
@@ -156,7 +161,7 @@
             "default": 400,
             "label": "Height",
             "description": "Simulation height in pixels; bounds the bounce.",
-            "tier": "domain"
+            "tier": "presentation"
           },
           {
             "key": "restitution",
@@ -167,11 +172,27 @@
             "tier": "domain"
           },
           {
-            "key": "title",
-            "type": "string",
-            "default": "Projectile Motion",
-            "label": "Title",
-            "description": "Heading shown above the simulation.",
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick integrates; toggle to start/pause the sim.",
+            "tier": "domain"
+          },
+          {
+            "key": "showVelocity",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Velocity",
+            "description": "Draw each body's velocity vector as an arrow.",
+            "tier": "presentation"
+          },
+          {
+            "key": "velocityScale",
+            "type": "number",
+            "default": 8,
+            "label": "Velocity Scale",
+            "description": "Length multiplier for the velocity arrows.",
             "tier": "presentation"
           },
           {
@@ -180,7 +201,7 @@
             "default": 600,
             "label": "Width",
             "description": "Simulation width in pixels; bounds the bounce.",
-            "tier": "domain"
+            "tier": "presentation"
           }
         ],
         "capabilities": [],
@@ -201,7 +222,9 @@
         "primaryEntity": "ProjectileState"
       }
     ],
-    "emittedEvents": [],
+    "emittedEvents": [
+      "BODIES_UPDATED"
+    ],
     "listenedEvents": []
   }
 ]

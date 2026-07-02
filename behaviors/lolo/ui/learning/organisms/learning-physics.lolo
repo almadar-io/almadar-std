@@ -24,10 +24,10 @@ orbital ProjectileMotionOrbital {
 
   trait ProjectileEngine = Projectile.traits.ProjectileSim -> ProjectileScene {
     config {
-      title: "Projectile Motion"
       gravity: 0.4
       restitution: 0.78
       damping: 0.995
+      running: true
       width: 600
       height: 400
       bodies: [
@@ -38,4 +38,493 @@ orbital ProjectileMotionOrbital {
   }
 
   page "/physics/projectile" as ProjectileMotionPage -> ProjectileEngine
+}
+
+orbital FreeFallMotionOrbital {
+  uses FreeFall from "std/behaviors/std-physics-freefall"
+
+  type FreeFallBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    vx : number
+    vy : number
+    fx : number
+    fy : number
+  }
+
+  entity FreeFallScene [runtime] {
+    id : string!
+    bodies : [FreeFallBody]
+    running : boolean = false
+  }
+
+  trait FreeFallEngine = FreeFall.traits.FreeFallSim -> FreeFallScene {
+    config {
+      gravity: 0.5
+      restitution: 0.8
+      damping: 0.995
+      running: true
+      width: 600
+      height: 400
+      bodies: [
+        { id: "ball-a", x: 100, y: 40, radius: 16, color: "#2563eb", label: "A", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "ball-b", x: 300, y: 70, radius: 13, color: "#16a34a", label: "B", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "ball-c", x: 480, y: 100, radius: 10, color: "#dc2626", label: "C", vx: 0, vy: 0, fx: 0, fy: 0 }
+      ]
+    }
+  }
+
+  page "/physics/freefall" as FreeFallMotionPage -> FreeFallEngine
+}
+
+orbital SpringMotionOrbital {
+  uses Spring from "std/behaviors/std-physics-spring"
+
+  type SpringBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    vx : number
+    vy : number
+    fx : number
+    fy : number
+  }
+
+  entity SpringScene [runtime] {
+    id : string!
+    bodies : [SpringBody]
+    running : boolean = false
+  }
+
+  trait SpringEngine = Spring.traits.SpringSim -> SpringScene {
+    config {
+      springK: 0.02
+      damping: 0.99
+      anchorX: 300
+      running: true
+      width: 600
+      height: 400
+      bodies: [
+        { id: "ball-a", x: 120, y: 200, radius: 14, color: "#2563eb", label: "A", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "ball-b", x: 300, y: 200, radius: 14, color: "#16a34a", label: "B", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "ball-c", x: 480, y: 200, radius: 14, color: "#dc2626", label: "C", vx: 0, vy: 0, fx: 0, fy: 0 }
+      ]
+    }
+  }
+
+  page "/physics/spring" as SpringMotionPage -> SpringEngine
+}
+
+orbital FrictionMotionOrbital {
+  uses Friction from "std/behaviors/std-physics-friction"
+
+  type FrictionBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    vx : number
+    vy : number
+    fx : number
+    fy : number
+  }
+
+  entity FrictionScene [runtime] {
+    id : string!
+    bodies : [FrictionBody]
+    running : boolean = false
+  }
+
+  trait FrictionEngine = Friction.traits.FrictionSim -> FrictionScene {
+    config {
+      friction: 0.12
+      running: true
+      width: 600
+      height: 400
+      bodies: [
+        { id: "ball-a", x: 60, y: 386, radius: 14, color: "#2563eb", label: "A", vx: 6, vy: 0, fx: 0, fy: 0 },
+        { id: "ball-b", x: 85, y: 386, radius: 14, color: "#16a34a", label: "B", vx: 9, vy: 0, fx: 0, fy: 0 },
+        { id: "ball-c", x: 110, y: 386, radius: 14, color: "#dc2626", label: "C", vx: 13, vy: 0, fx: 0, fy: 0 }
+      ]
+    }
+  }
+
+  page "/physics/friction" as FrictionMotionPage -> FrictionEngine
+}
+
+orbital CircularMotionOrbital {
+  uses Circular from "std/behaviors/std-physics-circular"
+
+  type CircularBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    vx : number
+    vy : number
+    fx : number
+    fy : number
+  }
+
+  entity CircularScene [runtime] {
+    id : string!
+    bodies : [CircularBody]
+    running : boolean = false
+  }
+
+  trait CircularEngine = Circular.traits.CircularSim -> CircularScene {
+    config {
+      centerK: 0.0009
+      centerX: 300
+      centerY: 200
+      running: true
+      width: 600
+      height: 400
+      bodies: [
+        { id: "orbit-a", x: 300, y: 70, radius: 14, color: "#2563eb", label: "A", vx: 3.9, vy: 0, fx: 0, fy: 0 },
+        { id: "orbit-b", x: 470, y: 200, radius: 10, color: "#dc2626", label: "B", vx: 0, vy: 5.1, fx: 0, fy: 0 }
+      ]
+    }
+  }
+
+  page "/physics/circular" as CircularMotionPage -> CircularEngine
+}
+
+orbital PendulumMotionOrbital {
+  uses Pendulum from "std/behaviors/std-physics-pendulum"
+
+  type PendulumBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    vx : number
+    vy : number
+    fx : number
+    fy : number
+  }
+
+  type PendulumConstraint = {
+    from : string!
+    to : string!
+    color : string
+  }
+
+  entity PendulumScene [runtime] {
+    id : string!
+    bodies : [PendulumBody]
+    running : boolean = false
+  }
+
+  trait PendulumEngine = Pendulum.traits.PendulumSim -> PendulumScene {
+    config {
+      gravity: 0.5
+      damping: 0.995
+      length: 170
+      pivotX: 300
+      pivotY: 70
+      running: true
+      width: 600
+      height: 400
+      constraints: [{ from: "pivot", to: "bob", color: "#94a3b8" }]
+      bodies: [
+        { id: "pivot", x: 300, y: 70, radius: 6, color: "#334155", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "bob", x: 450, y: 110, radius: 18, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 }
+      ]
+    }
+  }
+
+  page "/physics/pendulum" as PendulumMotionPage -> PendulumEngine
+}
+
+orbital CollisionMotionOrbital {
+  uses Collision from "std/behaviors/std-physics-collision"
+
+  type CollisionBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    vx : number
+    vy : number
+    fx : number
+    fy : number
+  }
+
+  entity CollisionScene [runtime] {
+    id : string!
+    bodies : [CollisionBody]
+    running : boolean = false
+  }
+
+  trait CollisionEngine = Collision.traits.CollisionSim -> CollisionScene {
+    config {
+      running: true
+      width: 600
+      height: 400
+      bodies: [
+        { id: "ball-a", x: 80, y: 200, radius: 16, color: "#2563eb", label: "A", vx: 5, vy: 0, fx: 0, fy: 0 },
+        { id: "ball-b", x: 520, y: 200, radius: 16, color: "#16a34a", label: "B", vx: -5, vy: 0, fx: 0, fy: 0 },
+        { id: "ball-c", x: 300, y: 90, radius: 16, color: "#dc2626", label: "C", vx: 0, vy: 4, fx: 0, fy: 0 },
+        { id: "ball-d", x: 300, y: 320, radius: 16, color: "#f59e0b", label: "D", vx: 0, vy: -4, fx: 0, fy: 0 }
+      ]
+    }
+  }
+
+  page "/physics/collision" as CollisionMotionPage -> CollisionEngine
+}
+
+orbital InclineMotionOrbital {
+  uses Incline from "std/behaviors/std-physics-incline"
+
+  type InclineBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    vx : number
+    vy : number
+    fx : number
+    fy : number
+  }
+
+  type InclineShape = {
+    type : string!
+    x1 : number!
+    y1 : number!
+    x2 : number!
+    y2 : number!
+    color : string
+    lineWidth : number
+  }
+
+  entity InclineScene [runtime] {
+    id : string!
+    bodies : [InclineBody]
+    running : boolean = false
+  }
+
+  trait InclineEngine = Incline.traits.InclineSim -> InclineScene {
+    config {
+      gravity: 0.5
+      damping: 0.99
+      rampX0: 120
+      rampY0: 90
+      rampX1: 520
+      rampY1: 330
+      running: true
+      width: 600
+      height: 400
+      shapes: [{ type: "line", x1: 120, y1: 90, x2: 520, y2: 330, color: "#334155", lineWidth: 3 }]
+      bodies: [
+        { id: "block", x: 170, y: 110, radius: 16, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 }
+      ]
+    }
+  }
+
+  page "/physics/incline" as InclineMotionPage -> InclineEngine
+}
+
+orbital OrbitMotionOrbital {
+  uses Orbit from "std/behaviors/std-physics-orbit"
+
+  type OrbitBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    vx : number
+    vy : number
+    fx : number
+    fy : number
+  }
+
+  entity OrbitScene [runtime] {
+    id : string!
+    bodies : [OrbitBody]
+    running : boolean = false
+  }
+
+  trait OrbitEngine = Orbit.traits.OrbitSim -> OrbitScene {
+    config {
+      gm: 600
+      centerX: 300
+      centerY: 200
+      running: true
+      width: 600
+      height: 400
+      bodies: [
+        { id: "sun", x: 300, y: 200, radius: 20, color: "#f59e0b", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "planet-a", x: 300, y: 80, radius: 10, color: "#2563eb", label: "", vx: 2.24, vy: 0, fx: 0, fy: 0 },
+        { id: "planet-b", x: 470, y: 200, radius: 8, color: "#16a34a", label: "", vx: 0, vy: 1.88, fx: 0, fy: 0 }
+      ]
+    }
+  }
+
+  page "/physics/orbit" as OrbitMotionPage -> OrbitEngine
+}
+
+orbital GasMotionOrbital {
+  uses Gas from "std/behaviors/std-physics-gas"
+
+  type GasBody = { id:string x:number! y:number! radius:number color:string label:string vx:number vy:number fx:number fy:number }
+
+  entity GasScene [runtime] {
+    id : string!
+    bodies : [GasBody]
+    running : boolean = false
+  }
+
+  trait GasEngine = Gas.traits.GasSim -> GasScene {
+    config {
+      running: true
+      width: 600
+      height: 400
+      bodies: [
+        { id: "p1", x: 80, y: 80, radius: 9, color: "#2563eb", label: "", vx: 3, vy: -2, fx: 0, fy: 0 },
+        { id: "p2", x: 220, y: 80, radius: 9, color: "#16a34a", label: "", vx: -4, vy: 5, fx: 0, fy: 0 },
+        { id: "p3", x: 360, y: 80, radius: 9, color: "#dc2626", label: "", vx: 5, vy: 3, fx: 0, fy: 0 },
+        { id: "p4", x: 500, y: 80, radius: 9, color: "#f59e0b", label: "", vx: -3, vy: -4, fx: 0, fy: 0 },
+        { id: "p5", x: 80, y: 160, radius: 9, color: "#16a34a", label: "", vx: 6, vy: 1, fx: 0, fy: 0 },
+        { id: "p6", x: 220, y: 160, radius: 9, color: "#dc2626", label: "", vx: -5, vy: -3, fx: 0, fy: 0 },
+        { id: "p7", x: 360, y: 160, radius: 9, color: "#f59e0b", label: "", vx: 2, vy: 6, fx: 0, fy: 0 },
+        { id: "p8", x: 500, y: 160, radius: 9, color: "#2563eb", label: "", vx: -6, vy: 2, fx: 0, fy: 0 },
+        { id: "p9", x: 80, y: 240, radius: 9, color: "#dc2626", label: "", vx: 4, vy: -5, fx: 0, fy: 0 },
+        { id: "p10", x: 220, y: 240, radius: 9, color: "#f59e0b", label: "", vx: -2, vy: 4, fx: 0, fy: 0 },
+        { id: "p11", x: 360, y: 240, radius: 9, color: "#2563eb", label: "", vx: 3, vy: -6, fx: 0, fy: 0 },
+        { id: "p12", x: 500, y: 240, radius: 9, color: "#16a34a", label: "", vx: -4, vy: 3, fx: 0, fy: 0 },
+        { id: "p13", x: 80, y: 320, radius: 9, color: "#f59e0b", label: "", vx: 5, vy: 2, fx: 0, fy: 0 },
+        { id: "p14", x: 220, y: 320, radius: 9, color: "#2563eb", label: "", vx: -3, vy: -2, fx: 0, fy: 0 },
+        { id: "p15", x: 360, y: 320, radius: 9, color: "#16a34a", label: "", vx: 6, vy: -1, fx: 0, fy: 0 },
+        { id: "p16", x: 500, y: 320, radius: 9, color: "#dc2626", label: "", vx: -5, vy: 4, fx: 0, fy: 0 }
+      ]
+    }
+  }
+
+  page "/physics/gas" as GasMotionPage -> GasEngine
+}
+
+orbital MagneticMotionOrbital {
+  uses Magnetic from "std/behaviors/std-physics-magnetic"
+
+  type MagneticBody = { id:string x:number! y:number! radius:number color:string label:string vx:number vy:number fx:number fy:number }
+
+  entity MagneticScene [runtime] {
+    id : string!
+    bodies : [MagneticBody]
+    running : boolean = false
+  }
+
+  trait MagneticEngine = Magnetic.traits.MagneticSim -> MagneticScene {
+    config {
+      qB: 0.03
+      running: true
+      width: 600
+      height: 400
+      bodies: [
+        { id: "q1", x: 200, y: 120, radius: 12, color: "#2563eb", label: "", vx: 0, vy: 4, fx: 0, fy: 0 },
+        { id: "q2", x: 420, y: 150, radius: 10, color: "#dc2626", label: "", vx: 0, vy: -3, fx: 0, fy: 0 },
+        { id: "q3", x: 320, y: 300, radius: 8, color: "#16a34a", label: "", vx: 5, vy: 0, fx: 0, fy: 0 }
+      ]
+    }
+  }
+
+  page "/physics/magnetic" as MagneticMotionPage -> MagneticEngine
+}
+
+orbital WaveMotionOrbital {
+  uses Wave from "std/behaviors/std-physics-wave"
+
+  type WaveBody = { id:string x:number! y:number! radius:number color:string label:string vx:number vy:number fx:number fy:number }
+
+  entity WaveScene [runtime] {
+    id : string!
+    bodies : [WaveBody]
+    running : boolean = false
+  }
+
+  trait WaveEngine = Wave.traits.WaveSim -> WaveScene {
+    config {
+      tension: 0.3
+      damping: 0.997
+      x0: 40
+      spacing: 26
+      running: true
+      width: 600
+      height: 400
+      bodies: [
+        { id: "p0", x: 40, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p1", x: 66, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p2", x: 92, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p3", x: 118, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p4", x: 144, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p5", x: 170, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p6", x: 196, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p7", x: 222, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p8", x: 248, y: 190, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p9", x: 274, y: 175, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p10", x: 300, y: 150, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p11", x: 326, y: 175, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p12", x: 352, y: 190, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p13", x: 378, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p14", x: 404, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p15", x: 430, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p16", x: 456, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p17", x: 482, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p18", x: 508, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p19", x: 534, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 },
+        { id: "p20", x: 560, y: 200, radius: 5, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 }
+      ]
+    }
+  }
+
+  page "/physics/wave" as WaveMotionPage -> WaveEngine
+}
+
+orbital ReflectionMotionOrbital {
+  uses Reflection from "std/behaviors/std-physics-reflection"
+
+  type ReflectionBody = { id:string x:number! y:number! radius:number color:string label:string vx:number vy:number fx:number fy:number }
+
+  type ReflectionShape = { type:string! x1:number! y1:number! x2:number! y2:number! color:string lineWidth:number }
+
+  entity ReflectionScene [runtime] {
+    id : string!
+    bodies : [ReflectionBody]
+    running : boolean = false
+  }
+
+  trait ReflectionEngine = Reflection.traits.ReflectionSim -> ReflectionScene {
+    config {
+      running: true
+      width: 600
+      height: 400
+      shapes: [{ type: "line", x1: 20, y1: 380, x2: 580, y2: 380, color: "#334155", lineWidth: 3 }]
+      bodies: [
+        { id: "ray-a", x: 120, y: 120, radius: 7, color: "#f59e0b", label: "", vx: 6, vy: 4, fx: 0, fy: 0 },
+        { id: "ray-b", x: 480, y: 150, radius: 7, color: "#2563eb", label: "", vx: -5, vy: 5, fx: 0, fy: 0 }
+      ]
+    }
+  }
+
+  page "/physics/reflection" as ReflectionMotionPage -> ReflectionEngine
 }

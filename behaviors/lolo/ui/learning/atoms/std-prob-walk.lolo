@@ -1,0 +1,106 @@
+app std-prob-walk "1.0.0"
+"Random-walk engine — a cloud of walkers starts at the origin and random-steps each tick into a widening Gaussian on math-canvas."
+orbital WalkEngineOrbital {
+  type WalkPoint = { x:number! y:number! label:string color:string radius:number }
+
+  entity WalkState [runtime] {
+    id : string!
+    points : [WalkPoint]
+    running : boolean = false
+  }
+
+  trait WalkSim -> @rebindable WalkState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.points @config.points)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: math-canvas
+          width: @config.width
+          height: @config.height
+          points: @entity.points
+        })
+        (emit POINTS_UPDATED { points: @entity.points })
+    }
+
+    ticks {
+      walkTick every 32ms
+        when @entity.running
+        (do
+          (set @entity.points (array/map @entity.points (fn p
+            (let (
+              (nx (math/clamp (+ (object/get @p x) (- (* (math/random) (* 2 @config.step)) @config.step)) -9 9))
+              (ny (math/clamp (+ (object/get @p y) (- (* (math/random) (* 2 @config.step)) @config.step)) -9 9))
+            )
+            (object/merge @p { x: @nx, y: @ny })))))
+          (render-ui main {
+            type: math-canvas
+            width: @config.width
+            height: @config.height
+            points: @entity.points
+          })
+          (emit POINTS_UPDATED { points: @entity.points }))
+    }
+
+    emits {
+      POINTS_UPDATED -> external {
+        points : [WalkPoint]
+      }
+        @description "The current walker cloud each tick — a composed listener (histogram, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      step : number = 0.35
+        @label "Step"
+        @description "Half-width of each per-tick random displacement in data units; larger diffuses faster."
+        @tier "domain"
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick random-walks every walker; toggle to start/pause the diffusion."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      points : [WalkPoint] = [
+        { x: 0, y: 0, label: "", color: "#dc2626", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 },
+        { x: 0, y: 0, label: "", color: "#2563eb", radius: 4 }
+      ]
+        @label "Points"
+        @description "24 walkers all seeded at the origin; the widening cloud IS the visual — one red walker tracks a single trajectory."
+        @tier "domain"
+    }
+  }
+
+  page "/prob-walk" as WalkEnginePage -> WalkSim
+}

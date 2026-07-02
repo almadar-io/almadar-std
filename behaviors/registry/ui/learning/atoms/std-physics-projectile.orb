@@ -1,5 +1,5 @@
 {
-  "description": "Projectile-motion engine — integrates bodies under constant gravity with wall-bounce every tick and slots a canvas + controls. Composed by a learning orbital via `uses`.",
+  "description": "Projectile-motion engine — integrates bodies under constant gravity with wall-bounce every tick and renders a physics-canvas; composed by a learning orbital via `uses`, controls auto-derived from @config.",
   "name": "std-physics-projectile",
   "orbitals": [
     {
@@ -94,6 +94,13 @@
         {
           "category": "interaction",
           "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
             "bodies": {
               "default": [
                 {
@@ -199,7 +206,7 @@
               "default": 400.0,
               "description": "Simulation height in pixels; bounds the bounce.",
               "label": "Height",
-              "tier": "domain",
+              "tier": "presentation",
               "type": "number"
             },
             "restitution": {
@@ -209,21 +216,50 @@
               "tier": "domain",
               "type": "number"
             },
-            "title": {
-              "default": "Projectile Motion",
-              "description": "Heading shown above the simulation.",
-              "label": "Title",
+            "running": {
+              "default": true,
+              "description": "When true the tick integrates; toggle to start/pause the sim.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "showVelocity": {
+              "default": true,
+              "description": "Draw each body's velocity vector as an arrow.",
+              "label": "Show Velocity",
               "tier": "presentation",
-              "type": "string"
+              "type": "boolean"
+            },
+            "velocityScale": {
+              "default": 8.0,
+              "description": "Length multiplier for the velocity arrows.",
+              "label": "Velocity Scale",
+              "tier": "presentation",
+              "type": "number"
             },
             "width": {
               "default": 600.0,
               "description": "Simulation width in pixels; bounds the bounce.",
               "label": "Width",
-              "tier": "domain",
+              "tier": "presentation",
               "type": "number"
             }
           },
+          "emits": [
+            {
+              "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "BODIES_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "bodies",
+                  "type": "[ProjectileBody]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw",
+              "tier": "domain"
+            }
+          ],
           "entityContract": {
             "provides": [
               "bodies",
@@ -242,16 +278,17 @@
                 "name": "Initialize"
               },
               {
-                "key": "START",
-                "name": "Start"
-              },
-              {
-                "key": "PAUSE",
-                "name": "Pause"
-              },
-              {
-                "key": "RESET",
-                "name": "Reset"
+                "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+                "key": "BODIES_UPDATED",
+                "name": "Bodies Updated",
+                "payloadSchema": [
+                  {
+                    "name": "bodies",
+                    "type": "[ProjectileBody]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw",
+                "tier": "domain"
               }
             ],
             "states": [
@@ -271,279 +308,31 @@
                   [
                     "set",
                     "@entity.running",
-                    false
+                    "@config.running"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "START",
-                                  "label": "Start",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "PAUSE",
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
-                                {
-                                  "action": "RESET",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "backgroundColor": "#f8fafc",
-                              "bodies": "@entity.bodies",
-                              "height": "@config.height",
-                              "showForces": false,
-                              "showVelocity": true,
-                              "type": "physics-canvas",
-                              "velocityScale": 8.0,
-                              "width": "@config.width"
-                            }
-                          ],
-                          "direction": "vertical",
-                          "gap": "md",
-                          "type": "stack"
-                        }
-                      ],
-                      "padding": "md",
-                      "type": "box"
+                      "backgroundColor": "@config.backgroundColor",
+                      "bodies": "@entity.bodies",
+                      "height": "@config.height",
+                      "showForces": false,
+                      "showVelocity": "@config.showVelocity",
+                      "type": "physics-canvas",
+                      "velocityScale": "@config.velocityScale",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BODIES_UPDATED",
+                    {
+                      "bodies": "@entity.bodies"
                     }
                   ]
                 ],
                 "event": "INIT",
-                "from": "idle",
-                "to": "idle"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.running",
-                    true
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "START",
-                                  "label": "Start",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "PAUSE",
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
-                                {
-                                  "action": "RESET",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "backgroundColor": "#f8fafc",
-                              "bodies": "@entity.bodies",
-                              "height": "@config.height",
-                              "showForces": false,
-                              "showVelocity": true,
-                              "type": "physics-canvas",
-                              "velocityScale": 8.0,
-                              "width": "@config.width"
-                            }
-                          ],
-                          "direction": "vertical",
-                          "gap": "md",
-                          "type": "stack"
-                        }
-                      ],
-                      "padding": "md",
-                      "type": "box"
-                    }
-                  ]
-                ],
-                "event": "START",
-                "from": "idle",
-                "to": "idle"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.running",
-                    false
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "START",
-                                  "label": "Start",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "PAUSE",
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
-                                {
-                                  "action": "RESET",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "backgroundColor": "#f8fafc",
-                              "bodies": "@entity.bodies",
-                              "height": "@config.height",
-                              "showForces": false,
-                              "showVelocity": true,
-                              "type": "physics-canvas",
-                              "velocityScale": 8.0,
-                              "width": "@config.width"
-                            }
-                          ],
-                          "direction": "vertical",
-                          "gap": "md",
-                          "type": "stack"
-                        }
-                      ],
-                      "padding": "md",
-                      "type": "box"
-                    }
-                  ]
-                ],
-                "event": "PAUSE",
-                "from": "idle",
-                "to": "idle"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.bodies",
-                    "@config.bodies"
-                  ],
-                  [
-                    "set",
-                    "@entity.running",
-                    false
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h4"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "action": "START",
-                                  "label": "Start",
-                                  "type": "button",
-                                  "variant": "primary"
-                                },
-                                {
-                                  "action": "PAUSE",
-                                  "label": "Pause",
-                                  "type": "button",
-                                  "variant": "secondary"
-                                },
-                                {
-                                  "action": "RESET",
-                                  "label": "Reset",
-                                  "type": "button",
-                                  "variant": "ghost"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack"
-                            },
-                            {
-                              "backgroundColor": "#f8fafc",
-                              "bodies": "@entity.bodies",
-                              "height": "@config.height",
-                              "showForces": false,
-                              "showVelocity": true,
-                              "type": "physics-canvas",
-                              "velocityScale": 8.0,
-                              "width": "@config.width"
-                            }
-                          ],
-                          "direction": "vertical",
-                          "gap": "md",
-                          "type": "stack"
-                        }
-                      ],
-                      "padding": "md",
-                      "type": "box"
-                    }
-                  ]
-                ],
-                "event": "RESET",
                 "from": "idle",
                 "to": "idle"
               }
@@ -737,57 +526,21 @@
                   "render-ui",
                   "main",
                   {
-                    "children": [
-                      {
-                        "children": [
-                          {
-                            "content": "@config.title",
-                            "type": "typography",
-                            "variant": "h4"
-                          },
-                          {
-                            "children": [
-                              {
-                                "action": "START",
-                                "label": "Start",
-                                "type": "button",
-                                "variant": "primary"
-                              },
-                              {
-                                "action": "PAUSE",
-                                "label": "Pause",
-                                "type": "button",
-                                "variant": "secondary"
-                              },
-                              {
-                                "action": "RESET",
-                                "label": "Reset",
-                                "type": "button",
-                                "variant": "ghost"
-                              }
-                            ],
-                            "direction": "horizontal",
-                            "gap": "sm",
-                            "type": "stack"
-                          },
-                          {
-                            "backgroundColor": "#f8fafc",
-                            "bodies": "@entity.bodies",
-                            "height": "@config.height",
-                            "showForces": false,
-                            "showVelocity": true,
-                            "type": "physics-canvas",
-                            "velocityScale": 8.0,
-                            "width": "@config.width"
-                          }
-                        ],
-                        "direction": "vertical",
-                        "gap": "md",
-                        "type": "stack"
-                      }
-                    ],
-                    "padding": "md",
-                    "type": "box"
+                    "backgroundColor": "@config.backgroundColor",
+                    "bodies": "@entity.bodies",
+                    "height": "@config.height",
+                    "showForces": false,
+                    "showVelocity": "@config.showVelocity",
+                    "type": "physics-canvas",
+                    "velocityScale": "@config.velocityScale",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "BODIES_UPDATED",
+                  {
+                    "bodies": "@entity.bodies"
                   }
                 ]
               ],

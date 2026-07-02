@@ -41,10 +41,14 @@ export type StdUiDialogueBubbleEventKey = 'INIT';
 export interface StdUiDialogueBubbleConfig {
   /** Default: `""` */
   className?: string;
+  /** Default: `"neutral"` */
+  mood?: 'neutral' | 'happy' | 'concerned' | 'angry';
   /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"portrait","dimension":"2d","name":"portrait","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png"}` */
   portrait?: EntityRow;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';
+  /** Default: `0` */
+  revealedChars?: number;
   /** Default: `"Hero"` */
   speaker?: string;
   /** Default: `"The dungeon awaits. Choose your path wisely."` */

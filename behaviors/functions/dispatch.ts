@@ -17,15 +17,60 @@ import { mergeCallSiteConfigOverrides } from '@almadar/core/factory-runtime';
 import type { OrbitalParamsManifest, ParamFieldDescriptor } from '@almadar/core/factory-runtime';
 
 import {
+  stdLearningBiologyPredatorPreyOrbital,
+  StdLearningBiologyPredatorPreyOrbitalManifest,
+  isStdLearningBiologyPredatorPreyOrbitalParams,
+  stdLearningBiologyFoodwebOrbital,
+  StdLearningBiologyFoodwebOrbitalManifest,
+  isStdLearningBiologyFoodwebOrbitalParams,
+  stdLearningBiologyMitosisOrbital,
+  StdLearningBiologyMitosisOrbitalManifest,
+  isStdLearningBiologyMitosisOrbitalParams,
+  stdLearningBiologyCellStructureOrbital,
+  StdLearningBiologyCellStructureOrbitalManifest,
+  isStdLearningBiologyCellStructureOrbitalParams,
+} from './ui/learning/organisms/learning-biology.js';
+import {
   stdLearningBiologyLabBiologyLabOrbital,
   StdLearningBiologyLabBiologyLabOrbitalManifest,
   isStdLearningBiologyLabBiologyLabOrbitalParams,
 } from './ui/learning/organisms/learning-biology-lab.js';
 import {
+  stdLearningChemistryDiffusionOrbital,
+  StdLearningChemistryDiffusionOrbitalManifest,
+  isStdLearningChemistryDiffusionOrbitalParams,
+  stdLearningChemistryReactionOrbital,
+  StdLearningChemistryReactionOrbitalManifest,
+  isStdLearningChemistryReactionOrbitalParams,
+  stdLearningChemistryOsmosisOrbital,
+  StdLearningChemistryOsmosisOrbitalManifest,
+  isStdLearningChemistryOsmosisOrbitalParams,
+} from './ui/learning/organisms/learning-chemistry.js';
+import {
   stdLearningChemistryLabChemistryLabOrbital,
   StdLearningChemistryLabChemistryLabOrbitalManifest,
   isStdLearningChemistryLabChemistryLabOrbitalParams,
 } from './ui/learning/organisms/learning-chemistry-lab.js';
+import {
+  stdLearningMathVectorAdditionOrbital,
+  StdLearningMathVectorAdditionOrbitalManifest,
+  isStdLearningMathVectorAdditionOrbitalParams,
+  stdLearningMathLinearSystemsOrbital,
+  StdLearningMathLinearSystemsOrbitalManifest,
+  isStdLearningMathLinearSystemsOrbitalParams,
+  stdLearningMathNumberLineOrbital,
+  StdLearningMathNumberLineOrbitalManifest,
+  isStdLearningMathNumberLineOrbitalParams,
+  stdLearningMathArithmeticSequenceOrbital,
+  StdLearningMathArithmeticSequenceOrbitalManifest,
+  isStdLearningMathArithmeticSequenceOrbitalParams,
+  stdLearningMathUnitCircleOrbital,
+  StdLearningMathUnitCircleOrbitalManifest,
+  isStdLearningMathUnitCircleOrbitalParams,
+  stdLearningMathSineWaveOrbital,
+  StdLearningMathSineWaveOrbitalManifest,
+  isStdLearningMathSineWaveOrbitalParams,
+} from './ui/learning/organisms/learning-math.js';
 import {
   stdLearningMathLabMathLabOrbital,
   StdLearningMathLabMathLabOrbitalManifest,
@@ -35,12 +80,59 @@ import {
   stdLearningPhysicsProjectileMotionOrbital,
   StdLearningPhysicsProjectileMotionOrbitalManifest,
   isStdLearningPhysicsProjectileMotionOrbitalParams,
+  stdLearningPhysicsFreeFallMotionOrbital,
+  StdLearningPhysicsFreeFallMotionOrbitalManifest,
+  isStdLearningPhysicsFreeFallMotionOrbitalParams,
+  stdLearningPhysicsSpringMotionOrbital,
+  StdLearningPhysicsSpringMotionOrbitalManifest,
+  isStdLearningPhysicsSpringMotionOrbitalParams,
+  stdLearningPhysicsFrictionMotionOrbital,
+  StdLearningPhysicsFrictionMotionOrbitalManifest,
+  isStdLearningPhysicsFrictionMotionOrbitalParams,
+  stdLearningPhysicsCircularMotionOrbital,
+  StdLearningPhysicsCircularMotionOrbitalManifest,
+  isStdLearningPhysicsCircularMotionOrbitalParams,
+  stdLearningPhysicsPendulumMotionOrbital,
+  StdLearningPhysicsPendulumMotionOrbitalManifest,
+  isStdLearningPhysicsPendulumMotionOrbitalParams,
+  stdLearningPhysicsCollisionMotionOrbital,
+  StdLearningPhysicsCollisionMotionOrbitalManifest,
+  isStdLearningPhysicsCollisionMotionOrbitalParams,
+  stdLearningPhysicsInclineMotionOrbital,
+  StdLearningPhysicsInclineMotionOrbitalManifest,
+  isStdLearningPhysicsInclineMotionOrbitalParams,
+  stdLearningPhysicsOrbitMotionOrbital,
+  StdLearningPhysicsOrbitMotionOrbitalManifest,
+  isStdLearningPhysicsOrbitMotionOrbitalParams,
+  stdLearningPhysicsGasMotionOrbital,
+  StdLearningPhysicsGasMotionOrbitalManifest,
+  isStdLearningPhysicsGasMotionOrbitalParams,
+  stdLearningPhysicsMagneticMotionOrbital,
+  StdLearningPhysicsMagneticMotionOrbitalManifest,
+  isStdLearningPhysicsMagneticMotionOrbitalParams,
+  stdLearningPhysicsWaveMotionOrbital,
+  StdLearningPhysicsWaveMotionOrbitalManifest,
+  isStdLearningPhysicsWaveMotionOrbitalParams,
+  stdLearningPhysicsReflectionMotionOrbital,
+  StdLearningPhysicsReflectionMotionOrbitalManifest,
+  isStdLearningPhysicsReflectionMotionOrbitalParams,
 } from './ui/learning/organisms/learning-physics.js';
 import {
   stdLearningPhysicsLabPhysicsLabOrbital,
   StdLearningPhysicsLabPhysicsLabOrbitalManifest,
   isStdLearningPhysicsLabPhysicsLabOrbitalParams,
 } from './ui/learning/organisms/learning-physics-lab.js';
+import {
+  stdLearningProbabilityGaltonBoardOrbital,
+  StdLearningProbabilityGaltonBoardOrbitalManifest,
+  isStdLearningProbabilityGaltonBoardOrbitalParams,
+  stdLearningProbabilityRandomWalkOrbital,
+  StdLearningProbabilityRandomWalkOrbitalManifest,
+  isStdLearningProbabilityRandomWalkOrbitalParams,
+  stdLearningProbabilityMonteCarloOrbital,
+  StdLearningProbabilityMonteCarloOrbitalManifest,
+  isStdLearningProbabilityMonteCarloOrbitalParams,
+} from './ui/learning/organisms/learning-probability.js';
 import {
   stdLearningProbabilityLabProbabilityLabOrbital,
   StdLearningProbabilityLabProbabilityLabOrbitalManifest,
@@ -539,6 +631,42 @@ interface DispatchEntry {
 }
 
 const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEntry>([
+  ['learning-biology::PredatorPreyOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningBiologyPredatorPreyOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-biology::PredatorPreyOrbital');
+      }
+      return stdLearningBiologyPredatorPreyOrbital(p);
+    },
+    manifest: StdLearningBiologyPredatorPreyOrbitalManifest,
+  }],
+  ['learning-biology::FoodwebOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningBiologyFoodwebOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-biology::FoodwebOrbital');
+      }
+      return stdLearningBiologyFoodwebOrbital(p);
+    },
+    manifest: StdLearningBiologyFoodwebOrbitalManifest,
+  }],
+  ['learning-biology::MitosisOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningBiologyMitosisOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-biology::MitosisOrbital');
+      }
+      return stdLearningBiologyMitosisOrbital(p);
+    },
+    manifest: StdLearningBiologyMitosisOrbitalManifest,
+  }],
+  ['learning-biology::CellStructureOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningBiologyCellStructureOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-biology::CellStructureOrbital');
+      }
+      return stdLearningBiologyCellStructureOrbital(p);
+    },
+    manifest: StdLearningBiologyCellStructureOrbitalManifest,
+  }],
   ['learning-biology-lab::BiologyLabOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdLearningBiologyLabBiologyLabOrbitalParams(p)) {
@@ -548,6 +676,33 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdLearningBiologyLabBiologyLabOrbitalManifest,
   }],
+  ['learning-chemistry::DiffusionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningChemistryDiffusionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-chemistry::DiffusionOrbital');
+      }
+      return stdLearningChemistryDiffusionOrbital(p);
+    },
+    manifest: StdLearningChemistryDiffusionOrbitalManifest,
+  }],
+  ['learning-chemistry::ReactionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningChemistryReactionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-chemistry::ReactionOrbital');
+      }
+      return stdLearningChemistryReactionOrbital(p);
+    },
+    manifest: StdLearningChemistryReactionOrbitalManifest,
+  }],
+  ['learning-chemistry::OsmosisOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningChemistryOsmosisOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-chemistry::OsmosisOrbital');
+      }
+      return stdLearningChemistryOsmosisOrbital(p);
+    },
+    manifest: StdLearningChemistryOsmosisOrbitalManifest,
+  }],
   ['learning-chemistry-lab::ChemistryLabOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdLearningChemistryLabChemistryLabOrbitalParams(p)) {
@@ -556,6 +711,60 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdLearningChemistryLabChemistryLabOrbital(p);
     },
     manifest: StdLearningChemistryLabChemistryLabOrbitalManifest,
+  }],
+  ['learning-math::VectorAdditionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningMathVectorAdditionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-math::VectorAdditionOrbital');
+      }
+      return stdLearningMathVectorAdditionOrbital(p);
+    },
+    manifest: StdLearningMathVectorAdditionOrbitalManifest,
+  }],
+  ['learning-math::LinearSystemsOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningMathLinearSystemsOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-math::LinearSystemsOrbital');
+      }
+      return stdLearningMathLinearSystemsOrbital(p);
+    },
+    manifest: StdLearningMathLinearSystemsOrbitalManifest,
+  }],
+  ['learning-math::NumberLineOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningMathNumberLineOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-math::NumberLineOrbital');
+      }
+      return stdLearningMathNumberLineOrbital(p);
+    },
+    manifest: StdLearningMathNumberLineOrbitalManifest,
+  }],
+  ['learning-math::ArithmeticSequenceOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningMathArithmeticSequenceOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-math::ArithmeticSequenceOrbital');
+      }
+      return stdLearningMathArithmeticSequenceOrbital(p);
+    },
+    manifest: StdLearningMathArithmeticSequenceOrbitalManifest,
+  }],
+  ['learning-math::UnitCircleOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningMathUnitCircleOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-math::UnitCircleOrbital');
+      }
+      return stdLearningMathUnitCircleOrbital(p);
+    },
+    manifest: StdLearningMathUnitCircleOrbitalManifest,
+  }],
+  ['learning-math::SineWaveOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningMathSineWaveOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-math::SineWaveOrbital');
+      }
+      return stdLearningMathSineWaveOrbital(p);
+    },
+    manifest: StdLearningMathSineWaveOrbitalManifest,
   }],
   ['learning-math-lab::MathLabOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -575,6 +784,114 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdLearningPhysicsProjectileMotionOrbitalManifest,
   }],
+  ['learning-physics::FreeFallMotionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningPhysicsFreeFallMotionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-physics::FreeFallMotionOrbital');
+      }
+      return stdLearningPhysicsFreeFallMotionOrbital(p);
+    },
+    manifest: StdLearningPhysicsFreeFallMotionOrbitalManifest,
+  }],
+  ['learning-physics::SpringMotionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningPhysicsSpringMotionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-physics::SpringMotionOrbital');
+      }
+      return stdLearningPhysicsSpringMotionOrbital(p);
+    },
+    manifest: StdLearningPhysicsSpringMotionOrbitalManifest,
+  }],
+  ['learning-physics::FrictionMotionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningPhysicsFrictionMotionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-physics::FrictionMotionOrbital');
+      }
+      return stdLearningPhysicsFrictionMotionOrbital(p);
+    },
+    manifest: StdLearningPhysicsFrictionMotionOrbitalManifest,
+  }],
+  ['learning-physics::CircularMotionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningPhysicsCircularMotionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-physics::CircularMotionOrbital');
+      }
+      return stdLearningPhysicsCircularMotionOrbital(p);
+    },
+    manifest: StdLearningPhysicsCircularMotionOrbitalManifest,
+  }],
+  ['learning-physics::PendulumMotionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningPhysicsPendulumMotionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-physics::PendulumMotionOrbital');
+      }
+      return stdLearningPhysicsPendulumMotionOrbital(p);
+    },
+    manifest: StdLearningPhysicsPendulumMotionOrbitalManifest,
+  }],
+  ['learning-physics::CollisionMotionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningPhysicsCollisionMotionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-physics::CollisionMotionOrbital');
+      }
+      return stdLearningPhysicsCollisionMotionOrbital(p);
+    },
+    manifest: StdLearningPhysicsCollisionMotionOrbitalManifest,
+  }],
+  ['learning-physics::InclineMotionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningPhysicsInclineMotionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-physics::InclineMotionOrbital');
+      }
+      return stdLearningPhysicsInclineMotionOrbital(p);
+    },
+    manifest: StdLearningPhysicsInclineMotionOrbitalManifest,
+  }],
+  ['learning-physics::OrbitMotionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningPhysicsOrbitMotionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-physics::OrbitMotionOrbital');
+      }
+      return stdLearningPhysicsOrbitMotionOrbital(p);
+    },
+    manifest: StdLearningPhysicsOrbitMotionOrbitalManifest,
+  }],
+  ['learning-physics::GasMotionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningPhysicsGasMotionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-physics::GasMotionOrbital');
+      }
+      return stdLearningPhysicsGasMotionOrbital(p);
+    },
+    manifest: StdLearningPhysicsGasMotionOrbitalManifest,
+  }],
+  ['learning-physics::MagneticMotionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningPhysicsMagneticMotionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-physics::MagneticMotionOrbital');
+      }
+      return stdLearningPhysicsMagneticMotionOrbital(p);
+    },
+    manifest: StdLearningPhysicsMagneticMotionOrbitalManifest,
+  }],
+  ['learning-physics::WaveMotionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningPhysicsWaveMotionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-physics::WaveMotionOrbital');
+      }
+      return stdLearningPhysicsWaveMotionOrbital(p);
+    },
+    manifest: StdLearningPhysicsWaveMotionOrbitalManifest,
+  }],
+  ['learning-physics::ReflectionMotionOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningPhysicsReflectionMotionOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-physics::ReflectionMotionOrbital');
+      }
+      return stdLearningPhysicsReflectionMotionOrbital(p);
+    },
+    manifest: StdLearningPhysicsReflectionMotionOrbitalManifest,
+  }],
   ['learning-physics-lab::PhysicsLabOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdLearningPhysicsLabPhysicsLabOrbitalParams(p)) {
@@ -583,6 +900,33 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdLearningPhysicsLabPhysicsLabOrbital(p);
     },
     manifest: StdLearningPhysicsLabPhysicsLabOrbitalManifest,
+  }],
+  ['learning-probability::GaltonBoardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningProbabilityGaltonBoardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-probability::GaltonBoardOrbital');
+      }
+      return stdLearningProbabilityGaltonBoardOrbital(p);
+    },
+    manifest: StdLearningProbabilityGaltonBoardOrbitalManifest,
+  }],
+  ['learning-probability::RandomWalkOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningProbabilityRandomWalkOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-probability::RandomWalkOrbital');
+      }
+      return stdLearningProbabilityRandomWalkOrbital(p);
+    },
+    manifest: StdLearningProbabilityRandomWalkOrbitalManifest,
+  }],
+  ['learning-probability::MonteCarloOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningProbabilityMonteCarloOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-probability::MonteCarloOrbital');
+      }
+      return stdLearningProbabilityMonteCarloOrbital(p);
+    },
+    manifest: StdLearningProbabilityMonteCarloOrbitalManifest,
   }],
   ['learning-probability-lab::ProbabilityLabOrbital', {
     factory: (p: object): OrbitalDefinition => {

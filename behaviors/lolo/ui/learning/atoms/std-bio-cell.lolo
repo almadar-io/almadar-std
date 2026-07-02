@@ -1,0 +1,126 @@
+app std-bio-cell "1.0.0"
+"Eukaryotic cell-structure engine — a large steady nucleus ringed by organelles whose radii breathe at staggered phases on biology-canvas."
+orbital BioCellEngineOrbital {
+  type BioNode = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    kind : "cell" | "organelle" | "molecule" | "organism"
+  }
+
+  type BioEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+
+  entity BioCellState [runtime] {
+    id : string!
+    phase : number = 0
+    nodes : [BioNode]
+    running : boolean = false
+  }
+
+  trait BioCellSim -> @rebindable BioCellState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.phase 0)
+        (set @entity.nodes @config.nodes)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: biology-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          nodes: @entity.nodes
+          edges: @config.edges
+        })
+        (emit CELL_UPDATED { nodes: @entity.nodes })
+    }
+
+    ticks {
+      cellTick every 32ms
+        when @entity.running
+        (set @entity.phase (+ @entity.phase 3))
+        (set @entity.nodes (array/map @entity.nodes (fn n
+          (if (= (object/get @n kind) "cell")
+            @n
+            (let (
+              (off (if (= (object/get @n id) "mitochondria") 0 (if (= (object/get @n id) "ribosome") 40 (if (= (object/get @n id) "golgi") 80 (if (= (object/get @n id) "vacuole") 120 160)))))
+            )
+            (let (
+              (tw (math/abs (- (math/mod (+ @entity.phase @off) 240) 120)))
+            )
+            (let (
+              (nr (+ 12 (* @tw 0.05)))
+            )
+            (object/merge @n { radius: @nr }))))))))
+        (render-ui main {
+          type: biology-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          nodes: @entity.nodes
+          edges: @config.edges
+        })
+        (emit CELL_UPDATED { nodes: @entity.nodes })
+    }
+
+    emits {
+      CELL_UPDATED -> external {
+        nodes : [BioNode]
+      }
+        @description "The current cell scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick advances the phase and recomputes every organelle radius; toggle to start/pause."
+        @tier "domain"
+      nodes : [BioNode] = [
+        { id: "nucleus", x: 300, y: 200, radius: 34, color: "#2563eb", label: "Nucleus", kind: cell },
+        { id: "mitochondria", x: 170, y: 120, radius: 14, color: "#dc2626", label: "Mitochondria", kind: organelle },
+        { id: "ribosome", x: 440, y: 120, radius: 14, color: "#f59e0b", label: "Ribosome", kind: organelle },
+        { id: "golgi", x: 150, y: 290, radius: 14, color: "#7c3aed", label: "Golgi", kind: organelle },
+        { id: "vacuole", x: 450, y: 290, radius: 14, color: "#0891b2", label: "Vacuole", kind: organelle },
+        { id: "chloroplast", x: 300, y: 330, radius: 14, color: "#16a34a", label: "Chloroplast", kind: organelle }
+      ]
+        @label "Nodes"
+        @description "A large central nucleus (kind cell) ringed by five organelles (kind organelle) — mitochondria, ribosome, golgi, vacuole, chloroplast; radius encodes the breathing pulse."
+        @tier "domain"
+      edges : [BioEdge] = [
+        { from: "mitochondria", to: "nucleus", color: "#e2e8f0", label: "" },
+        { from: "ribosome", to: "nucleus", color: "#e2e8f0", label: "" },
+        { from: "golgi", to: "nucleus", color: "#e2e8f0", label: "" },
+        { from: "vacuole", to: "nucleus", color: "#e2e8f0", label: "" },
+        { from: "chloroplast", to: "nucleus", color: "#e2e8f0", label: "" }
+      ]
+        @label "Edges"
+        @description "Faint links tethering each organelle to the central nucleus."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f0fdf4"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+    }
+  }
+
+  page "/bio-cell" as BioCellEnginePage -> BioCellSim
+}

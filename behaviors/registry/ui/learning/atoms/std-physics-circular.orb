@@ -1,0 +1,501 @@
+{
+  "description": "Circular-motion engine — integrates bodies under a central force each tick and renders a physics-canvas via `uses`.",
+  "name": "std-physics-circular",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fx": {
+                  "name": "fx",
+                  "required": false,
+                  "type": "number"
+                },
+                "fy": {
+                  "name": "fy",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "bodies",
+            "type": "array"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "CircularState",
+        "persistence": "runtime"
+      },
+      "name": "CircularEngineOrbital",
+      "pages": [
+        {
+          "name": "CircularEnginePage",
+          "path": "/physics-circular",
+          "traits": [
+            {
+              "ref": "CircularSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bodies": {
+              "default": [
+                {
+                  "color": "#2563eb",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "orbit-a",
+                  "label": "A",
+                  "radius": 14.0,
+                  "vx": 3.9,
+                  "vy": 0.0,
+                  "x": 300.0,
+                  "y": 70.0
+                },
+                {
+                  "color": "#dc2626",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "orbit-b",
+                  "label": "B",
+                  "radius": 10.0,
+                  "vx": 0.0,
+                  "vy": 5.1,
+                  "x": 470.0,
+                  "y": 200.0
+                }
+              ],
+              "description": "Initial bodies; each orbits the center with velocity perpendicular to its radius vector.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fx": {
+                    "name": "fx",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "fy": {
+                    "name": "fy",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vx": {
+                    "name": "vx",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vy": {
+                    "name": "vy",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bodies",
+              "tier": "domain",
+              "type": "[CircularBody]"
+            },
+            "centerK": {
+              "default": 0.0009,
+              "description": "Linear central-force constant; acceleration toward the center scales with distance times this value.",
+              "label": "Center Attraction",
+              "tier": "domain",
+              "type": "number"
+            },
+            "centerX": {
+              "default": 300.0,
+              "description": "X coordinate of the central attractor bodies orbit around.",
+              "label": "Center X",
+              "tier": "domain",
+              "type": "number"
+            },
+            "centerY": {
+              "default": 200.0,
+              "description": "Y coordinate of the central attractor bodies orbit around.",
+              "label": "Center Y",
+              "tier": "domain",
+              "type": "number"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Simulation height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick integrates; toggle to start/pause the sim.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "showVelocity": {
+              "default": true,
+              "description": "Draw each body's velocity vector as an arrow.",
+              "label": "Show Velocity",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "velocityScale": {
+              "default": 12.0,
+              "description": "Length multiplier for the velocity arrows.",
+              "label": "Velocity Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Simulation width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "BODIES_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "bodies",
+                  "type": "[CircularBody]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "bodies",
+              "running"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "CircularState",
+          "name": "CircularSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+                "key": "BODIES_UPDATED",
+                "name": "Bodies Updated",
+                "payloadSchema": [
+                  {
+                    "name": "bodies",
+                    "type": "[CircularBody]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bodies",
+                    "@config.bodies"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "bodies": "@entity.bodies",
+                      "height": "@config.height",
+                      "showForces": false,
+                      "showVelocity": "@config.showVelocity",
+                      "type": "physics-canvas",
+                      "velocityScale": "@config.velocityScale",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BODIES_UPDATED",
+                    {
+                      "bodies": "@entity.bodies"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.bodies",
+                  [
+                    "array/map",
+                    "@entity.bodies",
+                    [
+                      "fn",
+                      "b",
+                      [
+                        "let",
+                        [
+                          [
+                            "ax",
+                            [
+                              "*",
+                              [
+                                "*",
+                                -1.0,
+                                "@config.centerK"
+                              ],
+                              [
+                                "-",
+                                [
+                                  "object/get",
+                                  "@b",
+                                  "x"
+                                ],
+                                "@config.centerX"
+                              ]
+                            ]
+                          ],
+                          [
+                            "ay",
+                            [
+                              "*",
+                              [
+                                "*",
+                                -1.0,
+                                "@config.centerK"
+                              ],
+                              [
+                                "-",
+                                [
+                                  "object/get",
+                                  "@b",
+                                  "y"
+                                ],
+                                "@config.centerY"
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "nvx",
+                              [
+                                "+",
+                                [
+                                  "object/get",
+                                  "@b",
+                                  "vx"
+                                ],
+                                "@ax"
+                              ]
+                            ],
+                            [
+                              "nvy",
+                              [
+                                "+",
+                                [
+                                  "object/get",
+                                  "@b",
+                                  "vy"
+                                ],
+                                "@ay"
+                              ]
+                            ]
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "nx",
+                                [
+                                  "+",
+                                  [
+                                    "object/get",
+                                    "@b",
+                                    "x"
+                                  ],
+                                  "@nvx"
+                                ]
+                              ],
+                              [
+                                "ny",
+                                [
+                                  "+",
+                                  [
+                                    "object/get",
+                                    "@b",
+                                    "y"
+                                  ],
+                                  "@nvy"
+                                ]
+                              ]
+                            ],
+                            [
+                              "object/merge",
+                              "@b",
+                              {
+                                "vx": "@nvx",
+                                "vy": "@nvy",
+                                "x": "@nx",
+                                "y": "@ny"
+                              }
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "bodies": "@entity.bodies",
+                    "height": "@config.height",
+                    "showForces": false,
+                    "showVelocity": "@config.showVelocity",
+                    "type": "physics-canvas",
+                    "velocityScale": "@config.velocityScale",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "BODIES_UPDATED",
+                  {
+                    "bodies": "@entity.bodies"
+                  }
+                ]
+              ],
+              "guard": "@entity.running",
+              "interval": 32.0,
+              "name": "circularTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

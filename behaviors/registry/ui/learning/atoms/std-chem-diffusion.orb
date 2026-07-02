@@ -1,0 +1,499 @@
+{
+  "description": "Diffusion engine — two color-coded gases random-walk toward each other, mixing to illustrate entropy.",
+  "name": "std-chem-diffusion",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "element": {
+                  "name": "element",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "atoms",
+            "type": "array"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "ChemDiffusionState",
+        "persistence": "runtime"
+      },
+      "name": "ChemDiffusionOrbital",
+      "pages": [
+        {
+          "name": "ChemDiffusionEnginePage",
+          "path": "/chem-diffusion",
+          "traits": [
+            {
+              "ref": "ChemDiffusionSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "atoms": {
+              "default": [
+                {
+                  "color": "#dc2626",
+                  "element": "A",
+                  "id": "a1",
+                  "radius": 10.0,
+                  "x": 60.0,
+                  "y": 60.0
+                },
+                {
+                  "color": "#dc2626",
+                  "element": "A",
+                  "id": "a2",
+                  "radius": 10.0,
+                  "x": 100.0,
+                  "y": 100.0
+                },
+                {
+                  "color": "#dc2626",
+                  "element": "A",
+                  "id": "a3",
+                  "radius": 10.0,
+                  "x": 60.0,
+                  "y": 140.0
+                },
+                {
+                  "color": "#dc2626",
+                  "element": "A",
+                  "id": "a4",
+                  "radius": 10.0,
+                  "x": 100.0,
+                  "y": 180.0
+                },
+                {
+                  "color": "#dc2626",
+                  "element": "A",
+                  "id": "a5",
+                  "radius": 10.0,
+                  "x": 60.0,
+                  "y": 220.0
+                },
+                {
+                  "color": "#dc2626",
+                  "element": "A",
+                  "id": "a6",
+                  "radius": 10.0,
+                  "x": 100.0,
+                  "y": 260.0
+                },
+                {
+                  "color": "#dc2626",
+                  "element": "A",
+                  "id": "a7",
+                  "radius": 10.0,
+                  "x": 60.0,
+                  "y": 300.0
+                },
+                {
+                  "color": "#dc2626",
+                  "element": "A",
+                  "id": "a8",
+                  "radius": 10.0,
+                  "x": 100.0,
+                  "y": 340.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "B",
+                  "id": "b1",
+                  "radius": 10.0,
+                  "x": 540.0,
+                  "y": 60.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "B",
+                  "id": "b2",
+                  "radius": 10.0,
+                  "x": 500.0,
+                  "y": 100.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "B",
+                  "id": "b3",
+                  "radius": 10.0,
+                  "x": 540.0,
+                  "y": 140.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "B",
+                  "id": "b4",
+                  "radius": 10.0,
+                  "x": 500.0,
+                  "y": 180.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "B",
+                  "id": "b5",
+                  "radius": 10.0,
+                  "x": 540.0,
+                  "y": 220.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "B",
+                  "id": "b6",
+                  "radius": 10.0,
+                  "x": 500.0,
+                  "y": 260.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "B",
+                  "id": "b7",
+                  "radius": 10.0,
+                  "x": 540.0,
+                  "y": 300.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "B",
+                  "id": "b8",
+                  "radius": 10.0,
+                  "x": 500.0,
+                  "y": 340.0
+                }
+              ],
+              "description": "16 particles — 8 red gas A on the left, 8 blue gas B on the right — random-walk and mix over time.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "element": {
+                    "name": "element",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Atoms",
+              "tier": "domain",
+              "type": "[ChemAtom]"
+            },
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Simulation height in pixels; bounds the random walk.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick random-walks every atom; toggle to start/pause diffusion.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Simulation width in pixels; bounds the random walk.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current atom scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "ATOMS_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "atoms",
+                  "type": "[ChemAtom]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "atoms",
+              "running"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ChemDiffusionState",
+          "name": "ChemDiffusionSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current atom scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+                "key": "ATOMS_UPDATED",
+                "name": "Atoms Updated",
+                "payloadSchema": [
+                  {
+                    "name": "atoms",
+                    "type": "[ChemAtom]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.atoms",
+                    "@config.atoms"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "atoms": "@entity.atoms",
+                      "backgroundColor": "@config.backgroundColor",
+                      "height": "@config.height",
+                      "type": "chemistry-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "ATOMS_UPDATED",
+                    {
+                      "atoms": "@entity.atoms"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.atoms",
+                  [
+                    "array/map",
+                    "@entity.atoms",
+                    [
+                      "fn",
+                      "a",
+                      [
+                        "let",
+                        [
+                          [
+                            "r",
+                            [
+                              "object/get",
+                              "@a",
+                              "radius"
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "nx",
+                              [
+                                "math/clamp",
+                                [
+                                  "+",
+                                  [
+                                    "object/get",
+                                    "@a",
+                                    "x"
+                                  ],
+                                  [
+                                    "-",
+                                    [
+                                      "*",
+                                      [
+                                        "math/random"
+                                      ],
+                                      6.0
+                                    ],
+                                    3.0
+                                  ]
+                                ],
+                                "@r",
+                                [
+                                  "-",
+                                  "@config.width",
+                                  "@r"
+                                ]
+                              ]
+                            ],
+                            [
+                              "ny",
+                              [
+                                "math/clamp",
+                                [
+                                  "+",
+                                  [
+                                    "object/get",
+                                    "@a",
+                                    "y"
+                                  ],
+                                  [
+                                    "-",
+                                    [
+                                      "*",
+                                      [
+                                        "math/random"
+                                      ],
+                                      6.0
+                                    ],
+                                    3.0
+                                  ]
+                                ],
+                                "@r",
+                                [
+                                  "-",
+                                  "@config.height",
+                                  "@r"
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "object/merge",
+                            "@a",
+                            {
+                              "x": "@nx",
+                              "y": "@ny"
+                            }
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "atoms": "@entity.atoms",
+                    "backgroundColor": "@config.backgroundColor",
+                    "height": "@config.height",
+                    "type": "chemistry-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "ATOMS_UPDATED",
+                  {
+                    "atoms": "@entity.atoms"
+                  }
+                ]
+              ],
+              "guard": "@entity.running",
+              "interval": 32.0,
+              "name": "diffusionTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

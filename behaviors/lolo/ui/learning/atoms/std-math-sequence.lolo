@@ -1,0 +1,134 @@
+app std-math-sequence "1.0.0"
+"Arithmetic-sequence engine — aₙ = a₀ + n·d plotted as dots on a straight line; a highlighted marker sweeps term-by-term on math-canvas."
+orbital MathSequenceEngineOrbital {
+  type MathSample = {
+    x : number!
+    y : number!
+  }
+
+  type MathCurve = {
+    label : string
+    color : string
+    samples : [MathSample]
+  }
+
+  type MathPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity MathSequenceState [runtime] {
+    id : string!
+    phase : number = 0
+    curves : [MathCurve]
+    points : [MathPoint]
+    running : boolean = false
+  }
+
+  trait MathSequenceSim -> @rebindable MathSequenceState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.phase 0)
+        (set @entity.curves @config.curves)
+        (set @entity.points @config.points)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: math-canvas
+          width: @config.width
+          height: @config.height
+          curves: @entity.curves
+          points: @entity.points
+        })
+        (emit SEQUENCE_UPDATED { curves: @entity.curves, points: @entity.points })
+    }
+
+    ticks {
+      sequenceTick every 32ms
+        when @entity.running
+        (let (
+          (nphase (+ @entity.phase 4))
+        )
+        (let (
+          (idx (math/mod (math/round (/ @nphase 12)) 9))
+        )
+        (let (
+          (my (+ @config.a0 (* @idx @config.d)))
+        )
+        (let (
+          (marker { x: @idx, y: @my, label: "term", color: "#dc2626", radius: 8 })
+        )
+        (do
+          (set @entity.phase @nphase)
+          (set @entity.points (array/append @config.points @marker))
+          (render-ui main {
+            type: math-canvas
+            width: @config.width
+            height: @config.height
+            curves: @entity.curves
+            points: @entity.points
+          })
+          (emit SEQUENCE_UPDATED { curves: @entity.curves, points: @entity.points })
+        )))))
+    }
+
+    emits {
+      SEQUENCE_UPDATED -> external {
+        curves : [MathCurve]
+        points : [MathPoint]
+      }
+        @description "The current sequence scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      a0 : number = -7
+        @label "First Term"
+        @description "The first term a₀ of the arithmetic sequence; the marker term is recomputed as a₀ + n·d."
+        @tier "domain"
+      d : number = 1.7
+        @label "Common Difference"
+        @description "The constant step d between consecutive terms; a straight line of dots makes it visible as slope."
+        @tier "domain"
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick sweeps the highlighted marker term-by-term along the sequence; toggle to start/pause."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      curves : [MathCurve] = [
+        { label: "seq", color: "#94a3b8", samples: [{ x: 0, y: -7 }, { x: 1, y: -5.3 }, { x: 2, y: -3.6 }, { x: 3, y: -1.9 }, { x: 4, y: -0.2 }, { x: 5, y: 1.5 }, { x: 6, y: 3.2 }, { x: 7, y: 4.9 }, { x: 8, y: 6.6 }] }
+      ]
+        @label "Curves"
+        @description "The connecting line through every term in data coordinates; its constant slope is the common difference d."
+        @tier "domain"
+      points : [MathPoint] = [
+        { x: 0, y: -7, label: "a0", color: "#2563eb", radius: 5 },
+        { x: 1, y: -5.3, label: "a1", color: "#2563eb", radius: 5 },
+        { x: 2, y: -3.6, label: "a2", color: "#2563eb", radius: 5 },
+        { x: 3, y: -1.9, label: "a3", color: "#2563eb", radius: 5 },
+        { x: 4, y: -0.2, label: "a4", color: "#2563eb", radius: 5 },
+        { x: 5, y: 1.5, label: "a5", color: "#2563eb", radius: 5 },
+        { x: 6, y: 3.2, label: "a6", color: "#2563eb", radius: 5 },
+        { x: 7, y: 4.9, label: "a7", color: "#2563eb", radius: 5 },
+        { x: 8, y: 6.6, label: "a8", color: "#2563eb", radius: 5 }
+      ]
+        @label "Points"
+        @description "The nine static term dots {x:n, y:a₀+n·d} in data coordinates; the sweeping marker highlights the current one."
+        @tier "domain"
+    }
+  }
+
+  page "/math-sequence" as MathSequenceEnginePage -> MathSequenceSim
+}

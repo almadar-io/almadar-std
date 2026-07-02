@@ -1,0 +1,300 @@
+[
+  {
+    "organism": "std-physics-incline",
+    "orbital": "InclineEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-physics-incline.ts",
+    "entities": [
+      {
+        "name": "InclineState",
+        "fields": [
+          {
+            "name": "bodies",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "InclineSim",
+        "emittedEvents": [
+          "BODIES_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BODIES_UPDATED",
+            "direction": "emit",
+            "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tick, frame, step, redraw",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "bodies",
+            "type": "[InclineBody]",
+            "default": [
+              {
+                "color": "#2563eb",
+                "fx": 0,
+                "fy": 0,
+                "id": "block",
+                "label": "",
+                "radius": 16,
+                "vx": 0,
+                "vy": 0,
+                "x": 170,
+                "y": 110
+              }
+            ],
+            "label": "Bodies",
+            "description": "Initial bodies; the block starts on the ramp near the top and slides down.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fx": {
+                  "name": "fx",
+                  "required": false,
+                  "type": "number"
+                },
+                "fy": {
+                  "name": "fy",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "damping",
+            "type": "number",
+            "default": 0.99,
+            "label": "Damping",
+            "description": "Fraction of velocity retained each tick (rolling/air resistance along the ramp).",
+            "tier": "domain"
+          },
+          {
+            "key": "gravity",
+            "type": "number",
+            "default": 0.5,
+            "label": "Gravity",
+            "description": "Downward acceleration added to the block's vy every tick before the ramp projection.",
+            "tier": "domain"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Simulation height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "rampX0",
+            "type": "number",
+            "default": 120,
+            "label": "Ramp Start X",
+            "description": "X coordinate of the ramp's high (top) end.",
+            "tier": "domain"
+          },
+          {
+            "key": "rampX1",
+            "type": "number",
+            "default": 520,
+            "label": "Ramp End X",
+            "description": "X coordinate of the ramp's low (bottom) end.",
+            "tier": "domain"
+          },
+          {
+            "key": "rampY0",
+            "type": "number",
+            "default": 90,
+            "label": "Ramp Start Y",
+            "description": "Y coordinate of the ramp's high (top) end.",
+            "tier": "domain"
+          },
+          {
+            "key": "rampY1",
+            "type": "number",
+            "default": 330,
+            "label": "Ramp End Y",
+            "description": "Y coordinate of the ramp's low (bottom) end.",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick integrates; toggle to start/pause the sim.",
+            "tier": "domain"
+          },
+          {
+            "key": "shapes",
+            "type": "[InclineShape]",
+            "default": [
+              {
+                "color": "#334155",
+                "lineWidth": 3,
+                "type": "line",
+                "x1": 120,
+                "x2": 520,
+                "y1": 90,
+                "y2": 330
+              }
+            ],
+            "label": "Shapes",
+            "description": "Static ramp line drawn by the physics-canvas between the incline's endpoints.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "lineWidth": {
+                  "name": "lineWidth",
+                  "required": false,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x1": {
+                  "name": "x1",
+                  "required": true,
+                  "type": "number"
+                },
+                "x2": {
+                  "name": "x2",
+                  "required": true,
+                  "type": "number"
+                },
+                "y1": {
+                  "name": "y1",
+                  "required": true,
+                  "type": "number"
+                },
+                "y2": {
+                  "name": "y2",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "showVelocity",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Velocity",
+            "description": "Draw each body's velocity vector as an arrow.",
+            "tier": "presentation"
+          },
+          {
+            "key": "velocityScale",
+            "type": "number",
+            "default": 6,
+            "label": "Velocity Scale",
+            "description": "Length multiplier for the velocity arrows.",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Simulation width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "bodies",
+            "running"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "InclineEnginePage",
+        "defaultPath": "/physics-incline",
+        "primaryEntity": "InclineState"
+      }
+    ],
+    "emittedEvents": [
+      "BODIES_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

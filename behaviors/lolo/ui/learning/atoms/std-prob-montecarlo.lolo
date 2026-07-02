@@ -1,0 +1,331 @@
+app std-prob-montecarlo "1.0.0"
+"Monte-Carlo π engine — ~250 points shimmer in a [-5,5] square; the red inside-circle fraction ≈ π/4 estimates π on math-canvas."
+orbital MonteCarloEngineOrbital {
+  type MCPoint = { x:number! y:number! label:string color:string radius:number }
+
+  entity MonteCarloState [runtime] {
+    id : string!
+    points : [MCPoint]
+    running : boolean = false
+  }
+
+  trait MonteCarloSim -> @rebindable MonteCarloState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.points @config.points)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: math-canvas
+          width: @config.width
+          height: @config.height
+          points: @entity.points
+        })
+        (emit POINTS_UPDATED { points: @entity.points })
+    }
+
+    ticks {
+      mcTick every 32ms
+        when @entity.running
+        (do
+          (set @entity.points (array/map @entity.points (fn p
+            (let (
+              (nx (- (* (math/random) 10) 5))
+              (ny (- (* (math/random) 10) 5))
+            )
+            (let (
+              (ncolor (if (< (+ (* @nx @nx) (* @ny @ny)) 25) "#dc2626" "#2563eb"))
+            )
+            (object/merge @p { x: @nx, y: @ny, color: @ncolor }))))))
+          (render-ui main {
+            type: math-canvas
+            width: @config.width
+            height: @config.height
+            points: @entity.points
+          })
+          (emit POINTS_UPDATED { points: @entity.points }))
+    }
+
+    emits {
+      POINTS_UPDATED -> external {
+        points : [MCPoint]
+      }
+        @description "The current point field each tick — a composed listener (π readout, histogram, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick re-scatters every point uniformly in the [-5,5] square and recolors it; toggle to start/pause."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      points : [MCPoint] = [
+        { x: 1.39, y: -4.75, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.25, y: -2.77, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.36, y: 1.77, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.92, y: -4.13, label: "", color: "#2563eb", radius: 2 },
+        { x: -0.78, y: -4.7, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.81, y: 0.05, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.73, y: -3.01, label: "", color: "#2563eb", radius: 2 },
+        { x: 1.5, y: 0.45, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.8, y: 0.89, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.09, y: -4.94, label: "", color: "#2563eb", radius: 2 },
+        { x: 3.06, y: 1.98, label: "", color: "#dc2626", radius: 2 },
+        { x: -1.6, y: -3.45, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.57, y: -1.63, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.07, y: -4.03, label: "", color: "#2563eb", radius: 2 },
+        { x: 3.47, y: 1.04, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.07, y: 2.3, label: "", color: "#dc2626", radius: 2 },
+        { x: 0.36, y: 4.73, label: "", color: "#dc2626", radius: 2 },
+        { x: -1.21, y: 0.52, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.29, y: 1.19, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.62, y: 0.77, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.05, y: -4.54, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.72, y: -2.11, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.2, y: -2.67, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.99, y: -2.22, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.36, y: -1.35, label: "", color: "#dc2626", radius: 2 },
+        { x: -1.3, y: -2.9, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.33, y: 4.37, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.48, y: 1.09, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.29, y: 2.29, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.37, y: -1.21, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.9, y: 1.4, label: "", color: "#2563eb", radius: 2 },
+        { x: 0.57, y: 1.85, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.43, y: 2.76, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.71, y: -4.68, label: "", color: "#2563eb", radius: 2 },
+        { x: -1.85, y: -2.32, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.89, y: 4.43, label: "", color: "#2563eb", radius: 2 },
+        { x: 3.76, y: -1.85, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.55, y: -1.04, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.15, y: -0.41, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.35, y: -2.53, label: "", color: "#dc2626", radius: 2 },
+        { x: 0.61, y: -2.37, label: "", color: "#dc2626", radius: 2 },
+        { x: 0.85, y: 3.98, label: "", color: "#dc2626", radius: 2 },
+        { x: -1.01, y: -2.81, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.98, y: 0.1, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.09, y: -4.53, label: "", color: "#2563eb", radius: 2 },
+        { x: -3.9, y: 1.27, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.92, y: -0.78, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.36, y: -1.18, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.96, y: 0.29, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.71, y: 3.61, label: "", color: "#2563eb", radius: 2 },
+        { x: -4.89, y: 2.21, label: "", color: "#2563eb", radius: 2 },
+        { x: 1.82, y: 0.37, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.33, y: 1.41, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.88, y: -0.65, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.46, y: 4.54, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.76, y: -2.37, label: "", color: "#dc2626", radius: 2 },
+        { x: 0.01, y: -3.21, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.13, y: 3.71, label: "", color: "#2563eb", radius: 2 },
+        { x: -2.02, y: 1.39, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.09, y: -3.47, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.63, y: 0.39, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.79, y: 0.3, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.99, y: -1.76, label: "", color: "#2563eb", radius: 2 },
+        { x: -4.81, y: 4.29, label: "", color: "#2563eb", radius: 2 },
+        { x: 3.79, y: 3.32, label: "", color: "#2563eb", radius: 2 },
+        { x: -1.92, y: -4.42, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.78, y: 4.47, label: "", color: "#2563eb", radius: 2 },
+        { x: -4.14, y: -0.14, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.31, y: 2.61, label: "", color: "#2563eb", radius: 2 },
+        { x: 2.66, y: -3.72, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.25, y: 0.5, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.35, y: 3.72, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.77, y: -2.88, label: "", color: "#dc2626", radius: 2 },
+        { x: 0.39, y: 2.3, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.99, y: -1.88, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.95, y: 1.5, label: "", color: "#2563eb", radius: 2 },
+        { x: -0.62, y: 0.18, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.79, y: -2.75, label: "", color: "#dc2626", radius: 2 },
+        { x: -1.62, y: 0.88, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.7, y: -2.8, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.29, y: 1.31, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.71, y: 4.05, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.6, y: -4.29, label: "", color: "#2563eb", radius: 2 },
+        { x: -2.62, y: 1.69, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.86, y: -3.68, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.36, y: 0.71, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.27, y: 2.85, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.07, y: -3.1, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.03, y: -0.69, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.76, y: -0.33, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.29, y: 1.73, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.84, y: -4.02, label: "", color: "#2563eb", radius: 2 },
+        { x: -0.97, y: -1.61, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.62, y: -2.51, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.1, y: -0.51, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.78, y: -2.21, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.5, y: 4.23, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.57, y: 3.61, label: "", color: "#dc2626", radius: 2 },
+        { x: 0.5, y: -4.49, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.99, y: 3.36, label: "", color: "#2563eb", radius: 2 },
+        { x: 4.69, y: 4.26, label: "", color: "#2563eb", radius: 2 },
+        { x: 3.49, y: -3.34, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.14, y: -2.86, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.99, y: -4.41, label: "", color: "#dc2626", radius: 2 },
+        { x: -1.21, y: 4.85, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.35, y: 2.84, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.45, y: -0.77, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.57, y: 4.95, label: "", color: "#2563eb", radius: 2 },
+        { x: 0.56, y: 2.18, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.45, y: -2.03, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.69, y: 0.79, label: "", color: "#dc2626", radius: 2 },
+        { x: 0.42, y: 2.48, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.43, y: 0.84, label: "", color: "#dc2626", radius: 2 },
+        { x: 0.03, y: 3.53, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.43, y: 4.61, label: "", color: "#2563eb", radius: 2 },
+        { x: -4.2, y: -3.14, label: "", color: "#2563eb", radius: 2 },
+        { x: 0.95, y: 1.75, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.65, y: -3.8, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.9, y: -2.54, label: "", color: "#dc2626", radius: 2 },
+        { x: 0.95, y: 1.19, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.81, y: 0.84, label: "", color: "#dc2626", radius: 2 },
+        { x: 0.23, y: 4.35, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.96, y: 2.16, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.61, y: -1.04, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.72, y: -2.0, label: "", color: "#dc2626", radius: 2 },
+        { x: -1.84, y: 2.52, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.27, y: -0.42, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.98, y: 4.96, label: "", color: "#2563eb", radius: 2 },
+        { x: -4.27, y: -2.87, label: "", color: "#2563eb", radius: 2 },
+        { x: -2.35, y: 4.33, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.81, y: 3.79, label: "", color: "#2563eb", radius: 2 },
+        { x: -1.3, y: -3.42, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.34, y: 2.04, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.12, y: 4.87, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.54, y: -4.92, label: "", color: "#2563eb", radius: 2 },
+        { x: 3.17, y: -2.01, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.63, y: 4.39, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.66, y: -3.85, label: "", color: "#2563eb", radius: 2 },
+        { x: -3.93, y: 0.53, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.28, y: 1.05, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.18, y: -2.96, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.34, y: -2.36, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.11, y: 4.05, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.46, y: -4.08, label: "", color: "#2563eb", radius: 2 },
+        { x: -0.76, y: -2.23, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.96, y: 2.71, label: "", color: "#2563eb", radius: 2 },
+        { x: 1.37, y: -2.38, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.41, y: 0.52, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.72, y: -4.9, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.25, y: 3.83, label: "", color: "#2563eb", radius: 2 },
+        { x: 4.04, y: 0.46, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.35, y: 0.83, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.52, y: -3.73, label: "", color: "#2563eb", radius: 2 },
+        { x: -1.92, y: 3.99, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.96, y: 3.61, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.99, y: -2.9, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.5, y: -3.97, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.8, y: 3.84, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.94, y: 1.21, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.45, y: 4.3, label: "", color: "#2563eb", radius: 2 },
+        { x: 3.65, y: 4.76, label: "", color: "#2563eb", radius: 2 },
+        { x: 3.11, y: 3.81, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.75, y: 2.37, label: "", color: "#2563eb", radius: 2 },
+        { x: -1.68, y: 4.31, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.02, y: 3.64, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.11, y: -2.33, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.87, y: -3.92, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.72, y: 3.59, label: "", color: "#2563eb", radius: 2 },
+        { x: -2.78, y: 3.17, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.4, y: -1.95, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.95, y: -2.72, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.76, y: -3.07, label: "", color: "#2563eb", radius: 2 },
+        { x: -1.72, y: 3.64, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.67, y: -2.21, label: "", color: "#2563eb", radius: 2 },
+        { x: 1.41, y: -1.0, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.81, y: 0.36, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.39, y: -3.85, label: "", color: "#2563eb", radius: 2 },
+        { x: 4.7, y: -3.21, label: "", color: "#2563eb", radius: 2 },
+        { x: 4.63, y: -2.35, label: "", color: "#2563eb", radius: 2 },
+        { x: -3.92, y: -0.65, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.29, y: -1.86, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.06, y: 0.11, label: "", color: "#dc2626", radius: 2 },
+        { x: -1.15, y: 0.77, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.45, y: 2.09, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.98, y: 4.26, label: "", color: "#2563eb", radius: 2 },
+        { x: 0.38, y: 2.19, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.42, y: 1.71, label: "", color: "#dc2626", radius: 2 },
+        { x: -1.36, y: -4.3, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.64, y: -1.7, label: "", color: "#dc2626", radius: 2 },
+        { x: -1.86, y: 3.48, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.2, y: -2.0, label: "", color: "#dc2626", radius: 2 },
+        { x: -1.91, y: -0.92, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.98, y: -2.04, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.73, y: -0.8, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.4, y: 1.77, label: "", color: "#dc2626", radius: 2 },
+        { x: 4.03, y: 1.16, label: "", color: "#dc2626", radius: 2 },
+        { x: -1.99, y: 0.48, label: "", color: "#dc2626", radius: 2 },
+        { x: -5.0, y: -2.13, label: "", color: "#2563eb", radius: 2 },
+        { x: -0.7, y: 0.8, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.55, y: -0.35, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.58, y: -2.86, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.27, y: 4.01, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.96, y: -3.3, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.15, y: 0.15, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.33, y: -1.65, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.18, y: 2.51, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.73, y: -2.75, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.01, y: -4.76, label: "", color: "#2563eb", radius: 2 },
+        { x: -2.55, y: -0.25, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.5, y: -4.27, label: "", color: "#2563eb", radius: 2 },
+        { x: -0.86, y: 1.3, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.06, y: 1.96, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.06, y: -2.56, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.56, y: -4.94, label: "", color: "#2563eb", radius: 2 },
+        { x: 2.51, y: 2.7, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.93, y: -0.75, label: "", color: "#dc2626", radius: 2 },
+        { x: -3.24, y: 4.58, label: "", color: "#2563eb", radius: 2 },
+        { x: 0.18, y: -4.5, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.51, y: 3.48, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.44, y: 3.01, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.68, y: 4.88, label: "", color: "#2563eb", radius: 2 },
+        { x: 0.95, y: 4.5, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.91, y: 1.13, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.19, y: 0.05, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.31, y: 0.48, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.97, y: 2.44, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.25, y: -2.41, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.53, y: 1.38, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.66, y: 0.21, label: "", color: "#dc2626", radius: 2 },
+        { x: 1.27, y: -2.25, label: "", color: "#dc2626", radius: 2 },
+        { x: -4.23, y: -2.14, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.28, y: -1.8, label: "", color: "#dc2626", radius: 2 },
+        { x: 0.4, y: -3.62, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.69, y: 1.94, label: "", color: "#dc2626", radius: 2 },
+        { x: 2.06, y: -4.36, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.92, y: 0.43, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.84, y: -2.93, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.8, y: 4.05, label: "", color: "#dc2626", radius: 2 },
+        { x: 0.84, y: 1.96, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.57, y: 2.66, label: "", color: "#dc2626", radius: 2 },
+        { x: -1.2, y: -4.94, label: "", color: "#2563eb", radius: 2 },
+        { x: -1.48, y: 2.53, label: "", color: "#dc2626", radius: 2 },
+        { x: 3.53, y: 4.53, label: "", color: "#2563eb", radius: 2 },
+        { x: -0.81, y: 2.48, label: "", color: "#dc2626", radius: 2 },
+        { x: 0.46, y: 1.03, label: "", color: "#dc2626", radius: 2 },
+        { x: -2.79, y: -2.81, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.64, y: -4.71, label: "", color: "#dc2626", radius: 2 },
+        { x: -1.64, y: 1.79, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.96, y: -3.35, label: "", color: "#dc2626", radius: 2 },
+        { x: -0.33, y: -3.72, label: "", color: "#dc2626", radius: 2 }
+      ]
+        @label "Points"
+        @description "~250 samples uniform in the [-5,5] square; red points fall inside the inscribed radius-5 circle, blue outside — the red fraction ≈ π/4."
+        @tier "domain"
+    }
+  }
+
+  page "/prob-montecarlo" as MonteCarloEnginePage -> MonteCarloSim
+}

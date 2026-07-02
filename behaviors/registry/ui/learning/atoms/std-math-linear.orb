@@ -1,0 +1,673 @@
+{
+  "description": "Linear-systems engine — line A's slope animates on a Cartesian plot; the two lines' intersection point slides with it.",
+  "name": "std-math-linear",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "phase",
+            "type": "number"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "samples": {
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "samples",
+                  "required": false,
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "name": "curves",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "points",
+            "type": "array"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "MathLinearState",
+        "persistence": "runtime"
+      },
+      "name": "MathLinearEngineOrbital",
+      "pages": [
+        {
+          "name": "MathLinearEnginePage",
+          "path": "/math-linear",
+          "traits": [
+            {
+              "ref": "MathLinearSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "curves": {
+              "default": [
+                {
+                  "color": "#2563eb",
+                  "label": "A",
+                  "samples": [
+                    {
+                      "x": -9.0,
+                      "y": -5.0
+                    },
+                    {
+                      "x": 9.0,
+                      "y": 4.0
+                    }
+                  ]
+                },
+                {
+                  "color": "#16a34a",
+                  "label": "B",
+                  "samples": [
+                    {
+                      "x": -9.0,
+                      "y": 9.2
+                    },
+                    {
+                      "x": 9.0,
+                      "y": -1.6
+                    }
+                  ]
+                }
+              ],
+              "description": "Initial pair of lines in data coordinates: A through (-3,-2), B through (3,2).",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "samples": {
+                    "items": {
+                      "properties": {
+                        "x": {
+                          "name": "x",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "y": {
+                          "name": "y",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "samples",
+                    "required": false,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Curves",
+              "tier": "domain",
+              "type": "[MathCurve]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "mB": {
+              "default": -0.6,
+              "description": "Fixed slope of line B through data point (3,2); line A's slope animates and the intersection tracks it.",
+              "label": "Line B Slope",
+              "tier": "domain",
+              "type": "number"
+            },
+            "points": {
+              "default": [
+                {
+                  "color": "#dc2626",
+                  "label": "solution",
+                  "radius": 6.0,
+                  "x": 3.9,
+                  "y": 1.45
+                }
+              ],
+              "description": "Initial intersection point of the two lines in data coordinates.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Points",
+              "tier": "domain",
+              "type": "[MathPoint]"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick animates line A's slope and recomputes the intersection; toggle to start/pause.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "SYSTEM_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "curves",
+                  "type": "[MathCurve]"
+                },
+                {
+                  "name": "points",
+                  "type": "[MathPoint]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "curves",
+              "phase",
+              "points",
+              "running"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "MathLinearState",
+          "name": "MathLinearSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+                "key": "SYSTEM_UPDATED",
+                "name": "System Updated",
+                "payloadSchema": [
+                  {
+                    "name": "curves",
+                    "type": "[MathCurve]"
+                  },
+                  {
+                    "name": "points",
+                    "type": "[MathPoint]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.phase",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.curves",
+                    "@config.curves"
+                  ],
+                  [
+                    "set",
+                    "@entity.points",
+                    "@config.points"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "curves": "@entity.curves",
+                      "height": "@config.height",
+                      "points": "@entity.points",
+                      "type": "math-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "SYSTEM_UPDATED",
+                    {
+                      "curves": "@entity.curves",
+                      "points": "@entity.points"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "let",
+                  [
+                    [
+                      "nphase",
+                      [
+                        "+",
+                        "@entity.phase",
+                        3.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "tw",
+                        [
+                          "-",
+                          [
+                            "/",
+                            [
+                              "math/abs",
+                              [
+                                "-",
+                                [
+                                  "math/mod",
+                                  "@nphase",
+                                  240.0
+                                ],
+                                120.0
+                              ]
+                            ],
+                            120.0
+                          ],
+                          0.5
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "mA",
+                          [
+                            "*",
+                            "@tw",
+                            1.2
+                          ]
+                        ],
+                        [
+                          "mB",
+                          "@config.mB"
+                        ]
+                      ],
+                      [
+                        "let",
+                        [
+                          [
+                            "denom",
+                            [
+                              "if",
+                              [
+                                "<",
+                                [
+                                  "math/abs",
+                                  [
+                                    "-",
+                                    "@mA",
+                                    "@mB"
+                                  ]
+                                ],
+                                0.05
+                              ],
+                              0.05,
+                              [
+                                "-",
+                                "@mA",
+                                "@mB"
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "aInt",
+                              [
+                                "+",
+                                -2.0,
+                                [
+                                  "*",
+                                  3.0,
+                                  "@mA"
+                                ]
+                              ]
+                            ],
+                            [
+                              "bInt",
+                              [
+                                "-",
+                                2.0,
+                                [
+                                  "*",
+                                  3.0,
+                                  "@mB"
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "xstar",
+                                [
+                                  "/",
+                                  [
+                                    "-",
+                                    "@bInt",
+                                    "@aInt"
+                                  ],
+                                  "@denom"
+                                ]
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "ystar",
+                                  [
+                                    "+",
+                                    -2.0,
+                                    [
+                                      "*",
+                                      "@mA",
+                                      [
+                                        "+",
+                                        "@xstar",
+                                        3.0
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "lineA",
+                                    {
+                                      "color": "#2563eb",
+                                      "label": "A",
+                                      "samples": [
+                                        {
+                                          "x": -9.0,
+                                          "y": [
+                                            "+",
+                                            -2.0,
+                                            [
+                                              "*",
+                                              "@mA",
+                                              -6.0
+                                            ]
+                                          ]
+                                        },
+                                        {
+                                          "x": 9.0,
+                                          "y": [
+                                            "+",
+                                            -2.0,
+                                            [
+                                              "*",
+                                              "@mA",
+                                              12.0
+                                            ]
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                ],
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "lineB",
+                                      {
+                                        "color": "#16a34a",
+                                        "label": "B",
+                                        "samples": [
+                                          {
+                                            "x": -9.0,
+                                            "y": [
+                                              "+",
+                                              2.0,
+                                              [
+                                                "*",
+                                                "@mB",
+                                                -12.0
+                                              ]
+                                            ]
+                                          },
+                                          {
+                                            "x": 9.0,
+                                            "y": [
+                                              "+",
+                                              2.0,
+                                              [
+                                                "*",
+                                                "@mB",
+                                                6.0
+                                              ]
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  ],
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "solutionPoint",
+                                        {
+                                          "color": "#dc2626",
+                                          "label": "solution",
+                                          "radius": 6.0,
+                                          "x": "@xstar",
+                                          "y": "@ystar"
+                                        }
+                                      ]
+                                    ],
+                                    [
+                                      "do",
+                                      [
+                                        "set",
+                                        "@entity.phase",
+                                        "@nphase"
+                                      ],
+                                      [
+                                        "set",
+                                        "@entity.curves",
+                                        [
+                                          "@lineA",
+                                          "@lineB"
+                                        ]
+                                      ],
+                                      [
+                                        "set",
+                                        "@entity.points",
+                                        [
+                                          "@solutionPoint"
+                                        ]
+                                      ],
+                                      [
+                                        "render-ui",
+                                        "main",
+                                        {
+                                          "curves": "@entity.curves",
+                                          "height": "@config.height",
+                                          "points": "@entity.points",
+                                          "type": "math-canvas",
+                                          "width": "@config.width"
+                                        }
+                                      ],
+                                      [
+                                        "emit",
+                                        "SYSTEM_UPDATED",
+                                        {
+                                          "curves": "@entity.curves",
+                                          "points": "@entity.points"
+                                        }
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              "guard": "@entity.running",
+              "interval": 32.0,
+              "name": "linearTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

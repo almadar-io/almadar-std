@@ -1,0 +1,94 @@
+app learning-probability "1.0.0"
+"Probability learning app — a fat organism whose orbitals are individual probability topics, each composed via `uses` from a per-topic engine atom on the physics/math canvas."
+orbital GaltonBoardOrbital {
+  uses ProbGalton from "std/behaviors/std-prob-galton"
+
+  type GaltonBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    vx : number
+    vy : number
+    fx : number
+    fy : number
+  }
+
+  entity GaltonScene [runtime] {
+    id : string!
+    bodies : [GaltonBody]
+    running : boolean = false
+  }
+
+  trait GaltonEngine = ProbGalton.traits.GaltonSim -> GaltonScene {
+    config {
+      gravity: 0.5
+      jitter: 5
+      floor: 380
+      running: true
+      width: 600
+      height: 400
+    }
+  }
+
+  page "/prob/galton" as GaltonBoardPage -> GaltonEngine
+}
+
+orbital RandomWalkOrbital {
+  uses ProbWalk from "std/behaviors/std-prob-walk"
+
+  type WalkPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity WalkScene [runtime] {
+    id : string!
+    points : [WalkPoint]
+    running : boolean = false
+  }
+
+  trait WalkEngine = ProbWalk.traits.WalkSim -> WalkScene {
+    config {
+      step: 0.35
+      running: true
+      width: 600
+      height: 400
+    }
+  }
+
+  page "/prob/walk" as RandomWalkPage -> WalkEngine
+}
+
+orbital MonteCarloOrbital {
+  uses MonteCarlo from "std/behaviors/std-prob-montecarlo"
+
+  type MCPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+
+  entity MonteCarloScene [runtime] {
+    id : string!
+    points : [MCPoint]
+    running : boolean = false
+  }
+
+  trait MonteCarloEngine = MonteCarlo.traits.MonteCarloSim -> MonteCarloScene {
+    config {
+      running: true
+      width: 600
+      height: 400
+    }
+  }
+
+  page "/prob/montecarlo" as MonteCarloPage -> MonteCarloEngine
+}

@@ -1,0 +1,177 @@
+app std-physics-incline "1.0.0"
+"Inclined-plane engine — slides a block down a frictional ramp under gravity via line-projection every tick and renders a physics-canvas; composed by a learning orbital via `uses`, controls auto-derived from @config."
+orbital InclineEngineOrbital {
+  type InclineBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    vx : number
+    vy : number
+    fx : number
+    fy : number
+  }
+
+  type InclineShape = {
+    type : string!
+    x1 : number!
+    y1 : number!
+    x2 : number!
+    y2 : number!
+    color : string
+    lineWidth : number
+  }
+
+  entity InclineState [runtime] {
+    id : string!
+    bodies : [InclineBody]
+    running : boolean = false
+  }
+
+  trait InclineSim -> @rebindable InclineState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.bodies @config.bodies)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: physics-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          bodies: @entity.bodies
+          shapes: @config.shapes
+          showVelocity: @config.showVelocity
+          showForces: false
+          velocityScale: @config.velocityScale
+        })
+        (emit BODIES_UPDATED { bodies: @entity.bodies })
+    }
+
+    ticks {
+      inclineTick every 32ms
+        when @entity.running
+        (set @entity.bodies (array/map @entity.bodies (fn b
+          (let (
+            (dirx (- @config.rampX1 @config.rampX0))
+            (diry (- @config.rampY1 @config.rampY0))
+          )
+          (let (
+            (L2 (+ (* @dirx @dirx) (* @diry @diry)))
+          )
+          (let (
+            (nvy (* (+ (object/get @b vy) @config.gravity) @config.damping))
+            (nvx (* (object/get @b vx) @config.damping))
+          )
+          (let (
+            (px (+ (object/get @b x) @nvx))
+            (py (+ (object/get @b y) @nvy))
+          )
+          (let (
+            (t (/ (+ (* (- @px @config.rampX0) @dirx) (* (- @py @config.rampY0) @diry)) @L2))
+          )
+          (let (
+            (tc (math/clamp @t 0 1))
+          )
+          (let (
+            (cx (+ @config.rampX0 (* @tc @dirx)))
+            (cy (+ @config.rampY0 (* @tc @diry)))
+          )
+          (object/merge @b {
+            x: @cx,
+            y: @cy,
+            vx: (- @cx (object/get @b x)),
+            vy: (- @cy (object/get @b y))
+          })))))))))))
+        (render-ui main {
+          type: physics-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          bodies: @entity.bodies
+          shapes: @config.shapes
+          showVelocity: @config.showVelocity
+          showForces: false
+          velocityScale: @config.velocityScale
+        })
+        (emit BODIES_UPDATED { bodies: @entity.bodies })
+    }
+
+    emits {
+      BODIES_UPDATED -> external {
+        bodies : [InclineBody]
+      }
+        @description "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      gravity : number = 0.5
+        @label "Gravity"
+        @description "Downward acceleration added to the block's vy every tick before the ramp projection."
+        @tier "domain"
+      damping : number = 0.99
+        @label "Damping"
+        @description "Fraction of velocity retained each tick (rolling/air resistance along the ramp)."
+        @tier "domain"
+      rampX0 : number = 120
+        @label "Ramp Start X"
+        @description "X coordinate of the ramp's high (top) end."
+        @tier "domain"
+      rampY0 : number = 90
+        @label "Ramp Start Y"
+        @description "Y coordinate of the ramp's high (top) end."
+        @tier "domain"
+      rampX1 : number = 520
+        @label "Ramp End X"
+        @description "X coordinate of the ramp's low (bottom) end."
+        @tier "domain"
+      rampY1 : number = 330
+        @label "Ramp End Y"
+        @description "Y coordinate of the ramp's low (bottom) end."
+        @tier "domain"
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick integrates; toggle to start/pause the sim."
+        @tier "domain"
+      shapes : [InclineShape] = [
+        { type: "line", x1: 120, y1: 90, x2: 520, y2: 330, color: "#334155", lineWidth: 3 }
+      ]
+        @label "Shapes"
+        @description "Static ramp line drawn by the physics-canvas between the incline's endpoints."
+        @tier "domain"
+      bodies : [InclineBody] = [
+        { id: "block", x: 170, y: 110, radius: 16, color: "#2563eb", label: "", vx: 0, vy: 0, fx: 0, fy: 0 }
+      ]
+        @label "Bodies"
+        @description "Initial bodies; the block starts on the ramp near the top and slides down."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Simulation width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Simulation height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      showVelocity : boolean = true
+        @label "Show Velocity"
+        @description "Draw each body's velocity vector as an arrow."
+        @tier "presentation"
+      velocityScale : number = 6
+        @label "Velocity Scale"
+        @description "Length multiplier for the velocity arrows."
+        @tier "presentation"
+    }
+  }
+
+  page "/physics-incline" as InclineEnginePage -> InclineSim
+}

@@ -1,0 +1,168 @@
+[
+  {
+    "organism": "std-math-vectors",
+    "orbital": "MathVectorsEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-math-vectors.ts",
+    "entities": [
+      {
+        "name": "MathVectorsState",
+        "fields": [
+          {
+            "name": "phase",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "vectors",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "MathVectorsSim",
+        "emittedEvents": [
+          "VECTORS_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "VECTORS_UPDATED",
+            "direction": "emit",
+            "description": "The current vector scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tick, frame, step, redraw",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick animates B's oscillation and updates the resultant; toggle to start/pause.",
+            "tier": "domain"
+          },
+          {
+            "key": "vectors",
+            "type": "[MathVector]",
+            "default": [
+              {
+                "color": "#2563eb",
+                "label": "A",
+                "vx": 4,
+                "vy": 3,
+                "x": 0,
+                "y": 0
+              },
+              {
+                "color": "#16a34a",
+                "label": "B",
+                "vx": 3,
+                "vy": 2,
+                "x": 4,
+                "y": 3
+              },
+              {
+                "color": "#dc2626",
+                "label": "A+B",
+                "vx": 7,
+                "vy": 5,
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "label": "Vectors",
+            "description": "Initial vector scene in data coordinates; A is fixed, B oscillates, A+B is the tip-to-tail resultant.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": true,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "phase",
+            "running",
+            "vectors"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MathVectorsEnginePage",
+        "defaultPath": "/math-vectors",
+        "primaryEntity": "MathVectorsState"
+      }
+    ],
+    "emittedEvents": [
+      "VECTORS_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

@@ -97,6 +97,8 @@ export interface StdUiCanvas2dConfig {
   /** Default: `{"x":1,"y":1}` */
   hoveredTile?: EntityRow;
   /** Default: `false` */
+  interpolateUnits?: boolean;
+  /** Default: `false` */
   isLoading?: boolean;
   /** Default: `{"item":"Item"}` */
   keyMap?: Record<string, TraitConfig>;

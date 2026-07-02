@@ -41,8 +41,8 @@ export interface StdLearningPhysicsConfig {
   height?: unknown;
   /** Default: `0.78` */
   restitution?: unknown;
-  /** Default: `"Projectile Motion"` */
-  title?: unknown;
+  /** Default: `true` */
+  running?: unknown;
   /** Default: `600` */
   width?: unknown;
 }
@@ -226,8 +226,8 @@ export function stdLearningPhysicsProjectileMotionOrbital(params: StdLearningPhy
             'default': 0.78,
             'type': 'unknown',
           },
-          'title': {
-            'default': 'Projectile Motion',
+          'running': {
+            'default': true,
             'type': 'unknown',
           },
           'width': {
@@ -325,16 +325,3842 @@ export function isStdLearningPhysicsProjectileMotionOrbitalParams(p: object): p 
 }
 
 /**
+ * Tunable params for the FreeFallMotionOrbital orbital.
+ *
+ * Canonical entity: FreeFallScene — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdLearningPhysicsFreeFallMotionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'FreeFallEngine',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the FreeFallMotionOrbital orbital with consumer params. */
+export function stdLearningPhysicsFreeFallMotionOrbital(params: StdLearningPhysicsFreeFallMotionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'FreeFallScene';
+  const built = makeOrbitalWithUses({
+    name: 'FreeFallMotionOrbital',
+    uses: [
+      {
+        'as': 'FreeFall',
+        'from': 'std/behaviors/std-physics-freefall',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fx': {
+                  'name': 'fx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'fy': {
+                  'name': 'fy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'radius': {
+                  'name': 'radius',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'bodies',
+            'type': 'array',
+          },
+          {
+            'default': false,
+            'name': 'running',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'bodies': {
+            'default': [
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ball-a',
+                'label': 'A',
+                'radius': 16,
+                'vx': 0,
+                'vy': 0,
+                'x': 100,
+                'y': 40,
+              },
+              {
+                'color': '#16a34a',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ball-b',
+                'label': 'B',
+                'radius': 13,
+                'vx': 0,
+                'vy': 0,
+                'x': 300,
+                'y': 70,
+              },
+              {
+                'color': '#dc2626',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ball-c',
+                'label': 'C',
+                'radius': 10,
+                'vx': 0,
+                'vy': 0,
+                'x': 480,
+                'y': 100,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'damping': {
+            'default': 0.995,
+            'type': 'unknown',
+          },
+          'gravity': {
+            'default': 0.5,
+            'type': 'unknown',
+          },
+          'height': {
+            'default': 400,
+            'type': 'unknown',
+          },
+          'restitution': {
+            'default': 0.8,
+            'type': 'unknown',
+          },
+          'running': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'width': {
+            'default': 600,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'FreeFallEngine',
+        'ref': 'FreeFall.traits.FreeFallSim',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'FreeFallMotionPage',
+        'path': '/physics/freefall',
+        'traits': [
+          {
+            'ref': 'FreeFallEngine',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdLearningPhysicsFreeFallMotionOrbital. */
+export const StdLearningPhysicsFreeFallMotionOrbitalManifest = {
+  organism: 'learning-physics',
+  orbitalName: 'FreeFallMotionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'FreeFallEngine',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdLearningPhysicsFreeFallMotionOrbitalParams keys. */
+export function isStdLearningPhysicsFreeFallMotionOrbitalParams(p: object): p is StdLearningPhysicsFreeFallMotionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdLearningPhysicsFreeFallMotionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdLearningPhysicsFreeFallMotionOrbitalManifest.traitNames,
+      ...StdLearningPhysicsFreeFallMotionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the SpringMotionOrbital orbital.
+ *
+ * Canonical entity: SpringScene — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdLearningPhysicsSpringMotionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'SpringEngine',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the SpringMotionOrbital orbital with consumer params. */
+export function stdLearningPhysicsSpringMotionOrbital(params: StdLearningPhysicsSpringMotionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'SpringScene';
+  const built = makeOrbitalWithUses({
+    name: 'SpringMotionOrbital',
+    uses: [
+      {
+        'as': 'Spring',
+        'from': 'std/behaviors/std-physics-spring',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fx': {
+                  'name': 'fx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'fy': {
+                  'name': 'fy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'radius': {
+                  'name': 'radius',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'bodies',
+            'type': 'array',
+          },
+          {
+            'default': false,
+            'name': 'running',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'anchorX': {
+            'default': 300,
+            'type': 'unknown',
+          },
+          'bodies': {
+            'default': [
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ball-a',
+                'label': 'A',
+                'radius': 14,
+                'vx': 0,
+                'vy': 0,
+                'x': 120,
+                'y': 200,
+              },
+              {
+                'color': '#16a34a',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ball-b',
+                'label': 'B',
+                'radius': 14,
+                'vx': 0,
+                'vy': 0,
+                'x': 300,
+                'y': 200,
+              },
+              {
+                'color': '#dc2626',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ball-c',
+                'label': 'C',
+                'radius': 14,
+                'vx': 0,
+                'vy': 0,
+                'x': 480,
+                'y': 200,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'damping': {
+            'default': 0.99,
+            'type': 'unknown',
+          },
+          'height': {
+            'default': 400,
+            'type': 'unknown',
+          },
+          'running': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'springK': {
+            'default': 0.02,
+            'type': 'unknown',
+          },
+          'width': {
+            'default': 600,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'SpringEngine',
+        'ref': 'Spring.traits.SpringSim',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'SpringMotionPage',
+        'path': '/physics/spring',
+        'traits': [
+          {
+            'ref': 'SpringEngine',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdLearningPhysicsSpringMotionOrbital. */
+export const StdLearningPhysicsSpringMotionOrbitalManifest = {
+  organism: 'learning-physics',
+  orbitalName: 'SpringMotionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'SpringEngine',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdLearningPhysicsSpringMotionOrbitalParams keys. */
+export function isStdLearningPhysicsSpringMotionOrbitalParams(p: object): p is StdLearningPhysicsSpringMotionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdLearningPhysicsSpringMotionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdLearningPhysicsSpringMotionOrbitalManifest.traitNames,
+      ...StdLearningPhysicsSpringMotionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the FrictionMotionOrbital orbital.
+ *
+ * Canonical entity: FrictionScene — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdLearningPhysicsFrictionMotionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'FrictionEngine',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the FrictionMotionOrbital orbital with consumer params. */
+export function stdLearningPhysicsFrictionMotionOrbital(params: StdLearningPhysicsFrictionMotionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'FrictionScene';
+  const built = makeOrbitalWithUses({
+    name: 'FrictionMotionOrbital',
+    uses: [
+      {
+        'as': 'Friction',
+        'from': 'std/behaviors/std-physics-friction',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fx': {
+                  'name': 'fx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'fy': {
+                  'name': 'fy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'radius': {
+                  'name': 'radius',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'bodies',
+            'type': 'array',
+          },
+          {
+            'default': false,
+            'name': 'running',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'bodies': {
+            'default': [
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ball-a',
+                'label': 'A',
+                'radius': 14,
+                'vx': 6,
+                'vy': 0,
+                'x': 60,
+                'y': 386,
+              },
+              {
+                'color': '#16a34a',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ball-b',
+                'label': 'B',
+                'radius': 14,
+                'vx': 9,
+                'vy': 0,
+                'x': 85,
+                'y': 386,
+              },
+              {
+                'color': '#dc2626',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ball-c',
+                'label': 'C',
+                'radius': 14,
+                'vx': 13,
+                'vy': 0,
+                'x': 110,
+                'y': 386,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'friction': {
+            'default': 0.12,
+            'type': 'unknown',
+          },
+          'height': {
+            'default': 400,
+            'type': 'unknown',
+          },
+          'running': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'width': {
+            'default': 600,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'FrictionEngine',
+        'ref': 'Friction.traits.FrictionSim',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'FrictionMotionPage',
+        'path': '/physics/friction',
+        'traits': [
+          {
+            'ref': 'FrictionEngine',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdLearningPhysicsFrictionMotionOrbital. */
+export const StdLearningPhysicsFrictionMotionOrbitalManifest = {
+  organism: 'learning-physics',
+  orbitalName: 'FrictionMotionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'FrictionEngine',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdLearningPhysicsFrictionMotionOrbitalParams keys. */
+export function isStdLearningPhysicsFrictionMotionOrbitalParams(p: object): p is StdLearningPhysicsFrictionMotionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdLearningPhysicsFrictionMotionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdLearningPhysicsFrictionMotionOrbitalManifest.traitNames,
+      ...StdLearningPhysicsFrictionMotionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the CircularMotionOrbital orbital.
+ *
+ * Canonical entity: CircularScene — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdLearningPhysicsCircularMotionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'CircularEngine',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the CircularMotionOrbital orbital with consumer params. */
+export function stdLearningPhysicsCircularMotionOrbital(params: StdLearningPhysicsCircularMotionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'CircularScene';
+  const built = makeOrbitalWithUses({
+    name: 'CircularMotionOrbital',
+    uses: [
+      {
+        'as': 'Circular',
+        'from': 'std/behaviors/std-physics-circular',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fx': {
+                  'name': 'fx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'fy': {
+                  'name': 'fy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'radius': {
+                  'name': 'radius',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'bodies',
+            'type': 'array',
+          },
+          {
+            'default': false,
+            'name': 'running',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'bodies': {
+            'default': [
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'orbit-a',
+                'label': 'A',
+                'radius': 14,
+                'vx': 3.9,
+                'vy': 0,
+                'x': 300,
+                'y': 70,
+              },
+              {
+                'color': '#dc2626',
+                'fx': 0,
+                'fy': 0,
+                'id': 'orbit-b',
+                'label': 'B',
+                'radius': 10,
+                'vx': 0,
+                'vy': 5.1,
+                'x': 470,
+                'y': 200,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'centerK': {
+            'default': 0.0009,
+            'type': 'unknown',
+          },
+          'centerX': {
+            'default': 300,
+            'type': 'unknown',
+          },
+          'centerY': {
+            'default': 200,
+            'type': 'unknown',
+          },
+          'height': {
+            'default': 400,
+            'type': 'unknown',
+          },
+          'running': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'width': {
+            'default': 600,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'CircularEngine',
+        'ref': 'Circular.traits.CircularSim',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'CircularMotionPage',
+        'path': '/physics/circular',
+        'traits': [
+          {
+            'ref': 'CircularEngine',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdLearningPhysicsCircularMotionOrbital. */
+export const StdLearningPhysicsCircularMotionOrbitalManifest = {
+  organism: 'learning-physics',
+  orbitalName: 'CircularMotionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'CircularEngine',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdLearningPhysicsCircularMotionOrbitalParams keys. */
+export function isStdLearningPhysicsCircularMotionOrbitalParams(p: object): p is StdLearningPhysicsCircularMotionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdLearningPhysicsCircularMotionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdLearningPhysicsCircularMotionOrbitalManifest.traitNames,
+      ...StdLearningPhysicsCircularMotionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the PendulumMotionOrbital orbital.
+ *
+ * Canonical entity: PendulumScene — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdLearningPhysicsPendulumMotionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'PendulumEngine',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the PendulumMotionOrbital orbital with consumer params. */
+export function stdLearningPhysicsPendulumMotionOrbital(params: StdLearningPhysicsPendulumMotionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'PendulumScene';
+  const built = makeOrbitalWithUses({
+    name: 'PendulumMotionOrbital',
+    uses: [
+      {
+        'as': 'Pendulum',
+        'from': 'std/behaviors/std-physics-pendulum',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fx': {
+                  'name': 'fx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'fy': {
+                  'name': 'fy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'radius': {
+                  'name': 'radius',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'bodies',
+            'type': 'array',
+          },
+          {
+            'default': false,
+            'name': 'running',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'bodies': {
+            'default': [
+              {
+                'color': '#334155',
+                'fx': 0,
+                'fy': 0,
+                'id': 'pivot',
+                'label': '',
+                'radius': 6,
+                'vx': 0,
+                'vy': 0,
+                'x': 300,
+                'y': 70,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'bob',
+                'label': '',
+                'radius': 18,
+                'vx': 0,
+                'vy': 0,
+                'x': 450,
+                'y': 110,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'constraints': {
+            'default': [
+              {
+                'color': '#94a3b8',
+                'from': 'pivot',
+                'to': 'bob',
+              },
+            ],
+            'type': 'unknown',
+          },
+          'damping': {
+            'default': 0.995,
+            'type': 'unknown',
+          },
+          'gravity': {
+            'default': 0.5,
+            'type': 'unknown',
+          },
+          'height': {
+            'default': 400,
+            'type': 'unknown',
+          },
+          'length': {
+            'default': 170,
+            'type': 'unknown',
+          },
+          'pivotX': {
+            'default': 300,
+            'type': 'unknown',
+          },
+          'pivotY': {
+            'default': 70,
+            'type': 'unknown',
+          },
+          'running': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'width': {
+            'default': 600,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'PendulumEngine',
+        'ref': 'Pendulum.traits.PendulumSim',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'PendulumMotionPage',
+        'path': '/physics/pendulum',
+        'traits': [
+          {
+            'ref': 'PendulumEngine',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdLearningPhysicsPendulumMotionOrbital. */
+export const StdLearningPhysicsPendulumMotionOrbitalManifest = {
+  organism: 'learning-physics',
+  orbitalName: 'PendulumMotionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'PendulumEngine',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdLearningPhysicsPendulumMotionOrbitalParams keys. */
+export function isStdLearningPhysicsPendulumMotionOrbitalParams(p: object): p is StdLearningPhysicsPendulumMotionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdLearningPhysicsPendulumMotionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdLearningPhysicsPendulumMotionOrbitalManifest.traitNames,
+      ...StdLearningPhysicsPendulumMotionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the CollisionMotionOrbital orbital.
+ *
+ * Canonical entity: CollisionScene — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdLearningPhysicsCollisionMotionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'CollisionEngine',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the CollisionMotionOrbital orbital with consumer params. */
+export function stdLearningPhysicsCollisionMotionOrbital(params: StdLearningPhysicsCollisionMotionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'CollisionScene';
+  const built = makeOrbitalWithUses({
+    name: 'CollisionMotionOrbital',
+    uses: [
+      {
+        'as': 'Collision',
+        'from': 'std/behaviors/std-physics-collision',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fx': {
+                  'name': 'fx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'fy': {
+                  'name': 'fy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'radius': {
+                  'name': 'radius',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'bodies',
+            'type': 'array',
+          },
+          {
+            'default': false,
+            'name': 'running',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'bodies': {
+            'default': [
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ball-a',
+                'label': 'A',
+                'radius': 16,
+                'vx': 5,
+                'vy': 0,
+                'x': 80,
+                'y': 200,
+              },
+              {
+                'color': '#16a34a',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ball-b',
+                'label': 'B',
+                'radius': 16,
+                'vx': -5,
+                'vy': 0,
+                'x': 520,
+                'y': 200,
+              },
+              {
+                'color': '#dc2626',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ball-c',
+                'label': 'C',
+                'radius': 16,
+                'vx': 0,
+                'vy': 4,
+                'x': 300,
+                'y': 90,
+              },
+              {
+                'color': '#f59e0b',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ball-d',
+                'label': 'D',
+                'radius': 16,
+                'vx': 0,
+                'vy': -4,
+                'x': 300,
+                'y': 320,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'height': {
+            'default': 400,
+            'type': 'unknown',
+          },
+          'running': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'width': {
+            'default': 600,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'CollisionEngine',
+        'ref': 'Collision.traits.CollisionSim',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'CollisionMotionPage',
+        'path': '/physics/collision',
+        'traits': [
+          {
+            'ref': 'CollisionEngine',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdLearningPhysicsCollisionMotionOrbital. */
+export const StdLearningPhysicsCollisionMotionOrbitalManifest = {
+  organism: 'learning-physics',
+  orbitalName: 'CollisionMotionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'CollisionEngine',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdLearningPhysicsCollisionMotionOrbitalParams keys. */
+export function isStdLearningPhysicsCollisionMotionOrbitalParams(p: object): p is StdLearningPhysicsCollisionMotionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdLearningPhysicsCollisionMotionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdLearningPhysicsCollisionMotionOrbitalManifest.traitNames,
+      ...StdLearningPhysicsCollisionMotionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the InclineMotionOrbital orbital.
+ *
+ * Canonical entity: InclineScene — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdLearningPhysicsInclineMotionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'InclineEngine',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the InclineMotionOrbital orbital with consumer params. */
+export function stdLearningPhysicsInclineMotionOrbital(params: StdLearningPhysicsInclineMotionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'InclineScene';
+  const built = makeOrbitalWithUses({
+    name: 'InclineMotionOrbital',
+    uses: [
+      {
+        'as': 'Incline',
+        'from': 'std/behaviors/std-physics-incline',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fx': {
+                  'name': 'fx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'fy': {
+                  'name': 'fy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'radius': {
+                  'name': 'radius',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'bodies',
+            'type': 'array',
+          },
+          {
+            'default': false,
+            'name': 'running',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'bodies': {
+            'default': [
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'block',
+                'label': '',
+                'radius': 16,
+                'vx': 0,
+                'vy': 0,
+                'x': 170,
+                'y': 110,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'damping': {
+            'default': 0.99,
+            'type': 'unknown',
+          },
+          'gravity': {
+            'default': 0.5,
+            'type': 'unknown',
+          },
+          'height': {
+            'default': 400,
+            'type': 'unknown',
+          },
+          'rampX0': {
+            'default': 120,
+            'type': 'unknown',
+          },
+          'rampX1': {
+            'default': 520,
+            'type': 'unknown',
+          },
+          'rampY0': {
+            'default': 90,
+            'type': 'unknown',
+          },
+          'rampY1': {
+            'default': 330,
+            'type': 'unknown',
+          },
+          'running': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'shapes': {
+            'default': [
+              {
+                'color': '#334155',
+                'lineWidth': 3,
+                'type': 'line',
+                'x1': 120,
+                'x2': 520,
+                'y1': 90,
+                'y2': 330,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'width': {
+            'default': 600,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'InclineEngine',
+        'ref': 'Incline.traits.InclineSim',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'InclineMotionPage',
+        'path': '/physics/incline',
+        'traits': [
+          {
+            'ref': 'InclineEngine',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdLearningPhysicsInclineMotionOrbital. */
+export const StdLearningPhysicsInclineMotionOrbitalManifest = {
+  organism: 'learning-physics',
+  orbitalName: 'InclineMotionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'InclineEngine',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdLearningPhysicsInclineMotionOrbitalParams keys. */
+export function isStdLearningPhysicsInclineMotionOrbitalParams(p: object): p is StdLearningPhysicsInclineMotionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdLearningPhysicsInclineMotionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdLearningPhysicsInclineMotionOrbitalManifest.traitNames,
+      ...StdLearningPhysicsInclineMotionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the OrbitMotionOrbital orbital.
+ *
+ * Canonical entity: OrbitScene — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdLearningPhysicsOrbitMotionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'OrbitEngine',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the OrbitMotionOrbital orbital with consumer params. */
+export function stdLearningPhysicsOrbitMotionOrbital(params: StdLearningPhysicsOrbitMotionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'OrbitScene';
+  const built = makeOrbitalWithUses({
+    name: 'OrbitMotionOrbital',
+    uses: [
+      {
+        'as': 'Orbit',
+        'from': 'std/behaviors/std-physics-orbit',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fx': {
+                  'name': 'fx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'fy': {
+                  'name': 'fy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'radius': {
+                  'name': 'radius',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'bodies',
+            'type': 'array',
+          },
+          {
+            'default': false,
+            'name': 'running',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'bodies': {
+            'default': [
+              {
+                'color': '#f59e0b',
+                'fx': 0,
+                'fy': 0,
+                'id': 'sun',
+                'label': '',
+                'radius': 20,
+                'vx': 0,
+                'vy': 0,
+                'x': 300,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'planet-a',
+                'label': '',
+                'radius': 10,
+                'vx': 2.24,
+                'vy': 0,
+                'x': 300,
+                'y': 80,
+              },
+              {
+                'color': '#16a34a',
+                'fx': 0,
+                'fy': 0,
+                'id': 'planet-b',
+                'label': '',
+                'radius': 8,
+                'vx': 0,
+                'vy': 1.88,
+                'x': 470,
+                'y': 200,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'centerX': {
+            'default': 300,
+            'type': 'unknown',
+          },
+          'centerY': {
+            'default': 200,
+            'type': 'unknown',
+          },
+          'gm': {
+            'default': 600,
+            'type': 'unknown',
+          },
+          'height': {
+            'default': 400,
+            'type': 'unknown',
+          },
+          'running': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'width': {
+            'default': 600,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'OrbitEngine',
+        'ref': 'Orbit.traits.OrbitSim',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'OrbitMotionPage',
+        'path': '/physics/orbit',
+        'traits': [
+          {
+            'ref': 'OrbitEngine',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdLearningPhysicsOrbitMotionOrbital. */
+export const StdLearningPhysicsOrbitMotionOrbitalManifest = {
+  organism: 'learning-physics',
+  orbitalName: 'OrbitMotionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'OrbitEngine',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdLearningPhysicsOrbitMotionOrbitalParams keys. */
+export function isStdLearningPhysicsOrbitMotionOrbitalParams(p: object): p is StdLearningPhysicsOrbitMotionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdLearningPhysicsOrbitMotionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdLearningPhysicsOrbitMotionOrbitalManifest.traitNames,
+      ...StdLearningPhysicsOrbitMotionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the GasMotionOrbital orbital.
+ *
+ * Canonical entity: GasScene — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdLearningPhysicsGasMotionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'GasEngine',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the GasMotionOrbital orbital with consumer params. */
+export function stdLearningPhysicsGasMotionOrbital(params: StdLearningPhysicsGasMotionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'GasScene';
+  const built = makeOrbitalWithUses({
+    name: 'GasMotionOrbital',
+    uses: [
+      {
+        'as': 'Gas',
+        'from': 'std/behaviors/std-physics-gas',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fx': {
+                  'name': 'fx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'fy': {
+                  'name': 'fy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'radius': {
+                  'name': 'radius',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'bodies',
+            'type': 'array',
+          },
+          {
+            'default': false,
+            'name': 'running',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'bodies': {
+            'default': [
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p1',
+                'label': '',
+                'radius': 9,
+                'vx': 3,
+                'vy': -2,
+                'x': 80,
+                'y': 80,
+              },
+              {
+                'color': '#16a34a',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p2',
+                'label': '',
+                'radius': 9,
+                'vx': -4,
+                'vy': 5,
+                'x': 220,
+                'y': 80,
+              },
+              {
+                'color': '#dc2626',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p3',
+                'label': '',
+                'radius': 9,
+                'vx': 5,
+                'vy': 3,
+                'x': 360,
+                'y': 80,
+              },
+              {
+                'color': '#f59e0b',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p4',
+                'label': '',
+                'radius': 9,
+                'vx': -3,
+                'vy': -4,
+                'x': 500,
+                'y': 80,
+              },
+              {
+                'color': '#16a34a',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p5',
+                'label': '',
+                'radius': 9,
+                'vx': 6,
+                'vy': 1,
+                'x': 80,
+                'y': 160,
+              },
+              {
+                'color': '#dc2626',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p6',
+                'label': '',
+                'radius': 9,
+                'vx': -5,
+                'vy': -3,
+                'x': 220,
+                'y': 160,
+              },
+              {
+                'color': '#f59e0b',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p7',
+                'label': '',
+                'radius': 9,
+                'vx': 2,
+                'vy': 6,
+                'x': 360,
+                'y': 160,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p8',
+                'label': '',
+                'radius': 9,
+                'vx': -6,
+                'vy': 2,
+                'x': 500,
+                'y': 160,
+              },
+              {
+                'color': '#dc2626',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p9',
+                'label': '',
+                'radius': 9,
+                'vx': 4,
+                'vy': -5,
+                'x': 80,
+                'y': 240,
+              },
+              {
+                'color': '#f59e0b',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p10',
+                'label': '',
+                'radius': 9,
+                'vx': -2,
+                'vy': 4,
+                'x': 220,
+                'y': 240,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p11',
+                'label': '',
+                'radius': 9,
+                'vx': 3,
+                'vy': -6,
+                'x': 360,
+                'y': 240,
+              },
+              {
+                'color': '#16a34a',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p12',
+                'label': '',
+                'radius': 9,
+                'vx': -4,
+                'vy': 3,
+                'x': 500,
+                'y': 240,
+              },
+              {
+                'color': '#f59e0b',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p13',
+                'label': '',
+                'radius': 9,
+                'vx': 5,
+                'vy': 2,
+                'x': 80,
+                'y': 320,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p14',
+                'label': '',
+                'radius': 9,
+                'vx': -3,
+                'vy': -2,
+                'x': 220,
+                'y': 320,
+              },
+              {
+                'color': '#16a34a',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p15',
+                'label': '',
+                'radius': 9,
+                'vx': 6,
+                'vy': -1,
+                'x': 360,
+                'y': 320,
+              },
+              {
+                'color': '#dc2626',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p16',
+                'label': '',
+                'radius': 9,
+                'vx': -5,
+                'vy': 4,
+                'x': 500,
+                'y': 320,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'height': {
+            'default': 400,
+            'type': 'unknown',
+          },
+          'running': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'width': {
+            'default': 600,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'GasEngine',
+        'ref': 'Gas.traits.GasSim',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'GasMotionPage',
+        'path': '/physics/gas',
+        'traits': [
+          {
+            'ref': 'GasEngine',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdLearningPhysicsGasMotionOrbital. */
+export const StdLearningPhysicsGasMotionOrbitalManifest = {
+  organism: 'learning-physics',
+  orbitalName: 'GasMotionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'GasEngine',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdLearningPhysicsGasMotionOrbitalParams keys. */
+export function isStdLearningPhysicsGasMotionOrbitalParams(p: object): p is StdLearningPhysicsGasMotionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdLearningPhysicsGasMotionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdLearningPhysicsGasMotionOrbitalManifest.traitNames,
+      ...StdLearningPhysicsGasMotionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the MagneticMotionOrbital orbital.
+ *
+ * Canonical entity: MagneticScene — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdLearningPhysicsMagneticMotionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'MagneticEngine',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the MagneticMotionOrbital orbital with consumer params. */
+export function stdLearningPhysicsMagneticMotionOrbital(params: StdLearningPhysicsMagneticMotionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'MagneticScene';
+  const built = makeOrbitalWithUses({
+    name: 'MagneticMotionOrbital',
+    uses: [
+      {
+        'as': 'Magnetic',
+        'from': 'std/behaviors/std-physics-magnetic',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fx': {
+                  'name': 'fx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'fy': {
+                  'name': 'fy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'radius': {
+                  'name': 'radius',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'bodies',
+            'type': 'array',
+          },
+          {
+            'default': false,
+            'name': 'running',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'bodies': {
+            'default': [
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'q1',
+                'label': '',
+                'radius': 12,
+                'vx': 0,
+                'vy': 4,
+                'x': 200,
+                'y': 120,
+              },
+              {
+                'color': '#dc2626',
+                'fx': 0,
+                'fy': 0,
+                'id': 'q2',
+                'label': '',
+                'radius': 10,
+                'vx': 0,
+                'vy': -3,
+                'x': 420,
+                'y': 150,
+              },
+              {
+                'color': '#16a34a',
+                'fx': 0,
+                'fy': 0,
+                'id': 'q3',
+                'label': '',
+                'radius': 8,
+                'vx': 5,
+                'vy': 0,
+                'x': 320,
+                'y': 300,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'height': {
+            'default': 400,
+            'type': 'unknown',
+          },
+          'qB': {
+            'default': 0.03,
+            'type': 'unknown',
+          },
+          'running': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'width': {
+            'default': 600,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'MagneticEngine',
+        'ref': 'Magnetic.traits.MagneticSim',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'MagneticMotionPage',
+        'path': '/physics/magnetic',
+        'traits': [
+          {
+            'ref': 'MagneticEngine',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdLearningPhysicsMagneticMotionOrbital. */
+export const StdLearningPhysicsMagneticMotionOrbitalManifest = {
+  organism: 'learning-physics',
+  orbitalName: 'MagneticMotionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'MagneticEngine',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdLearningPhysicsMagneticMotionOrbitalParams keys. */
+export function isStdLearningPhysicsMagneticMotionOrbitalParams(p: object): p is StdLearningPhysicsMagneticMotionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdLearningPhysicsMagneticMotionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdLearningPhysicsMagneticMotionOrbitalManifest.traitNames,
+      ...StdLearningPhysicsMagneticMotionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the WaveMotionOrbital orbital.
+ *
+ * Canonical entity: WaveScene — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdLearningPhysicsWaveMotionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'WaveEngine',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the WaveMotionOrbital orbital with consumer params. */
+export function stdLearningPhysicsWaveMotionOrbital(params: StdLearningPhysicsWaveMotionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'WaveScene';
+  const built = makeOrbitalWithUses({
+    name: 'WaveMotionOrbital',
+    uses: [
+      {
+        'as': 'Wave',
+        'from': 'std/behaviors/std-physics-wave',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fx': {
+                  'name': 'fx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'fy': {
+                  'name': 'fy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'radius': {
+                  'name': 'radius',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'bodies',
+            'type': 'array',
+          },
+          {
+            'default': false,
+            'name': 'running',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'bodies': {
+            'default': [
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p0',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 40,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p1',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 66,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p2',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 92,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p3',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 118,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p4',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 144,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p5',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 170,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p6',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 196,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p7',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 222,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p8',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 248,
+                'y': 190,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p9',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 274,
+                'y': 175,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p10',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 300,
+                'y': 150,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p11',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 326,
+                'y': 175,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p12',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 352,
+                'y': 190,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p13',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 378,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p14',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 404,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p15',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 430,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p16',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 456,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p17',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 482,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p18',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 508,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p19',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 534,
+                'y': 200,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'p20',
+                'label': '',
+                'radius': 5,
+                'vx': 0,
+                'vy': 0,
+                'x': 560,
+                'y': 200,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'damping': {
+            'default': 0.997,
+            'type': 'unknown',
+          },
+          'height': {
+            'default': 400,
+            'type': 'unknown',
+          },
+          'running': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'spacing': {
+            'default': 26,
+            'type': 'unknown',
+          },
+          'tension': {
+            'default': 0.3,
+            'type': 'unknown',
+          },
+          'width': {
+            'default': 600,
+            'type': 'unknown',
+          },
+          'x0': {
+            'default': 40,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'WaveEngine',
+        'ref': 'Wave.traits.WaveSim',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'WaveMotionPage',
+        'path': '/physics/wave',
+        'traits': [
+          {
+            'ref': 'WaveEngine',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdLearningPhysicsWaveMotionOrbital. */
+export const StdLearningPhysicsWaveMotionOrbitalManifest = {
+  organism: 'learning-physics',
+  orbitalName: 'WaveMotionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'WaveEngine',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdLearningPhysicsWaveMotionOrbitalParams keys. */
+export function isStdLearningPhysicsWaveMotionOrbitalParams(p: object): p is StdLearningPhysicsWaveMotionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdLearningPhysicsWaveMotionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdLearningPhysicsWaveMotionOrbitalManifest.traitNames,
+      ...StdLearningPhysicsWaveMotionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Tunable params for the ReflectionMotionOrbital orbital.
+ *
+ * Canonical entity: ReflectionScene — overridable via
+ * `entityName`. The factory threads the effective name through every
+ * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
+ * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
+ * `["persist",…,X,…]` and payload type string accordingly.
+ *
+ * Override surface (mirrors `.lolo`'s native overrides 1:1):
+ *   fields         — extra entity fields (appended)
+ *   pagePath       — first-page URL override
+ *   entityName     — rename the canonical entity
+ *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
+ *                    `events`, `name`, `emitsScope`, `listens`.
+ *                    `effects` is NOT exposed — `.lolo` removed it
+ *                    in Phase 9.5.H. Use `listens` via a sibling
+ *                    trait to react to atom events.
+ */
+export interface StdLearningPhysicsReflectionMotionOrbitalParams {
+  /** Extra fields appended to the canonical entity. */
+  fields?: EntityField[];
+  /** URL path override for the orbital's first page. */
+  pagePath?: string;
+  /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
+  entityName?: string;
+  /**
+   * Per-imported-trait override surface keyed on each imported
+   * trait's canonical `name`. Accepts every override `.lolo`
+   * natively supports: `config`, `linkedEntity`, `events`,
+   * `name`, `emitsScope`, `listens`. `effects` is excluded —
+   * atom-owned (use `listens` via a sibling trait instead).
+   */
+  traitOverrides?: Partial<Record<
+    'ReflectionEngine',
+    Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
+  >>;
+}
+
+/** Per-orbital factory: builds the ReflectionMotionOrbital orbital with consumer params. */
+export function stdLearningPhysicsReflectionMotionOrbital(params: StdLearningPhysicsReflectionMotionOrbitalParams = {}): OrbitalDefinition {
+  const canonicalName = params.entityName ?? 'ReflectionScene';
+  const built = makeOrbitalWithUses({
+    name: 'ReflectionMotionOrbital',
+    uses: [
+      {
+        'as': 'Reflection',
+        'from': 'std/behaviors/std-physics-reflection',
+      },
+    ],
+    entity: {
+      name: canonicalName,
+      persistence: 'runtime',
+      fields: ((): EntityField[] => {
+        const canonical: EntityField[] = [
+          {
+            'name': 'id',
+            'required': true,
+            'type': 'string',
+          },
+          {
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fx': {
+                  'name': 'fx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'fy': {
+                  'name': 'fy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'radius': {
+                  'name': 'radius',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vx': {
+                  'name': 'vx',
+                  'required': false,
+                  'type': 'number',
+                },
+                'vy': {
+                  'name': 'vy',
+                  'required': false,
+                  'type': 'number',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'bodies',
+            'type': 'array',
+          },
+          {
+            'default': false,
+            'name': 'running',
+            'type': 'boolean',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      makeTraitRef({
+        'config': {
+          'bodies': {
+            'default': [
+              {
+                'color': '#f59e0b',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ray-a',
+                'label': '',
+                'radius': 7,
+                'vx': 6,
+                'vy': 4,
+                'x': 120,
+                'y': 120,
+              },
+              {
+                'color': '#2563eb',
+                'fx': 0,
+                'fy': 0,
+                'id': 'ray-b',
+                'label': '',
+                'radius': 7,
+                'vx': -5,
+                'vy': 5,
+                'x': 480,
+                'y': 150,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'height': {
+            'default': 400,
+            'type': 'unknown',
+          },
+          'running': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'shapes': {
+            'default': [
+              {
+                'color': '#334155',
+                'lineWidth': 3,
+                'type': 'line',
+                'x1': 20,
+                'x2': 580,
+                'y1': 380,
+                'y2': 380,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'width': {
+            'default': 600,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'ReflectionEngine',
+        'ref': 'Reflection.traits.ReflectionSim',
+      }),
+    ],
+    pages: [
+      {
+        'name': 'ReflectionMotionPage',
+        'path': '/physics/reflection',
+        'traits': [
+          {
+            'ref': 'ReflectionEngine',
+          },
+        ],
+      } as never,
+    ],
+  });
+  type _OrbTrait = OrbitalDefinition["traits"][number];
+  type _OrbPage = NonNullable<OrbitalDefinition["pages"]>[number];
+  type _RefOverride = Pick<MakeTraitRefOpts, "config" | "linkedEntity" | "events" | "name" | "emitsScope" | "listens">;
+  if (built.traits && params.traitOverrides !== undefined) {
+    built.traits = (built.traits as _OrbTrait[]).map((t): _OrbTrait => {
+      if (!t || typeof t !== "object") return t;
+      const tr = t as TraitReference & { name?: string };
+      // Match by name so inline traits (no `ref`) and
+      // reference traits (with `ref`) both pick up the
+      // override surface keyed on the trait's `name`.
+      if (typeof tr.name !== "string") return t;
+      const overrides = params.traitOverrides as Record<string, _RefOverride | undefined> | undefined;
+      const override = overrides?.[tr.name];
+      if (!override) return t;
+      const merged: TraitReference = { ...tr };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
+      if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
+      if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
+      if (override.name !== undefined) merged.name = override.name;
+      if (override.emitsScope !== undefined) merged.emitsScope = override.emitsScope;
+      if (override.listens !== undefined) merged.listens = override.listens;
+      return merged;
+    });
+  }
+  if (built.pages && params.pagePath !== undefined) {
+    built.pages = (built.pages as _OrbPage[]).map((p, idx) => {
+      if (!p || typeof p !== "object") return p;
+      if (idx !== 0) return p;
+      const out = { ...p } as _OrbPage & { path?: string };
+      out.path = params.pagePath;
+      return out;
+    });
+  }
+  return built;
+}
+
+/** Manifest — describes the params surface of stdLearningPhysicsReflectionMotionOrbital. */
+export const StdLearningPhysicsReflectionMotionOrbitalManifest = {
+  organism: 'learning-physics',
+  orbitalName: 'ReflectionMotionOrbital',
+  paramFields: [
+    { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
+    { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
+    { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
+    { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
+  ] as const,
+  traitNames: [
+    'ReflectionEngine',
+  ] as const,
+  inlineTraitNames: [
+  ] as const,
+};
+
+/** Typed guard — runtime validates StdLearningPhysicsReflectionMotionOrbitalParams keys. */
+export function isStdLearningPhysicsReflectionMotionOrbitalParams(p: object): p is StdLearningPhysicsReflectionMotionOrbitalParams {
+  type _OverrideRecord = NonNullable<StdLearningPhysicsReflectionMotionOrbitalParams['traitOverrides']>;
+  const obj = p as { traitOverrides?: _OverrideRecord };
+  if (obj.traitOverrides !== undefined) {
+    if (typeof obj.traitOverrides !== "object" || obj.traitOverrides === null) return false;
+    const allowed: readonly string[] = [
+      ...StdLearningPhysicsReflectionMotionOrbitalManifest.traitNames,
+      ...StdLearningPhysicsReflectionMotionOrbitalManifest.inlineTraitNames,
+    ];
+    for (const k of Object.keys(obj.traitOverrides)) {
+      if (!allowed.includes(k)) return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Bundled params for learning-physics — one optional entry per orbital.
  * Each entry maps to its per-orbital factory above.
  */
 export interface StdLearningPhysicsParams {
   ProjectileMotion?: StdLearningPhysicsProjectileMotionOrbitalParams;
+  FreeFallMotion?: StdLearningPhysicsFreeFallMotionOrbitalParams;
+  SpringMotion?: StdLearningPhysicsSpringMotionOrbitalParams;
+  FrictionMotion?: StdLearningPhysicsFrictionMotionOrbitalParams;
+  CircularMotion?: StdLearningPhysicsCircularMotionOrbitalParams;
+  PendulumMotion?: StdLearningPhysicsPendulumMotionOrbitalParams;
+  CollisionMotion?: StdLearningPhysicsCollisionMotionOrbitalParams;
+  InclineMotion?: StdLearningPhysicsInclineMotionOrbitalParams;
+  OrbitMotion?: StdLearningPhysicsOrbitMotionOrbitalParams;
+  GasMotion?: StdLearningPhysicsGasMotionOrbitalParams;
+  MagneticMotion?: StdLearningPhysicsMagneticMotionOrbitalParams;
+  WaveMotion?: StdLearningPhysicsWaveMotionOrbitalParams;
+  ReflectionMotion?: StdLearningPhysicsReflectionMotionOrbitalParams;
 }
 
-/** Whole-organism descriptor (1 orbitals). Composes per-orbital factories. */
+/** Whole-organism descriptor (13 orbitals). Composes per-orbital factories. */
 export function stdLearningPhysics(params: StdLearningPhysicsParams = {}): OrbitalDefinition[] {
   return [
     stdLearningPhysicsProjectileMotionOrbital(params.ProjectileMotion ?? {}),
+    stdLearningPhysicsFreeFallMotionOrbital(params.FreeFallMotion ?? {}),
+    stdLearningPhysicsSpringMotionOrbital(params.SpringMotion ?? {}),
+    stdLearningPhysicsFrictionMotionOrbital(params.FrictionMotion ?? {}),
+    stdLearningPhysicsCircularMotionOrbital(params.CircularMotion ?? {}),
+    stdLearningPhysicsPendulumMotionOrbital(params.PendulumMotion ?? {}),
+    stdLearningPhysicsCollisionMotionOrbital(params.CollisionMotion ?? {}),
+    stdLearningPhysicsInclineMotionOrbital(params.InclineMotion ?? {}),
+    stdLearningPhysicsOrbitMotionOrbital(params.OrbitMotion ?? {}),
+    stdLearningPhysicsGasMotionOrbital(params.GasMotion ?? {}),
+    stdLearningPhysicsMagneticMotionOrbital(params.MagneticMotion ?? {}),
+    stdLearningPhysicsWaveMotionOrbital(params.WaveMotion ?? {}),
+    stdLearningPhysicsReflectionMotionOrbital(params.ReflectionMotion ?? {}),
   ];
 }

@@ -1,0 +1,110 @@
+app std-math-sinewave "1.0.0"
+"Sine wave — y = 5·sin(x − t); the whole waveform travels left as t advances (a real trig function plot)."
+orbital MathSineWaveEngineOrbital {
+  type MathPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+  entity MathSineWaveState [runtime] {
+    id : string!
+    phase : number = 0
+    points : [MathPoint]
+    running : boolean = false
+  }
+  trait MathSineWaveSim -> @rebindable MathSineWaveState [interaction, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.phase 0)
+        (set @entity.points @config.points)
+        (set @entity.running @config.running)
+        (render-ui main { type: math-canvas, width: @config.width, height: @config.height, points: @entity.points })
+        (emit WAVE_UPDATED { points: @entity.points })
+    }
+    ticks {
+      waveTick every 32ms
+        when @entity.running
+        (let (
+          (np (+ @entity.phase 0.08))
+        )
+        (do
+          (set @entity.phase @np)
+          (set @entity.points (array/map @entity.points (fn p
+            (object/merge @p { y: (* 5 (math/sin (- (object/get @p x) @np))) }))))
+          (render-ui main { type: math-canvas, width: @config.width, height: @config.height, points: @entity.points })
+          (emit WAVE_UPDATED { points: @entity.points })))
+    }
+    emits {
+      WAVE_UPDATED -> external {
+        points : [MathPoint]
+      }
+        @description "The current waveform each tick."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "Animate the traveling wave."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height."
+        @tier "presentation"
+      points : [MathPoint] = [
+        { x: -9.000, y: -2.061, label: "", color: "#2563eb", radius: 3 },
+        { x: -8.550, y: -3.837, label: "", color: "#2563eb", radius: 3 },
+        { x: -8.100, y: -4.849, label: "", color: "#2563eb", radius: 3 },
+        { x: -7.650, y: -4.896, label: "", color: "#2563eb", radius: 3 },
+        { x: -7.200, y: -3.968, label: "", color: "#2563eb", radius: 3 },
+        { x: -6.750, y: -2.250, label: "", color: "#2563eb", radius: 3 },
+        { x: -6.300, y: -0.084, label: "", color: "#2563eb", radius: 3 },
+        { x: -5.850, y: 2.099, label: "", color: "#2563eb", radius: 3 },
+        { x: -5.400, y: 3.864, label: "", color: "#2563eb", radius: 3 },
+        { x: -4.950, y: 4.860, label: "", color: "#2563eb", radius: 3 },
+        { x: -4.500, y: 4.888, label: "", color: "#2563eb", radius: 3 },
+        { x: -4.050, y: 3.943, label: "", color: "#2563eb", radius: 3 },
+        { x: -3.600, y: 2.213, label: "", color: "#2563eb", radius: 3 },
+        { x: -3.150, y: 0.042, label: "", color: "#2563eb", radius: 3 },
+        { x: -2.700, y: -2.137, label: "", color: "#2563eb", radius: 3 },
+        { x: -2.250, y: -3.890, label: "", color: "#2563eb", radius: 3 },
+        { x: -1.800, y: -4.869, label: "", color: "#2563eb", radius: 3 },
+        { x: -1.350, y: -4.879, label: "", color: "#2563eb", radius: 3 },
+        { x: -0.900, y: -3.917, label: "", color: "#2563eb", radius: 3 },
+        { x: -0.450, y: -2.175, label: "", color: "#2563eb", radius: 3 },
+        { x: 0.000, y: 0.000, label: "", color: "#2563eb", radius: 3 },
+        { x: 0.450, y: 2.175, label: "", color: "#2563eb", radius: 3 },
+        { x: 0.900, y: 3.917, label: "", color: "#2563eb", radius: 3 },
+        { x: 1.350, y: 4.879, label: "", color: "#2563eb", radius: 3 },
+        { x: 1.800, y: 4.869, label: "", color: "#2563eb", radius: 3 },
+        { x: 2.250, y: 3.890, label: "", color: "#2563eb", radius: 3 },
+        { x: 2.700, y: 2.137, label: "", color: "#2563eb", radius: 3 },
+        { x: 3.150, y: -0.042, label: "", color: "#2563eb", radius: 3 },
+        { x: 3.600, y: -2.213, label: "", color: "#2563eb", radius: 3 },
+        { x: 4.050, y: -3.943, label: "", color: "#2563eb", radius: 3 },
+        { x: 4.500, y: -4.888, label: "", color: "#2563eb", radius: 3 },
+        { x: 4.950, y: -4.860, label: "", color: "#2563eb", radius: 3 },
+        { x: 5.400, y: -3.864, label: "", color: "#2563eb", radius: 3 },
+        { x: 5.850, y: -2.099, label: "", color: "#2563eb", radius: 3 },
+        { x: 6.300, y: 0.084, label: "", color: "#2563eb", radius: 3 },
+        { x: 6.750, y: 2.250, label: "", color: "#2563eb", radius: 3 },
+        { x: 7.200, y: 3.968, label: "", color: "#2563eb", radius: 3 },
+        { x: 7.650, y: 4.896, label: "", color: "#2563eb", radius: 3 },
+        { x: 8.100, y: 4.849, label: "", color: "#2563eb", radius: 3 },
+        { x: 8.550, y: 3.837, label: "", color: "#2563eb", radius: 3 },
+        { x: 9.000, y: 2.061, label: "", color: "#2563eb", radius: 3 }
+      ]
+        @label "Points"
+        @description "41 samples of y = 5·sin(x) across x in [-9, 9]."
+        @tier "domain"
+    }
+  }
+  page "/math-sinewave" as MathSineWaveEnginePage -> MathSineWaveSim
+}

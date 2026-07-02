@@ -1,0 +1,281 @@
+[
+  {
+    "organism": "std-bio-cell",
+    "orbital": "BioCellEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-bio-cell.ts",
+    "entities": [
+      {
+        "name": "BioCellState",
+        "fields": [
+          {
+            "name": "phase",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "nodes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "BioCellSim",
+        "emittedEvents": [
+          "CELL_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CELL_UPDATED",
+            "direction": "emit",
+            "description": "The current cell scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tick, frame, step, redraw",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f0fdf4",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "edges",
+            "type": "[BioEdge]",
+            "default": [
+              {
+                "color": "#e2e8f0",
+                "from": "mitochondria",
+                "label": "",
+                "to": "nucleus"
+              },
+              {
+                "color": "#e2e8f0",
+                "from": "ribosome",
+                "label": "",
+                "to": "nucleus"
+              },
+              {
+                "color": "#e2e8f0",
+                "from": "golgi",
+                "label": "",
+                "to": "nucleus"
+              },
+              {
+                "color": "#e2e8f0",
+                "from": "vacuole",
+                "label": "",
+                "to": "nucleus"
+              },
+              {
+                "color": "#e2e8f0",
+                "from": "chloroplast",
+                "label": "",
+                "to": "nucleus"
+              }
+            ],
+            "label": "Edges",
+            "description": "Faint links tethering each organelle to the central nucleus.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "nodes",
+            "type": "[BioNode]",
+            "default": [
+              {
+                "color": "#2563eb",
+                "id": "nucleus",
+                "kind": "cell",
+                "label": "Nucleus",
+                "radius": 34,
+                "x": 300,
+                "y": 200
+              },
+              {
+                "color": "#dc2626",
+                "id": "mitochondria",
+                "kind": "organelle",
+                "label": "Mitochondria",
+                "radius": 14,
+                "x": 170,
+                "y": 120
+              },
+              {
+                "color": "#f59e0b",
+                "id": "ribosome",
+                "kind": "organelle",
+                "label": "Ribosome",
+                "radius": 14,
+                "x": 440,
+                "y": 120
+              },
+              {
+                "color": "#7c3aed",
+                "id": "golgi",
+                "kind": "organelle",
+                "label": "Golgi",
+                "radius": 14,
+                "x": 150,
+                "y": 290
+              },
+              {
+                "color": "#0891b2",
+                "id": "vacuole",
+                "kind": "organelle",
+                "label": "Vacuole",
+                "radius": 14,
+                "x": 450,
+                "y": 290
+              },
+              {
+                "color": "#16a34a",
+                "id": "chloroplast",
+                "kind": "organelle",
+                "label": "Chloroplast",
+                "radius": 14,
+                "x": 300,
+                "y": 330
+              }
+            ],
+            "label": "Nodes",
+            "description": "A large central nucleus (kind cell) ringed by five organelles (kind organelle) — mitochondria, ribosome, golgi, vacuole, chloroplast; radius encodes the breathing pulse.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick advances the phase and recomputes every organelle radius; toggle to start/pause.",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "nodes",
+            "phase",
+            "running"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "BioCellEnginePage",
+        "defaultPath": "/bio-cell",
+        "primaryEntity": "BioCellState"
+      }
+    ],
+    "emittedEvents": [
+      "CELL_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

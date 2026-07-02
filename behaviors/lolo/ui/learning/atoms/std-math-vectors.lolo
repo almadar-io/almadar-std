@@ -1,0 +1,105 @@
+app std-math-vectors "1.0.0"
+"Vector addition engine — B oscillates via a triangle wave, animates the tip-to-tail A+B resultant on math-canvas."
+orbital MathVectorsEngineOrbital {
+  type MathVector = {
+    x : number!
+    y : number!
+    vx : number!
+    vy : number!
+    color : string
+    label : string
+  }
+
+  entity MathVectorsState [runtime] {
+    id : string!
+    phase : number = 0
+    vectors : [MathVector]
+    running : boolean = false
+  }
+
+  trait MathVectorsSim -> @rebindable MathVectorsState [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.phase 0)
+        (set @entity.vectors @config.vectors)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: math-canvas
+          width: @config.width
+          height: @config.height
+          vectors: @entity.vectors
+        })
+        (emit VECTORS_UPDATED { vectors: @entity.vectors })
+    }
+
+    ticks {
+      vectorTick every 32ms
+        when @entity.running
+        (let (
+          (nphase (+ @entity.phase 4))
+        )
+        (let (
+          (tw (math/abs (- (math/mod @nphase 200) 100)))
+        )
+        (let (
+          (bx (+ 1 (* @tw 0.04)))
+        )
+        (let (
+          (vecA { x: 0, y: 0, vx: 4, vy: 3, color: "#2563eb", label: "A" })
+        )
+        (let (
+          (vecB { x: 4, y: 3, vx: @bx, vy: 2, color: "#16a34a", label: "B" })
+        )
+        (let (
+          (vecSum { x: 0, y: 0, vx: (+ 4 @bx), vy: 5, color: "#dc2626", label: "A+B" })
+        )
+        (do
+          (set @entity.phase @nphase)
+          (set @entity.vectors [ @vecA @vecB @vecSum ])
+          (render-ui main {
+            type: math-canvas
+            width: @config.width
+            height: @config.height
+            vectors: @entity.vectors
+          })
+          (emit VECTORS_UPDATED { vectors: @entity.vectors })
+        )))))))
+    }
+
+    emits {
+      VECTORS_UPDATED -> external {
+        vectors : [MathVector]
+      }
+        @description "The current vector scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick animates B's oscillation and updates the resultant; toggle to start/pause."
+        @tier "domain"
+      vectors : [MathVector] = [
+        { x: 0, y: 0, vx: 4, vy: 3, color: "#2563eb", label: "A" },
+        { x: 4, y: 3, vx: 3, vy: 2, color: "#16a34a", label: "B" },
+        { x: 0, y: 0, vx: 7, vy: 5, color: "#dc2626", label: "A+B" }
+      ]
+        @label "Vectors"
+        @description "Initial vector scene in data coordinates; A is fixed, B oscillates, A+B is the tip-to-tail resultant."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+    }
+  }
+
+  page "/math-vectors" as MathVectorsEnginePage -> MathVectorsSim
+}

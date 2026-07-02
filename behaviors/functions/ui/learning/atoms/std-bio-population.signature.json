@@ -1,0 +1,221 @@
+[
+  {
+    "organism": "std-bio-population",
+    "orbital": "BioPopulationEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-bio-population.ts",
+    "entities": [
+      {
+        "name": "BioPopulationState",
+        "fields": [
+          {
+            "name": "phase",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "nodes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "BioPopulationSim",
+        "emittedEvents": [
+          "POPULATION_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "POPULATION_UPDATED",
+            "direction": "emit",
+            "description": "The current population scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+            "synonyms": "tick, frame, step, redraw",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f0fdf4",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "edges",
+            "type": "[BioEdge]",
+            "default": [
+              {
+                "color": "#94a3b8",
+                "from": "predator",
+                "label": "eats",
+                "to": "prey"
+              }
+            ],
+            "label": "Edges",
+            "description": "Predation relationship linking the two populations.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "nodes",
+            "type": "[BioNode]",
+            "default": [
+              {
+                "color": "#16a34a",
+                "id": "prey",
+                "kind": "organism",
+                "label": "Prey",
+                "radius": 20,
+                "x": 210,
+                "y": 200
+              },
+              {
+                "color": "#dc2626",
+                "id": "predator",
+                "kind": "organism",
+                "label": "Predator",
+                "radius": 20,
+                "x": 400,
+                "y": 200
+              }
+            ],
+            "label": "Nodes",
+            "description": "Initial prey and predator population nodes; radius encodes population size.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick advances the phase and recomputes both population radii; toggle to start/pause.",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "nodes",
+            "phase",
+            "running"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "BioPopulationEnginePage",
+        "defaultPath": "/bio-population",
+        "primaryEntity": "BioPopulationState"
+      }
+    ],
+    "emittedEvents": [
+      "POPULATION_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

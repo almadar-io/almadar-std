@@ -1,0 +1,92 @@
+app std-math-unitcircle "1.0.0"
+"Unit circle — a point sweeps the circle while its cos (horizontal) and sin (vertical) projections track on the Cartesian plot."
+orbital MathUnitCircleEngineOrbital {
+  type MathSample = {
+    x : number!
+    y : number!
+  }
+  type MathCurve = {
+    label : string
+    color : string
+    samples : [MathSample]
+  }
+  type MathPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+  entity MathUnitCircleState [runtime] {
+    id : string!
+    phase : number = 0
+    curves : [MathCurve]
+    points : [MathPoint]
+    running : boolean = false
+  }
+  trait MathUnitCircleSim -> @rebindable MathUnitCircleState [interaction, instance] {
+    initial: idle
+    state idle {
+      INIT -> idle
+        (set @entity.phase 0)
+        (set @entity.curves @config.curves)
+        (set @entity.points @config.points)
+        (set @entity.running @config.running)
+        (render-ui main { type: math-canvas, width: @config.width, height: @config.height, curves: @entity.curves, points: @entity.points })
+        (emit CIRCLE_UPDATED { curves: @entity.curves, points: @entity.points })
+    }
+    ticks {
+      circleTick every 32ms
+        when @entity.running
+        (let (
+          (np (+ @entity.phase 0.04))
+        )
+        (let (
+          (px (* 6 (math/cos @np)))
+          (py (* 6 (math/sin @np)))
+        )
+        (do
+          (set @entity.phase @np)
+          (set @entity.curves [ @config.circle { label: "r", color: "#dc2626", samples: [{ x: 0, y: 0 } { x: @px, y: @py }] } { label: "sin", color: "#16a34a", samples: [{ x: @px, y: @py } { x: @px, y: 0 }] } { label: "cos", color: "#2563eb", samples: [{ x: 0, y: 0 } { x: @px, y: 0 }] } ])
+          (set @entity.points [ { x: @px, y: @py, label: "P", color: "#dc2626", radius: 6 } { x: @px, y: 0, label: "cos", color: "#2563eb", radius: 4 } ])
+          (render-ui main { type: math-canvas, width: @config.width, height: @config.height, curves: @entity.curves, points: @entity.points })
+          (emit CIRCLE_UPDATED { curves: @entity.curves, points: @entity.points }))))
+    }
+    emits {
+      CIRCLE_UPDATED -> external {
+        curves : [MathCurve]
+        points : [MathPoint]
+      }
+        @description "The current scene each tick."
+        @synonyms "tick, frame, step, redraw"
+        @tier "domain"
+    }
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "Animate the sweep."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height."
+        @tier "presentation"
+      circle : MathCurve = { label: "", color: "#94a3b8", samples: [ { x: 6.000, y: 0.000 }, { x: 5.909, y: 1.042 }, { x: 5.638, y: 2.052 }, { x: 5.196, y: 3.000 }, { x: 4.596, y: 3.857 }, { x: 3.857, y: 4.596 }, { x: 3.000, y: 5.196 }, { x: 2.052, y: 5.638 }, { x: 1.042, y: 5.909 }, { x: 0.000, y: 6.000 }, { x: -1.042, y: 5.909 }, { x: -2.052, y: 5.638 }, { x: -3.000, y: 5.196 }, { x: -3.857, y: 4.596 }, { x: -4.596, y: 3.857 }, { x: -5.196, y: 3.000 }, { x: -5.638, y: 2.052 }, { x: -5.909, y: 1.042 }, { x: -6.000, y: 0.000 }, { x: -5.909, y: -1.042 }, { x: -5.638, y: -2.052 }, { x: -5.196, y: -3.000 }, { x: -4.596, y: -3.857 }, { x: -3.857, y: -4.596 }, { x: -3.000, y: -5.196 }, { x: -2.052, y: -5.638 }, { x: -1.042, y: -5.909 }, { x: -0.000, y: -6.000 }, { x: 1.042, y: -5.909 }, { x: 2.052, y: -5.638 }, { x: 3.000, y: -5.196 }, { x: 3.857, y: -4.596 }, { x: 4.596, y: -3.857 }, { x: 5.196, y: -3.000 }, { x: 5.638, y: -2.052 }, { x: 5.909, y: -1.042 }, { x: 6.000, y: -0.000 } ] }
+        @label "Circle"
+        @description "Static radius-6 circle outline (cos/sin sampled)."
+        @tier "domain"
+      curves : [MathCurve] = [ { label: "", color: "#94a3b8", samples: [ { x: 6.000, y: 0.000 }, { x: 5.909, y: 1.042 }, { x: 5.638, y: 2.052 }, { x: 5.196, y: 3.000 }, { x: 4.596, y: 3.857 }, { x: 3.857, y: 4.596 }, { x: 3.000, y: 5.196 }, { x: 2.052, y: 5.638 }, { x: 1.042, y: 5.909 }, { x: 0.000, y: 6.000 }, { x: -1.042, y: 5.909 }, { x: -2.052, y: 5.638 }, { x: -3.000, y: 5.196 }, { x: -3.857, y: 4.596 }, { x: -4.596, y: 3.857 }, { x: -5.196, y: 3.000 }, { x: -5.638, y: 2.052 }, { x: -5.909, y: 1.042 }, { x: -6.000, y: 0.000 }, { x: -5.909, y: -1.042 }, { x: -5.638, y: -2.052 }, { x: -5.196, y: -3.000 }, { x: -4.596, y: -3.857 }, { x: -3.857, y: -4.596 }, { x: -3.000, y: -5.196 }, { x: -2.052, y: -5.638 }, { x: -1.042, y: -5.909 }, { x: -0.000, y: -6.000 }, { x: 1.042, y: -5.909 }, { x: 2.052, y: -5.638 }, { x: 3.000, y: -5.196 }, { x: 3.857, y: -4.596 }, { x: 4.596, y: -3.857 }, { x: 5.196, y: -3.000 }, { x: 5.638, y: -2.052 }, { x: 5.909, y: -1.042 }, { x: 6.000, y: -0.000 } ] } ]
+        @label "Curves"
+        @description "Initial scene curves."
+        @tier "domain"
+      points : [MathPoint] = [ { x: 6, y: 0, label: "P", color: "#dc2626", radius: 6 } ]
+        @label "Points"
+        @description "Initial point on the circle."
+        @tier "domain"
+    }
+  }
+  page "/math-unitcircle" as MathUnitCircleEnginePage -> MathUnitCircleSim
+}

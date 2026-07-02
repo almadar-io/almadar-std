@@ -1,0 +1,416 @@
+{
+  "description": "Vector addition engine — B oscillates via a triangle wave, animates the tip-to-tail A+B resultant on math-canvas.",
+  "name": "std-math-vectors",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "phase",
+            "type": "number"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": true,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "vectors",
+            "type": "array"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "MathVectorsState",
+        "persistence": "runtime"
+      },
+      "name": "MathVectorsEngineOrbital",
+      "pages": [
+        {
+          "name": "MathVectorsEnginePage",
+          "path": "/math-vectors",
+          "traits": [
+            {
+              "ref": "MathVectorsSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick animates B's oscillation and updates the resultant; toggle to start/pause.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "vectors": {
+              "default": [
+                {
+                  "color": "#2563eb",
+                  "label": "A",
+                  "vx": 4.0,
+                  "vy": 3.0,
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#16a34a",
+                  "label": "B",
+                  "vx": 3.0,
+                  "vy": 2.0,
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "color": "#dc2626",
+                  "label": "A+B",
+                  "vx": 7.0,
+                  "vy": 5.0,
+                  "x": 0.0,
+                  "y": 0.0
+                }
+              ],
+              "description": "Initial vector scene in data coordinates; A is fixed, B oscillates, A+B is the tip-to-tail resultant.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "vx": {
+                    "name": "vx",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "vy": {
+                    "name": "vy",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Vectors",
+              "tier": "domain",
+              "type": "[MathVector]"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current vector scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "VECTORS_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "vectors",
+                  "type": "[MathVector]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "phase",
+              "running",
+              "vectors"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "MathVectorsState",
+          "name": "MathVectorsSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current vector scene each tick — a composed listener (readout, graph) can subscribe; a harmless no-op when the atom runs standalone.",
+                "key": "VECTORS_UPDATED",
+                "name": "Vectors Updated",
+                "payloadSchema": [
+                  {
+                    "name": "vectors",
+                    "type": "[MathVector]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.phase",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.vectors",
+                    "@config.vectors"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "height": "@config.height",
+                      "type": "math-canvas",
+                      "vectors": "@entity.vectors",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "VECTORS_UPDATED",
+                    {
+                      "vectors": "@entity.vectors"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "let",
+                  [
+                    [
+                      "nphase",
+                      [
+                        "+",
+                        "@entity.phase",
+                        4.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "tw",
+                        [
+                          "math/abs",
+                          [
+                            "-",
+                            [
+                              "math/mod",
+                              "@nphase",
+                              200.0
+                            ],
+                            100.0
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "bx",
+                          [
+                            "+",
+                            1.0,
+                            [
+                              "*",
+                              "@tw",
+                              0.04
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "let",
+                        [
+                          [
+                            "vecA",
+                            {
+                              "color": "#2563eb",
+                              "label": "A",
+                              "vx": 4.0,
+                              "vy": 3.0,
+                              "x": 0.0,
+                              "y": 0.0
+                            }
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "vecB",
+                              {
+                                "color": "#16a34a",
+                                "label": "B",
+                                "vx": "@bx",
+                                "vy": 2.0,
+                                "x": 4.0,
+                                "y": 3.0
+                              }
+                            ]
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "vecSum",
+                                {
+                                  "color": "#dc2626",
+                                  "label": "A+B",
+                                  "vx": [
+                                    "+",
+                                    4.0,
+                                    "@bx"
+                                  ],
+                                  "vy": 5.0,
+                                  "x": 0.0,
+                                  "y": 0.0
+                                }
+                              ]
+                            ],
+                            [
+                              "do",
+                              [
+                                "set",
+                                "@entity.phase",
+                                "@nphase"
+                              ],
+                              [
+                                "set",
+                                "@entity.vectors",
+                                [
+                                  "@vecA",
+                                  "@vecB",
+                                  "@vecSum"
+                                ]
+                              ],
+                              [
+                                "render-ui",
+                                "main",
+                                {
+                                  "height": "@config.height",
+                                  "type": "math-canvas",
+                                  "vectors": "@entity.vectors",
+                                  "width": "@config.width"
+                                }
+                              ],
+                              [
+                                "emit",
+                                "VECTORS_UPDATED",
+                                {
+                                  "vectors": "@entity.vectors"
+                                }
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              "guard": "@entity.running",
+              "interval": 32.0,
+              "name": "vectorTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

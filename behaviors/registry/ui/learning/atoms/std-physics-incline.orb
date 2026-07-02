@@ -1,0 +1,662 @@
+{
+  "description": "Inclined-plane engine — slides a block down a frictional ramp under gravity via line-projection every tick and renders a physics-canvas; composed by a learning orbital via `uses`, controls auto-derived from @config.",
+  "name": "std-physics-incline",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fx": {
+                  "name": "fx",
+                  "required": false,
+                  "type": "number"
+                },
+                "fy": {
+                  "name": "fy",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "bodies",
+            "type": "array"
+          },
+          {
+            "default": false,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "InclineState",
+        "persistence": "runtime"
+      },
+      "name": "InclineEngineOrbital",
+      "pages": [
+        {
+          "name": "InclineEnginePage",
+          "path": "/physics-incline",
+          "traits": [
+            {
+              "ref": "InclineSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bodies": {
+              "default": [
+                {
+                  "color": "#2563eb",
+                  "fx": 0.0,
+                  "fy": 0.0,
+                  "id": "block",
+                  "label": "",
+                  "radius": 16.0,
+                  "vx": 0.0,
+                  "vy": 0.0,
+                  "x": 170.0,
+                  "y": 110.0
+                }
+              ],
+              "description": "Initial bodies; the block starts on the ramp near the top and slides down.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fx": {
+                    "name": "fx",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "fy": {
+                    "name": "fy",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vx": {
+                    "name": "vx",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vy": {
+                    "name": "vy",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bodies",
+              "tier": "domain",
+              "type": "[InclineBody]"
+            },
+            "damping": {
+              "default": 0.99,
+              "description": "Fraction of velocity retained each tick (rolling/air resistance along the ramp).",
+              "label": "Damping",
+              "tier": "domain",
+              "type": "number"
+            },
+            "gravity": {
+              "default": 0.5,
+              "description": "Downward acceleration added to the block's vy every tick before the ramp projection.",
+              "label": "Gravity",
+              "tier": "domain",
+              "type": "number"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Simulation height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "rampX0": {
+              "default": 120.0,
+              "description": "X coordinate of the ramp's high (top) end.",
+              "label": "Ramp Start X",
+              "tier": "domain",
+              "type": "number"
+            },
+            "rampX1": {
+              "default": 520.0,
+              "description": "X coordinate of the ramp's low (bottom) end.",
+              "label": "Ramp End X",
+              "tier": "domain",
+              "type": "number"
+            },
+            "rampY0": {
+              "default": 90.0,
+              "description": "Y coordinate of the ramp's high (top) end.",
+              "label": "Ramp Start Y",
+              "tier": "domain",
+              "type": "number"
+            },
+            "rampY1": {
+              "default": 330.0,
+              "description": "Y coordinate of the ramp's low (bottom) end.",
+              "label": "Ramp End Y",
+              "tier": "domain",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick integrates; toggle to start/pause the sim.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "shapes": {
+              "default": [
+                {
+                  "color": "#334155",
+                  "lineWidth": 3.0,
+                  "type": "line",
+                  "x1": 120.0,
+                  "x2": 520.0,
+                  "y1": 90.0,
+                  "y2": 330.0
+                }
+              ],
+              "description": "Static ramp line drawn by the physics-canvas between the incline's endpoints.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "lineWidth": {
+                    "name": "lineWidth",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "x1": {
+                    "name": "x1",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "x2": {
+                    "name": "x2",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y1": {
+                    "name": "y1",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y2": {
+                    "name": "y2",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Shapes",
+              "tier": "domain",
+              "type": "[InclineShape]"
+            },
+            "showVelocity": {
+              "default": true,
+              "description": "Draw each body's velocity vector as an arrow.",
+              "label": "Show Velocity",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "velocityScale": {
+              "default": 6.0,
+              "description": "Length multiplier for the velocity arrows.",
+              "label": "Velocity Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Simulation width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+              "event": "BODIES_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "bodies",
+                  "type": "[InclineBody]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "bodies",
+              "running"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "InclineState",
+          "name": "InclineSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current scene each tick — a composed listener (graph, readout, mirror canvas) can subscribe; a harmless no-op when the atom runs standalone.",
+                "key": "BODIES_UPDATED",
+                "name": "Bodies Updated",
+                "payloadSchema": [
+                  {
+                    "name": "bodies",
+                    "type": "[InclineBody]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bodies",
+                    "@config.bodies"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "bodies": "@entity.bodies",
+                      "height": "@config.height",
+                      "shapes": "@config.shapes",
+                      "showForces": false,
+                      "showVelocity": "@config.showVelocity",
+                      "type": "physics-canvas",
+                      "velocityScale": "@config.velocityScale",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BODIES_UPDATED",
+                    {
+                      "bodies": "@entity.bodies"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.bodies",
+                  [
+                    "array/map",
+                    "@entity.bodies",
+                    [
+                      "fn",
+                      "b",
+                      [
+                        "let",
+                        [
+                          [
+                            "dirx",
+                            [
+                              "-",
+                              "@config.rampX1",
+                              "@config.rampX0"
+                            ]
+                          ],
+                          [
+                            "diry",
+                            [
+                              "-",
+                              "@config.rampY1",
+                              "@config.rampY0"
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "L2",
+                              [
+                                "+",
+                                [
+                                  "*",
+                                  "@dirx",
+                                  "@dirx"
+                                ],
+                                [
+                                  "*",
+                                  "@diry",
+                                  "@diry"
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "nvy",
+                                [
+                                  "*",
+                                  [
+                                    "+",
+                                    [
+                                      "object/get",
+                                      "@b",
+                                      "vy"
+                                    ],
+                                    "@config.gravity"
+                                  ],
+                                  "@config.damping"
+                                ]
+                              ],
+                              [
+                                "nvx",
+                                [
+                                  "*",
+                                  [
+                                    "object/get",
+                                    "@b",
+                                    "vx"
+                                  ],
+                                  "@config.damping"
+                                ]
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "px",
+                                  [
+                                    "+",
+                                    [
+                                      "object/get",
+                                      "@b",
+                                      "x"
+                                    ],
+                                    "@nvx"
+                                  ]
+                                ],
+                                [
+                                  "py",
+                                  [
+                                    "+",
+                                    [
+                                      "object/get",
+                                      "@b",
+                                      "y"
+                                    ],
+                                    "@nvy"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "t",
+                                    [
+                                      "/",
+                                      [
+                                        "+",
+                                        [
+                                          "*",
+                                          [
+                                            "-",
+                                            "@px",
+                                            "@config.rampX0"
+                                          ],
+                                          "@dirx"
+                                        ],
+                                        [
+                                          "*",
+                                          [
+                                            "-",
+                                            "@py",
+                                            "@config.rampY0"
+                                          ],
+                                          "@diry"
+                                        ]
+                                      ],
+                                      "@L2"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "tc",
+                                      [
+                                        "math/clamp",
+                                        "@t",
+                                        0.0,
+                                        1.0
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "cx",
+                                        [
+                                          "+",
+                                          "@config.rampX0",
+                                          [
+                                            "*",
+                                            "@tc",
+                                            "@dirx"
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "cy",
+                                        [
+                                          "+",
+                                          "@config.rampY0",
+                                          [
+                                            "*",
+                                            "@tc",
+                                            "@diry"
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "object/merge",
+                                      "@b",
+                                      {
+                                        "vx": [
+                                          "-",
+                                          "@cx",
+                                          [
+                                            "object/get",
+                                            "@b",
+                                            "x"
+                                          ]
+                                        ],
+                                        "vy": [
+                                          "-",
+                                          "@cy",
+                                          [
+                                            "object/get",
+                                            "@b",
+                                            "y"
+                                          ]
+                                        ],
+                                        "x": "@cx",
+                                        "y": "@cy"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "bodies": "@entity.bodies",
+                    "height": "@config.height",
+                    "shapes": "@config.shapes",
+                    "showForces": false,
+                    "showVelocity": "@config.showVelocity",
+                    "type": "physics-canvas",
+                    "velocityScale": "@config.velocityScale",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "BODIES_UPDATED",
+                  {
+                    "bodies": "@entity.bodies"
+                  }
+                ]
+              ],
+              "guard": "@entity.running",
+              "interval": 32.0,
+              "name": "inclineTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}
