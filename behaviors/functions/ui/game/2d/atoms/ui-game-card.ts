@@ -47,6 +47,8 @@ export interface StdUiGameCardClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCardConfig {
+  /** Default: `"idle"` */
+  animState?: 'idle' | 'drawn' | 'played' | 'flipped';
   /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"art","dimension":"2d","name":"art","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   art?: EntityRow;
   /** Default: `0` */
