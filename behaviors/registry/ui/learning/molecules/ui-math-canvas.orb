@@ -628,6 +628,31 @@
                 "name": "Initialize"
               },
               {
+                "description": "Live scene update; payload carries the current drawable state.",
+                "key": "UPDATE",
+                "name": "Update",
+                "payloadSchema": [
+                  {
+                    "name": "curves",
+                    "type": "[MathCanvasCurvesItem]"
+                  },
+                  {
+                    "name": "points",
+                    "type": "[MathCanvasPointsItem]"
+                  },
+                  {
+                    "name": "vectors",
+                    "type": "[MathCanvasVectorsItem]"
+                  },
+                  {
+                    "name": "shapes",
+                    "type": "[MathCanvasShapesItem]"
+                  }
+                ],
+                "synonyms": "tick, redraw, animate, frame",
+                "tier": "domain"
+              },
+              {
                 "description": "onShapeClick prop",
                 "key": "SHAPE_CLICK",
                 "name": "Shape Click",
@@ -693,6 +718,40 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "animate": "@config.animate",
+                      "className": "@config.className",
+                      "curves": "@payload.curves",
+                      "error": "@config.error",
+                      "gridStep": "@config.gridStep",
+                      "height": "@config.height",
+                      "interactive": "@config.interactive",
+                      "isLoading": "@config.isLoading",
+                      "onShapeClick": "SHAPE_CLICK",
+                      "points": "@payload.points",
+                      "shapes": "@payload.shapes",
+                      "showAxes": "@config.showAxes",
+                      "showGrid": "@config.showGrid",
+                      "title": "@config.title",
+                      "type": "math-canvas",
+                      "vectors": "@payload.vectors",
+                      "width": "@config.width",
+                      "xMax": "@config.xMax",
+                      "xMin": "@config.xMin",
+                      "yMax": "@config.yMax",
+                      "yMin": "@config.yMin"
+                    }
+                  ]
+                ],
+                "event": "UPDATE",
                 "from": "idle",
                 "to": "idle"
               }

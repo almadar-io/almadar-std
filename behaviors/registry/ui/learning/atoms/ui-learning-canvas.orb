@@ -424,6 +424,19 @@
                 "name": "Initialize"
               },
               {
+                "description": "Live scene update; payload carries the current drawable state.",
+                "key": "UPDATE",
+                "name": "Update",
+                "payloadSchema": [
+                  {
+                    "name": "shapes",
+                    "type": "[LearningCanvasShapesItem]"
+                  }
+                ],
+                "synonyms": "tick, redraw, animate, frame",
+                "tier": "domain"
+              },
+              {
                 "description": "Clicked shape payload: { id?, type?, index }.",
                 "key": "SHAPE_CLICK",
                 "name": "Shape Click",
@@ -507,6 +520,31 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "animate": "@config.animate",
+                      "backgroundColor": "@config.backgroundColor",
+                      "className": "@config.className",
+                      "error": "@config.error",
+                      "height": "@config.height",
+                      "interactive": "@config.interactive",
+                      "isLoading": "@config.isLoading",
+                      "onShapeClick": "SHAPE_CLICK",
+                      "onShapeHover": "SHAPE_HOVER",
+                      "shapes": "@payload.shapes",
+                      "type": "learning-canvas",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "UPDATE",
                 "from": "idle",
                 "to": "idle"
               }

@@ -92,6 +92,24 @@ orbital ChemistryCanvasOrbital {
           error: @config.error
           type: chemistry-canvas
         })
+      UPDATE -> idle
+        (render-ui main {
+          className: @config.className
+          width: @config.width
+          height: @config.height
+          title: @config.title
+          backgroundColor: @config.backgroundColor
+          atoms: @payload.atoms
+          bonds: @payload.bonds
+          arrows: @payload.arrows
+          shapes: @payload.shapes
+          interactive: @config.interactive
+          animate: @config.animate
+          onShapeClick: SHAPE_CLICK
+          isLoading: @config.isLoading
+          error: @config.error
+          type: chemistry-canvas
+        })
     }
 
     emits {
@@ -100,6 +118,18 @@ orbital ChemistryCanvasOrbital {
       }
         @description "onShapeClick prop"
         @tier "essential"
+    }
+
+    listens {
+      UPDATE {
+        atoms : [ChemistryCanvasAtomsItem]
+        bonds : [ChemistryCanvasBondsItem]
+        arrows : [ChemistryCanvasArrowsItem]
+        shapes : [ChemistryCanvasShapesItem]
+      }
+        @description "Live scene update; payload carries the current drawable state."
+        @synonyms "tick, redraw, animate, frame"
+        @tier "domain"
     }
 
     config {
