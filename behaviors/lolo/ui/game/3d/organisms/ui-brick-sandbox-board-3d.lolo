@@ -1,0 +1,151 @@
+app ui-brick-sandbox-board-3d "1.0.0"
+"BrickSandboxBoard3D — 6x6 LEGO-style build-to-blueprint sandbox; click target cells to place bricks before 3 mistakes."
+orbital BrickSandboxBoard3DOrbital {
+  type BrickSandboxBoard3DError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type Asset = {
+      url : asset
+      role : string
+      category : string
+      animations : [string]
+      style : string
+      dimension : string
+      aspect : string
+      name : string
+      thumbnailUrl : string
+    }
+  type BrickSandboxBoard3DTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    passable : boolean
+    modelUrl : Asset
+  }
+  type BrickSandboxBoard3DBlueprintItem = {
+    id : string!
+    x : number!
+    y : number!
+    filled : boolean
+    brickModel : Asset
+  }
+  type BrickSandboxBoard3DFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    type : string
+    assetUrl : Asset
+  }
+
+  entity BrickSandboxBoard3DItem [runtime] {
+    id : string!
+    blueprint : [BrickSandboxBoard3DBlueprintItem]
+    features : [BrickSandboxBoard3DFeaturesItem]
+    placed : number = 0
+    mistakes : number = 0
+    result : "none" | "won" | "lost" = none
+  }
+
+  trait BrickSandboxBoard3DRender -> @rebindable BrickSandboxBoard3DItem [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.blueprint (array/map @config.blueprint (fn b (object/merge @b { filled: false }))))
+        (set @entity.placed 0)
+        (set @entity.mistakes 0)
+        (set @entity.result "none")
+        (set @entity.features (array/map @entity.blueprint (fn b (if (== @b.filled true) { id: @b.id, x: @b.x, y: @b.y, type: "brick", assetUrl: @b.brickModel } { id: @b.id, x: @b.x, y: @b.y, type: "marker", assetUrl: @config.markerModel }))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Placed", value: @entity.placed }, { label: "Mistakes", value: @entity.mistakes }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: [], features: @entity.features, scale: @config.scale, backgroundColor: @config.bgColor, tileClickEvent: TILE_CLICK } ]
+        })
+
+      TILE_CLICK -> playing when (== @entity.result "none")
+        (let ((hit (array/find @entity.blueprint (fn b (and (== @b.x ?x) (and (== @b.y ?z) (== @b.filled false)))))))
+          (do
+            (set @entity.blueprint (if (!= @hit null) (array/map @entity.blueprint (fn b (if (and (== @b.x ?x) (== @b.y ?z)) (object/merge @b { filled: true }) @b))) @entity.blueprint))
+            (set @entity.placed (if (!= @hit null) (+ @entity.placed 1) @entity.placed))
+            (set @entity.mistakes (if (== @hit null) (+ @entity.mistakes 1) @entity.mistakes))
+            (set @entity.result (if (>= @entity.placed 8) "won" (if (>= @entity.mistakes 3) "lost" "none")))
+            (set @entity.features (array/map @entity.blueprint (fn b (if (== @b.filled true) { id: @b.id, x: @b.x, y: @b.y, type: "brick", assetUrl: @b.brickModel } { id: @b.id, x: @b.x, y: @b.y, type: "marker", assetUrl: @config.markerModel }))))
+            (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Placed", value: @entity.placed }, { label: "Mistakes", value: @entity.mistakes }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: [], features: @entity.features, scale: @config.scale, backgroundColor: @config.bgColor, tileClickEvent: TILE_CLICK } ]
+        })
+          )
+        )
+
+      PLAY_AGAIN -> playing
+        (set @entity.blueprint (array/map @config.blueprint (fn b (object/merge @b { filled: false }))))
+        (set @entity.placed 0)
+        (set @entity.mistakes 0)
+        (set @entity.result "none")
+        (set @entity.features (array/map @entity.blueprint (fn b (if (== @b.filled true) { id: @b.id, x: @b.x, y: @b.y, type: "brick", assetUrl: @b.brickModel } { id: @b.id, x: @b.x, y: @b.y, type: "marker", assetUrl: @config.markerModel }))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Placed", value: @entity.placed }, { label: "Mistakes", value: @entity.mistakes }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: [], features: @entity.features, scale: @config.scale, backgroundColor: @config.bgColor, tileClickEvent: TILE_CLICK } ]
+        })
+
+    }
+
+    emits {
+      TILE_CLICK -> external {
+        tileId : string
+        x : number!
+        z : number
+      }
+        @description "Emits UI:{tileClickEvent} with {tileId,x,z} on grid cell click"
+        @tier "domain"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "domain"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : BrickSandboxBoard3DError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      tiles : [BrickSandboxBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t20", x: 2, y: 0, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t30", x: 3, y: 0, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t40", x: 4, y: 0, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t50", x: 5, y: 0, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t11", x: 1, y: 1, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t21", x: 2, y: 1, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t31", x: 3, y: 1, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t41", x: 4, y: 1, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t51", x: 5, y: 1, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t02", x: 0, y: 2, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t12", x: 1, y: 2, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t22", x: 2, y: 2, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t32", x: 3, y: 2, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t42", x: 4, y: 2, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t52", x: 5, y: 2, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t03", x: 0, y: 3, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t13", x: 1, y: 3, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t23", x: 2, y: 3, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t33", x: 3, y: 3, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t43", x: 4, y: 3, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t53", x: 5, y: 3, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t04", x: 0, y: 4, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t14", x: 1, y: 4, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t24", x: 2, y: 4, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t34", x: 3, y: 4, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t44", x: 4, y: 4, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t54", x: 5, y: 4, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t05", x: 0, y: 5, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t15", x: 1, y: 5, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t25", x: 2, y: 5, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t35", x: 3, y: 5, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t45", x: 4, y: 5, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }, { id: "t55", x: 5, y: 5, terrain: "baseplate", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/square-hq-plate-1x1.glb", role: "tile", category: "baseplate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-plate-1x1", thumbnailUrl: "" } }]
+        @label "Tiles"
+        @description "6x6 flat baseplate — one plate model per cell."
+        @tier "presentation"
+      blueprint : [BrickSandboxBoard3DBlueprintItem] = [{ id: "bp1", x: 1, y: 2, filled: false, brickModel: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/square-hq-brick-1x1.glb", role: "decoration", category: "brick-square", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-brick-1x1", thumbnailUrl: "" } }, { id: "bp2", x: 2, y: 2, filled: false, brickModel: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/round-hq-brick-1x1-round.glb", role: "decoration", category: "brick-round", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "round-hq-brick-1x1-round", thumbnailUrl: "" } }, { id: "bp3", x: 3, y: 2, filled: false, brickModel: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/bevel-hq-brick-2x2.glb", role: "decoration", category: "brick-bevel", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "bevel-hq-brick-2x2", thumbnailUrl: "" } }, { id: "bp4", x: 4, y: 2, filled: false, brickModel: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/square-hq-brick-1x1.glb", role: "decoration", category: "brick-square", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-brick-1x1", thumbnailUrl: "" } }, { id: "bp5", x: 1, y: 4, filled: false, brickModel: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/round-hq-brick-1x1-round.glb", role: "decoration", category: "brick-round", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "round-hq-brick-1x1-round", thumbnailUrl: "" } }, { id: "bp6", x: 2, y: 4, filled: false, brickModel: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/bevel-hq-brick-2x2.glb", role: "decoration", category: "brick-bevel", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "bevel-hq-brick-2x2", thumbnailUrl: "" } }, { id: "bp7", x: 3, y: 4, filled: false, brickModel: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/square-hq-brick-1x1.glb", role: "decoration", category: "brick-square", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "square-hq-brick-1x1", thumbnailUrl: "" } }, { id: "bp8", x: 4, y: 4, filled: false, brickModel: { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/terrain/round-hq-brick-1x1-round.glb", role: "decoration", category: "brick-round", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "round-hq-brick-1x1-round", thumbnailUrl: "" } }]
+        @label "Blueprint"
+        @description "8 target cells forming the build blueprint, cycling 3 brick models."
+        @tier "presentation"
+      markerModel : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-brick-sandbox-board-3d/kenney-brick-kit/features/round-hq-plate-1x1-round.glb", role: "decoration", category: "marker", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "round-hq-plate-1x1-round", thumbnailUrl: "" }
+        @label "Marker Model"
+        @description "Subtle stud marker shown on unfilled blueprint cells."
+        @tier "presentation"
+      scale : number = 0.5
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      bgColor : string = "#FFD966"
+        @label "Bg Color"
+        @description "Bright playful canvas background color"
+        @tier "presentation"
+    }
+  }
+
+  page "/brick-sandbox-board-3d" as BrickSandboxBoard3DPage -> BrickSandboxBoard3DRender
+}

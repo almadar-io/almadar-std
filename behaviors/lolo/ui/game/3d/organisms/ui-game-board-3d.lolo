@@ -7,6 +7,17 @@ orbital GameBoard3DOrbital {
     code : string
     stack : string
   }
+  type Asset = {
+      url : asset
+      role : string
+      category : string
+      animations : [string]
+      style : string
+      dimension : string
+      aspect : string
+      name : string
+      thumbnailUrl : string
+    }
   type GameBoard3DTilesItem = {
     id : string
     x : number!
@@ -14,12 +25,12 @@ orbital GameBoard3DOrbital {
     z : number
     terrain : string
     type : string
-    terrainSprite : asset
+    terrainSprite : Asset
     passable : boolean
     movementCost : number
     tileType : string
     elevation : number
-    modelUrl : asset
+    modelUrl : Asset
   }
   type GameBoard3DUnitsItem = {
     id : string!
@@ -27,8 +38,8 @@ orbital GameBoard3DOrbital {
     x : number
     y : number
     z : number
-    sprite : asset
-    modelUrl : asset
+    sprite : Asset
+    modelUrl : Asset
     unitType : string
     heroId : string
     name : string
@@ -60,17 +71,16 @@ orbital GameBoard3DOrbital {
     y : number!
     z : number
     type : string!
-    sprite : asset
-    assetUrl : asset
+    sprite : Asset
+    assetUrl : Asset
     color : string
     elevation : number
   }
   type GameBoard3DAssetManifest = {
-    baseUrl : asset
-    terrains : Map string asset
-    units : Map string asset
-    features : Map string asset
-    effects : Map string asset
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
   }
   type GameBoard3DValidMovesItem = {
     x : number!
@@ -114,7 +124,7 @@ orbital GameBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
     }
 
@@ -135,7 +145,7 @@ orbital GameBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
@@ -144,7 +154,7 @@ orbital GameBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
@@ -155,7 +165,7 @@ orbital GameBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0))))
@@ -167,7 +177,7 @@ orbital GameBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       ATTACK -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))
@@ -179,7 +189,7 @@ orbital GameBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       END_TURN -> playing when (== @entity.result "none")
@@ -193,7 +203,7 @@ orbital GameBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       CANCEL -> playing when (!= @entity.selectedUnitId "")
@@ -204,11 +214,12 @@ orbital GameBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
         (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "defeat" "victory"))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
         (set @entity.phase "game_over")
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
@@ -216,7 +227,7 @@ orbital GameBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
     }
 
@@ -234,7 +245,7 @@ orbital GameBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
     }
 
@@ -246,13 +257,14 @@ orbital GameBoard3DOrbital {
         # move pass: each live enemy without an adjacent player steps one cell toward nearest live player
         (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (if (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.health 0)) (== (grid/manhattan-distance (object/get @u position) (object/get @p position)) 1))))) 0) (let ((target (array/first (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.health 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)) } })) @u) @u))))
         (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
         (set @entity.enemyTurn false)
         (set @entity.currentTeam "player")
         (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
     }
 
@@ -280,11 +292,14 @@ orbital GameBoard3DOrbital {
       TILE_CLICK -> external {
         x : number!
         z : number!
+        tileId : string
       }
         @description "-- Declarative event props --"
         @tier "domain"
       UNIT_CLICK -> external {
         unitId : string!
+        x : number
+        z : number
       }
         @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
         @tier "domain"
@@ -318,19 +333,19 @@ orbital GameBoard3DOrbital {
         @label "Error"
         @description "Error state (UiError)"
         @tier "presentation"
-      tiles : [GameBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t10", x: 1, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t20", x: 2, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t30", x: 3, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t40", x: 4, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t01", x: 0, y: 1, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t11", x: 1, y: 1, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail.glb" }, { id: "t21", x: 2, y: 1, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor.glb" }, { id: "t31", x: 3, y: 1, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor.glb" }, { id: "t41", x: 4, y: 1, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t02", x: 0, y: 2, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t12", x: 1, y: 2, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor.glb" }, { id: "t22", x: 2, y: 2, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail.glb" }, { id: "t32", x: 3, y: 2, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor.glb" }, { id: "t42", x: 4, y: 2, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t03", x: 0, y: 3, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t13", x: 1, y: 3, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor.glb" }, { id: "t23", x: 2, y: 3, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor.glb" }, { id: "t33", x: 3, y: 3, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail.glb" }, { id: "t43", x: 4, y: 3, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t04", x: 0, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t14", x: 1, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t24", x: 2, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t34", x: 3, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, { id: "t44", x: 4, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }]
+      tiles : [GameBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t20", x: 2, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t30", x: 3, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t40", x: 4, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t11", x: 1, y: 1, terrain: "dirt", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb", role: "decoration", category: "template-floor-detail", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "template-floor-detail", thumbnailUrl: "" } }, { id: "t21", x: 2, y: 1, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb", role: "decoration", category: "template-floor", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "template-floor", thumbnailUrl: "" } }, { id: "t31", x: 3, y: 1, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb", role: "decoration", category: "template-floor", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "template-floor", thumbnailUrl: "" } }, { id: "t41", x: 4, y: 1, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t02", x: 0, y: 2, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t12", x: 1, y: 2, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb", role: "decoration", category: "template-floor", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "template-floor", thumbnailUrl: "" } }, { id: "t22", x: 2, y: 2, terrain: "dirt", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb", role: "decoration", category: "template-floor-detail", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "template-floor-detail", thumbnailUrl: "" } }, { id: "t32", x: 3, y: 2, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb", role: "decoration", category: "template-floor", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "template-floor", thumbnailUrl: "" } }, { id: "t42", x: 4, y: 2, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t03", x: 0, y: 3, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t13", x: 1, y: 3, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb", role: "decoration", category: "template-floor", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "template-floor", thumbnailUrl: "" } }, { id: "t23", x: 2, y: 3, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb", role: "decoration", category: "template-floor", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "template-floor", thumbnailUrl: "" } }, { id: "t33", x: 3, y: 3, terrain: "dirt", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb", role: "decoration", category: "template-floor-detail", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "template-floor-detail", thumbnailUrl: "" } }, { id: "t43", x: 4, y: 3, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t04", x: 0, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t14", x: 1, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t24", x: 2, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t34", x: 3, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t44", x: 4, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "decoration", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }]
         @label "Tiles"
         @description "5×5 grid tile data — takes priority over entity-derived tiles."
         @tier "presentation"
-      units : [GameBoard3DUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "worker", name: "Worker", team: player, health: 10, maxHealth: 10, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/pit_slave.glb" }, { id: "u2", position: { x: 1, y: 3 }, unitType: "warrior", name: "Warrior", team: player, health: 10, maxHealth: 10, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/valence.glb" }, { id: "e1", position: { x: 3, y: 3 }, unitType: "guardian", name: "Guardian", team: enemy, health: 8, maxHealth: 10, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/shadow_legionnaire.glb" }, { id: "e2", position: { x: 3, y: 1 }, unitType: "scout", name: "Scout", team: enemy, health: 6, maxHealth: 8, modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/tunnel_creeper.glb" }]
+      units : [GameBoard3DUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "worker", name: "Worker", team: player, health: 10, maxHealth: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-human.glb", role: "decoration", category: "character-human", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-human", thumbnailUrl: "" } }, { id: "u2", position: { x: 1, y: 3 }, unitType: "warrior", name: "Warrior", team: player, health: 10, maxHealth: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-arena/units/character-soldier.glb", role: "decoration", category: "character-soldier", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-soldier", thumbnailUrl: "" } }, { id: "e1", position: { x: 3, y: 3 }, unitType: "guardian", name: "Guardian", team: enemy, health: 8, maxHealth: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-orc.glb", role: "decoration", category: "character-orc", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-orc", thumbnailUrl: "" } }, { id: "e2", position: { x: 3, y: 1 }, unitType: "scout", name: "Scout", team: enemy, health: 6, maxHealth: 8, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-graveyard-kit/units/character-skeleton.glb", role: "decoration", category: "character-skeleton", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-skeleton", thumbnailUrl: "" } }]
         @label "Units"
         @description "Initial unit roster (2 player + 2 enemy) — takes priority over entity-derived units."
         @tier "presentation"
-      features : [GameBoard3DFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", assetUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/barrels.glb" }, { id: "f2", x: 3, y: 0, type: "portal", assetUrl: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/gate-door.glb" }]
+      features : [GameBoard3DFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/chest.glb", role: "decoration", category: "chest", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "chest", thumbnailUrl: "" } }, { id: "f2", x: 3, y: 0, type: "portal", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/gate-metal-bars.glb", role: "decoration", category: "gate-metal-bars", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "gate-metal-bars", thumbnailUrl: "" } }]
         @label "Features"
         @description "Decorative features on the board."
         @tier "presentation"
-      assetManifest : GameBoard3DAssetManifest = { terrains: { grass: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor.glb", dirt: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail.glb", stone: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb", forest: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail.glb", castle: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/template-floor-detail-a.glb" }, units: { worker: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/pit_slave.glb", guardian: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/shadow_legionnaire.glb", warrior: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/valence.glb", scout: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/tunnel_creeper.glb" }, features: { gold_mine: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/barrels.glb", portal: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/gate-door.glb" }, effects: { melee: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/barrels.glb", ranged: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/gate-door.glb", magic: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/barrels.glb", hit: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/gate-door.glb", heal: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/barrels.glb", death: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/default/models/gate-door.glb" } }
+      assetManifest : GameBoard3DAssetManifest = { terrains: { grass: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb", role: "tile", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, dirt: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb", role: "tile", category: "dirt", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "dirt", thumbnailUrl: "" }, stone: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "tile", category: "stone", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, forest: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb", role: "tile", category: "forest", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "forest", thumbnailUrl: "" }, castle: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb", role: "tile", category: "castle", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "castle", thumbnailUrl: "" } }, units: { worker: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-human.glb", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "worker", thumbnailUrl: "" }, guardian: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-orc.glb", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "guardian", thumbnailUrl: "" }, warrior: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-arena/units/character-soldier.glb", role: "npc", category: "warrior", animations: ["idle","walk","attack","hit","death"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "warrior", thumbnailUrl: "" }, scout: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-graveyard-kit/units/character-skeleton.glb", role: "npc", category: "scout", animations: ["idle","walk","attack","hit","death"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "scout", thumbnailUrl: "" } }, features: { gold_mine: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/chest.glb", role: "decoration", category: "gold_mine", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" }, portal: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/gate-metal-bars.glb", role: "decoration", category: "portal", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "portal", thumbnailUrl: "" } }, effects: { melee: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/weapon-sword.glb", role: "effect", category: "melee", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "melee", thumbnailUrl: "" }, ranged: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/weapon-spear.glb", role: "effect", category: "ranged", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "ranged", thumbnailUrl: "" }, magic: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/banner.glb", role: "effect", category: "magic", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "magic", thumbnailUrl: "" }, hit: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/trap.glb", role: "effect", category: "hit", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "hit", thumbnailUrl: "" }, heal: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/coin.glb", role: "effect", category: "heal", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "heal", thumbnailUrl: "" }, death: { url: "https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/stones.glb", role: "effect", category: "death", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "death", thumbnailUrl: "" } } }
         @label "Asset Manifest"
         @description "Asset manifest for terrain/unit/feature/effect sprites."
         @tier "presentation"

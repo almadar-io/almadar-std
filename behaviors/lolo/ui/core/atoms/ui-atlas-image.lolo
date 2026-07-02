@@ -1,0 +1,73 @@
+app ui-atlas-image "1.0.0"
+"AtlasImage — UI factory (1:1 with the @almadar/ui atlas-image pattern)."
+orbital AtlasImageOrbital {
+  type AtlasImageAsset = {
+    name : string
+    category : string
+  }
+
+  entity AtlasImageItem [runtime] {
+    id : string!
+  }
+
+  trait AtlasImageRender -> @rebindable AtlasImageItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          asset: @config.asset
+          size: @config.size
+          width: @config.width
+          height: @config.height
+          fill: @config.fill
+          fit: @config.fit
+          alt: @config.alt
+          className: @config.className
+          style: @config.style
+          type: atlas-image
+        })
+    }
+
+    config {
+      asset : AtlasImageAsset = { name: "Name", category: "Category" }
+        @label "Asset"
+        @description "asset prop"
+        @tier "presentation"
+      size : number = 0
+        @label "Size"
+        @description "Square pixel size (icon usage). Ignored when `fill`."
+        @tier "presentation"
+      width : number = 0
+        @label "Width"
+        @description "width prop"
+        @tier "presentation"
+      height : number = 0
+        @label "Height"
+        @description "height prop"
+        @tier "presentation"
+      fill : boolean = false
+        @label "Fill"
+        @description "Absolutely fill the nearest positioned ancestor (background usage)."
+        @tier "presentation"
+      fit : "contain" | "cover" | "fill" = contain
+        @label "Fit"
+        @description "fit prop"
+        @tier "presentation"
+      alt : string = "Alt"
+        @label "Alt"
+        @description "alt prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      style : json = {}
+        @label "Style"
+        @description "style prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/atlas-image" as AtlasImagePage -> AtlasImageRender
+}

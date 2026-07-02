@@ -126,6 +126,8 @@ export interface StdUiGameCanvas3dCameraChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCanvas3dConfig {
+  /** Default: `{"effects":{},"features":{"castle":{"animations":["static"],"aspect":"1:1","category":"castle","dimension":"2d","name":"castle","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/features/tower.png"},"gold_mine":{"animations":["static"],"aspect":"1:1","category":"gold_mine","dimension":"2d","name":"gold_mine","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/features/tower.png"},"portal":{"animations":["static"],"aspect":"1:1","category":"portal","dimension":"2d","name":"portal","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/health_potion.png"}},"terrains":{"castle":{"animations":["static"],"aspect":"1:1","category":"castle","dimension":"2d","name":"castle","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png"},"dirt":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/floor.png"},"forest":{"animations":["static"],"aspect":"1:1","category":"forest","dimension":"2d","name":"forest","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/grass.png"},"grass":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/grass.png"},"stone":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/stone.png"}},"units":{"guardian":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"guardian","dimension":"2d","name":"guardian","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/units/hero.png"},"mender":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"mender","dimension":"2d","name":"mender","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"scrapper":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"scrapper","dimension":"2d","name":"scrapper","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/enemy.png"},"worker":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"worker","dimension":"2d","name":"worker","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/units/creep.png"}}}` */
+  assetManifest?: EntityRow;
   /** Default: `[{"x":1,"z":1},{"x":2,"z":2}]` */
   attackTargets?: EntityRow[];
   /** Default: `"#1a1a2e"` */
@@ -143,13 +145,27 @@ export interface StdUiGameCanvas3dConfig {
   /** Default: `[]` */
   fogOfWar?: unknown;
   /** Default: `false` */
+  interpolateUnits?: boolean;
+  /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `{"item":"Item"}` */
+  keyMap?: Record<string, TraitConfig>;
+  /** Default: `{"item":"Item"}` */
+  keyUpMap?: Record<string, TraitConfig>;
   /** Default: `"Loading 3D Scene..."` */
   loadingMessage?: string;
   /** Default: `"standard"` */
   orientation?: 'standard' | 'rotated';
   /** Default: `"default"` */
   overlay?: 'default' | 'hidden' | 'minimap';
+  /** Default: `32` */
+  pixelsPerUnit?: number;
+  /** Default: `[{"height":1,"type":"ground","width":1,"x":1,"y":1},{"height":2,"type":"platform","width":2,"x":2,"y":2}]` */
+  platforms?: EntityRow[];
+  /** Default: `{"animation":"Animation","facingRight":false,"frame":1,"grounded":false,"height":1,"vx":1,"vy":1,"width":1,"x":1,"y":1}` */
+  player?: EntityRow;
+  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"playerSprite","dimension":"2d","name":"playerSprite","role":"player","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
+  playerSprite?: EntityRow;
   /** Default: `[]` */
   preloadAssets?: string[];
   /** Default: `0` */
@@ -166,6 +182,8 @@ export interface StdUiGameCanvas3dConfig {
   showGrid?: boolean;
   /** Default: `false` */
   showTileInfo?: boolean;
+  /** Default: `{}` */
+  tileSprites?: Record<string, TraitConfig>;
   /** Default: `[]` */
   tiles?: EntityRow[];
   /** Default: `1` */
@@ -176,6 +194,10 @@ export interface StdUiGameCanvas3dConfig {
   useInstancing?: boolean;
   /** Default: `[{"x":1,"z":1},{"x":2,"z":2}]` */
   validMoves?: EntityRow[];
+  /** Default: `400` */
+  worldHeight?: number;
+  /** Default: `0` */
+  worldWidth?: number;
 }
 
 /**

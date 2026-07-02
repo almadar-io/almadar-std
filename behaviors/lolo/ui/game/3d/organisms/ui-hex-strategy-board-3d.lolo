@@ -1,0 +1,263 @@
+app ui-hex-strategy-board-3d "1.0.0"
+"HexStrategyBoard3D — settler claims neutral village/market/windmill hexes before the turn clock runs out."
+orbital HexStrategyBoard3DOrbital {
+  type HexStrategyBoard3DError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type Asset = {
+      url : asset
+      role : string
+      category : string
+      animations : [string]
+      style : string
+      dimension : string
+      aspect : string
+      name : string
+      thumbnailUrl : string
+    }
+  type HexStrategyBoard3DTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    passable : boolean
+    claimable : boolean
+    modelUrl : Asset
+  }
+  type HexStrategyBoard3DUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type HexStrategyBoard3DUnitsItem = {
+    id : string!
+    position : HexStrategyBoard3DUnitsItemPosition
+    unitType : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    modelUrl : Asset
+  }
+  type HexStrategyBoard3DFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    type : string!
+    assetUrl : Asset
+  }
+  type HexStrategyBoard3DValidMovesItem = {
+    x : number!
+    z : number!
+  }
+
+  entity HexStrategyBoard3DItem [runtime] {
+    id : string!
+    units : [HexStrategyBoard3DUnitsItem]
+    selectedUnitId : string
+    validMoves : [HexStrategyBoard3DValidMovesItem]
+    claimed : number = 0
+    claimedIds : [string] = []
+    totalBuildings : number = 3
+    turnsLeft : number = 20
+    result : "none" | "won" | "lost" = none
+    gridWidth : number = 6
+    gridHeight : number = 6
+    movementRange : number = 2
+  }
+
+  trait HexStrategyBoard3DRender -> @rebindable HexStrategyBoard3DItem [interaction, instance] {
+    initial: playing
+
+    state menu {
+      START -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.claimed 0)
+        (set @entity.claimedIds [])
+        (set @entity.totalBuildings 3)
+        (set @entity.turnsLeft @config.startingTurns)
+        (set @entity.result none)
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Claimed", value: @entity.claimed }, { label: "Turns Left", value: @entity.turnsLeft }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+    }
+
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.claimed 0)
+        (set @entity.claimedIds [])
+        (set @entity.totalBuildings 3)
+        (set @entity.turnsLeft @config.startingTurns)
+        (set @entity.result none)
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (set @entity.gridWidth 6)
+        (set @entity.gridHeight 6)
+        (set @entity.movementRange 2)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Claimed", value: @entity.claimed }, { label: "Turns Left", value: @entity.turnsLeft }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.result "none") (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Claimed", value: @entity.claimed }, { label: "Turns Left", value: @entity.turnsLeft }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+
+      TILE_CLICK -> playing when (and (== @entity.result "none") (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (== (object/get (array/find @config.tiles (fn t (and (== (object/get @t x) ?x) (== (object/get @t y) ?z)))) passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0))))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (let ((tile (array/find @config.tiles (fn t (and (== (object/get @t x) ?x) (== (object/get @t y) ?z)))))) (do (set @entity.claimedIds (if (and (== (object/get @tile claimable) true) (not (array/includes @entity.claimedIds (object/get @tile id)))) (array/append @entity.claimedIds (object/get @tile id)) @entity.claimedIds)) (set @entity.claimed (array/len @entity.claimedIds)) (set @entity.result (if (== @entity.claimed @entity.totalBuildings) "won" @entity.result))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Claimed", value: @entity.claimed }, { label: "Turns Left", value: @entity.turnsLeft }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Claimed", value: @entity.claimed }, { label: "Turns Left", value: @entity.turnsLeft }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+
+      GAME_END -> gameover when (!= @entity.result "none")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Claimed", value: @entity.claimed }, { label: "Turns Left", value: @entity.turnsLeft }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> menu
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.claimed 0)
+        (set @entity.claimedIds [])
+        (set @entity.totalBuildings 3)
+        (set @entity.turnsLeft @config.startingTurns)
+        (set @entity.result none)
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Claimed", value: @entity.claimed }, { label: "Turns Left", value: @entity.turnsLeft }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+    }
+
+    ticks {
+      turnTick every 2s
+        when (== @entity.result "none")
+        (set @entity.turnsLeft (math/max 0 (- @entity.turnsLeft 1)))
+        (set @entity.result (if (<= @entity.turnsLeft 0) "lost" @entity.result))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Claimed", value: @entity.claimed }, { label: "Turns Left", value: @entity.turnsLeft }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+    }
+
+    emits {
+      TILE_CLICK -> external {
+        tileId : string
+        x : number!
+        z : number
+      }
+        @description "-- Declarative event props --"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+        x : number
+        z : number
+      }
+        @description "Selects the settler on click"
+        @tier "domain"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Deselects the current unit"
+        @tier "domain"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when the realm-expansion match ends"
+        @tier "domain"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Resets the board for a new match"
+        @tier "domain"
+      START -> external {
+        id : string
+      }
+        @description "Starts the match from the menu state"
+        @tier "domain"
+      INIT -> external {
+        id : string
+      }
+        @description "Initializes the board on first mount"
+        @tier "domain"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : HexStrategyBoard3DError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      tiles : [HexStrategyBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "castle", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-castle.glb", role: "decoration", category: "building-castle", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-castle", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t20", x: 2, y: 0, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t30", x: 3, y: 0, terrain: "sand", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb", role: "decoration", category: "sand", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, { id: "t40", x: 4, y: 0, terrain: "water", passable: false, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/water.glb", role: "decoration", category: "water", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "water", thumbnailUrl: "" } }, { id: "t50", x: 5, y: 0, terrain: "water", passable: false, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/water.glb", role: "decoration", category: "water", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "water", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t11", x: 1, y: 1, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t21", x: 2, y: 1, terrain: "village", passable: true, claimable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-village.glb", role: "decoration", category: "building-village", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-village", thumbnailUrl: "" } }, { id: "t31", x: 3, y: 1, terrain: "sand", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb", role: "decoration", category: "sand", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, { id: "t41", x: 4, y: 1, terrain: "sand", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb", role: "decoration", category: "sand", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, { id: "t51", x: 5, y: 1, terrain: "water", passable: false, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/water.glb", role: "decoration", category: "water", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "water", thumbnailUrl: "" } }, { id: "t02", x: 0, y: 2, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t12", x: 1, y: 2, terrain: "mountain", passable: false, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/stone-mountain.glb", role: "decoration", category: "stone-mountain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-mountain", thumbnailUrl: "" } }, { id: "t22", x: 2, y: 2, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t32", x: 3, y: 2, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t42", x: 4, y: 2, terrain: "market", passable: true, claimable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-market.glb", role: "decoration", category: "building-market", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-market", thumbnailUrl: "" } }, { id: "t52", x: 5, y: 2, terrain: "sand", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb", role: "decoration", category: "sand", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, { id: "t03", x: 0, y: 3, terrain: "dirt", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/dirt.glb", role: "decoration", category: "dirt", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "dirt", thumbnailUrl: "" } }, { id: "t13", x: 1, y: 3, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t23", x: 2, y: 3, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t33", x: 3, y: 3, terrain: "mountain", passable: false, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/stone-mountain.glb", role: "decoration", category: "stone-mountain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-mountain", thumbnailUrl: "" } }, { id: "t43", x: 4, y: 3, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t53", x: 5, y: 3, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t04", x: 0, y: 4, terrain: "forest", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass-forest.glb", role: "decoration", category: "grass-forest", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass-forest", thumbnailUrl: "" } }, { id: "t14", x: 1, y: 4, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t24", x: 2, y: 4, terrain: "windmill", passable: true, claimable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-mill.glb", role: "decoration", category: "building-mill", animations: ["animation"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-mill", thumbnailUrl: "" } }, { id: "t34", x: 3, y: 4, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t44", x: 4, y: 4, terrain: "mountain", passable: false, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/stone-mountain.glb", role: "decoration", category: "stone-mountain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-mountain", thumbnailUrl: "" } }, { id: "t54", x: 5, y: 4, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t05", x: 0, y: 5, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t15", x: 1, y: 5, terrain: "sand", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb", role: "decoration", category: "sand", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, { id: "t25", x: 2, y: 5, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t35", x: 3, y: 5, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t45", x: 4, y: 5, terrain: "grass", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t55", x: 5, y: 5, terrain: "hill", passable: true, claimable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass-hill.glb", role: "decoration", category: "grass-hill", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass-hill", thumbnailUrl: "" } }]
+        @label "Tiles"
+        @description "6x6 hex realm grid — biomes + neutral building hexes on square-lattice positions."
+        @tier "presentation"
+      units : [HexStrategyBoard3DUnitsItem] = [{ id: "settler", position: { x: 0, y: 0 }, unitType: "settler", name: "Settler", team: player, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/unit-tower.glb", role: "decoration", category: "unit-tower", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "unit-tower", thumbnailUrl: "" } }]
+        @label "Units"
+        @description "The player's single settler token — starts on the castle hex."
+        @tier "presentation"
+      features : [HexStrategyBoard3DFeaturesItem] = []
+        @label "Features"
+        @description "Unused — neutral buildings are encoded directly in tiles."
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+      startingTurns : number = 20
+        @label "Starting Turns"
+        @description "Turn-clock ticks before an unfinished realm counts as lost"
+        @tier "presentation"
+    }
+  }
+
+  page "/hex-strategy-board-3d" as HexStrategyBoard3DPage -> HexStrategyBoard3DRender
+}

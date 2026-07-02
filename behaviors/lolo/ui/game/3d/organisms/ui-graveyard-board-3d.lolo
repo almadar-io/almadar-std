@@ -1,0 +1,356 @@
+app ui-graveyard-board-3d "1.0.0"
+"GraveyardBoard3D — 3D grid-tactics board: Keeper vs skeleton, zombie and ghost on a graveyard grid."
+orbital GraveyardBoard3DOrbital {
+  type GraveyardBoard3DError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type Asset = {
+      url : asset
+      role : string
+      category : string
+      animations : [string]
+      style : string
+      dimension : string
+      aspect : string
+      name : string
+      thumbnailUrl : string
+    }
+  type GraveyardBoard3DTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : Asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+    modelUrl : Asset
+  }
+  type GraveyardBoard3DUnitsItem = {
+    id : string!
+    position : GraveyardBoard3DUnitsItemPosition
+    x : number
+    y : number
+    z : number
+    sprite : Asset
+    modelUrl : Asset
+    unitType : string
+    heroId : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    faction : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    traits : [GraveyardBoard3DUnitsItemTraitsItem]
+    previousPosition : GraveyardBoard3DUnitsItemPreviousPosition
+    elevation : number
+  }
+  type GraveyardBoard3DUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type GraveyardBoard3DUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number!
+  }
+  type GraveyardBoard3DUnitsItemPreviousPosition = {
+    x : number!
+    y : number!
+  }
+  type GraveyardBoard3DFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : Asset
+    assetUrl : Asset
+    color : string
+    elevation : number
+  }
+  type GraveyardBoard3DValidMovesItem = {
+    x : number!
+    z : number!
+  }
+  type GraveyardBoard3DAttackTargetsItem = {
+    x : number!
+    z : number!
+  }
+
+  entity GraveyardBoard3DItem [runtime] {
+    id : string!
+    units : [GraveyardBoard3DUnitsItem]
+    selectedUnitId : string
+    validMoves : [GraveyardBoard3DValidMovesItem]
+    attackTargets : [GraveyardBoard3DAttackTargetsItem]
+    phase : "observation" | "selection" | "movement" | "action" | "enemy_turn" | "game_over" = "observation"
+    turn : number = 0
+    result : "none" | "victory" | "defeat" = none
+    currentTeam : "player" | "enemy" = "player"
+    gridWidth : number = 5
+    gridHeight : number = 5
+    movementRange : number = 2
+    enemyTurn : boolean = false
+  }
+
+  trait GraveyardBoard3DRender -> @rebindable GraveyardBoard3DItem [interaction, instance] {
+    initial: playing
+
+    state menu {
+      START -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.currentTeam "player")
+        (set @entity.enemyTurn false)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true } ]
+        })
+    }
+
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.currentTeam "player")
+        (set @entity.enemyTurn false)
+        (set @entity.gridWidth 5)
+        (set @entity.gridHeight 5)
+        (set @entity.movementRange 2)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.phase "action")
+        (set @entity.attackTargets (array/map (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn s (== @s.id @entity.selectedUnitId))) position) (object/get @u position)) 1)))) (fn u { x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y) })))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true } ]
+        })
+
+      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.phase "selection")
+        (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== (object/get @t passable) true) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0)))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+        (set @entity.attackTargets [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true } ]
+        })
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true } ]
+        })
+
+      ATTACK -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)) }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true } ]
+        })
+
+      END_TURN -> playing when (== @entity.result "none")
+        (set @entity.turn (+ @entity.turn 1))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.enemyTurn true)
+        (set @entity.currentTeam "enemy")
+        (set @entity.phase "enemy_turn")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true } ]
+        })
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true } ]
+        })
+
+      GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "defeat" "victory"))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (set @entity.phase "game_over")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true } ]
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> menu
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.currentTeam "player")
+        (set @entity.enemyTurn false)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true } ]
+        })
+    }
+
+    ticks {
+      enemyAiTick every 1s
+        when (and (== @entity.enemyTurn true) (== @entity.result "none"))
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 1)) }) @u) @u))))
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (if (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.health 0)) (== (grid/manhattan-distance (object/get @u position) (object/get @p position)) 1))))) 0) (let ((target (array/first (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.health 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)) } })) @u) @u))))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (set @entity.enemyTurn false)
+        (set @entity.currentTeam "player")
+        (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true } ]
+        })
+    }
+
+    emits {
+      ATTACK -> external {
+        attacker : object
+        target : object
+        damage : number
+        attackerId : string!
+        targetId : string!
+      }
+        @description "-- Callbacks --"
+        @tier "domain"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when the match ends"
+        @tier "domain"
+      UNIT_MOVE -> external {
+        unit : object
+        to : GraveyardBoard3DValidMovesItem
+      }
+        @description "Called after a unit moves"
+        @tier "domain"
+      TILE_CLICK -> external {
+        x : number!
+        z : number!
+        tileId : string
+      }
+        @description "-- Declarative event props --"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+        x : number
+        z : number
+      }
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "domain"
+      END_TURN -> external {
+        id : string
+      }
+        @description "Emits UI:{endTurnEvent} with {} on end turn"
+        @tier "domain"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Emits UI:{cancelEvent} with {} on cancel"
+        @tier "domain"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "domain"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : GraveyardBoard3DError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      tiles : [GraveyardBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t20", x: 2, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t30", x: 3, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t40", x: 4, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t11", x: 1, y: 1, terrain: "dirt", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb", role: "decoration", category: "grave-border", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grave-border", thumbnailUrl: "" } }, { id: "t21", x: 2, y: 1, terrain: "gravel", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/road.glb", role: "decoration", category: "road", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road", thumbnailUrl: "" } }, { id: "t31", x: 3, y: 1, terrain: "dirt", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb", role: "decoration", category: "grave-border", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grave-border", thumbnailUrl: "" } }, { id: "t41", x: 4, y: 1, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t02", x: 0, y: 2, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t12", x: 1, y: 2, terrain: "gravel", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/road.glb", role: "decoration", category: "road", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road", thumbnailUrl: "" } }, { id: "t22", x: 2, y: 2, terrain: "dirt", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb", role: "decoration", category: "grave-border", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grave-border", thumbnailUrl: "" } }, { id: "t32", x: 3, y: 2, terrain: "gravel", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/road.glb", role: "decoration", category: "road", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road", thumbnailUrl: "" } }, { id: "t42", x: 4, y: 2, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t03", x: 0, y: 3, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t13", x: 1, y: 3, terrain: "dirt", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb", role: "decoration", category: "grave-border", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grave-border", thumbnailUrl: "" } }, { id: "t23", x: 2, y: 3, terrain: "gravel", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/road.glb", role: "decoration", category: "road", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road", thumbnailUrl: "" } }, { id: "t33", x: 3, y: 3, terrain: "dirt", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb", role: "decoration", category: "grave-border", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grave-border", thumbnailUrl: "" } }, { id: "t43", x: 4, y: 3, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t04", x: 0, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t14", x: 1, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t24", x: 2, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t34", x: 3, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }, { id: "t44", x: 4, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb", role: "decoration", category: "stone-wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone-wall", thumbnailUrl: "" } }]
+        @label "Tiles"
+        @description "5×5 grid tile data — takes priority over entity-derived tiles."
+        @tier "presentation"
+      units : [GraveyardBoard3DUnitsItem] = [{ id: "u1", position: { x: 2, y: 1 }, unitType: "keeper", name: "Keeper", team: player, health: 15, maxHealth: 15, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-keeper.glb", role: "decoration", category: "character-keeper", animations: ["idle","walk","die","attack-melee-right"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-keeper", thumbnailUrl: "" } }, { id: "e1", position: { x: 1, y: 3 }, unitType: "skeleton", name: "Skeleton", team: enemy, health: 8, maxHealth: 8, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-skeleton.glb", role: "decoration", category: "character-skeleton", animations: ["idle","walk","die","attack-melee-right"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-skeleton", thumbnailUrl: "" } }, { id: "e2", position: { x: 3, y: 3 }, unitType: "zombie", name: "Zombie", team: enemy, health: 10, maxHealth: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-zombie.glb", role: "decoration", category: "character-zombie", animations: ["idle","walk","die","attack-melee-right"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-zombie", thumbnailUrl: "" } }, { id: "e3", position: { x: 2, y: 3 }, unitType: "ghost", name: "Ghost", team: enemy, health: 6, maxHealth: 6, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-ghost.glb", role: "decoration", category: "character-ghost", animations: ["idle","walk","die","attack-melee-right"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-ghost", thumbnailUrl: "" } }]
+        @label "Units"
+        @description "Initial unit roster (1 player Keeper + 3 enemies) — takes priority over entity-derived units."
+        @tier "presentation"
+      features : [GraveyardBoard3DFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "crypt", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/crypt.glb", role: "decoration", category: "crypt", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "crypt", thumbnailUrl: "" } }, { id: "f2", x: 1, y: 1, type: "gravestone", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/gravestone-cross.glb", role: "decoration", category: "gravestone-cross", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "gravestone-cross", thumbnailUrl: "" } }, { id: "f3", x: 3, y: 1, type: "gravestone", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/gravestone-round.glb", role: "decoration", category: "gravestone-round", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "gravestone-round", thumbnailUrl: "" } }, { id: "f4", x: 1, y: 2, type: "pumpkin", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/pumpkin-carved.glb", role: "decoration", category: "pumpkin-carved", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "pumpkin-carved", thumbnailUrl: "" } }, { id: "f5", x: 3, y: 2, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/pine.glb", role: "decoration", category: "pine", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "pine", thumbnailUrl: "" } }, { id: "f6", x: 0, y: 2, type: "lantern", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/lantern-candle.glb", role: "decoration", category: "lantern-candle", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "lantern-candle", thumbnailUrl: "" } }, { id: "f7", x: 4, y: 2, type: "coffin", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/coffin.glb", role: "decoration", category: "coffin", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "coffin", thumbnailUrl: "" } }]
+        @label "Features"
+        @description "Decorative graveyard features — crypt, gravestones, pumpkin, pine, lantern, coffin."
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+      bgColor : string = "#14101f"
+        @label "Bg Color"
+        @description "Canvas background color — dark spooky-night tone"
+        @tier "presentation"
+    }
+  }
+
+  page "/graveyard-board-3d" as GraveyardBoard3DPage -> GraveyardBoard3DRender
+}

@@ -106,7 +106,7 @@ export interface StdUiCanvas2dConfig {
   keyUpMap?: Record<string, TraitConfig>;
   /** Default: `[{"height":1,"type":"ground","width":1,"x":1,"y":1},{"height":2,"type":"platform","width":2,"x":2,"y":2}]` */
   platforms?: EntityRow[];
-  /** Default: `{"facingRight":false,"grounded":false,"height":1,"vx":1,"vy":1,"width":1,"x":1,"y":1}` */
+  /** Default: `{"animation":"Animation","facingRight":false,"frame":1,"grounded":false,"height":1,"vx":1,"vy":1,"width":1,"x":1,"y":1}` */
   player?: EntityRow;
   /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"playerSprite","dimension":"2d","name":"playerSprite","role":"player","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   playerSprite?: EntityRow;

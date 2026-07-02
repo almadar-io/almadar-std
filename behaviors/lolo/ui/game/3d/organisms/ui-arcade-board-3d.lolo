@@ -1,0 +1,287 @@
+app ui-arcade-board-3d "1.0.0"
+"ArcadeBoard3D — 3D arcade-hall board: a kid roams a 5x6 hall, plays machines for tickets, claims the prize counter."
+orbital ArcadeBoard3DOrbital {
+  type ArcadeBoard3DError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type Asset = {
+      url : asset
+      atlas : asset
+      sprite : string
+      role : string
+      category : string
+      animations : [string]
+      style : string
+      variant : string
+      dimension : string
+      aspect : string
+      name : string
+      thumbnailUrl : string
+    }
+  type ArcadeBoard3DTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    passable : boolean
+    modelUrl : Asset
+  }
+  type ArcadeBoard3DUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type ArcadeBoard3DUnitsItem = {
+    id : string!
+    position : ArcadeBoard3DUnitsItemPosition
+    unitType : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    modelUrl : Asset
+  }
+  type ArcadeBoard3DFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    type : string!
+    assetUrl : Asset
+  }
+  type ArcadeBoard3DValidMovesItem = {
+    x : number!
+    z : number!
+  }
+
+  entity ArcadeBoard3DItem [runtime] {
+    id : string!
+    units : [ArcadeBoard3DUnitsItem]
+    selectedUnitId : string
+    validMoves : [ArcadeBoard3DValidMovesItem]
+    tokens : number = 8
+    tickets : number = 0
+    ticketsToWin : number = 5
+    playCount : number = 0
+    npcTick : number = 0
+    gridWidth : number = 5
+    gridHeight : number = 6
+    result : "none" | "won" | "lost" = none
+  }
+
+  trait ArcadeBoard3DRender -> @rebindable ArcadeBoard3DItem [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.tokens @config.startingTokens)
+        (set @entity.tickets 0)
+        (set @entity.playCount 0)
+        (set @entity.npcTick 0)
+        (set @entity.gridWidth @config.gridWidth)
+        (set @entity.gridHeight @config.gridHeight)
+        (set @entity.ticketsToWin @config.ticketsToWin)
+        (set @entity.result "none")
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.result "none") (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u2 (== @u2.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) 1) (== (array/len (array/filter @entity.units (fn u3 (and (== (object/get (object/get @u3 position) x) (object/get @t x)) (== (object/get (object/get @u3 position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+        })
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (== @entity.result "none") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) 1) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0)))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+        })
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+        })
+
+      FEATURE_CLICK -> playing when (and (== @entity.result "none") (and (== ?type "prize_counter") (and (>= @entity.tickets @entity.ticketsToWin) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.team "player"))) position) { x: ?x, y: ?z }) 1))))
+        (set @entity.result "won")
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+        })
+
+      FEATURE_CLICK -> playing when (and (== @entity.result "none") (and (!= ?type "prize_counter") (and (> @entity.tokens 0) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.team "player"))) position) { x: ?x, y: ?z }) 1))))
+        (set @entity.tokens (- @entity.tokens 1))
+        (set @entity.playCount (+ @entity.playCount 1))
+        (set @entity.tickets (if (== (% @entity.playCount 2) 0) (+ @entity.tickets 1) @entity.tickets))
+        (set @entity.result (if (and (== @entity.tokens 0) (< @entity.tickets @entity.ticketsToWin)) "lost" "none"))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+        })
+
+      GAME_END -> won when (== @entity.result "won")
+
+      GAME_END -> lost when (== @entity.result "lost")
+    }
+
+    state won {
+      PLAY_AGAIN -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.tokens @config.startingTokens)
+        (set @entity.tickets 0)
+        (set @entity.playCount 0)
+        (set @entity.npcTick 0)
+        (set @entity.result "none")
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+        })
+    }
+
+    state lost {
+      PLAY_AGAIN -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.tokens @config.startingTokens)
+        (set @entity.tickets 0)
+        (set @entity.playCount 0)
+        (set @entity.npcTick 0)
+        (set @entity.result "none")
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+        })
+    }
+
+    ticks {
+      npcWanderTick every 1500ms
+        when (== @entity.result "none")
+        (set @entity.npcTick (+ @entity.npcTick 1))
+        # triangle-wave ping-pong of the NPC kid between x=1 and x=3
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "neutral") (object/merge @u { position: { x: (+ 1 (math/abs (- (% @entity.npcTick 4) 2))), y: (object/get (object/get @u position) y) } }) @u))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+        })
+    }
+
+    emits {
+      UNIT_CLICK -> external {
+        unitId : string!
+        x : number
+        z : number
+      }
+        @description "Emits UI:{unitClickEvent} with { unitId } — selects the player kid"
+        @tier "domain"
+      TILE_CLICK -> external {
+        tileId : string
+        x : number!
+        z : number
+      }
+        @description "Emits UI:{tileClickEvent} with { x, z } — moves the selected kid one step"
+        @tier "domain"
+      FEATURE_CLICK -> external {
+        featureId : string
+        x : number!
+        z : number
+        type : string
+      }
+        @description "Emits UI:{featureClickEvent} with { x, z, type } — plays a machine or claims the prize counter"
+        @tier "domain"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Deselects the current unit"
+        @tier "domain"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when the match ends (won or lost)"
+        @tier "domain"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "domain"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : ArcadeBoard3DError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      gridWidth : number = 5
+        @label "Grid Width"
+        @description "Arcade hall width in cells"
+        @tier "presentation"
+      gridHeight : number = 6
+        @label "Grid Height"
+        @description "Arcade hall height in cells"
+        @tier "presentation"
+      startingTokens : number = 8
+        @label "Starting Tokens"
+        @description "Tokens the player starts with"
+        @tier "presentation"
+      ticketsToWin : number = 5
+        @label "Tickets To Win"
+        @description "Tickets required to unlock the prize counter"
+        @tier "presentation"
+      tiles : [ArcadeBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb", role: "tile", category: "wall-corner", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall-corner", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t20", x: 2, y: 0, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-window.glb", role: "tile", category: "wall-window", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall-window", thumbnailUrl: "" } }, { id: "t30", x: 3, y: 0, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t40", x: 4, y: 0, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb", role: "tile", category: "wall-corner", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall-corner", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t11", x: 1, y: 1, terrain: "floor", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" } }, { id: "t21", x: 2, y: 1, terrain: "floor", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" } }, { id: "t31", x: 3, y: 1, terrain: "floor", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" } }, { id: "t41", x: 4, y: 1, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t02", x: 0, y: 2, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t12", x: 1, y: 2, terrain: "floor", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" } }, { id: "t22", x: 2, y: 2, terrain: "floor", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" } }, { id: "t32", x: 3, y: 2, terrain: "floor", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" } }, { id: "t42", x: 4, y: 2, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t03", x: 0, y: 3, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t13", x: 1, y: 3, terrain: "floor", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" } }, { id: "t23", x: 2, y: 3, terrain: "floor", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" } }, { id: "t33", x: 3, y: 3, terrain: "floor", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" } }, { id: "t43", x: 4, y: 3, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t04", x: 0, y: 4, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t14", x: 1, y: 4, terrain: "floor", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" } }, { id: "t24", x: 2, y: 4, terrain: "floor", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" } }, { id: "t34", x: 3, y: 4, terrain: "floor", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" } }, { id: "t44", x: 4, y: 4, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t05", x: 0, y: 5, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb", role: "tile", category: "wall-corner", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall-corner", thumbnailUrl: "" } }, { id: "t15", x: 1, y: 5, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t25", x: 2, y: 5, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-door-rotate.glb", role: "tile", category: "wall-door-rotate", animations: ["open", "close", "open-and-close"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall-door-rotate", thumbnailUrl: "" } }, { id: "t35", x: 3, y: 5, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { id: "t45", x: 4, y: 5, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb", role: "tile", category: "wall-corner", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall-corner", thumbnailUrl: "" } }]
+        @label "Tiles"
+        @description "5x6 arcade hall grid — floor interior + wall/corner/window/door border."
+        @tier "presentation"
+      units : [ArcadeBoard3DUnitsItem] = [{ id: "player1", position: { x: 2, y: 1 }, unitType: "player-kid", name: "Kid Gamer", team: player, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/units/character-gamer.glb", role: "player", category: "character-gamer", animations: ["idle", "walk"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "character-gamer", thumbnailUrl: "" } }, { id: "npc1", position: { x: 2, y: 3 }, unitType: "wander-kid", name: "Wandering Kid", team: neutral, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/units/character-employee.glb", role: "npc", category: "character-employee", animations: ["idle", "walk"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "character-employee", thumbnailUrl: "" } }]
+        @label "Units"
+        @description "Player kid + wandering NPC kid — takes priority over entity-derived units."
+        @tier "presentation"
+      features : [ArcadeBoard3DFeaturesItem] = [{ id: "f1", x: 1, y: 1, type: "arcade_machine", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/features/arcade-machine.glb", role: "decoration", category: "arcade-machine", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "arcade-machine", thumbnailUrl: "" } }, { id: "f2", x: 3, y: 1, type: "claw_machine", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/features/claw-machine.glb", role: "decoration", category: "claw-machine", animations: ["animation"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "claw-machine", thumbnailUrl: "" } }, { id: "f3", x: 1, y: 2, type: "air_hockey", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/features/air-hockey.glb", role: "decoration", category: "air-hockey", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "air-hockey", thumbnailUrl: "" } }, { id: "f4", x: 2, y: 2, type: "prize_wheel", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/features/prize-wheel.glb", role: "decoration", category: "prize-wheel", animations: ["animation"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "prize-wheel", thumbnailUrl: "" } }, { id: "f5", x: 3, y: 2, type: "basketball_game", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/features/basketball-game.glb", role: "decoration", category: "basketball-game", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "basketball-game", thumbnailUrl: "" } }, { id: "f6", x: 1, y: 3, type: "pinball", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/features/pinball.glb", role: "decoration", category: "pinball", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "pinball", thumbnailUrl: "" } }, { id: "f7", x: 3, y: 3, type: "dance_machine", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/features/dance-machine.glb", role: "decoration", category: "dance-machine", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "dance-machine", thumbnailUrl: "" } }, { id: "f8", x: 1, y: 4, type: "gambling_machine", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/features/gambling-machine.glb", role: "decoration", category: "gambling-machine", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "gambling-machine", thumbnailUrl: "" } }, { id: "f9", x: 2, y: 4, type: "prize_counter", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/features/prizes.glb", role: "decoration", category: "prizes", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "prizes", thumbnailUrl: "" } }, { id: "f10", x: 3, y: 4, type: "vending_machine", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/features/vending-machine.glb", role: "decoration", category: "vending-machine", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "vending-machine", thumbnailUrl: "" } }]
+        @label "Features"
+        @description "Arcade machines + the prize counter."
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+    }
+  }
+
+  page "/arcade-board-3d" as ArcadeBoard3DPage -> ArcadeBoard3DRender
+}

@@ -1,0 +1,2089 @@
+{
+  "description": "SkateparkBoard3D — 3D side-view skate run: player/platforms pixel physics, keyMap/d-pad, follow camera, GLB skater clips.",
+  "name": "ui-skatepark-board-3d",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": 1.0,
+            "name": "level",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "score",
+            "type": "number"
+          },
+          {
+            "default": 3.0,
+            "name": "lives",
+            "type": "number"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string",
+            "values": [
+              "none",
+              "won",
+              "lost"
+            ]
+          },
+          {
+            "default": {
+              "animation": "skate-stand",
+              "facingRight": true,
+              "frame": 0.0,
+              "grounded": false,
+              "height": 48.0,
+              "vx": 0.0,
+              "vy": 0.0,
+              "width": 32.0,
+              "x": 80.0,
+              "y": 320.0
+            },
+            "name": "player",
+            "properties": {
+              "animation": {
+                "name": "animation",
+                "required": false,
+                "type": "string"
+              },
+              "facingRight": {
+                "name": "facingRight",
+                "required": false,
+                "type": "boolean"
+              },
+              "frame": {
+                "name": "frame",
+                "required": false,
+                "type": "number"
+              },
+              "grounded": {
+                "name": "grounded",
+                "required": false,
+                "type": "boolean"
+              },
+              "height": {
+                "name": "height",
+                "required": false,
+                "type": "number"
+              },
+              "vx": {
+                "name": "vx",
+                "required": false,
+                "type": "number"
+              },
+              "vy": {
+                "name": "vy",
+                "required": false,
+                "type": "number"
+              },
+              "width": {
+                "name": "width",
+                "required": false,
+                "type": "number"
+              },
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            },
+            "type": "object"
+          },
+          {
+            "default": 720.0,
+            "name": "goalX",
+            "type": "number"
+          },
+          {
+            "default": 800.0,
+            "name": "worldWidth",
+            "type": "number"
+          },
+          {
+            "default": 400.0,
+            "name": "worldHeight",
+            "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
+          },
+          {
+            "default": "",
+            "name": "selectedUnitId",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "facingRight": {
+                  "name": "facingRight",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "grounded": {
+                  "name": "grounded",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "height": {
+                  "name": "height",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "validMoves",
+            "type": "array"
+          }
+        ],
+        "name": "SkateparkBoard3DItem",
+        "persistence": "runtime"
+      },
+      "name": "SkateparkBoard3DOrbital",
+      "pages": [
+        {
+          "name": "SkateparkBoard3DPage",
+          "path": "/skatepark-board-3d",
+          "traits": [
+            {
+              "ref": "SkateparkBoard3DRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "assetBaseUrl": {
+              "default": "https://almadar-kflow-assets.web.app/shared/",
+              "description": "Base URL prefix for asset URLs",
+              "label": "Asset Base Url",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bgColor": {
+              "default": "#87ceeb",
+              "description": "Canvas background color",
+              "label": "Bg Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "goalX": {
+              "default": 720.0,
+              "description": "X pixel of the goal tile (used for display)",
+              "label": "Goal X",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "gravity": {
+              "default": 0.6,
+              "description": "vy delta per 33ms tick",
+              "label": "Gravity",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "jumpStrength": {
+              "default": 12.0,
+              "description": "vy set to -(jumpStrength) on JUMP",
+              "label": "Jump Strength",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "maxFallSpeed": {
+              "default": 20.0,
+              "description": "Terminal velocity cap",
+              "label": "Max Fall Speed",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "moveSpeed": {
+              "default": 4.0,
+              "description": "Horizontal vx magnitude",
+              "label": "Move Speed",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "platforms": {
+              "default": [
+                {
+                  "height": 32.0,
+                  "type": "ground",
+                  "width": 800.0,
+                  "x": 0.0,
+                  "y": 368.0
+                },
+                {
+                  "height": 16.0,
+                  "type": "platform",
+                  "width": 160.0,
+                  "x": 150.0,
+                  "y": 280.0
+                },
+                {
+                  "height": 16.0,
+                  "type": "platform",
+                  "width": 160.0,
+                  "x": 420.0,
+                  "y": 220.0
+                },
+                {
+                  "height": 16.0,
+                  "type": "hazard",
+                  "width": 80.0,
+                  "x": 580.0,
+                  "y": 300.0
+                },
+                {
+                  "height": 28.0,
+                  "type": "goal",
+                  "width": 64.0,
+                  "x": 700.0,
+                  "y": 340.0
+                }
+              ],
+              "description": "Level geometry including hazard and goal tiles",
+              "items": {
+                "properties": {
+                  "height": {
+                    "name": "height",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "ground",
+                      "platform",
+                      "hazard",
+                      "goal"
+                    ]
+                  },
+                  "width": {
+                    "name": "width",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Platforms",
+              "tier": "presentation",
+              "type": "[SkateparkBoard3DPlatformsItem]"
+            },
+            "playerSprite": {
+              "default": {
+                "animations": [
+                  "skate-stand",
+                  "skate",
+                  "skate-air",
+                  "idle",
+                  "jump",
+                  "fall"
+                ],
+                "aspect": "1:1",
+                "category": "player",
+                "dimension": "3d",
+                "name": "player",
+                "role": "player",
+                "style": "lowpoly-flat",
+                "thumbnailUrl": "",
+                "url": "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/units/character-skate-boy.glb",
+                "variant": ""
+              },
+              "description": "Player GLB Asset — named clips driven by the entity's animation field",
+              "label": "Player Model",
+              "properties": {
+                "animations": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "animations",
+                  "required": false,
+                  "type": "array"
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string"
+                },
+                "atlas": {
+                  "name": "atlas",
+                  "required": false,
+                  "type": "string"
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string"
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "Asset"
+            },
+            "tileSprites": {
+              "default": {
+                "goal": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "goal",
+                  "dimension": "3d",
+                  "name": "goal",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/skateboard.glb",
+                  "variant": ""
+                },
+                "ground": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground",
+                  "dimension": "3d",
+                  "name": "ground",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/terrain/floor-wood.glb",
+                  "variant": ""
+                },
+                "hazard": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "hazard",
+                  "dimension": "3d",
+                  "name": "hazard",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/structure-wood.glb",
+                  "variant": ""
+                },
+                "platform": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "platform",
+                  "dimension": "3d",
+                  "name": "platform",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/obstacle-box.glb",
+                  "variant": ""
+                }
+              },
+              "description": "Map of platform type to GLB Asset",
+              "items": {
+                "properties": {
+                  "animations": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "animations",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "aspect": {
+                    "name": "aspect",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "atlas": {
+                    "name": "atlas",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "category": {
+                    "name": "category",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "dimension": {
+                    "name": "dimension",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "role": {
+                    "name": "role",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "style": {
+                    "name": "style",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "thumbnailUrl": {
+                    "name": "thumbnailUrl",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "url": {
+                    "name": "url",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Tile Models",
+              "tier": "presentation",
+              "type": "Map<string,Asset>"
+            },
+            "worldHeight": {
+              "default": 400.0,
+              "description": "World pixel height",
+              "label": "World Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "worldWidth": {
+              "default": 800.0,
+              "description": "World pixel width",
+              "label": "World Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Tile click passthrough — skatepark is keyboard-driven; click coordinates for jump target",
+              "event": "TILE_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "tileId",
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "z",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Unit click passthrough",
+              "event": "UNIT_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "type": "number"
+                },
+                {
+                  "name": "z",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Emitted when result becomes won or lost",
+              "event": "GAME_END",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Move-left intent (keyboard keyMap or d-pad directionEvents)",
+              "event": "LEFT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Move-right intent (keyboard keyMap or d-pad directionEvents)",
+              "event": "RIGHT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Jump intent (keyboard keyMap or d-pad directionEvents)",
+              "event": "JUMP",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Stop-horizontal intent (keyboard keyUpMap or d-pad directionReleaseEvents)",
+              "event": "STOP",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Emits UI:{playAgainEvent} on restart",
+              "event": "PLAY_AGAIN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "effects",
+              "goalX",
+              "level",
+              "lives",
+              "player",
+              "result",
+              "score",
+              "selectedUnitId",
+              "validMoves",
+              "worldHeight",
+              "worldWidth"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "SkateparkBoard3DItem",
+          "name": "SkateparkBoard3DRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Move-left intent (keyboard keyMap or d-pad directionEvents)",
+                "key": "LEFT",
+                "name": "Left",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Move-right intent (keyboard keyMap or d-pad directionEvents)",
+                "key": "RIGHT",
+                "name": "Right",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Jump intent (keyboard keyMap or d-pad directionEvents)",
+                "key": "JUMP",
+                "name": "Jump",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Stop-horizontal intent (keyboard keyUpMap or d-pad directionReleaseEvents)",
+                "key": "STOP",
+                "name": "Stop",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Tile click passthrough — skatepark is keyboard-driven; click coordinates for jump target",
+                "key": "TILE_CLICK",
+                "name": "Tile Click",
+                "payloadSchema": [
+                  {
+                    "name": "tileId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "z",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Unit click passthrough",
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "z",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emitted when result becomes won or lost",
+                "key": "GAME_END",
+                "name": "Game End",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emits UI:{playAgainEvent} on restart",
+                "key": "PLAY_AGAIN",
+                "name": "Play Again",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "playing"
+              },
+              {
+                "name": "won"
+              },
+              {
+                "name": "lost"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.level",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lives",
+                    3.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.player",
+                    {
+                      "animation": "skate-stand",
+                      "facingRight": true,
+                      "frame": 0.0,
+                      "grounded": false,
+                      "height": 48.0,
+                      "vx": 0.0,
+                      "vy": 0.0,
+                      "width": 32.0,
+                      "x": 80.0,
+                      "y": 320.0
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.goalX",
+                    "@config.goalX"
+                  ],
+                  [
+                    "set",
+                    "@entity.worldWidth",
+                    "@config.worldWidth"
+                  ],
+                  [
+                    "set",
+                    "@entity.worldHeight",
+                    "@config.worldHeight"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundAsset": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "panel",
+                        "role": "ui",
+                        "sprite": "panelInset_beige.png",
+                        "style": "vector-flat",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
+                        "variant": ""
+                      },
+                      "children": [
+                        {
+                          "backgroundColor": "@config.bgColor",
+                          "cameraMode": "follow",
+                          "interpolateUnits": true,
+                          "keyMap": {
+                            "ArrowLeft": "LEFT",
+                            "ArrowRight": "RIGHT",
+                            "ArrowUp": "JUMP",
+                            "KeyA": "LEFT",
+                            "KeyD": "RIGHT",
+                            "KeyW": "JUMP",
+                            "Space": "JUMP"
+                          },
+                          "keyUpMap": {
+                            "ArrowLeft": "STOP",
+                            "ArrowRight": "STOP",
+                            "KeyA": "STOP",
+                            "KeyD": "STOP"
+                          },
+                          "pixelsPerUnit": 32.0,
+                          "platforms": "@config.platforms",
+                          "player": "@entity.player",
+                          "playerSprite": "@config.playerSprite",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tileSprites": "@config.tileSprites",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "worldHeight": "@entity.worldHeight",
+                          "worldWidth": "@entity.worldWidth"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "directionAssets": {
+                              "down": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "stick-down",
+                                "role": "ui",
+                                "sprite": "generic_stick_down",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                                "variant": ""
+                              },
+                              "left": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "stick-left",
+                                "role": "ui",
+                                "sprite": "generic_stick_left",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                                "variant": ""
+                              },
+                              "right": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "stick-right",
+                                "role": "ui",
+                                "sprite": "generic_stick_right",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                                "variant": ""
+                              },
+                              "up": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "stick-up",
+                                "role": "ui",
+                                "sprite": "generic_stick_up",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                                "variant": ""
+                              }
+                            },
+                            "directionEvents": {
+                              "left": "LEFT",
+                              "right": "RIGHT",
+                              "up": "JUMP"
+                            },
+                            "directionReleaseEvents": {
+                              "left": "STOP",
+                              "right": "STOP"
+                            },
+                            "kind": "dpad",
+                            "type": "control-grid"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "hudBackgroundAsset": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "hud-panel",
+                        "role": "ui",
+                        "sprite": "panelInset_beigeLight.png",
+                        "style": "vector-flat",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
+                        "variant": ""
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "animation": "skate",
+                        "facingRight": false,
+                        "vx": [
+                          "-",
+                          0.0,
+                          "@config.moveSpeed"
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                "event": "LEFT",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "animation": "skate",
+                        "facingRight": true,
+                        "vx": "@config.moveSpeed"
+                      }
+                    ]
+                  ]
+                ],
+                "event": "RIGHT",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "animation": "skate-air",
+                        "grounded": false,
+                        "vy": [
+                          "-",
+                          0.0,
+                          "@config.jumpStrength"
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                "event": "JUMP",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "==",
+                    "@entity.player.grounded",
+                    true
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "animation": "skate-stand",
+                        "vx": 0.0
+                      }
+                    ]
+                  ]
+                ],
+                "event": "STOP",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ]
+                ],
+                "event": "TILE_CLICK",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    "@payload.unitId"
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "event": "GAME_END",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "won"
+                ],
+                "to": "won"
+              },
+              {
+                "event": "GAME_END",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "lost"
+                ],
+                "to": "lost"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.level",
+                    [
+                      "+",
+                      "@entity.level",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.player",
+                    {
+                      "animation": "skate-stand",
+                      "facingRight": true,
+                      "frame": 0.0,
+                      "grounded": false,
+                      "height": 48.0,
+                      "vx": 0.0,
+                      "vy": 0.0,
+                      "width": 32.0,
+                      "x": 80.0,
+                      "y": 320.0
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "won",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.level",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lives",
+                    3.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.player",
+                    {
+                      "animation": "skate-stand",
+                      "facingRight": true,
+                      "frame": 0.0,
+                      "grounded": false,
+                      "height": 48.0,
+                      "vx": 0.0,
+                      "vy": 0.0,
+                      "width": 32.0,
+                      "x": 80.0,
+                      "y": 320.0
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "lost",
+                "to": "playing"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "let",
+                  [
+                    [
+                      "vy1",
+                      [
+                        "math/clamp",
+                        [
+                          "+",
+                          "@entity.player.vy",
+                          "@config.gravity"
+                        ],
+                        [
+                          "-",
+                          0.0,
+                          "@config.jumpStrength"
+                        ],
+                        "@config.maxFallSpeed"
+                      ]
+                    ],
+                    [
+                      "px1",
+                      [
+                        "math/clamp",
+                        [
+                          "+",
+                          "@entity.player.x",
+                          "@entity.player.vx"
+                        ],
+                        0.0,
+                        [
+                          "-",
+                          "@entity.worldWidth",
+                          "@entity.player.width"
+                        ]
+                      ]
+                    ],
+                    [
+                      "pw",
+                      "@entity.player.width"
+                    ],
+                    [
+                      "ph",
+                      "@entity.player.height"
+                    ],
+                    [
+                      "livesLeft",
+                      [
+                        "-",
+                        "@entity.lives",
+                        1.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "py1",
+                        [
+                          "+",
+                          "@entity.player.y",
+                          "@vy1"
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "playerRect",
+                          {
+                            "h": "@ph",
+                            "w": "@pw",
+                            "x": "@px1",
+                            "y": "@py1"
+                          }
+                        ]
+                      ],
+                      [
+                        "let",
+                        [
+                          [
+                            "hit",
+                            [
+                              "array/find",
+                              "@config.platforms",
+                              [
+                                "fn",
+                                "p",
+                                [
+                                  "and",
+                                  [
+                                    "!=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "type"
+                                    ],
+                                    "goal"
+                                  ],
+                                  [
+                                    "geo/aabb-overlap",
+                                    "@playerRect",
+                                    {
+                                      "h": "@p.height",
+                                      "w": "@p.width",
+                                      "x": "@p.x",
+                                      "y": "@p.y"
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "hazardHit",
+                              [
+                                "array/find",
+                                "@config.platforms",
+                                [
+                                  "fn",
+                                  "p",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "@p",
+                                        "type"
+                                      ],
+                                      "hazard"
+                                    ],
+                                    [
+                                      "geo/aabb-overlap",
+                                      "@playerRect",
+                                      {
+                                        "h": "@p.height",
+                                        "w": "@p.width",
+                                        "x": "@p.x",
+                                        "y": "@p.y"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "goalHit",
+                                [
+                                  "array/find",
+                                  "@config.platforms",
+                                  [
+                                    "fn",
+                                    "p",
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@p",
+                                          "type"
+                                        ],
+                                        "goal"
+                                      ],
+                                      [
+                                        "geo/aabb-overlap",
+                                        "@playerRect",
+                                        {
+                                          "h": "@p.height",
+                                          "w": "@p.width",
+                                          "x": "@p.x",
+                                          "y": "@p.y"
+                                        }
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "hitY",
+                                  [
+                                    "object/get",
+                                    "@hit",
+                                    "y",
+                                    "@entity.worldHeight"
+                                  ]
+                                ],
+                                [
+                                  "landed",
+                                  [
+                                    "and",
+                                    [
+                                      "!=",
+                                      "@hit",
+                                      null
+                                    ],
+                                    [
+                                      ">",
+                                      "@vy1",
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "py2",
+                                    [
+                                      "if",
+                                      "@landed",
+                                      [
+                                        "-",
+                                        "@hitY",
+                                        "@ph"
+                                      ],
+                                      "@py1"
+                                    ]
+                                  ],
+                                  [
+                                    "vy2",
+                                    [
+                                      "if",
+                                      "@landed",
+                                      0.0,
+                                      "@vy1"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "atGround",
+                                      [
+                                        ">=",
+                                        [
+                                          "+",
+                                          "@py2",
+                                          "@ph"
+                                        ],
+                                        "@entity.worldHeight"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "py3",
+                                        [
+                                          "if",
+                                          "@atGround",
+                                          [
+                                            "-",
+                                            "@entity.worldHeight",
+                                            "@ph"
+                                          ],
+                                          "@py2"
+                                        ]
+                                      ],
+                                      [
+                                        "vy3",
+                                        [
+                                          "if",
+                                          "@atGround",
+                                          0.0,
+                                          "@vy2"
+                                        ]
+                                      ],
+                                      [
+                                        "grounded",
+                                        [
+                                          "or",
+                                          "@landed",
+                                          "@atGround"
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "let",
+                                      [
+                                        [
+                                          "fell",
+                                          [
+                                            ">",
+                                            "@py3",
+                                            "@entity.worldHeight"
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "let",
+                                        [
+                                          [
+                                            "damaged",
+                                            [
+                                              "or",
+                                              [
+                                                "!=",
+                                                "@hazardHit",
+                                                null
+                                              ],
+                                              "@fell"
+                                            ]
+                                          ]
+                                        ],
+                                        [
+                                          "do",
+                                          [
+                                            "set",
+                                            "@entity.player",
+                                            [
+                                              "object/merge",
+                                              "@entity.player",
+                                              {
+                                                "grounded": "@grounded",
+                                                "vy": "@vy3",
+                                                "x": "@px1",
+                                                "y": "@py3"
+                                              }
+                                            ]
+                                          ],
+                                          [
+                                            "set",
+                                            "@entity.result",
+                                            [
+                                              "if",
+                                              [
+                                                "!=",
+                                                "@goalHit",
+                                                null
+                                              ],
+                                              "won",
+                                              [
+                                                "if",
+                                                [
+                                                  "and",
+                                                  "@damaged",
+                                                  [
+                                                    "<=",
+                                                    "@livesLeft",
+                                                    0.0
+                                                  ]
+                                                ],
+                                                "lost",
+                                                "none"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "set",
+                                            "@entity.score",
+                                            [
+                                              "if",
+                                              [
+                                                "!=",
+                                                "@goalHit",
+                                                null
+                                              ],
+                                              [
+                                                "+",
+                                                "@entity.score",
+                                                100.0
+                                              ],
+                                              "@entity.score"
+                                            ]
+                                          ],
+                                          [
+                                            "set",
+                                            "@entity.lives",
+                                            [
+                                              "if",
+                                              [
+                                                "and",
+                                                "@damaged",
+                                                [
+                                                  ">",
+                                                  "@entity.lives",
+                                                  0.0
+                                                ],
+                                                [
+                                                  "==",
+                                                  "@entity.result",
+                                                  "none"
+                                                ]
+                                              ],
+                                              "@livesLeft",
+                                              "@entity.lives"
+                                            ]
+                                          ],
+                                          [
+                                            "set",
+                                            "@entity.player",
+                                            [
+                                              "if",
+                                              [
+                                                "and",
+                                                "@damaged",
+                                                [
+                                                  "==",
+                                                  "@entity.result",
+                                                  "none"
+                                                ]
+                                              ],
+                                              {
+                                                "animation": "skate-stand",
+                                                "facingRight": true,
+                                                "frame": 0.0,
+                                                "grounded": false,
+                                                "height": 48.0,
+                                                "vx": 0.0,
+                                                "vy": 0.0,
+                                                "width": 32.0,
+                                                "x": 80.0,
+                                                "y": 320.0
+                                              },
+                                              "@entity.player"
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "if",
+                  [
+                    "!=",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "emit",
+                    "GAME_END",
+                    {
+                      "result": "@entity.result"
+                    }
+                  ],
+                  null
+                ]
+              ],
+              "guard": [
+                "==",
+                "@entity.result",
+                "none"
+              ],
+              "interval": 33.0,
+              "name": "gameflowTick"
+            },
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.player",
+                  [
+                    "object/merge",
+                    "@entity.player",
+                    {
+                      "frame": [
+                        "%",
+                        [
+                          "+",
+                          [
+                            "object/get",
+                            "@entity.player",
+                            "frame"
+                          ],
+                          1.0
+                        ],
+                        8.0
+                      ]
+                    }
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundAsset": {
+                      "animations": [],
+                      "aspect": "1:1",
+                      "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
+                      "category": "ui",
+                      "dimension": "2d",
+                      "name": "panel",
+                      "role": "ui",
+                      "sprite": "panelInset_beige.png",
+                      "style": "vector-flat",
+                      "thumbnailUrl": "",
+                      "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
+                      "variant": ""
+                    },
+                    "children": [
+                      {
+                        "backgroundColor": "@config.bgColor",
+                        "cameraMode": "follow",
+                        "interpolateUnits": true,
+                        "keyMap": {
+                          "ArrowLeft": "LEFT",
+                          "ArrowRight": "RIGHT",
+                          "ArrowUp": "JUMP",
+                          "KeyA": "LEFT",
+                          "KeyD": "RIGHT",
+                          "KeyW": "JUMP",
+                          "Space": "JUMP"
+                        },
+                        "keyUpMap": {
+                          "ArrowLeft": "STOP",
+                          "ArrowRight": "STOP",
+                          "KeyA": "STOP",
+                          "KeyD": "STOP"
+                        },
+                        "pixelsPerUnit": 32.0,
+                        "platforms": "@config.platforms",
+                        "player": "@entity.player",
+                        "playerSprite": "@config.playerSprite",
+                        "tileClickEvent": "TILE_CLICK",
+                        "tileSprites": "@config.tileSprites",
+                        "type": "game-canvas-3d",
+                        "unitClickEvent": "UNIT_CLICK",
+                        "worldHeight": "@entity.worldHeight",
+                        "worldWidth": "@entity.worldWidth"
+                      }
+                    ],
+                    "hud": {
+                      "children": [
+                        {
+                          "stats": [
+                            {
+                              "label": "Score",
+                              "value": "@entity.score"
+                            },
+                            {
+                              "label": "Lives",
+                              "value": "@entity.lives"
+                            }
+                          ],
+                          "type": "game-hud"
+                        },
+                        {
+                          "directionAssets": {
+                            "down": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "stick-down",
+                              "role": "ui",
+                              "sprite": "generic_stick_down",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                              "variant": ""
+                            },
+                            "left": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "stick-left",
+                              "role": "ui",
+                              "sprite": "generic_stick_left",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                              "variant": ""
+                            },
+                            "right": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "stick-right",
+                              "role": "ui",
+                              "sprite": "generic_stick_right",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                              "variant": ""
+                            },
+                            "up": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "stick-up",
+                              "role": "ui",
+                              "sprite": "generic_stick_up",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                              "variant": ""
+                            }
+                          },
+                          "directionEvents": {
+                            "left": "LEFT",
+                            "right": "RIGHT",
+                            "up": "JUMP"
+                          },
+                          "directionReleaseEvents": {
+                            "left": "STOP",
+                            "right": "STOP"
+                          },
+                          "kind": "dpad",
+                          "type": "control-grid"
+                        },
+                        {
+                          "action": "PLAY_AGAIN",
+                          "label": "Restart",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
+                    },
+                    "hudBackgroundAsset": {
+                      "animations": [],
+                      "aspect": "1:1",
+                      "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
+                      "category": "ui",
+                      "dimension": "2d",
+                      "name": "hud-panel",
+                      "role": "ui",
+                      "sprite": "panelInset_beigeLight.png",
+                      "style": "vector-flat",
+                      "thumbnailUrl": "",
+                      "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
+                      "variant": ""
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

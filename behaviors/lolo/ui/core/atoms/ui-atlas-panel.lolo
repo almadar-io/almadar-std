@@ -1,0 +1,59 @@
+app ui-atlas-panel "1.0.0"
+"AtlasPanel — UI factory (1:1 with the @almadar/ui atlas-panel pattern)."
+orbital AtlasPanelOrbital {
+  type AtlasPanelAsset = {
+    name : string
+    category : string
+  }
+
+  entity AtlasPanelItem [runtime] {
+    id : string!
+  }
+
+  trait AtlasPanelRender -> @rebindable AtlasPanelItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          asset: @config.asset
+          borderSlice: @config.borderSlice
+          borderWidth: @config.borderWidth
+          mode: @config.mode
+          className: @config.className
+          style: @config.style
+          children: [{ content: "Sample content", type: typography }]
+          type: atlas-panel
+        })
+    }
+
+    config {
+      asset : AtlasPanelAsset = { name: "Name", category: "Category" }
+        @label "Asset"
+        @description "asset prop"
+        @tier "presentation"
+      borderSlice : number = 16
+        @label "Border Slice"
+        @description "Border thickness (source pixels) for the 9-slice cut."
+        @tier "presentation"
+      borderWidth : number = 16
+        @label "Border Width"
+        @description "Rendered border width in CSS px."
+        @tier "presentation"
+      mode : "nineSlice" | "repeat" = nineSlice
+        @label "Mode"
+        @description "'nineSlice' scales edges crisp (panels/buttons); 'repeat' tiles the slice (pattern fills)."
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      style : json = {}
+        @label "Style"
+        @description "style prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/atlas-panel" as AtlasPanelPage -> AtlasPanelRender
+}

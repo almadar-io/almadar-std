@@ -1,0 +1,231 @@
+app ui-holiday-board-3d "1.0.0"
+"HolidayBoard3D — snowy 3D grid board: nutcracker collects gifts while a reindeer wanders; game-shell + game-canvas-3d."
+orbital HolidayBoard3DOrbital {
+  type HolidayBoard3DError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type Asset = {
+      url : asset
+      role : string
+      category : string
+      animations : [string]
+      style : string
+      variant : string
+      dimension : string
+      aspect : string
+      name : string
+      thumbnailUrl : string
+    }
+  type HolidayBoard3DTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    passable : boolean
+    modelUrl : Asset
+  }
+  type HolidayBoard3DUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type HolidayBoard3DUnitsItem = {
+    id : string!
+    position : HolidayBoard3DUnitsItemPosition
+    unitType : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    modelUrl : Asset
+  }
+  type HolidayBoard3DFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    type : string!
+    assetUrl : Asset
+  }
+  type HolidayBoard3DValidMovesItem = {
+    x : number!
+    z : number!
+  }
+
+  entity HolidayBoard3DItem [runtime] {
+    id : string!
+    units : [HolidayBoard3DUnitsItem]
+    features : [HolidayBoard3DFeaturesItem]
+    selectedUnitId : string
+    validMoves : [HolidayBoard3DValidMovesItem]
+    phase : "observation" | "selection" = "observation"
+    result : "none" | "won" = "none"
+    score : number = 0
+    giftsLeft : number = 0
+    gridWidth : number = 5
+    gridHeight : number = 5
+    movementRange : number = 1
+  }
+
+  trait HolidayBoard3DRender -> @rebindable HolidayBoard3DItem [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.features @config.features)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.phase "observation")
+        (set @entity.result "none")
+        (set @entity.score 0)
+        (set @entity.giftsLeft 4)
+        (set @entity.gridWidth 5)
+        (set @entity.gridHeight 5)
+        (set @entity.movementRange 1)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Gifts Left", value: @entity.giftsLeft }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, scale: @config.scale, unitScale: @config.unitScale } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.result "none") (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.phase "selection")
+        (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Gifts Left", value: @entity.giftsLeft }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, scale: @config.scale, unitScale: @config.unitScale } ]
+        })
+
+      TILE_CLICK -> playing when (and (== @entity.result "none") (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0)))))
+        (let ((matches (array/filter @entity.features (fn f (and (== @f.type "gift") (and (== @f.x ?x) (== @f.y ?z)))))))
+        (let ((hasGift (> (array/len @matches) 0)) (hitId (object/get (array/first @matches) id)))
+        (let ((newGiftsLeft (if @hasGift (- @entity.giftsLeft 1) @entity.giftsLeft)))
+        (do
+          (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
+          (set @entity.features (if @hasGift (array/filter @entity.features (fn f (!= @f.id @hitId))) @entity.features))
+          (set @entity.score (if @hasGift (+ @entity.score 1) @entity.score))
+          (set @entity.giftsLeft @newGiftsLeft)
+          (set @entity.selectedUnitId "")
+          (set @entity.validMoves [])
+          (set @entity.phase "observation")
+          (set @entity.result (if (<= @newGiftsLeft 0) "won" "none"))
+          (render-ui main {
+            type: game-shell
+            hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Gifts Left", value: @entity.giftsLeft }, { label: "Result", value: @entity.result } ] }
+            children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, scale: @config.scale, unitScale: @config.unitScale } ]
+          })
+        ))))
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Gifts Left", value: @entity.giftsLeft }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, scale: @config.scale, unitScale: @config.unitScale } ]
+        })
+
+      PLAY_AGAIN -> playing
+        (set @entity.units @config.units)
+        (set @entity.features @config.features)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.phase "observation")
+        (set @entity.result "none")
+        (set @entity.score 0)
+        (set @entity.giftsLeft 4)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Gifts Left", value: @entity.giftsLeft }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, scale: @config.scale, unitScale: @config.unitScale } ]
+        })
+    }
+
+    ticks {
+      reindeerWanderTick every 900ms
+        when (== @entity.result "none")
+        (let ((npc (array/find @entity.units (fn u (== @u.team "neutral")))))
+        (let ((cell (object/get @npc position)))
+        (let ((dir (math/floor (* (math/random) 4))))
+        (let ((nextCell (if (== @dir 0) { x: (+ (object/get @cell x) 1), y: (object/get @cell y) } (if (== @dir 1) { x: (- (object/get @cell x) 1), y: (object/get @cell y) } (if (== @dir 2) { x: (object/get @cell x), y: (+ (object/get @cell y) 1) } { x: (object/get @cell x), y: (- (object/get @cell y) 1) })))))
+        (let ((valid (and (grid/in-bounds @nextCell @entity.gridWidth @entity.gridHeight) (and (== (object/get (array/find @config.tiles (fn t (and (== (object/get @t x) (object/get @nextCell x)) (== (object/get @t y) (object/get @nextCell y))))) passable) true) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @nextCell x)) (== (object/get (object/get @u position) y) (object/get @nextCell y)))))) 0)))))
+        (do
+          (set @entity.units (if @valid (array/map @entity.units (fn u (if (== @u.id @npc.id) (object/merge @u { position: @nextCell }) @u))) @entity.units))
+          (render-ui main {
+            type: game-shell
+            hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Gifts Left", value: @entity.giftsLeft }, { label: "Result", value: @entity.result } ] }
+            children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, scale: @config.scale, unitScale: @config.unitScale } ]
+          })
+        ))))))
+    }
+
+    emits {
+      TILE_CLICK -> external {
+        tileId : string
+        x : number!
+        z : number
+      }
+        @description "Move the selected unit onto a tile; collects a gift if one is present"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+        x : number
+        z : number
+      }
+        @description "Select the player unit and compute adjacent valid moves"
+        @tier "domain"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Deselect the current unit"
+        @tier "domain"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Reset the board for a new round"
+        @tier "domain"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : HolidayBoard3DError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      tiles : [HolidayBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t20", x: 2, y: 0, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t30", x: 3, y: 0, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t40", x: 4, y: 0, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t11", x: 1, y: 1, terrain: "snow", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb", role: "tile", category: "floor-wood-snow", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor-wood-snow", thumbnailUrl: "" } }, { id: "t21", x: 2, y: 1, terrain: "snow", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb", role: "tile", category: "floor-wood-snow", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor-wood-snow", thumbnailUrl: "" } }, { id: "t31", x: 3, y: 1, terrain: "snow", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb", role: "tile", category: "floor-wood-snow", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor-wood-snow", thumbnailUrl: "" } }, { id: "t41", x: 4, y: 1, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t02", x: 0, y: 2, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t12", x: 1, y: 2, terrain: "wood", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood.glb", role: "tile", category: "floor-wood", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor-wood", thumbnailUrl: "" } }, { id: "t22", x: 2, y: 2, terrain: "snow", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb", role: "tile", category: "floor-wood-snow", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor-wood-snow", thumbnailUrl: "" } }, { id: "t32", x: 3, y: 2, terrain: "snow", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb", role: "tile", category: "floor-wood-snow", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor-wood-snow", thumbnailUrl: "" } }, { id: "t42", x: 4, y: 2, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t03", x: 0, y: 3, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t13", x: 1, y: 3, terrain: "wood", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood.glb", role: "tile", category: "floor-wood", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor-wood", thumbnailUrl: "" } }, { id: "t23", x: 2, y: 3, terrain: "snow", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb", role: "tile", category: "floor-wood-snow", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor-wood-snow", thumbnailUrl: "" } }, { id: "t33", x: 3, y: 3, terrain: "snow", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb", role: "tile", category: "floor-wood-snow", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor-wood-snow", thumbnailUrl: "" } }, { id: "t43", x: 4, y: 3, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t04", x: 0, y: 4, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t14", x: 1, y: 4, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t24", x: 2, y: 4, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t34", x: 3, y: 4, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }, { id: "t44", x: 4, y: 4, terrain: "wall", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" } }]
+        @label "Tiles"
+        @description "5×5 snowy yard grid — cabin-wall border, floor-wood-snow/floor-wood interior."
+        @tier "presentation"
+      units : [HolidayBoard3DUnitsItem] = [{ id: "player1", position: { x: 1, y: 1 }, unitType: "nutcracker", name: "Nutcracker", team: player, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/nutcracker.glb", role: "player", category: "nutcracker", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "nutcracker", thumbnailUrl: "" } }, { id: "npc1", position: { x: 3, y: 3 }, unitType: "reindeer", name: "Reindeer", team: neutral, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/reindeer.glb", role: "npc", category: "reindeer", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "reindeer", thumbnailUrl: "" } }]
+        @label "Units"
+        @description "Initial roster — player nutcracker plus a wandering reindeer NPC."
+        @tier "presentation"
+      features : [HolidayBoard3DFeaturesItem] = [{ id: "gift1", x: 2, y: 1, type: "gift", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-a-round.glb", role: "item", category: "present-a-round", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "present-a-round", thumbnailUrl: "" } }, { id: "gift2", x: 3, y: 1, type: "gift", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-b-cube.glb", role: "item", category: "present-b-cube", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "present-b-cube", thumbnailUrl: "" } }, { id: "gift3", x: 1, y: 2, type: "gift", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-a-rectangle.glb", role: "item", category: "present-a-rectangle", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "present-a-rectangle", thumbnailUrl: "" } }, { id: "gift4", x: 3, y: 2, type: "gift", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-b-round.glb", role: "item", category: "present-b-round", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "present-b-round", thumbnailUrl: "" } }, { id: "deco1", x: 2, y: 2, type: "wreath", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/wreath-decorated.glb", role: "decoration", category: "wreath-decorated", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wreath-decorated", thumbnailUrl: "" } }, { id: "deco2", x: 1, y: 3, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/tree-snow-a.glb", role: "decoration", category: "tree-snow-a", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree-snow-a", thumbnailUrl: "" } }, { id: "deco3", x: 2, y: 3, type: "candy-cane", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/candy-cane-red.glb", role: "decoration", category: "candy-cane-red", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "candy-cane-red", thumbnailUrl: "" } }]
+        @label "Features"
+        @description "Collectible gifts plus festive decorations on the board."
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+    }
+  }
+
+  page "/holiday-board-3d" as HolidayBoard3DPage -> HolidayBoard3DRender
+}

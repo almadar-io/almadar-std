@@ -1,0 +1,2703 @@
+[
+  {
+    "organism": "ui-winter-ski-board",
+    "orbital": "WinterSkiBoardOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/2d/organisms/ui-winter-ski-board.ts",
+    "entities": [
+      {
+        "name": "WinterSkiBoardItem",
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validMoves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lives",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "turn",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "phase",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "gridWidth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "gridHeight",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "firingRange",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "enemyTurn",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "effects",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "WinterSkiBoardRender",
+        "emittedEvents": [
+          "FIRE",
+          "GAME_END",
+          "TILE_CLICK",
+          "UNIT_CLICK",
+          "END_TURN",
+          "CANCEL",
+          "PLAY_AGAIN"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "FIRE",
+            "direction": "emit",
+            "description": "Fired when a tank shoots at a target.",
+            "tier": "domain"
+          },
+          {
+            "name": "GAME_END",
+            "direction": "emit",
+            "description": "Called when the battle ends.",
+            "tier": "domain"
+          },
+          {
+            "name": "TILE_CLICK",
+            "direction": "emit",
+            "description": "Emits UI:{tileClickEvent} with { x, y } on tile click.",
+            "tier": "domain"
+          },
+          {
+            "name": "UNIT_CLICK",
+            "direction": "emit",
+            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click.",
+            "tier": "domain"
+          },
+          {
+            "name": "END_TURN",
+            "direction": "emit",
+            "description": "Emits UI:{endTurnEvent} with {} on end turn.",
+            "tier": "domain"
+          },
+          {
+            "name": "CANCEL",
+            "direction": "emit",
+            "description": "Emits UI:{cancelEvent} with {} on cancel.",
+            "tier": "domain"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} with {} on play again / reset.",
+            "tier": "domain"
+          },
+          {
+            "name": "START",
+            "direction": "listen"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "assetManifest",
+            "type": "WinterSkiBoardAssetManifest",
+            "default": {
+              "effects": {
+                "explosion": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "8:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_pixelExplosion.json",
+                  "category": "explosion",
+                  "dimension": "2d",
+                  "name": "explosion",
+                  "role": "effect",
+                  "sprite": "pixelExplosion07.png",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_pixelExplosion.png",
+                  "variant": ""
+                }
+              },
+              "features": {
+                "obstacle": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "obstacle",
+                  "dimension": "2d",
+                  "name": "obstacle",
+                  "role": "decoration",
+                  "sprite": "6,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                }
+              },
+              "terrains": {
+                "ground": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "ground",
+                  "dimension": "2d",
+                  "name": "ground",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "sand": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "sand",
+                  "dimension": "2d",
+                  "name": "sand",
+                  "role": "tile",
+                  "sprite": "4,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                }
+              },
+              "units": {
+                "tank": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tank",
+                  "dimension": "2d",
+                  "name": "tank",
+                  "role": "npc",
+                  "sprite": "9,5",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                }
+              }
+            },
+            "label": "Asset Manifest",
+            "description": "Asset sprite manifest",
+            "tier": "presentation",
+            "properties": {
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "Additional CSS classes",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "WinterSkiBoardError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "features",
+            "type": "[WinterSkiBoardFeaturesItem]",
+            "default": [
+              {
+                "id": "f1",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "sandbagBeige",
+                  "dimension": "2d",
+                  "name": "sandbagBeige",
+                  "role": "decoration",
+                  "sprite": "6,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "type": "obstacle",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "id": "f2",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "sandbagBeige",
+                  "dimension": "2d",
+                  "name": "sandbagBeige",
+                  "role": "decoration",
+                  "sprite": "6,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "type": "obstacle",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "id": "f3",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "sandbagBeige",
+                  "dimension": "2d",
+                  "name": "sandbagBeige",
+                  "role": "decoration",
+                  "sprite": "6,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "type": "obstacle",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "id": "f4",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "sandbagBeige",
+                  "dimension": "2d",
+                  "name": "sandbagBeige",
+                  "role": "decoration",
+                  "sprite": "6,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "type": "obstacle",
+                "x": 5,
+                "y": 3
+              },
+              {
+                "id": "f5",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "sandbagBeige",
+                  "dimension": "2d",
+                  "name": "sandbagBeige",
+                  "role": "decoration",
+                  "sprite": "6,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "type": "obstacle",
+                "x": 5,
+                "y": 4
+              },
+              {
+                "id": "f6",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "sandbagBeige",
+                  "dimension": "2d",
+                  "name": "sandbagBeige",
+                  "role": "decoration",
+                  "sprite": "6,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "type": "obstacle",
+                "x": 2,
+                "y": 4
+              }
+            ],
+            "label": "Features",
+            "description": "Obstacles and structures on the board",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "assetUrl": {
+                  "name": "assetUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.45,
+            "label": "Scale",
+            "description": "Render scale",
+            "tier": "presentation"
+          },
+          {
+            "key": "tiles",
+            "type": "[WinterSkiBoardTilesItem]",
+            "default": [
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 0,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 1,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 2,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 3,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 4,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 5,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 6,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 7,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 0,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 1,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 2,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 3,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 4,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 5,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 6,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 7,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 0,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 1,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 2,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "sand",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileSand1",
+                  "dimension": "2d",
+                  "name": "tileSand1",
+                  "role": "tile",
+                  "sprite": "4,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 3,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "sand",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileSand1",
+                  "dimension": "2d",
+                  "name": "tileSand1",
+                  "role": "tile",
+                  "sprite": "4,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 4,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "sand",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileSand1",
+                  "dimension": "2d",
+                  "name": "tileSand1",
+                  "role": "tile",
+                  "sprite": "4,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 5,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 6,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 7,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 0,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 1,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "sand",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileSand1",
+                  "dimension": "2d",
+                  "name": "tileSand1",
+                  "role": "tile",
+                  "sprite": "4,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 2,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "sand",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileSand1",
+                  "dimension": "2d",
+                  "name": "tileSand1",
+                  "role": "tile",
+                  "sprite": "4,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 3,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "sand",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileSand1",
+                  "dimension": "2d",
+                  "name": "tileSand1",
+                  "role": "tile",
+                  "sprite": "4,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 4,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "sand",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileSand1",
+                  "dimension": "2d",
+                  "name": "tileSand1",
+                  "role": "tile",
+                  "sprite": "4,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 5,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 6,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 7,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 0,
+                "y": 4
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 1,
+                "y": 4
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 2,
+                "y": 4
+              },
+              {
+                "passable": true,
+                "terrain": "sand",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileSand1",
+                  "dimension": "2d",
+                  "name": "tileSand1",
+                  "role": "tile",
+                  "sprite": "4,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 3,
+                "y": 4
+              },
+              {
+                "passable": true,
+                "terrain": "sand",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileSand1",
+                  "dimension": "2d",
+                  "name": "tileSand1",
+                  "role": "tile",
+                  "sprite": "4,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 4,
+                "y": 4
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 5,
+                "y": 4
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 6,
+                "y": 4
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 7,
+                "y": 4
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 0,
+                "y": 5
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 1,
+                "y": 5
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 2,
+                "y": 5
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 3,
+                "y": 5
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 4,
+                "y": 5
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 5,
+                "y": 5
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 6,
+                "y": 5
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tileGrass1",
+                  "dimension": "2d",
+                  "name": "tileGrass1",
+                  "role": "tile",
+                  "sprite": "2,0",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 7,
+                "y": 5
+              }
+            ],
+            "label": "Tiles",
+            "description": "Ground/sand terrain tiles",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "movementCost": {
+                  "name": "movementCost",
+                  "required": false,
+                  "type": "number"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "terrain": {
+                  "name": "terrain",
+                  "required": false,
+                  "type": "string"
+                },
+                "terrainSprite": {
+                  "name": "terrainSprite",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "tileType": {
+                  "name": "tileType",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "units",
+            "type": "[WinterSkiBoardUnitsItem]",
+            "default": [
+              {
+                "animation": "idle",
+                "frame": 0,
+                "health": 10,
+                "id": "t1",
+                "maxHealth": 10,
+                "name": "Alpha",
+                "position": {
+                  "x": 1,
+                  "y": 1
+                },
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tankBody_green",
+                  "dimension": "2d",
+                  "name": "tankBody_green",
+                  "role": "npc",
+                  "sprite": "9,5",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "team": "player",
+                "unitType": "tank"
+              },
+              {
+                "animation": "idle",
+                "frame": 0,
+                "health": 10,
+                "id": "t2",
+                "maxHealth": 10,
+                "name": "Bravo",
+                "position": {
+                  "x": 6,
+                  "y": 0
+                },
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tankBody_dark",
+                  "dimension": "2d",
+                  "name": "tankBody_dark",
+                  "role": "npc",
+                  "sprite": "6,6",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "team": "enemy",
+                "unitType": "tank"
+              },
+              {
+                "animation": "idle",
+                "frame": 0,
+                "health": 8,
+                "id": "t3",
+                "maxHealth": 10,
+                "name": "Charlie",
+                "position": {
+                  "x": 6,
+                  "y": 4
+                },
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "tankBody_dark",
+                  "dimension": "2d",
+                  "name": "tankBody_dark",
+                  "role": "npc",
+                  "sprite": "6,6",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-winter-ski-board/kenney-tiny-ski/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "team": "enemy",
+                "unitType": "tank"
+              }
+            ],
+            "label": "Units",
+            "description": "Tank units on the board",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "faction": {
+                  "name": "faction",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "heroId": {
+                  "name": "heroId",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "previousPosition": {
+                  "name": "previousPosition",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "spriteSheet": {
+                  "name": "spriteSheet",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "traits": {
+                  "name": "traits",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "cooldown": {
+                        "name": "cooldown",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "currentState": {
+                        "name": "currentState",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "states": {
+                        "name": "states",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "effects",
+            "enemyTurn",
+            "firingRange",
+            "gridHeight",
+            "gridWidth",
+            "lives",
+            "phase",
+            "result",
+            "score",
+            "selectedUnitId",
+            "turn",
+            "units",
+            "validMoves"
+          ]
+        }
+      },
+      {
+        "name": "WinterSkiBoardAnimTick",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "frameCount",
+            "type": "unknown",
+            "default": 8
+          }
+        ],
+        "capabilities": [],
+        "ref": "AnimTick.traits.AnimTick"
+      }
+    ],
+    "pages": [
+      {
+        "name": "WinterSkiBoardPage",
+        "defaultPath": "/winter-ski-board",
+        "primaryEntity": "WinterSkiBoardItem"
+      }
+    ],
+    "emittedEvents": [
+      "CANCEL",
+      "END_TURN",
+      "FIRE",
+      "GAME_END",
+      "PLAY_AGAIN",
+      "TILE_CLICK",
+      "UNIT_CLICK"
+    ],
+    "listenedEvents": []
+  }
+]

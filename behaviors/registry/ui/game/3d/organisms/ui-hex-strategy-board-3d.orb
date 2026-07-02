@@ -1,0 +1,2674 @@
+{
+  "description": "HexStrategyBoard3D — settler claims neutral village/market/windmill hexes before the turn clock runs out.",
+  "name": "ui-hex-strategy-board-3d",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "properties": {
+                    "animations": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "name": "animations",
+                      "required": false,
+                      "type": "array"
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "units",
+            "type": "array"
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "validMoves",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "claimed",
+            "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "name": "claimedIds",
+            "type": "array"
+          },
+          {
+            "default": 3.0,
+            "name": "totalBuildings",
+            "type": "number"
+          },
+          {
+            "default": 20.0,
+            "name": "turnsLeft",
+            "type": "number"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string",
+            "values": [
+              "none",
+              "won",
+              "lost"
+            ]
+          },
+          {
+            "default": 6.0,
+            "name": "gridWidth",
+            "type": "number"
+          },
+          {
+            "default": 6.0,
+            "name": "gridHeight",
+            "type": "number"
+          },
+          {
+            "default": 2.0,
+            "name": "movementRange",
+            "type": "number"
+          }
+        ],
+        "name": "HexStrategyBoard3DItem",
+        "persistence": "runtime"
+      },
+      "name": "HexStrategyBoard3DOrbital",
+      "pages": [
+        {
+          "name": "HexStrategyBoard3DPage",
+          "path": "/hex-strategy-board-3d",
+          "traits": [
+            {
+              "ref": "HexStrategyBoard3DRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "description": "Error state (UiError)",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "HexStrategyBoard3DError"
+            },
+            "features": {
+              "default": [],
+              "description": "Unused — neutral buildings are encoded directly in tiles.",
+              "items": {
+                "properties": {
+                  "assetUrl": {
+                    "name": "assetUrl",
+                    "properties": {
+                      "animations": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "animations",
+                        "required": false,
+                        "type": "array"
+                      },
+                      "aspect": {
+                        "name": "aspect",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "category": {
+                        "name": "category",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "dimension": {
+                        "name": "dimension",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "role": {
+                        "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "style": {
+                        "name": "style",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "thumbnailUrl": {
+                        "name": "thumbnailUrl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "url": {
+                        "name": "url",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Features",
+              "tier": "presentation",
+              "type": "[HexStrategyBoard3DFeaturesItem]"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "scale": {
+              "default": 0.45,
+              "description": "Canvas render scale",
+              "label": "Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "startingTurns": {
+              "default": 20.0,
+              "description": "Turn-clock ticks before an unfinished realm counts as lost",
+              "label": "Starting Turns",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "tiles": {
+              "default": [
+                {
+                  "claimable": false,
+                  "id": "t00",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "building-castle",
+                    "dimension": "3d",
+                    "name": "building-castle",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-castle.glb"
+                  },
+                  "passable": true,
+                  "terrain": "castle",
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t10",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t20",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 2.0,
+                  "y": 0.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t30",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "sand",
+                    "dimension": "3d",
+                    "name": "sand",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb"
+                  },
+                  "passable": true,
+                  "terrain": "sand",
+                  "x": 3.0,
+                  "y": 0.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t40",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "water",
+                    "dimension": "3d",
+                    "name": "water",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/water.glb"
+                  },
+                  "passable": false,
+                  "terrain": "water",
+                  "x": 4.0,
+                  "y": 0.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t50",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "water",
+                    "dimension": "3d",
+                    "name": "water",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/water.glb"
+                  },
+                  "passable": false,
+                  "terrain": "water",
+                  "x": 5.0,
+                  "y": 0.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t01",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t11",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 1.0,
+                  "y": 1.0
+                },
+                {
+                  "claimable": true,
+                  "id": "t21",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "building-village",
+                    "dimension": "3d",
+                    "name": "building-village",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-village.glb"
+                  },
+                  "passable": true,
+                  "terrain": "village",
+                  "x": 2.0,
+                  "y": 1.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t31",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "sand",
+                    "dimension": "3d",
+                    "name": "sand",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb"
+                  },
+                  "passable": true,
+                  "terrain": "sand",
+                  "x": 3.0,
+                  "y": 1.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t41",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "sand",
+                    "dimension": "3d",
+                    "name": "sand",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb"
+                  },
+                  "passable": true,
+                  "terrain": "sand",
+                  "x": 4.0,
+                  "y": 1.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t51",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "water",
+                    "dimension": "3d",
+                    "name": "water",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/water.glb"
+                  },
+                  "passable": false,
+                  "terrain": "water",
+                  "x": 5.0,
+                  "y": 1.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t02",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 0.0,
+                  "y": 2.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t12",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "stone-mountain",
+                    "dimension": "3d",
+                    "name": "stone-mountain",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/stone-mountain.glb"
+                  },
+                  "passable": false,
+                  "terrain": "mountain",
+                  "x": 1.0,
+                  "y": 2.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t22",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t32",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 3.0,
+                  "y": 2.0
+                },
+                {
+                  "claimable": true,
+                  "id": "t42",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "building-market",
+                    "dimension": "3d",
+                    "name": "building-market",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-market.glb"
+                  },
+                  "passable": true,
+                  "terrain": "market",
+                  "x": 4.0,
+                  "y": 2.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t52",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "sand",
+                    "dimension": "3d",
+                    "name": "sand",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb"
+                  },
+                  "passable": true,
+                  "terrain": "sand",
+                  "x": 5.0,
+                  "y": 2.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t03",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "dirt",
+                    "dimension": "3d",
+                    "name": "dirt",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/dirt.glb"
+                  },
+                  "passable": true,
+                  "terrain": "dirt",
+                  "x": 0.0,
+                  "y": 3.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t13",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 1.0,
+                  "y": 3.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t23",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t33",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "stone-mountain",
+                    "dimension": "3d",
+                    "name": "stone-mountain",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/stone-mountain.glb"
+                  },
+                  "passable": false,
+                  "terrain": "mountain",
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t43",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t53",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 5.0,
+                  "y": 3.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t04",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass-forest",
+                    "dimension": "3d",
+                    "name": "grass-forest",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass-forest.glb"
+                  },
+                  "passable": true,
+                  "terrain": "forest",
+                  "x": 0.0,
+                  "y": 4.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t14",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 1.0,
+                  "y": 4.0
+                },
+                {
+                  "claimable": true,
+                  "id": "t24",
+                  "modelUrl": {
+                    "animations": [
+                      "animation"
+                    ],
+                    "aspect": "1:1",
+                    "category": "building-mill",
+                    "dimension": "3d",
+                    "name": "building-mill",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-mill.glb"
+                  },
+                  "passable": true,
+                  "terrain": "windmill",
+                  "x": 2.0,
+                  "y": 4.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t34",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 3.0,
+                  "y": 4.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t44",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "stone-mountain",
+                    "dimension": "3d",
+                    "name": "stone-mountain",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/stone-mountain.glb"
+                  },
+                  "passable": false,
+                  "terrain": "mountain",
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t54",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 5.0,
+                  "y": 4.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t05",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 0.0,
+                  "y": 5.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t15",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "sand",
+                    "dimension": "3d",
+                    "name": "sand",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb"
+                  },
+                  "passable": true,
+                  "terrain": "sand",
+                  "x": 1.0,
+                  "y": 5.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t25",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t35",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 3.0,
+                  "y": 5.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t45",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass",
+                    "dimension": "3d",
+                    "name": "grass",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"
+                  },
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 4.0,
+                  "y": 5.0
+                },
+                {
+                  "claimable": false,
+                  "id": "t55",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "grass-hill",
+                    "dimension": "3d",
+                    "name": "grass-hill",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass-hill.glb"
+                  },
+                  "passable": true,
+                  "terrain": "hill",
+                  "x": 5.0,
+                  "y": 5.0
+                }
+              ],
+              "description": "6x6 hex realm grid — biomes + neutral building hexes on square-lattice positions.",
+              "items": {
+                "properties": {
+                  "claimable": {
+                    "name": "claimable",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "modelUrl": {
+                    "name": "modelUrl",
+                    "properties": {
+                      "animations": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "animations",
+                        "required": false,
+                        "type": "array"
+                      },
+                      "aspect": {
+                        "name": "aspect",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "category": {
+                        "name": "category",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "dimension": {
+                        "name": "dimension",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "role": {
+                        "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "style": {
+                        "name": "style",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "thumbnailUrl": {
+                        "name": "thumbnailUrl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "url": {
+                        "name": "url",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "passable": {
+                    "name": "passable",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "terrain": {
+                    "name": "terrain",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Tiles",
+              "tier": "presentation",
+              "type": "[HexStrategyBoard3DTilesItem]"
+            },
+            "unitScale": {
+              "default": 1.0,
+              "description": "Unit draw-size multiplier",
+              "label": "Unit Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "units": {
+              "default": [
+                {
+                  "id": "settler",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "unit-tower",
+                    "dimension": "3d",
+                    "name": "unit-tower",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/unit-tower.glb"
+                  },
+                  "name": "Settler",
+                  "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "team": "player",
+                  "unitType": "settler"
+                }
+              ],
+              "description": "The player's single settler token — starts on the castle hex.",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "modelUrl": {
+                    "name": "modelUrl",
+                    "properties": {
+                      "animations": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "animations",
+                        "required": false,
+                        "type": "array"
+                      },
+                      "aspect": {
+                        "name": "aspect",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "category": {
+                        "name": "category",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "dimension": {
+                        "name": "dimension",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "role": {
+                        "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "style": {
+                        "name": "style",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "thumbnailUrl": {
+                        "name": "thumbnailUrl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "url": {
+                        "name": "url",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "position": {
+                    "name": "position",
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "team": {
+                    "name": "team",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "player",
+                      "enemy",
+                      "neutral"
+                    ]
+                  },
+                  "unitType": {
+                    "name": "unitType",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Units",
+              "tier": "presentation",
+              "type": "[HexStrategyBoard3DUnitsItem]"
+            }
+          },
+          "emits": [
+            {
+              "description": "-- Declarative event props --",
+              "event": "TILE_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "tileId",
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "z",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Selects the settler on click",
+              "event": "UNIT_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "type": "number"
+                },
+                {
+                  "name": "z",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Deselects the current unit",
+              "event": "CANCEL",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Called when the realm-expansion match ends",
+              "event": "GAME_END",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Resets the board for a new match",
+              "event": "PLAY_AGAIN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Starts the match from the menu state",
+              "event": "START",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Initializes the board on first mount",
+              "event": "INIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "claimed",
+              "claimedIds",
+              "gridHeight",
+              "gridWidth",
+              "movementRange",
+              "result",
+              "selectedUnitId",
+              "totalBuildings",
+              "turnsLeft",
+              "units",
+              "validMoves"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "HexStrategyBoard3DItem",
+          "name": "HexStrategyBoard3DRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "description": "Starts the match from the menu state",
+                "key": "START",
+                "name": "Start",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Initializes the board on first mount",
+                "key": "INIT",
+                "name": "Initialize",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Selects the settler on click",
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "z",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "-- Declarative event props --",
+                "key": "TILE_CLICK",
+                "name": "Tile Click",
+                "payloadSchema": [
+                  {
+                    "name": "tileId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "z",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Deselects the current unit",
+                "key": "CANCEL",
+                "name": "Cancel",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Called when the realm-expansion match ends",
+                "key": "GAME_END",
+                "name": "Game End",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Resets the board for a new match",
+                "key": "PLAY_AGAIN",
+                "name": "Play Again",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "playing"
+              },
+              {
+                "name": "menu"
+              },
+              {
+                "name": "gameover"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.claimed",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.claimedIds",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.totalBuildings",
+                    3.0
+                  ],
+                  [
+                    "set",
+                    "@entity.turnsLeft",
+                    "@config.startingTurns"
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "if",
+                    [
+                      "!=",
+                      "@entity.result",
+                      "none"
+                    ],
+                    [
+                      "emit",
+                      "GAME_END",
+                      {
+                        "result": "@entity.result"
+                      }
+                    ],
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Claimed",
+                            "value": "@entity.claimed"
+                          },
+                          {
+                            "label": "Turns Left",
+                            "value": "@entity.turnsLeft"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "START",
+                "from": "menu",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.claimed",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.claimedIds",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.totalBuildings",
+                    3.0
+                  ],
+                  [
+                    "set",
+                    "@entity.turnsLeft",
+                    "@config.startingTurns"
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "if",
+                    [
+                      "!=",
+                      "@entity.result",
+                      "none"
+                    ],
+                    [
+                      "emit",
+                      "GAME_END",
+                      {
+                        "result": "@entity.result"
+                      }
+                    ],
+                    null
+                  ],
+                  [
+                    "set",
+                    "@entity.gridWidth",
+                    6.0
+                  ],
+                  [
+                    "set",
+                    "@entity.gridHeight",
+                    6.0
+                  ],
+                  [
+                    "set",
+                    "@entity.movementRange",
+                    2.0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Claimed",
+                            "value": "@entity.claimed"
+                          },
+                          {
+                            "label": "Turns Left",
+                            "value": "@entity.turnsLeft"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    "@payload.unitId"
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    [
+                      "array/map",
+                      [
+                        "array/filter",
+                        "@config.tiles",
+                        [
+                          "fn",
+                          "t",
+                          [
+                            "and",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@t",
+                                "passable"
+                              ],
+                              true
+                            ],
+                            [
+                              "and",
+                              [
+                                "<=",
+                                [
+                                  "grid/manhattan-distance",
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/find",
+                                      "@entity.units",
+                                      [
+                                        "fn",
+                                        "u",
+                                        [
+                                          "==",
+                                          "@u.id",
+                                          "@payload.unitId"
+                                        ]
+                                      ]
+                                    ],
+                                    "position"
+                                  ],
+                                  {
+                                    "x": [
+                                      "object/get",
+                                      "@t",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@t",
+                                      "y"
+                                    ]
+                                  }
+                                ],
+                                "@entity.movementRange"
+                              ],
+                              [
+                                "==",
+                                [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ],
+                                            "x"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "x"
+                                          ]
+                                        ],
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ],
+                                            "y"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "y"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "t",
+                        {
+                          "x": [
+                            "object/get",
+                            "@t",
+                            "x"
+                          ],
+                          "z": [
+                            "object/get",
+                            "@t",
+                            "y"
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Claimed",
+                            "value": "@entity.claimed"
+                          },
+                          {
+                            "label": "Turns Left",
+                            "value": "@entity.turnsLeft"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "==",
+                    [
+                      "object/get",
+                      [
+                        "array/find",
+                        "@entity.units",
+                        [
+                          "fn",
+                          "u",
+                          [
+                            "==",
+                            "@u.id",
+                            "@payload.unitId"
+                          ]
+                        ]
+                      ],
+                      "team"
+                    ],
+                    "player"
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "@entity.selectedUnitId"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "position": {
+                                "x": "@payload.x",
+                                "y": "@payload.z"
+                              }
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "tile",
+                        [
+                          "array/find",
+                          "@config.tiles",
+                          [
+                            "fn",
+                            "t",
+                            [
+                              "and",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@t",
+                                  "x"
+                                ],
+                                "@payload.x"
+                              ],
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@t",
+                                  "y"
+                                ],
+                                "@payload.z"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.claimedIds",
+                        [
+                          "if",
+                          [
+                            "and",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@tile",
+                                "claimable"
+                              ],
+                              true
+                            ],
+                            [
+                              "not",
+                              [
+                                "array/includes",
+                                "@entity.claimedIds",
+                                [
+                                  "object/get",
+                                  "@tile",
+                                  "id"
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "array/append",
+                            "@entity.claimedIds",
+                            [
+                              "object/get",
+                              "@tile",
+                              "id"
+                            ]
+                          ],
+                          "@entity.claimedIds"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.claimed",
+                        [
+                          "array/len",
+                          "@entity.claimedIds"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.result",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.claimed",
+                            "@entity.totalBuildings"
+                          ],
+                          "won",
+                          "@entity.result"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Claimed",
+                            "value": "@entity.claimed"
+                          },
+                          {
+                            "label": "Turns Left",
+                            "value": "@entity.turnsLeft"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "TILE_CLICK",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "and",
+                    [
+                      "!=",
+                      "@entity.selectedUnitId",
+                      ""
+                    ],
+                    [
+                      "and",
+                      [
+                        "grid/in-bounds",
+                        {
+                          "x": "@payload.x",
+                          "y": "@payload.z"
+                        },
+                        "@entity.gridWidth",
+                        "@entity.gridHeight"
+                      ],
+                      [
+                        "and",
+                        [
+                          "==",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@config.tiles",
+                              [
+                                "fn",
+                                "t",
+                                [
+                                  "and",
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "@t",
+                                      "x"
+                                    ],
+                                    "@payload.x"
+                                  ],
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "@t",
+                                      "y"
+                                    ],
+                                    "@payload.z"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "passable"
+                          ],
+                          true
+                        ],
+                        [
+                          "and",
+                          [
+                            "<=",
+                            [
+                              "grid/manhattan-distance",
+                              [
+                                "object/get",
+                                [
+                                  "array/find",
+                                  "@entity.units",
+                                  [
+                                    "fn",
+                                    "u",
+                                    [
+                                      "==",
+                                      "@u.id",
+                                      "@entity.selectedUnitId"
+                                    ]
+                                  ]
+                                ],
+                                "position"
+                              ],
+                              {
+                                "x": "@payload.x",
+                                "y": "@payload.z"
+                              }
+                            ],
+                            "@entity.movementRange"
+                          ],
+                          [
+                            "==",
+                            [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "position"
+                                        ],
+                                        "x"
+                                      ],
+                                      "@payload.x"
+                                    ],
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "position"
+                                        ],
+                                        "y"
+                                      ],
+                                      "@payload.z"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ],
+                            0.0
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Claimed",
+                            "value": "@entity.claimed"
+                          },
+                          {
+                            "label": "Turns Left",
+                            "value": "@entity.turnsLeft"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "CANCEL",
+                "from": "playing",
+                "guard": [
+                  "!=",
+                  "@entity.selectedUnitId",
+                  ""
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Claimed",
+                            "value": "@entity.claimed"
+                          },
+                          {
+                            "label": "Turns Left",
+                            "value": "@entity.turnsLeft"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "GAME_END",
+                "from": "playing",
+                "guard": [
+                  "!=",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "gameover"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.claimed",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.claimedIds",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.totalBuildings",
+                    3.0
+                  ],
+                  [
+                    "set",
+                    "@entity.turnsLeft",
+                    "@config.startingTurns"
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "if",
+                    [
+                      "!=",
+                      "@entity.result",
+                      "none"
+                    ],
+                    [
+                      "emit",
+                      "GAME_END",
+                      {
+                        "result": "@entity.result"
+                      }
+                    ],
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Claimed",
+                            "value": "@entity.claimed"
+                          },
+                          {
+                            "label": "Turns Left",
+                            "value": "@entity.turnsLeft"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "gameover",
+                "to": "menu"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.turnsLeft",
+                  [
+                    "math/max",
+                    0.0,
+                    [
+                      "-",
+                      "@entity.turnsLeft",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.result",
+                  [
+                    "if",
+                    [
+                      "<=",
+                      "@entity.turnsLeft",
+                      0.0
+                    ],
+                    "lost",
+                    "@entity.result"
+                  ]
+                ],
+                [
+                  "if",
+                  [
+                    "!=",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "emit",
+                    "GAME_END",
+                    {
+                      "result": "@entity.result"
+                    }
+                  ],
+                  null
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "selectedUnitId": "@entity.selectedUnitId",
+                        "tileClickEvent": "TILE_CLICK",
+                        "tiles": "@config.tiles",
+                        "type": "game-canvas-3d",
+                        "unitClickEvent": "UNIT_CLICK",
+                        "unitScale": "@config.unitScale",
+                        "units": "@entity.units",
+                        "validMoves": "@entity.validMoves"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Claimed",
+                          "value": "@entity.claimed"
+                        },
+                        {
+                          "label": "Turns Left",
+                          "value": "@entity.turnsLeft"
+                        },
+                        {
+                          "label": "Result",
+                          "value": "@entity.result"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "guard": [
+                "==",
+                "@entity.result",
+                "none"
+              ],
+              "interval": 2000.0,
+              "name": "turnTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

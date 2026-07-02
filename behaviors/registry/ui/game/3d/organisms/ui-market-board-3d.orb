@@ -1,0 +1,3512 @@
+{
+  "description": "MarketBoard3D — 3D shop-service board organism (game-shell + game-canvas-3d); serve customers before patience hits zero.",
+  "name": "ui-market-board-3d",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxPatience": {
+                  "name": "maxPatience",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "properties": {
+                    "animations": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "name": "animations",
+                      "required": false,
+                      "type": "array"
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "patience": {
+                  "name": "patience",
+                  "required": false,
+                  "type": "number"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "neutral"
+                  ]
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "units",
+            "type": "array"
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "validMoves",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "attackTargets",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "score",
+            "type": "number"
+          },
+          {
+            "default": 3.0,
+            "name": "lives",
+            "type": "number"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string",
+            "values": [
+              "none",
+              "won",
+              "lost"
+            ]
+          },
+          {
+            "default": 5.0,
+            "name": "gridWidth",
+            "type": "number"
+          },
+          {
+            "default": 6.0,
+            "name": "gridHeight",
+            "type": "number"
+          },
+          {
+            "default": 2.0,
+            "name": "movementRange",
+            "type": "number"
+          },
+          {
+            "default": 8.0,
+            "name": "maxPatience",
+            "type": "number"
+          },
+          {
+            "default": 10.0,
+            "name": "scoreTarget",
+            "type": "number"
+          }
+        ],
+        "name": "MarketBoard3DItem",
+        "persistence": "runtime"
+      },
+      "name": "MarketBoard3DOrbital",
+      "pages": [
+        {
+          "name": "MarketBoard3DPage",
+          "path": "/market-board-3d",
+          "traits": [
+            {
+              "ref": "MarketBoard3DRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "description": "Error state (UiError)",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "MarketBoard3DError"
+            },
+            "features": {
+              "default": [
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "shelf-boxes",
+                    "dimension": "3d",
+                    "name": "shelf-boxes",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-boxes.glb"
+                  },
+                  "id": "f1",
+                  "type": "shelf",
+                  "x": 1.0,
+                  "y": 1.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "shelf-bags",
+                    "dimension": "3d",
+                    "name": "shelf-bags",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-bags.glb"
+                  },
+                  "id": "f2",
+                  "type": "shelf",
+                  "x": 2.0,
+                  "y": 1.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "shopping-basket",
+                    "dimension": "3d",
+                    "name": "shopping-basket",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shopping-basket.glb"
+                  },
+                  "id": "f3",
+                  "type": "shopping_basket",
+                  "x": 3.0,
+                  "y": 1.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "freezer",
+                    "dimension": "3d",
+                    "name": "freezer",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/freezer.glb"
+                  },
+                  "id": "f4",
+                  "type": "freezer",
+                  "x": 1.0,
+                  "y": 2.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "freezers-standing",
+                    "dimension": "3d",
+                    "name": "freezers-standing",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/freezers-standing.glb"
+                  },
+                  "id": "f5",
+                  "type": "freezer",
+                  "x": 3.0,
+                  "y": 2.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "display-fruit",
+                    "dimension": "3d",
+                    "name": "display-fruit",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/display-fruit.glb"
+                  },
+                  "id": "f6",
+                  "type": "display_fruit",
+                  "x": 1.0,
+                  "y": 3.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "apple",
+                    "dimension": "3d",
+                    "name": "apple",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/apple.glb"
+                  },
+                  "id": "f7",
+                  "type": "food",
+                  "x": 1.0,
+                  "y": 3.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "banana",
+                    "dimension": "3d",
+                    "name": "banana",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/banana.glb"
+                  },
+                  "id": "f8",
+                  "type": "food",
+                  "x": 1.0,
+                  "y": 3.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "carrot",
+                    "dimension": "3d",
+                    "name": "carrot",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/carrot.glb"
+                  },
+                  "id": "f9",
+                  "type": "food",
+                  "x": 1.0,
+                  "y": 3.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "display-bread",
+                    "dimension": "3d",
+                    "name": "display-bread",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/display-bread.glb"
+                  },
+                  "id": "f10",
+                  "type": "display_bread",
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "bread",
+                    "dimension": "3d",
+                    "name": "bread",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/bread.glb"
+                  },
+                  "id": "f11",
+                  "type": "food",
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "shopping-cart",
+                    "dimension": "3d",
+                    "name": "shopping-cart",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shopping-cart.glb"
+                  },
+                  "id": "f12",
+                  "type": "shopping_cart",
+                  "x": 1.0,
+                  "y": 4.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "cash-register",
+                    "dimension": "3d",
+                    "name": "cash-register",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/cash-register.glb"
+                  },
+                  "id": "f13",
+                  "type": "checkout",
+                  "x": 2.0,
+                  "y": 4.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "bottle-return",
+                    "dimension": "3d",
+                    "name": "bottle-return",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/bottle-return.glb"
+                  },
+                  "id": "f14",
+                  "type": "bottle_return",
+                  "x": 2.0,
+                  "y": 4.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "shelf-end",
+                    "dimension": "3d",
+                    "name": "shelf-end",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-end.glb"
+                  },
+                  "id": "f15",
+                  "type": "shelf",
+                  "x": 3.0,
+                  "y": 1.0
+                }
+              ],
+              "description": "Shop fixtures (shelves/freezers/checkout/carts) and food props on the floor.",
+              "items": {
+                "properties": {
+                  "assetUrl": {
+                    "name": "assetUrl",
+                    "properties": {
+                      "animations": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "animations",
+                        "required": false,
+                        "type": "array"
+                      },
+                      "aspect": {
+                        "name": "aspect",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "category": {
+                        "name": "category",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "dimension": {
+                        "name": "dimension",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "role": {
+                        "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "style": {
+                        "name": "style",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "thumbnailUrl": {
+                        "name": "thumbnailUrl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "url": {
+                        "name": "url",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Features",
+              "tier": "presentation",
+              "type": "[MarketBoard3DFeaturesItem]"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "maxPatience": {
+              "default": 8.0,
+              "description": "Starting/reset patience ticks for each customer",
+              "label": "Max Patience",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "scale": {
+              "default": 0.45,
+              "description": "Canvas render scale",
+              "label": "Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "scoreTarget": {
+              "default": 10.0,
+              "description": "Score needed to win",
+              "label": "Score Target",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "tiles": {
+              "default": [
+                {
+                  "id": "t00",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall-corner",
+                    "dimension": "3d",
+                    "name": "wall-corner",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall-corner.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "id": "t10",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall-window",
+                    "dimension": "3d",
+                    "name": "wall-window",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall-window.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                {
+                  "id": "t20",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall",
+                    "dimension": "3d",
+                    "name": "wall",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 2.0,
+                  "y": 0.0
+                },
+                {
+                  "id": "t30",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall-window",
+                    "dimension": "3d",
+                    "name": "wall-window",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall-window.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 3.0,
+                  "y": 0.0
+                },
+                {
+                  "id": "t40",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall-corner",
+                    "dimension": "3d",
+                    "name": "wall-corner",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall-corner.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 4.0,
+                  "y": 0.0
+                },
+                {
+                  "id": "t01",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall",
+                    "dimension": "3d",
+                    "name": "wall",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                {
+                  "id": "t11",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "floor",
+                    "dimension": "3d",
+                    "name": "floor",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                  },
+                  "passable": true,
+                  "terrain": "floor",
+                  "x": 1.0,
+                  "y": 1.0
+                },
+                {
+                  "id": "t21",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "floor",
+                    "dimension": "3d",
+                    "name": "floor",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                  },
+                  "passable": true,
+                  "terrain": "floor",
+                  "x": 2.0,
+                  "y": 1.0
+                },
+                {
+                  "id": "t31",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "floor",
+                    "dimension": "3d",
+                    "name": "floor",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                  },
+                  "passable": true,
+                  "terrain": "floor",
+                  "x": 3.0,
+                  "y": 1.0
+                },
+                {
+                  "id": "t41",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall",
+                    "dimension": "3d",
+                    "name": "wall",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 4.0,
+                  "y": 1.0
+                },
+                {
+                  "id": "t02",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall",
+                    "dimension": "3d",
+                    "name": "wall",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 0.0,
+                  "y": 2.0
+                },
+                {
+                  "id": "t12",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "floor",
+                    "dimension": "3d",
+                    "name": "floor",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                  },
+                  "passable": true,
+                  "terrain": "floor",
+                  "x": 1.0,
+                  "y": 2.0
+                },
+                {
+                  "id": "t22",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "floor",
+                    "dimension": "3d",
+                    "name": "floor",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                  },
+                  "passable": true,
+                  "terrain": "floor",
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                {
+                  "id": "t32",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "floor",
+                    "dimension": "3d",
+                    "name": "floor",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                  },
+                  "passable": true,
+                  "terrain": "floor",
+                  "x": 3.0,
+                  "y": 2.0
+                },
+                {
+                  "id": "t42",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall",
+                    "dimension": "3d",
+                    "name": "wall",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 4.0,
+                  "y": 2.0
+                },
+                {
+                  "id": "t03",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall",
+                    "dimension": "3d",
+                    "name": "wall",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 0.0,
+                  "y": 3.0
+                },
+                {
+                  "id": "t13",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "floor",
+                    "dimension": "3d",
+                    "name": "floor",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                  },
+                  "passable": true,
+                  "terrain": "floor",
+                  "x": 1.0,
+                  "y": 3.0
+                },
+                {
+                  "id": "t23",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "floor",
+                    "dimension": "3d",
+                    "name": "floor",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                  },
+                  "passable": true,
+                  "terrain": "floor",
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "id": "t33",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "floor",
+                    "dimension": "3d",
+                    "name": "floor",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                  },
+                  "passable": true,
+                  "terrain": "floor",
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                {
+                  "id": "t43",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall",
+                    "dimension": "3d",
+                    "name": "wall",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "id": "t04",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall",
+                    "dimension": "3d",
+                    "name": "wall",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 0.0,
+                  "y": 4.0
+                },
+                {
+                  "id": "t14",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "floor",
+                    "dimension": "3d",
+                    "name": "floor",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                  },
+                  "passable": true,
+                  "terrain": "floor",
+                  "x": 1.0,
+                  "y": 4.0
+                },
+                {
+                  "id": "t24",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "floor",
+                    "dimension": "3d",
+                    "name": "floor",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                  },
+                  "passable": true,
+                  "terrain": "floor",
+                  "x": 2.0,
+                  "y": 4.0
+                },
+                {
+                  "id": "t34",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "floor",
+                    "dimension": "3d",
+                    "name": "floor",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                  },
+                  "passable": true,
+                  "terrain": "floor",
+                  "x": 3.0,
+                  "y": 4.0
+                },
+                {
+                  "id": "t44",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall",
+                    "dimension": "3d",
+                    "name": "wall",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                {
+                  "id": "t05",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall-corner",
+                    "dimension": "3d",
+                    "name": "wall-corner",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall-corner.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 0.0,
+                  "y": 5.0
+                },
+                {
+                  "id": "t15",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall",
+                    "dimension": "3d",
+                    "name": "wall",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 1.0,
+                  "y": 5.0
+                },
+                {
+                  "id": "t25",
+                  "modelUrl": {
+                    "animations": [
+                      "open",
+                      "close",
+                      "open-and-close"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall-door-rotate",
+                    "dimension": "3d",
+                    "name": "wall-door-rotate",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall-door-rotate.glb"
+                  },
+                  "passable": true,
+                  "terrain": "door",
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "id": "t35",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall",
+                    "dimension": "3d",
+                    "name": "wall",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 3.0,
+                  "y": 5.0
+                },
+                {
+                  "id": "t45",
+                  "modelUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "wall-corner",
+                    "dimension": "3d",
+                    "name": "wall-corner",
+                    "role": "tile",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall-corner.glb"
+                  },
+                  "passable": false,
+                  "terrain": "wall",
+                  "x": 4.0,
+                  "y": 5.0
+                }
+              ],
+              "description": "5×6 shop floor grid (wall border + door) — takes priority over entity-derived tiles.",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "modelUrl": {
+                    "name": "modelUrl",
+                    "properties": {
+                      "animations": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "animations",
+                        "required": false,
+                        "type": "array"
+                      },
+                      "aspect": {
+                        "name": "aspect",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "category": {
+                        "name": "category",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "dimension": {
+                        "name": "dimension",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "role": {
+                        "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "style": {
+                        "name": "style",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "thumbnailUrl": {
+                        "name": "thumbnailUrl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "url": {
+                        "name": "url",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "passable": {
+                    "name": "passable",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "terrain": {
+                    "name": "terrain",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Tiles",
+              "tier": "presentation",
+              "type": "[MarketBoard3DTilesItem]"
+            },
+            "unitScale": {
+              "default": 1.0,
+              "description": "Unit draw-size multiplier",
+              "label": "Unit Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "units": {
+              "default": [
+                {
+                  "id": "u1",
+                  "modelUrl": {
+                    "animations": [
+                      "static",
+                      "idle",
+                      "walk",
+                      "sprint",
+                      "jump",
+                      "fall",
+                      "crouch",
+                      "sit",
+                      "drive",
+                      "die",
+                      "pick-up",
+                      "emote-yes",
+                      "emote-no",
+                      "holding-right",
+                      "holding-left",
+                      "holding-both",
+                      "holding-right-shoot",
+                      "holding-left-shoot",
+                      "holding-both-shoot",
+                      "attack-melee-right",
+                      "attack-melee-left",
+                      "attack-kick-right",
+                      "attack-kick-left",
+                      "interact-right",
+                      "interact-left",
+                      "wheelchair-sit",
+                      "wheelchair-look-left",
+                      "wheelchair-look-right",
+                      "wheelchair-move-forward",
+                      "wheelchair-move-back",
+                      "wheelchair-move-left",
+                      "wheelchair-move-right"
+                    ],
+                    "aspect": "1:1",
+                    "category": "character-employee",
+                    "dimension": "3d",
+                    "name": "character-employee",
+                    "role": "player",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/units/character-employee.glb"
+                  },
+                  "name": "Shopkeeper",
+                  "position": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "team": "player",
+                  "unitType": "shopkeeper"
+                },
+                {
+                  "id": "c1",
+                  "maxPatience": 8.0,
+                  "modelUrl": {
+                    "animations": [
+                      "static",
+                      "idle",
+                      "walk",
+                      "sprint",
+                      "jump",
+                      "fall",
+                      "crouch",
+                      "sit",
+                      "drive",
+                      "die",
+                      "pick-up",
+                      "emote-yes",
+                      "emote-no",
+                      "holding-right",
+                      "holding-left",
+                      "holding-both",
+                      "holding-right-shoot",
+                      "holding-left-shoot",
+                      "holding-both-shoot",
+                      "attack-melee-right",
+                      "attack-melee-left",
+                      "attack-kick-right",
+                      "attack-kick-left",
+                      "interact-right",
+                      "interact-left",
+                      "wheelchair-sit",
+                      "wheelchair-look-left",
+                      "wheelchair-look-right",
+                      "wheelchair-move-forward",
+                      "wheelchair-move-back",
+                      "wheelchair-move-left",
+                      "wheelchair-move-right"
+                    ],
+                    "aspect": "1:1",
+                    "category": "character-female-a",
+                    "dimension": "3d",
+                    "name": "character-female-a",
+                    "role": "npc",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-female-a.glb"
+                  },
+                  "name": "Customer A",
+                  "patience": 8.0,
+                  "position": {
+                    "x": 2.0,
+                    "y": 3.0
+                  },
+                  "team": "neutral",
+                  "unitType": "customer"
+                },
+                {
+                  "id": "c2",
+                  "maxPatience": 8.0,
+                  "modelUrl": {
+                    "animations": [
+                      "static",
+                      "idle",
+                      "walk",
+                      "sprint",
+                      "jump",
+                      "fall",
+                      "crouch",
+                      "sit",
+                      "drive",
+                      "die",
+                      "pick-up",
+                      "emote-yes",
+                      "emote-no",
+                      "holding-right",
+                      "holding-left",
+                      "holding-both",
+                      "holding-right-shoot",
+                      "holding-left-shoot",
+                      "holding-both-shoot",
+                      "attack-melee-right",
+                      "attack-melee-left",
+                      "attack-kick-right",
+                      "attack-kick-left",
+                      "interact-right",
+                      "interact-left",
+                      "wheelchair-sit",
+                      "wheelchair-look-left",
+                      "wheelchair-look-right",
+                      "wheelchair-move-forward",
+                      "wheelchair-move-back",
+                      "wheelchair-move-left",
+                      "wheelchair-move-right"
+                    ],
+                    "aspect": "1:1",
+                    "category": "character-male-a",
+                    "dimension": "3d",
+                    "name": "character-male-a",
+                    "role": "npc",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-male-a.glb"
+                  },
+                  "name": "Customer B",
+                  "patience": 8.0,
+                  "position": {
+                    "x": 3.0,
+                    "y": 4.0
+                  },
+                  "team": "neutral",
+                  "unitType": "customer"
+                }
+              ],
+              "description": "Initial roster: shopkeeper + 2 customers — takes priority over entity-derived units.",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "maxPatience": {
+                    "name": "maxPatience",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "modelUrl": {
+                    "name": "modelUrl",
+                    "properties": {
+                      "animations": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "animations",
+                        "required": false,
+                        "type": "array"
+                      },
+                      "aspect": {
+                        "name": "aspect",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "category": {
+                        "name": "category",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "dimension": {
+                        "name": "dimension",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "role": {
+                        "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "style": {
+                        "name": "style",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "thumbnailUrl": {
+                        "name": "thumbnailUrl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "url": {
+                        "name": "url",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "patience": {
+                    "name": "patience",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "position": {
+                    "name": "position",
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "team": {
+                    "name": "team",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "player",
+                      "neutral"
+                    ]
+                  },
+                  "unitType": {
+                    "name": "unitType",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Units",
+              "tier": "presentation",
+              "type": "[MarketBoard3DUnitsItem]"
+            }
+          },
+          "emits": [
+            {
+              "description": "Emitted when result becomes won or lost",
+              "event": "GAME_END",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Moves the shopkeeper toward the clicked tile",
+              "event": "TILE_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "z",
+                  "type": "number"
+                },
+                {
+                  "name": "tileId",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Serves the clicked customer when the shopkeeper is adjacent",
+              "event": "UNIT_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "type": "number"
+                },
+                {
+                  "name": "z",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+              "event": "PLAY_AGAIN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "attackTargets",
+              "gridHeight",
+              "gridWidth",
+              "lives",
+              "maxPatience",
+              "movementRange",
+              "result",
+              "score",
+              "scoreTarget",
+              "selectedUnitId",
+              "units",
+              "validMoves"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "MarketBoard3DItem",
+          "name": "MarketBoard3DRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Moves the shopkeeper toward the clicked tile",
+                "key": "TILE_CLICK",
+                "name": "Tile Click",
+                "payloadSchema": [
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "z",
+                    "type": "number"
+                  },
+                  {
+                    "name": "tileId",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Serves the clicked customer when the shopkeeper is adjacent",
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "z",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emitted when result becomes won or lost",
+                "key": "GAME_END",
+                "name": "Game End",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+                "key": "PLAY_AGAIN",
+                "name": "Play Again",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "playing"
+              },
+              {
+                "name": "menu"
+              },
+              {
+                "name": "gameover"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    "u1"
+                  ],
+                  [
+                    "set",
+                    "@entity.gridWidth",
+                    5.0
+                  ],
+                  [
+                    "set",
+                    "@entity.gridHeight",
+                    6.0
+                  ],
+                  [
+                    "set",
+                    "@entity.movementRange",
+                    2.0
+                  ],
+                  [
+                    "set",
+                    "@entity.maxPatience",
+                    "@config.maxPatience"
+                  ],
+                  [
+                    "set",
+                    "@entity.scoreTarget",
+                    "@config.scoreTarget"
+                  ],
+                  [
+                    "set",
+                    "@entity.attackTargets",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    [
+                      "array/map",
+                      [
+                        "array/filter",
+                        "@config.tiles",
+                        [
+                          "fn",
+                          "t",
+                          [
+                            "and",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@t",
+                                "passable"
+                              ],
+                              true
+                            ],
+                            [
+                              "and",
+                              [
+                                "<=",
+                                [
+                                  "grid/manhattan-distance",
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/find",
+                                      "@entity.units",
+                                      [
+                                        "fn",
+                                        "u",
+                                        [
+                                          "==",
+                                          "@u.id",
+                                          "u1"
+                                        ]
+                                      ]
+                                    ],
+                                    "position"
+                                  ],
+                                  {
+                                    "x": [
+                                      "object/get",
+                                      "@t",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@t",
+                                      "y"
+                                    ]
+                                  }
+                                ],
+                                "@entity.movementRange"
+                              ],
+                              [
+                                "==",
+                                [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ],
+                                            "x"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "x"
+                                          ]
+                                        ],
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ],
+                                            "y"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "y"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "t",
+                        {
+                          "x": [
+                            "object/get",
+                            "@t",
+                            "x"
+                          ],
+                          "z": [
+                            "object/get",
+                            "@t",
+                            "y"
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lives",
+                    3.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "attackTargets": "@entity.attackTargets",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "START",
+                "from": "menu",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    "u1"
+                  ],
+                  [
+                    "set",
+                    "@entity.gridWidth",
+                    5.0
+                  ],
+                  [
+                    "set",
+                    "@entity.gridHeight",
+                    6.0
+                  ],
+                  [
+                    "set",
+                    "@entity.movementRange",
+                    2.0
+                  ],
+                  [
+                    "set",
+                    "@entity.maxPatience",
+                    "@config.maxPatience"
+                  ],
+                  [
+                    "set",
+                    "@entity.scoreTarget",
+                    "@config.scoreTarget"
+                  ],
+                  [
+                    "set",
+                    "@entity.attackTargets",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    [
+                      "array/map",
+                      [
+                        "array/filter",
+                        "@config.tiles",
+                        [
+                          "fn",
+                          "t",
+                          [
+                            "and",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@t",
+                                "passable"
+                              ],
+                              true
+                            ],
+                            [
+                              "and",
+                              [
+                                "<=",
+                                [
+                                  "grid/manhattan-distance",
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/find",
+                                      "@entity.units",
+                                      [
+                                        "fn",
+                                        "u",
+                                        [
+                                          "==",
+                                          "@u.id",
+                                          "u1"
+                                        ]
+                                      ]
+                                    ],
+                                    "position"
+                                  ],
+                                  {
+                                    "x": [
+                                      "object/get",
+                                      "@t",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@t",
+                                      "y"
+                                    ]
+                                  }
+                                ],
+                                "@entity.movementRange"
+                              ],
+                              [
+                                "==",
+                                [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ],
+                                            "x"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "x"
+                                          ]
+                                        ],
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ],
+                                            "y"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "y"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "t",
+                        {
+                          "x": [
+                            "object/get",
+                            "@t",
+                            "x"
+                          ],
+                          "z": [
+                            "object/get",
+                            "@t",
+                            "y"
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lives",
+                    3.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "attackTargets": "@entity.attackTargets",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "u1"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "position": {
+                                "x": "@payload.x",
+                                "y": "@payload.z"
+                              }
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    [
+                      "array/map",
+                      [
+                        "array/filter",
+                        "@config.tiles",
+                        [
+                          "fn",
+                          "t",
+                          [
+                            "and",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@t",
+                                "passable"
+                              ],
+                              true
+                            ],
+                            [
+                              "and",
+                              [
+                                "<=",
+                                [
+                                  "grid/manhattan-distance",
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/find",
+                                      "@entity.units",
+                                      [
+                                        "fn",
+                                        "u",
+                                        [
+                                          "==",
+                                          "@u.id",
+                                          "u1"
+                                        ]
+                                      ]
+                                    ],
+                                    "position"
+                                  ],
+                                  {
+                                    "x": [
+                                      "object/get",
+                                      "@t",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@t",
+                                      "y"
+                                    ]
+                                  }
+                                ],
+                                "@entity.movementRange"
+                              ],
+                              [
+                                "==",
+                                [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ],
+                                            "x"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "x"
+                                          ]
+                                        ],
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ],
+                                            "y"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "y"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "t",
+                        {
+                          "x": [
+                            "object/get",
+                            "@t",
+                            "x"
+                          ],
+                          "z": [
+                            "object/get",
+                            "@t",
+                            "y"
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "attackTargets": "@entity.attackTargets",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "TILE_CLICK",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "and",
+                    [
+                      "grid/in-bounds",
+                      {
+                        "x": "@payload.x",
+                        "y": "@payload.z"
+                      },
+                      "@entity.gridWidth",
+                      "@entity.gridHeight"
+                    ],
+                    [
+                      "and",
+                      [
+                        "<=",
+                        [
+                          "grid/manhattan-distance",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "u1"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          {
+                            "x": "@payload.x",
+                            "y": "@payload.z"
+                          }
+                        ],
+                        "@entity.movementRange"
+                      ],
+                      [
+                        "and",
+                        [
+                          "==",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@config.tiles",
+                              [
+                                "fn",
+                                "t",
+                                [
+                                  "and",
+                                  [
+                                    "==",
+                                    "@t.x",
+                                    "@payload.x"
+                                  ],
+                                  [
+                                    "==",
+                                    "@t.y",
+                                    "@payload.z"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "passable"
+                          ],
+                          true
+                        ],
+                        [
+                          "==",
+                          [
+                            "array/len",
+                            [
+                              "array/filter",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "and",
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "x"
+                                    ],
+                                    "@payload.x"
+                                  ],
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "y"
+                                    ],
+                                    "@payload.z"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          0.0
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "@payload.unitId"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "patience": "@entity.maxPatience"
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    [
+                      "+",
+                      "@entity.score",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    [
+                      "if",
+                      [
+                        ">=",
+                        "@entity.score",
+                        "@entity.scoreTarget"
+                      ],
+                      "won",
+                      "@entity.result"
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "!=",
+                      "@entity.result",
+                      "none"
+                    ],
+                    [
+                      "emit",
+                      "GAME_END",
+                      {
+                        "result": "@entity.result"
+                      }
+                    ],
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "attackTargets": "@entity.attackTargets",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "and",
+                    [
+                      "!=",
+                      [
+                        "object/get",
+                        [
+                          "array/find",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "==",
+                              "@u.id",
+                              "@payload.unitId"
+                            ]
+                          ]
+                        ],
+                        "team"
+                      ],
+                      "player"
+                    ],
+                    [
+                      "<=",
+                      [
+                        "grid/manhattan-distance",
+                        [
+                          "object/get",
+                          [
+                            "array/find",
+                            "@entity.units",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "==",
+                                "@u.id",
+                                "u1"
+                              ]
+                            ]
+                          ],
+                          "position"
+                        ],
+                        [
+                          "object/get",
+                          [
+                            "array/find",
+                            "@entity.units",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "==",
+                                "@u.id",
+                                "@payload.unitId"
+                              ]
+                            ]
+                          ],
+                          "position"
+                        ]
+                      ],
+                      1.0
+                    ]
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.attackTargets",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "attackTargets": "@entity.attackTargets",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "GAME_END",
+                "from": "playing",
+                "guard": [
+                  "or",
+                  [
+                    "==",
+                    "@entity.result",
+                    "won"
+                  ],
+                  [
+                    "==",
+                    "@entity.result",
+                    "lost"
+                  ]
+                ],
+                "to": "gameover"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    "u1"
+                  ],
+                  [
+                    "set",
+                    "@entity.gridWidth",
+                    5.0
+                  ],
+                  [
+                    "set",
+                    "@entity.gridHeight",
+                    6.0
+                  ],
+                  [
+                    "set",
+                    "@entity.movementRange",
+                    2.0
+                  ],
+                  [
+                    "set",
+                    "@entity.maxPatience",
+                    "@config.maxPatience"
+                  ],
+                  [
+                    "set",
+                    "@entity.scoreTarget",
+                    "@config.scoreTarget"
+                  ],
+                  [
+                    "set",
+                    "@entity.attackTargets",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    [
+                      "array/map",
+                      [
+                        "array/filter",
+                        "@config.tiles",
+                        [
+                          "fn",
+                          "t",
+                          [
+                            "and",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@t",
+                                "passable"
+                              ],
+                              true
+                            ],
+                            [
+                              "and",
+                              [
+                                "<=",
+                                [
+                                  "grid/manhattan-distance",
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/find",
+                                      "@entity.units",
+                                      [
+                                        "fn",
+                                        "u",
+                                        [
+                                          "==",
+                                          "@u.id",
+                                          "u1"
+                                        ]
+                                      ]
+                                    ],
+                                    "position"
+                                  ],
+                                  {
+                                    "x": [
+                                      "object/get",
+                                      "@t",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@t",
+                                      "y"
+                                    ]
+                                  }
+                                ],
+                                "@entity.movementRange"
+                              ],
+                              [
+                                "==",
+                                [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ],
+                                            "x"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "x"
+                                          ]
+                                        ],
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ],
+                                            "y"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "y"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "t",
+                        {
+                          "x": [
+                            "object/get",
+                            "@t",
+                            "x"
+                          ],
+                          "z": [
+                            "object/get",
+                            "@t",
+                            "y"
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lives",
+                    3.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "attackTargets": "@entity.attackTargets",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "gameover",
+                "to": "menu"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "if",
+                        [
+                          "==",
+                          "@u.team",
+                          "neutral"
+                        ],
+                        [
+                          "object/merge",
+                          "@u",
+                          {
+                            "patience": [
+                              "math/clamp",
+                              [
+                                "-",
+                                "@u.patience",
+                                1.0
+                              ],
+                              0.0,
+                              "@entity.maxPatience"
+                            ]
+                          }
+                        ],
+                        "@u"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.lives",
+                  [
+                    "math/max",
+                    0.0,
+                    [
+                      "-",
+                      "@entity.lives",
+                      [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@u.team",
+                                "neutral"
+                              ],
+                              [
+                                "<=",
+                                "@u.patience",
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "if",
+                        [
+                          "and",
+                          [
+                            "==",
+                            "@u.team",
+                            "neutral"
+                          ],
+                          [
+                            "<=",
+                            "@u.patience",
+                            0.0
+                          ]
+                        ],
+                        [
+                          "object/merge",
+                          "@u",
+                          {
+                            "patience": "@entity.maxPatience"
+                          }
+                        ],
+                        "@u"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.result",
+                  [
+                    "if",
+                    [
+                      "<=",
+                      "@entity.lives",
+                      0.0
+                    ],
+                    "lost",
+                    "@entity.result"
+                  ]
+                ],
+                [
+                  "if",
+                  [
+                    "!=",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "emit",
+                    "GAME_END",
+                    {
+                      "result": "@entity.result"
+                    }
+                  ],
+                  null
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "attackTargets": "@entity.attackTargets",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "selectedUnitId": "@entity.selectedUnitId",
+                        "tileClickEvent": "TILE_CLICK",
+                        "tiles": "@config.tiles",
+                        "type": "game-canvas-3d",
+                        "unitClickEvent": "UNIT_CLICK",
+                        "unitScale": "@config.unitScale",
+                        "units": "@entity.units",
+                        "validMoves": "@entity.validMoves"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Score",
+                          "value": "@entity.score"
+                        },
+                        {
+                          "label": "Lives",
+                          "value": "@entity.lives"
+                        },
+                        {
+                          "label": "Result",
+                          "value": "@entity.result"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "guard": [
+                "==",
+                "@entity.result",
+                "none"
+              ],
+              "interval": 1000.0,
+              "name": "patienceTick"
+            },
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "if",
+                        [
+                          "==",
+                          "@u.team",
+                          "neutral"
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "cx",
+                              [
+                                "object/get",
+                                [
+                                  "object/get",
+                                  "@u",
+                                  "position"
+                                ],
+                                "x"
+                              ]
+                            ],
+                            [
+                              "cy",
+                              [
+                                "object/get",
+                                [
+                                  "object/get",
+                                  "@u",
+                                  "position"
+                                ],
+                                "y"
+                              ]
+                            ],
+                            [
+                              "tx",
+                              [
+                                "+",
+                                1.0,
+                                [
+                                  "math/floor",
+                                  [
+                                    "*",
+                                    [
+                                      "math/random"
+                                    ],
+                                    3.0
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "ty",
+                              [
+                                "+",
+                                1.0,
+                                [
+                                  "math/floor",
+                                  [
+                                    "*",
+                                    [
+                                      "math/random"
+                                    ],
+                                    4.0
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "position": {
+                                "x": [
+                                  "math/clamp",
+                                  [
+                                    "+",
+                                    "@cx",
+                                    [
+                                      "math/sign",
+                                      [
+                                        "-",
+                                        "@tx",
+                                        "@cx"
+                                      ]
+                                    ]
+                                  ],
+                                  1.0,
+                                  3.0
+                                ],
+                                "y": [
+                                  "math/clamp",
+                                  [
+                                    "+",
+                                    "@cy",
+                                    [
+                                      "math/sign",
+                                      [
+                                        "-",
+                                        "@ty",
+                                        "@cy"
+                                      ]
+                                    ]
+                                  ],
+                                  1.0,
+                                  4.0
+                                ]
+                              }
+                            }
+                          ]
+                        ],
+                        "@u"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "attackTargets": "@entity.attackTargets",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "selectedUnitId": "@entity.selectedUnitId",
+                        "tileClickEvent": "TILE_CLICK",
+                        "tiles": "@config.tiles",
+                        "type": "game-canvas-3d",
+                        "unitClickEvent": "UNIT_CLICK",
+                        "unitScale": "@config.unitScale",
+                        "units": "@entity.units",
+                        "validMoves": "@entity.validMoves"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Score",
+                          "value": "@entity.score"
+                        },
+                        {
+                          "label": "Lives",
+                          "value": "@entity.lives"
+                        },
+                        {
+                          "label": "Result",
+                          "value": "@entity.result"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "guard": [
+                "==",
+                "@entity.result",
+                "none"
+              ],
+              "interval": 1500.0,
+              "name": "wanderTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

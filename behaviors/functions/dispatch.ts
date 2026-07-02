@@ -520,6 +520,11 @@ import {
   isStdUiNegotiatorBoardNegotiatorBoardOrbitalParams,
 } from './ui/game/2d/organisms/ui-negotiator-board.js';
 import {
+  stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital,
+  StdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbitalManifest,
+  isStdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbitalParams,
+} from './ui/game/2d/organisms/ui-physics-sandbox-board.js';
+import {
   stdUiPinballBoardPinballBoardOrbital,
   StdUiPinballBoardPinballBoardOrbitalManifest,
   isStdUiPinballBoardPinballBoardOrbitalParams,
@@ -660,6 +665,16 @@ import {
   isStdUiTopDownShooterBoardTopDownShooterBoardOrbitalParams,
 } from './ui/game/2d/organisms/ui-top-down-shooter-board.js';
 import {
+  stdUiTopdownDungeonBoardTopdownDungeonBoardOrbital,
+  StdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalManifest,
+  isStdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalParams,
+} from './ui/game/2d/organisms/ui-topdown-dungeon-board.js';
+import {
+  stdUiTopdownRtsBoardTopdownRtsBoardOrbital,
+  StdUiTopdownRtsBoardTopdownRtsBoardOrbitalManifest,
+  isStdUiTopdownRtsBoardTopdownRtsBoardOrbitalParams,
+} from './ui/game/2d/organisms/ui-topdown-rts-board.js';
+import {
   stdUiTowerDefenseBoardTowerDefenseBoardOrbital,
   StdUiTowerDefenseBoardTowerDefenseBoardOrbitalManifest,
   isStdUiTowerDefenseBoardTowerDefenseBoardOrbitalParams,
@@ -679,6 +694,11 @@ import {
   StdUiVisualNovelBoardVisualNovelBoardOrbitalManifest,
   isStdUiVisualNovelBoardVisualNovelBoardOrbitalParams,
 } from './ui/game/2d/organisms/ui-visual-novel-board.js';
+import {
+  stdUiWinterSkiBoardWinterSkiBoardOrbital,
+  StdUiWinterSkiBoardWinterSkiBoardOrbitalManifest,
+  isStdUiWinterSkiBoardWinterSkiBoardOrbitalParams,
+} from './ui/game/2d/organisms/ui-winter-ski-board.js';
 import {
   stdUiWorldMapBoardWorldMapBoardOrbital,
   StdUiWorldMapBoardWorldMapBoardOrbitalManifest,
@@ -1872,6 +1892,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiNegotiatorBoardNegotiatorBoardOrbitalManifest,
   }],
+  ['ui-physics-sandbox-board::PhysicsSandboxBoardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-physics-sandbox-board::PhysicsSandboxBoardOrbital');
+      }
+      return stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(p);
+    },
+    manifest: StdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbitalManifest,
+  }],
   ['ui-pinball-board::PinballBoardOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiPinballBoardPinballBoardOrbitalParams(p)) {
@@ -2124,6 +2153,24 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiTopDownShooterBoardTopDownShooterBoardOrbitalManifest,
   }],
+  ['ui-topdown-dungeon-board::TopdownDungeonBoardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-topdown-dungeon-board::TopdownDungeonBoardOrbital');
+      }
+      return stdUiTopdownDungeonBoardTopdownDungeonBoardOrbital(p);
+    },
+    manifest: StdUiTopdownDungeonBoardTopdownDungeonBoardOrbitalManifest,
+  }],
+  ['ui-topdown-rts-board::TopdownRtsBoardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiTopdownRtsBoardTopdownRtsBoardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-topdown-rts-board::TopdownRtsBoardOrbital');
+      }
+      return stdUiTopdownRtsBoardTopdownRtsBoardOrbital(p);
+    },
+    manifest: StdUiTopdownRtsBoardTopdownRtsBoardOrbitalManifest,
+  }],
   ['ui-tower-defense-board::TowerDefenseBoardOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiTowerDefenseBoardTowerDefenseBoardOrbitalParams(p)) {
@@ -2159,6 +2206,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiVisualNovelBoardVisualNovelBoardOrbital(p);
     },
     manifest: StdUiVisualNovelBoardVisualNovelBoardOrbitalManifest,
+  }],
+  ['ui-winter-ski-board::WinterSkiBoardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiWinterSkiBoardWinterSkiBoardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-winter-ski-board::WinterSkiBoardOrbital');
+      }
+      return stdUiWinterSkiBoardWinterSkiBoardOrbital(p);
+    },
+    manifest: StdUiWinterSkiBoardWinterSkiBoardOrbitalManifest,
   }],
   ['ui-world-map-board::WorldMapBoardOrbital', {
     factory: (p: object): OrbitalDefinition => {

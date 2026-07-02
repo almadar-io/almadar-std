@@ -1,0 +1,249 @@
+app ui-tower-defense-board-3d "1.0.0"
+"TowerDefenseBoard3D — 3D one-lane tower-defense organism; build turrets beside the path to stop UFOs reaching the base."
+orbital TowerDefenseBoard3DOrbital {
+  type TowerDefenseBoard3DError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type Asset = {
+      url : asset
+      role : string
+      category : string
+      animations : [string]
+      style : string
+      dimension : string
+      aspect : string
+      name : string
+      thumbnailUrl : string
+    }
+  type TowerDefenseBoard3DTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    passable : boolean
+    modelUrl : Asset
+  }
+  type TowerDefenseBoard3DUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type TowerDefenseBoard3DUnitsItem = {
+    id : string!
+    position : TowerDefenseBoard3DUnitsItemPosition
+    unitType : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    modelUrl : Asset
+    pathIndex : number
+  }
+  type TowerDefenseBoard3DTowersItem = {
+    id : string!
+    x : number!
+    y : number!
+  }
+  type TowerDefenseBoard3DFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    type : string!
+    assetUrl : Asset
+  }
+  type TowerDefenseBoard3DPathItem = {
+    index : number!
+    x : number!
+    y : number!
+  }
+
+  entity TowerDefenseBoard3DItem [runtime] {
+    id : string!
+    units : [TowerDefenseBoard3DUnitsItem] = []
+    towers : [TowerDefenseBoard3DTowersItem] = []
+    gold : number = 100
+    lives : number = 10
+    wave : number = 0
+    result : "none" | "victory" | "defeat" = none
+  }
+
+  trait TowerDefenseBoard3DRender -> @rebindable TowerDefenseBoard3DItem [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.units [])
+        (set @entity.towers [])
+        (set @entity.gold @config.startingGold)
+        (set @entity.lives @config.startingLives)
+        (set @entity.wave 0)
+        (set @entity.result "none")
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
+        })
+
+      TILE_CLICK -> playing when (and (== @entity.result "none") (>= @entity.gold @config.towerCost) (let ((tile (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))))) (and (!= @tile null) (== (object/get @tile passable) true) (== (array/len (array/filter @entity.towers (fn tw (and (== @tw.x ?x) (== @tw.y ?z))))) 0))))
+        (set @entity.gold (- @entity.gold @config.towerCost))
+        (set @entity.towers (array/append @entity.towers { id: (str/concat "tower-" (array/len @entity.towers)), x: ?x, y: ?z }))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
+        })
+
+      GAME_END -> gameover when (or (== @entity.result "victory") (== @entity.result "defeat"))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> playing
+        (set @entity.units [])
+        (set @entity.towers [])
+        (set @entity.gold @config.startingGold)
+        (set @entity.lives @config.startingLives)
+        (set @entity.wave 0)
+        (set @entity.result "none")
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
+        })
+    }
+
+    ticks {
+      enemySpawnTick every 1200ms
+        when (and (== @entity.result "none") (< @entity.wave @config.maxWaves))
+        (set @entity.units (array/append @entity.units { id: (str/concat "enemy-" @entity.wave), position: { x: (object/get (array/first @config.path) x), y: (object/get (array/first @config.path) y) }, unitType: "ufo", name: "Invader", team: enemy, health: @config.enemyHealth, maxHealth: @config.enemyHealth, modelUrl: @config.enemyAsset, pathIndex: 0 }))
+        (set @entity.wave (+ @entity.wave 1))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
+        })
+
+      enemyMoveTick every 900ms
+        when (and (== @entity.result "none") (> (array/len @entity.units) 0))
+        (set @entity.units (array/map @entity.units (fn u (let ((nextIndex (math/min (+ @u.pathIndex 1) (- (array/len @config.path) 1))) (nextWaypoint (array/nth @config.path (math/min (+ @u.pathIndex 1) (- (array/len @config.path) 1))))) (object/merge @u { position: { x: (object/get @nextWaypoint x), y: (object/get @nextWaypoint y) }, pathIndex: @nextIndex })))))
+        (set @entity.lives (math/max 0 (- @entity.lives (array/len (array/filter @entity.units (fn u (== @u.pathIndex (- (array/len @config.path) 1))))))))
+        (set @entity.units (array/filter @entity.units (fn u (< @u.pathIndex (- (array/len @config.path) 1)))))
+        (set @entity.result (if (<= @entity.lives 0) "defeat" @entity.result))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (set @entity.result (if (and (>= @entity.wave @config.maxWaves) (and (> @entity.lives 0) (== (array/len @entity.units) 0))) "victory" @entity.result))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
+        })
+
+      towerFireTick every 900ms
+        when (and (== @entity.result "none") (> (array/len @entity.units) 0))
+        (set @entity.units (array/map @entity.units (fn u (if (and (> @u.health 0) (array/some @entity.towers (fn tw (<= (grid/manhattan-distance (object/get @u position) { x: @tw.x, y: @tw.y }) 1)))) (object/merge @u { health: (math/max 0 (- @u.health @config.towerDamage)) }) @u))))
+        (set @entity.units (array/filter @entity.units (fn u (> @u.health 0))))
+        (set @entity.result (if (and (>= @entity.wave @config.maxWaves) (and (> @entity.lives 0) (== (array/len @entity.units) 0))) "victory" @entity.result))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
+        })
+    }
+
+    emits {
+      TILE_CLICK -> external {
+        tileId : string
+        x : number!
+        z : number
+      }
+        @description "Emits UI:{tileClickEvent} with { x, z } — builds a tower on a buildable grass cell"
+        @tier "domain"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when lives reach 0 (defeat) or all waves are cleared with lives left (victory)"
+        @tier "domain"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "domain"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : TowerDefenseBoard3DError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      tiles : [TowerDefenseBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "path", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb", role: "path", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-dirt", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t20", x: 2, y: 0, terrain: "tree", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-tree.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-tree", thumbnailUrl: "" } }, { id: "t30", x: 3, y: 0, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t40", x: 4, y: 0, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t50", x: 5, y: 0, terrain: "rock", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-rock.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-rock", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "path", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb", role: "path", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-dirt", thumbnailUrl: "" } }, { id: "t11", x: 1, y: 1, terrain: "crystal", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-crystal.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-crystal", thumbnailUrl: "" } }, { id: "t21", x: 2, y: 1, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t31", x: 3, y: 1, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t41", x: 4, y: 1, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t51", x: 5, y: 1, terrain: "tree", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-tree-double.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-tree-double", thumbnailUrl: "" } }, { id: "t02", x: 0, y: 2, terrain: "path", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb", role: "path", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-dirt", thumbnailUrl: "" } }, { id: "t12", x: 1, y: 2, terrain: "path", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb", role: "path", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-dirt", thumbnailUrl: "" } }, { id: "t22", x: 2, y: 2, terrain: "path", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb", role: "path", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-dirt", thumbnailUrl: "" } }, { id: "t32", x: 3, y: 2, terrain: "path", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb", role: "path", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-dirt", thumbnailUrl: "" } }, { id: "t42", x: 4, y: 2, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t52", x: 5, y: 2, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t03", x: 0, y: 3, terrain: "rock", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-rock.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-rock", thumbnailUrl: "" } }, { id: "t13", x: 1, y: 3, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t23", x: 2, y: 3, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t33", x: 3, y: 3, terrain: "path", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb", role: "path", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-dirt", thumbnailUrl: "" } }, { id: "t43", x: 4, y: 3, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t53", x: 5, y: 3, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t04", x: 0, y: 4, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t14", x: 1, y: 4, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t24", x: 2, y: 4, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t34", x: 3, y: 4, terrain: "path", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb", role: "path", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-dirt", thumbnailUrl: "" } }, { id: "t44", x: 4, y: 4, terrain: "path", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb", role: "path", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-dirt", thumbnailUrl: "" } }, { id: "t54", x: 5, y: 4, terrain: "path", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb", role: "path", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-dirt", thumbnailUrl: "" } }, { id: "t05", x: 0, y: 5, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t15", x: 1, y: 5, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t25", x: 2, y: 5, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t35", x: 3, y: 5, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile", thumbnailUrl: "" } }, { id: "t45", x: 4, y: 5, terrain: "tree", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-tree-quad.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-tree-quad", thumbnailUrl: "" } }, { id: "t55", x: 5, y: 5, terrain: "path", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb", role: "path", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tile-dirt", thumbnailUrl: "" } }]
+        @label "Tiles"
+        @description "6x6 grid — dirt path from spawn to base, grass cells buildable, rock/tree/crystal cells blocked."
+        @tier "presentation"
+      path : [TowerDefenseBoard3DPathItem] = [{ index: 0, x: 0, y: 0 }, { index: 1, x: 0, y: 1 }, { index: 2, x: 0, y: 2 }, { index: 3, x: 1, y: 2 }, { index: 4, x: 2, y: 2 }, { index: 5, x: 3, y: 2 }, { index: 6, x: 3, y: 3 }, { index: 7, x: 3, y: 4 }, { index: 8, x: 4, y: 4 }, { index: 9, x: 5, y: 4 }, { index: 10, x: 5, y: 5 }]
+        @label "Path"
+        @description "Ordered waypoints enemies follow — index 0 is the spawn portal, the last index is the base."
+        @tier "presentation"
+      features : [TowerDefenseBoard3DFeaturesItem] = [{ id: "f-spawn", x: 0, y: 0, type: "spawn_portal", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/spawn-round.glb", role: "portal", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "spawn-round", thumbnailUrl: "" } }, { id: "f-base", x: 5, y: 5, type: "base", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/tower-round-build-f.glb", role: "base", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tower-round-build-f", thumbnailUrl: "" } }, { id: "f-tree1", x: 3, y: 1, type: "decoration", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/detail-tree.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "detail-tree", thumbnailUrl: "" } }, { id: "f-rocks1", x: 2, y: 3, type: "decoration", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/detail-rocks.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "detail-rocks", thumbnailUrl: "" } }, { id: "f-crystal1", x: 1, y: 4, type: "decoration", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/detail-crystal.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "detail-crystal", thumbnailUrl: "" } }]
+        @label "Features"
+        @description "Static spawn portal, base structure and tree/rock/crystal decoration."
+        @tier "presentation"
+      startingGold : number = 120
+        @label "Starting Gold"
+        @description "Gold available at match start"
+        @tier "presentation"
+      startingLives : number = 10
+        @label "Starting Lives"
+        @description "Lives before defeat"
+        @tier "presentation"
+      towerCost : number = 40
+        @label "Tower Cost"
+        @description "Gold spent per tower build"
+        @tier "presentation"
+      towerDamage : number = 2
+        @label "Tower Damage"
+        @description "Damage dealt per tick to enemies within 1 cell of a tower"
+        @tier "presentation"
+      enemyHealth : number = 6
+        @label "Enemy Health"
+        @description "HP of each spawned enemy"
+        @tier "presentation"
+      maxWaves : number = 8
+        @label "Max Waves"
+        @description "Total enemies to survive for victory"
+        @tier "presentation"
+      towerAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/weapon-turret.glb", role: "tower", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "weapon-turret", thumbnailUrl: "" }
+        @label "Tower Model"
+        @description "GLB Asset placed at built tower cells"
+        @tier "presentation"
+      enemyAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/units/enemy-ufo-a.glb", role: "enemy", category: "units", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "enemy-ufo-a", thumbnailUrl: "" }
+        @label "Enemy Model"
+        @description "GLB Asset for spawned enemies"
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+    }
+  }
+
+  page "/tower-defense-board-3d" as TowerDefenseBoard3DPage -> TowerDefenseBoard3DRender
+}

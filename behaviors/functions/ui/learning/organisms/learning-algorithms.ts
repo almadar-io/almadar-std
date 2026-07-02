@@ -38,7 +38,7 @@ export interface StdLearningAlgorithmsConfig {
 /**
  * Tunable params for the AstargraphOrbital orbital.
  *
- * Canonical entity: AstarScene — overridable via
+ * Canonical entity: AstargraphScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -76,7 +76,7 @@ export interface StdLearningAlgorithmsAstargraphOrbitalParams {
 
 /** Per-orbital factory: builds the AstargraphOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsAstargraphOrbital(params: StdLearningAlgorithmsAstargraphOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'AstarScene';
+  const canonicalName = params.entityName ?? 'AstargraphScene';
   const built = makeOrbitalWithUses({
     name: 'AstargraphOrbital',
     uses: [
@@ -390,7 +390,7 @@ export function isStdLearningAlgorithmsAstargraphOrbitalParams(p: object): p is 
 /**
  * Tunable params for the AstargridOrbital orbital.
  *
- * Canonical entity: AstarScene — overridable via
+ * Canonical entity: AstargridScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -428,7 +428,7 @@ export interface StdLearningAlgorithmsAstargridOrbitalParams {
 
 /** Per-orbital factory: builds the AstargridOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsAstargridOrbital(params: StdLearningAlgorithmsAstargridOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'AstarScene';
+  const canonicalName = params.entityName ?? 'AstargridScene';
   const built = makeOrbitalWithUses({
     name: 'AstargridOrbital',
     uses: [
@@ -933,7 +933,7 @@ export function isStdLearningAlgorithmsBfsOrbitalParams(p: object): p is StdLear
 /**
  * Tunable params for the BinarysearchOrbital orbital.
  *
- * Canonical entity: BinarySearchScene — overridable via
+ * Canonical entity: BinarysearchScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -971,7 +971,7 @@ export interface StdLearningAlgorithmsBinarysearchOrbitalParams {
 
 /** Per-orbital factory: builds the BinarysearchOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsBinarysearchOrbital(params: StdLearningAlgorithmsBinarysearchOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'BinarySearchScene';
+  const canonicalName = params.entityName ?? 'BinarysearchScene';
   const built = makeOrbitalWithUses({
     name: 'BinarysearchOrbital',
     uses: [
@@ -1180,7 +1180,7 @@ export function isStdLearningAlgorithmsBinarysearchOrbitalParams(p: object): p i
 /**
  * Tunable params for the BubblesortOrbital orbital.
  *
- * Canonical entity: BubbleScene — overridable via
+ * Canonical entity: BubblesortScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -1218,7 +1218,7 @@ export interface StdLearningAlgorithmsBubblesortOrbitalParams {
 
 /** Per-orbital factory: builds the BubblesortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsBubblesortOrbital(params: StdLearningAlgorithmsBubblesortOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'BubbleScene';
+  const canonicalName = params.entityName ?? 'BubblesortScene';
   const built = makeOrbitalWithUses({
     name: 'BubblesortOrbital',
     uses: [
@@ -1997,7 +1997,7 @@ export function isStdLearningAlgorithmsDijkstraOrbitalParams(p: object): p is St
 /**
  * Tunable params for the FloodfillOrbital orbital.
  *
- * Canonical entity: FloodScene — overridable via
+ * Canonical entity: FloodfillScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -2035,7 +2035,7 @@ export interface StdLearningAlgorithmsFloodfillOrbitalParams {
 
 /** Per-orbital factory: builds the FloodfillOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsFloodfillOrbital(params: StdLearningAlgorithmsFloodfillOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'FloodScene';
+  const canonicalName = params.entityName ?? 'FloodfillScene';
   const built = makeOrbitalWithUses({
     name: 'FloodfillOrbital',
     uses: [
@@ -2248,7 +2248,7 @@ export function isStdLearningAlgorithmsFloodfillOrbitalParams(p: object): p is S
 /**
  * Tunable params for the GameoflifeOrbital orbital.
  *
- * Canonical entity: LifeScene — overridable via
+ * Canonical entity: GameoflifeScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -2286,7 +2286,7 @@ export interface StdLearningAlgorithmsGameoflifeOrbitalParams {
 
 /** Per-orbital factory: builds the GameoflifeOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsGameoflifeOrbital(params: StdLearningAlgorithmsGameoflifeOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'LifeScene';
+  const canonicalName = params.entityName ?? 'GameoflifeScene';
   const built = makeOrbitalWithUses({
     name: 'GameoflifeOrbital',
     uses: [
@@ -2451,7 +2451,7 @@ export function isStdLearningAlgorithmsGameoflifeOrbitalParams(p: object): p is 
 /**
  * Tunable params for the GridbfsOrbital orbital.
  *
- * Canonical entity: GridBfsScene — overridable via
+ * Canonical entity: GridbfsScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -2489,7 +2489,7 @@ export interface StdLearningAlgorithmsGridbfsOrbitalParams {
 
 /** Per-orbital factory: builds the GridbfsOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsGridbfsOrbital(params: StdLearningAlgorithmsGridbfsOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'GridBfsScene';
+  const canonicalName = params.entityName ?? 'GridbfsScene';
   const built = makeOrbitalWithUses({
     name: 'GridbfsOrbital',
     uses: [
@@ -2697,7 +2697,7 @@ export function isStdLearningAlgorithmsGridbfsOrbitalParams(p: object): p is Std
 /**
  * Tunable params for the HeapsortOrbital orbital.
  *
- * Canonical entity: HeapScene — overridable via
+ * Canonical entity: HeapsortScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -2735,7 +2735,7 @@ export interface StdLearningAlgorithmsHeapsortOrbitalParams {
 
 /** Per-orbital factory: builds the HeapsortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsHeapsortOrbital(params: StdLearningAlgorithmsHeapsortOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'HeapScene';
+  const canonicalName = params.entityName ?? 'HeapsortScene';
   const built = makeOrbitalWithUses({
     name: 'HeapsortOrbital',
     uses: [
@@ -2960,7 +2960,7 @@ export function isStdLearningAlgorithmsHeapsortOrbitalParams(p: object): p is St
 /**
  * Tunable params for the InsertionsortOrbital orbital.
  *
- * Canonical entity: InsertionScene — overridable via
+ * Canonical entity: InsertionsortScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -2998,7 +2998,7 @@ export interface StdLearningAlgorithmsInsertionsortOrbitalParams {
 
 /** Per-orbital factory: builds the InsertionsortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsInsertionsortOrbital(params: StdLearningAlgorithmsInsertionsortOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'InsertionScene';
+  const canonicalName = params.entityName ?? 'InsertionsortScene';
   const built = makeOrbitalWithUses({
     name: 'InsertionsortOrbital',
     uses: [
@@ -3173,7 +3173,7 @@ export function isStdLearningAlgorithmsInsertionsortOrbitalParams(p: object): p 
 /**
  * Tunable params for the MazegenOrbital orbital.
  *
- * Canonical entity: MazeScene — overridable via
+ * Canonical entity: MazegenScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -3211,7 +3211,7 @@ export interface StdLearningAlgorithmsMazegenOrbitalParams {
 
 /** Per-orbital factory: builds the MazegenOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsMazegenOrbital(params: StdLearningAlgorithmsMazegenOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'MazeScene';
+  const canonicalName = params.entityName ?? 'MazegenScene';
   const built = makeOrbitalWithUses({
     name: 'MazegenOrbital',
     uses: [
@@ -3415,7 +3415,7 @@ export function isStdLearningAlgorithmsMazegenOrbitalParams(p: object): p is Std
 /**
  * Tunable params for the MergesortOrbital orbital.
  *
- * Canonical entity: MergeScene — overridable via
+ * Canonical entity: MergesortScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -3453,7 +3453,7 @@ export interface StdLearningAlgorithmsMergesortOrbitalParams {
 
 /** Per-orbital factory: builds the MergesortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsMergesortOrbital(params: StdLearningAlgorithmsMergesortOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'MergeScene';
+  const canonicalName = params.entityName ?? 'MergesortScene';
   const built = makeOrbitalWithUses({
     name: 'MergesortOrbital',
     uses: [
@@ -4040,7 +4040,7 @@ export function isStdLearningAlgorithmsMstOrbitalParams(p: object): p is StdLear
 /**
  * Tunable params for the QuicksortOrbital orbital.
  *
- * Canonical entity: QuickScene — overridable via
+ * Canonical entity: QuicksortScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -4078,7 +4078,7 @@ export interface StdLearningAlgorithmsQuicksortOrbitalParams {
 
 /** Per-orbital factory: builds the QuicksortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsQuicksortOrbital(params: StdLearningAlgorithmsQuicksortOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'QuickScene';
+  const canonicalName = params.entityName ?? 'QuicksortScene';
   const built = makeOrbitalWithUses({
     name: 'QuicksortOrbital',
     uses: [
@@ -4322,7 +4322,7 @@ export function isStdLearningAlgorithmsQuicksortOrbitalParams(p: object): p is S
 /**
  * Tunable params for the SelectionsortOrbital orbital.
  *
- * Canonical entity: SelectionScene — overridable via
+ * Canonical entity: SelectionsortScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -4360,7 +4360,7 @@ export interface StdLearningAlgorithmsSelectionsortOrbitalParams {
 
 /** Per-orbital factory: builds the SelectionsortOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsSelectionsortOrbital(params: StdLearningAlgorithmsSelectionsortOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'SelectionScene';
+  const canonicalName = params.entityName ?? 'SelectionsortScene';
   const built = makeOrbitalWithUses({
     name: 'SelectionsortOrbital',
     uses: [
@@ -4540,7 +4540,7 @@ export function isStdLearningAlgorithmsSelectionsortOrbitalParams(p: object): p 
 /**
  * Tunable params for the SlidingwindowOrbital orbital.
  *
- * Canonical entity: SlidingWindowScene — overridable via
+ * Canonical entity: SlidingwindowScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -4578,7 +4578,7 @@ export interface StdLearningAlgorithmsSlidingwindowOrbitalParams {
 
 /** Per-orbital factory: builds the SlidingwindowOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsSlidingwindowOrbital(params: StdLearningAlgorithmsSlidingwindowOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'SlidingWindowScene';
+  const canonicalName = params.entityName ?? 'SlidingwindowScene';
   const built = makeOrbitalWithUses({
     name: 'SlidingwindowOrbital',
     uses: [
@@ -5059,7 +5059,7 @@ export function isStdLearningAlgorithmsToposortOrbitalParams(p: object): p is St
 /**
  * Tunable params for the TwopointerOrbital orbital.
  *
- * Canonical entity: TwoPointerScene — overridable via
+ * Canonical entity: TwopointerScene — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -5097,7 +5097,7 @@ export interface StdLearningAlgorithmsTwopointerOrbitalParams {
 
 /** Per-orbital factory: builds the TwopointerOrbital orbital with consumer params. */
 export function stdLearningAlgorithmsTwopointerOrbital(params: StdLearningAlgorithmsTwopointerOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'TwoPointerScene';
+  const canonicalName = params.entityName ?? 'TwopointerScene';
   const built = makeOrbitalWithUses({
     name: 'TwopointerOrbital',
     uses: [

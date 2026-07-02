@@ -1,0 +1,366 @@
+app ui-space-board-3d "1.0.0"
+"SpaceBoard3D — 3D Mars-base tactics board on a canyon grid composing game-shell + game-canvas-3d; owns gameplay state."
+orbital SpaceBoard3DOrbital {
+  type SpaceBoard3DError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type Asset = {
+      url : asset
+      role : string
+      category : string
+      animations : [string]
+      style : string
+      dimension : string
+      aspect : string
+      name : string
+      thumbnailUrl : string
+    }
+  type SpaceBoard3DTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : Asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+    modelUrl : Asset
+  }
+  type SpaceBoard3DUnitsItem = {
+    id : string!
+    position : SpaceBoard3DUnitsItemPosition
+    x : number
+    y : number
+    z : number
+    sprite : Asset
+    modelUrl : Asset
+    unitType : string
+    heroId : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    faction : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    traits : [SpaceBoard3DUnitsItemTraitsItem]
+    previousPosition : SpaceBoard3DUnitsItemPreviousPosition
+    elevation : number
+  }
+  type SpaceBoard3DUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type SpaceBoard3DUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number!
+  }
+  type SpaceBoard3DUnitsItemPreviousPosition = {
+    x : number!
+    y : number!
+  }
+  type SpaceBoard3DFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : Asset
+    assetUrl : Asset
+    color : string
+    elevation : number
+  }
+  type SpaceBoard3DAssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
+  }
+  type SpaceBoard3DValidMovesItem = {
+    x : number!
+    z : number!
+  }
+  type SpaceBoard3DAttackTargetsItem = {
+    x : number!
+    z : number!
+  }
+
+  entity SpaceBoard3DItem [runtime] {
+    id : string!
+    units : [SpaceBoard3DUnitsItem]
+    selectedUnitId : string
+    validMoves : [SpaceBoard3DValidMovesItem]
+    attackTargets : [SpaceBoard3DAttackTargetsItem]
+    phase : "observation" | "selection" | "movement" | "action" | "enemy_turn" | "game_over" = "observation"
+    turn : number = 0
+    result : "none" | "victory" | "defeat" = none
+    currentTeam : "player" | "enemy" = "player"
+    gridWidth : number = 5
+    gridHeight : number = 5
+    movementRange : number = 2
+    enemyTurn : boolean = false
+  }
+
+  trait SpaceBoard3DRender -> @rebindable SpaceBoard3DItem [interaction, instance] {
+    initial: playing
+
+    state menu {
+      START -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.currentTeam "player")
+        (set @entity.enemyTurn false)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+    }
+
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.currentTeam "player")
+        (set @entity.enemyTurn false)
+        (set @entity.gridWidth 5)
+        (set @entity.gridHeight 5)
+        (set @entity.movementRange 2)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.phase "action")
+        (set @entity.attackTargets (array/map (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn s (== @s.id @entity.selectedUnitId))) position) (object/get @u position)) 1)))) (fn u { x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y) })))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+
+      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.phase "selection")
+        (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== (object/get @t passable) true) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0)))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+        (set @entity.attackTargets [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+
+      ATTACK -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)) }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+
+      END_TURN -> playing when (== @entity.result "none")
+        (set @entity.turn (+ @entity.turn 1))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.enemyTurn true)
+        (set @entity.currentTeam "enemy")
+        (set @entity.phase "enemy_turn")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+
+      GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "defeat" "victory"))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (set @entity.phase "game_over")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> menu
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.currentTeam "player")
+        (set @entity.enemyTurn false)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+    }
+
+    ticks {
+      enemyAiTick every 1s
+        when (and (== @entity.enemyTurn true) (== @entity.result "none"))
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 1)) }) @u) @u))))
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (if (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.health 0)) (== (grid/manhattan-distance (object/get @u position) (object/get @p position)) 1))))) 0) (let ((target (array/first (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.health 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)) } })) @u) @u))))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (set @entity.enemyTurn false)
+        (set @entity.currentTeam "player")
+        (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+    }
+
+    emits {
+      ATTACK -> external {
+        attacker : object
+        target : object
+        damage : number
+        attackerId : string!
+        targetId : string!
+      }
+        @description "-- Callbacks --"
+        @tier "domain"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when the match ends"
+        @tier "domain"
+      UNIT_MOVE -> external {
+        unit : object
+        to : SpaceBoard3DValidMovesItem
+      }
+        @description "Called after a unit moves"
+        @tier "domain"
+      TILE_CLICK -> external {
+        x : number!
+        z : number!
+        tileId : string
+      }
+        @description "-- Declarative event props --"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+        x : number
+        z : number
+      }
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "domain"
+      END_TURN -> external {
+        id : string
+      }
+        @description "Emits UI:{endTurnEvent} with {} on end turn"
+        @tier "domain"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Emits UI:{cancelEvent} with {} on cancel"
+        @tier "domain"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "domain"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : SpaceBoard3DError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      tiles : [SpaceBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "boulder", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb", role: "decoration", category: "boulder", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "crater", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/crater.glb", role: "decoration", category: "crater", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "crater", thumbnailUrl: "" } }, { id: "t20", x: 2, y: 0, terrain: "boulder", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb", role: "decoration", category: "boulder", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "t30", x: 3, y: 0, terrain: "crater", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/crater.glb", role: "decoration", category: "crater", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "crater", thumbnailUrl: "" } }, { id: "t40", x: 4, y: 0, terrain: "boulder", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb", role: "decoration", category: "boulder", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "boulder", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb", role: "decoration", category: "boulder", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "t11", x: 1, y: 1, terrain: "regolith", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb", role: "tile", category: "regolith", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "terrain", thumbnailUrl: "" } }, { id: "t21", x: 2, y: 1, terrain: "regolith", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb", role: "tile", category: "regolith", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "terrain", thumbnailUrl: "" } }, { id: "t31", x: 3, y: 1, terrain: "regolith", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb", role: "tile", category: "regolith", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "terrain", thumbnailUrl: "" } }, { id: "t41", x: 4, y: 1, terrain: "boulder", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb", role: "decoration", category: "boulder", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "t02", x: 0, y: 2, terrain: "boulder", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb", role: "decoration", category: "boulder", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "t12", x: 1, y: 2, terrain: "regolith", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb", role: "tile", category: "regolith", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "terrain", thumbnailUrl: "" } }, { id: "t22", x: 2, y: 2, terrain: "regolith", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb", role: "tile", category: "regolith", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "terrain", thumbnailUrl: "" } }, { id: "t32", x: 3, y: 2, terrain: "regolith", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb", role: "tile", category: "regolith", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "terrain", thumbnailUrl: "" } }, { id: "t42", x: 4, y: 2, terrain: "boulder", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb", role: "decoration", category: "boulder", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "t03", x: 0, y: 3, terrain: "boulder", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb", role: "decoration", category: "boulder", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "t13", x: 1, y: 3, terrain: "regolith", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb", role: "tile", category: "regolith", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "terrain", thumbnailUrl: "" } }, { id: "t23", x: 2, y: 3, terrain: "regolith", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb", role: "tile", category: "regolith", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "terrain", thumbnailUrl: "" } }, { id: "t33", x: 3, y: 3, terrain: "regolith", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb", role: "tile", category: "regolith", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "terrain", thumbnailUrl: "" } }, { id: "t43", x: 4, y: 3, terrain: "boulder", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb", role: "decoration", category: "boulder", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "t04", x: 0, y: 4, terrain: "boulder", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb", role: "decoration", category: "boulder", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "t14", x: 1, y: 4, terrain: "crater", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/crater.glb", role: "decoration", category: "crater", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "crater", thumbnailUrl: "" } }, { id: "t24", x: 2, y: 4, terrain: "boulder", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb", role: "decoration", category: "boulder", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "t34", x: 3, y: 4, terrain: "crater", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/crater.glb", role: "decoration", category: "crater", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "crater", thumbnailUrl: "" } }, { id: "t44", x: 4, y: 4, terrain: "boulder", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb", role: "decoration", category: "boulder", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }]
+        @label "Tiles"
+        @description "5×5 Mars-canyon grid — a rock/crater rim ringing an open regolith floor. Takes priority over entity-derived tiles."
+        @tier "presentation"
+      units : [SpaceBoard3DUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "astronaut", name: "Astronaut", team: player, health: 10, maxHealth: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb", role: "player", category: "astronaut", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "astronautA", thumbnailUrl: "" } }, { id: "u2", position: { x: 1, y: 3 }, unitType: "rover", name: "Rover", team: player, health: 12, maxHealth: 12, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rover.glb", role: "player", category: "rover", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rover", thumbnailUrl: "" } }, { id: "e1", position: { x: 3, y: 3 }, unitType: "alien", name: "Alien", team: enemy, health: 8, maxHealth: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb", role: "enemy", category: "alien", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "alien", thumbnailUrl: "" } }, { id: "e2", position: { x: 3, y: 1 }, unitType: "raider", name: "Raider Craft", team: enemy, health: 6, maxHealth: 8, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/craft_speederA.glb", role: "enemy", category: "raider", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "craft_speederA", thumbnailUrl: "" } }]
+        @label "Units"
+        @description "Initial unit roster (astronaut + rover vs alien + raider craft) — takes priority over entity-derived units."
+        @tier "presentation"
+      features : [SpaceBoard3DFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "dome", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/hangar_roundA.glb", role: "decoration", category: "dome", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "hangar_roundA", thumbnailUrl: "" } }, { id: "f2", x: 2, y: 0, type: "rocket", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rocket_baseA.glb", role: "decoration", category: "rocket", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rocket_baseA", thumbnailUrl: "" } }, { id: "f3", x: 0, y: 2, type: "hangar", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/hangar_smallA.glb", role: "decoration", category: "hangar", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "hangar_smallA", thumbnailUrl: "" } }, { id: "f4", x: 4, y: 2, type: "comms_dish", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/satelliteDish.glb", role: "decoration", category: "comms_dish", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "satelliteDish", thumbnailUrl: "" } }]
+        @label "Features"
+        @description "Base features on the board: central dome, north rocket pad, west hangar, east comms dish."
+        @tier "presentation"
+      assetManifest : SpaceBoard3DAssetManifest = { terrains: { regolith: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb", role: "tile", category: "regolith", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "regolith", thumbnailUrl: "" }, boulder: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb", role: "tile", category: "boulder", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "boulder", thumbnailUrl: "" }, crater: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/crater.glb", role: "tile", category: "crater", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "crater", thumbnailUrl: "" } }, units: { astronaut: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb", role: "npc", category: "astronaut", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "astronaut", thumbnailUrl: "" }, rover: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rover.glb", role: "npc", category: "rover", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rover", thumbnailUrl: "" }, alien: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb", role: "npc", category: "alien", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "alien", thumbnailUrl: "" }, raider: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/craft_speederA.glb", role: "npc", category: "raider", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "raider", thumbnailUrl: "" } }, features: { dome: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/hangar_roundA.glb", role: "decoration", category: "dome", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "dome", thumbnailUrl: "" }, rocket: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rocket_baseA.glb", role: "decoration", category: "rocket", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "rocket", thumbnailUrl: "" }, hangar: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/hangar_smallA.glb", role: "decoration", category: "hangar", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "hangar", thumbnailUrl: "" }, comms_dish: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/satelliteDish.glb", role: "decoration", category: "comms_dish", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "comms_dish", thumbnailUrl: "" } }, effects: { melee: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/weapon_gun.glb", role: "effect", category: "melee", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "melee", thumbnailUrl: "" }, ranged: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/weapon_rifle.glb", role: "effect", category: "ranged", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "ranged", thumbnailUrl: "" }, magic: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/machine_wireless.glb", role: "effect", category: "magic", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "magic", thumbnailUrl: "" }, hit: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/meteor_half.glb", role: "effect", category: "hit", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "hit", thumbnailUrl: "" }, heal: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/barrel.glb", role: "effect", category: "heal", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "heal", thumbnailUrl: "" }, death: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/bones.glb", role: "effect", category: "death", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "death", thumbnailUrl: "" } } }
+        @label "Asset Manifest"
+        @description "Asset manifest for terrain/unit/feature/effect models."
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+      bgColor : string = "#05070f"
+        @label "Bg Color"
+        @description "Deep-space canvas background color"
+        @tier "presentation"
+    }
+  }
+
+  page "/space-board-3d" as SpaceBoard3DPage -> SpaceBoard3DRender
+}

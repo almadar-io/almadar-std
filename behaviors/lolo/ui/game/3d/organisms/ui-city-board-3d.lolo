@@ -1,0 +1,249 @@
+app ui-city-board-3d "1.0.0"
+"CityBoard3D — 3D delivery board organism; courier car drives city roads delivering to shops via game-canvas-3d."
+orbital CityBoard3DOrbital {
+  type CityBoard3DError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type Asset = {
+      url : asset
+      role : string
+      category : string
+      animations : [string]
+      style : string
+      dimension : string
+      aspect : string
+      name : string
+      thumbnailUrl : string
+    }
+  type CityBoard3DTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    passable : boolean
+    modelUrl : Asset
+  }
+  type CityBoard3DUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type CityBoard3DUnitsItem = {
+    id : string!
+    position : CityBoard3DUnitsItemPosition
+    unitType : string
+    name : string
+    team : "player" | "neutral"
+    health : number
+    maxHealth : number
+    modelUrl : Asset
+    routeA : CityBoard3DUnitsItemPosition
+    routeB : CityBoard3DUnitsItemPosition
+    headingToB : boolean
+  }
+  type CityBoard3DFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    type : string!
+    assetUrl : Asset
+  }
+  type CityBoard3DValidMovesItem = {
+    x : number!
+    z : number!
+  }
+  type CityBoard3DTargetsItem = {
+    id : string!
+    x : number!
+    y : number!
+    delivered : boolean
+  }
+
+  entity CityBoard3DItem [runtime] {
+    id : string!
+    units : [CityBoard3DUnitsItem]
+    selectedUnitId : string
+    validMoves : [CityBoard3DValidMovesItem]
+    attackTargets : [CityBoard3DValidMovesItem] = []
+    targets : [CityBoard3DTargetsItem]
+    deliveries : number = 0
+    totalTargets : number = 3
+    result : "none" | "won" = none
+    gridWidth : number = 6
+    gridHeight : number = 6
+    movementRange : number = 6
+  }
+
+  trait CityBoard3DRender -> @rebindable CityBoard3DItem [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.targets @config.targets)
+        (set @entity.deliveries 0)
+        (set @entity.totalTargets 3)
+        (set @entity.result "none")
+        (set @entity.gridWidth 6)
+        (set @entity.gridHeight 6)
+        (set @entity.movementRange 6)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+        })
+
+      UNIT_CLICK -> playing when (== @entity.selectedUnitId ?unitId)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+        })
+
+      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== (object/get t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get t x), y: (object/get t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn o (and (== (object/get (object/get o position) x) (object/get t x)) (== (object/get (object/get o position) y) (object/get t y)))))) 0))))) (fn t { x: (object/get t x), z: (object/get t y) })))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+        })
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (and (== (object/get (array/find @config.tiles (fn t (and (== (object/get t x) ?x) (== (object/get t y) ?z)))) passable) true) (== (array/len (array/filter @entity.units (fn o (and (== (object/get (object/get o position) x) ?x) (== (object/get (object/get o position) y) ?z))))) 0)))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
+        (set @entity.targets (array/map @entity.targets (fn t (if (and (== (object/get t delivered) false) (<= (grid/manhattan-distance { x: ?x, y: ?z } { x: (object/get t x), y: (object/get t y) }) 1)) (object/merge t { delivered: true }) t))))
+        (set @entity.deliveries (array/len (array/filter @entity.targets (fn t (== (object/get t delivered) true)))))
+        (set @entity.result (if (== @entity.deliveries @entity.totalTargets) "won" "none"))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+        })
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+        })
+
+      GAME_END -> gameover when (!= @entity.result "none")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.targets @config.targets)
+        (set @entity.deliveries 0)
+        (set @entity.result "none")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+        })
+    }
+
+    ticks {
+      trafficTick every 1200ms
+        when (== @entity.result "none")
+        (set @entity.units (array/map @entity.units (fn u (if (== (object/get @u team) "neutral") (let ((cur (object/get @u position)) (headingB (object/get @u headingToB))) (let ((tgt (if @headingB (object/get @u routeB) (object/get @u routeA)))) (let ((atTarget (and (== (object/get @cur x) (object/get @tgt x)) (== (object/get @cur y) (object/get @tgt y))))) (let ((nextHeading (if @atTarget (if @headingB false true) @headingB))) (object/merge @u { position: { x: (math/clamp (+ (object/get @cur x) (math/sign (- (object/get @tgt x) (object/get @cur x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get @cur y) (math/sign (- (object/get @tgt y) (object/get @cur y)))) 0 (- @entity.gridHeight 1)) }, headingToB: @nextHeading }))))) @u))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+        })
+    }
+
+    emits {
+      TILE_CLICK -> external {
+        x : number!
+        z : number!
+      }
+        @description "Emits UI:{tileClickEvent} with { x, z } on tile click"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+      }
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "domain"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Emits UI:{cancelEvent} with {} on cancel"
+        @tier "domain"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when all delivery targets are reached"
+        @tier "domain"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "domain"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : CityBoard3DError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      tiles : [CityBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "building", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-a.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-a", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "building", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-b.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-b", thumbnailUrl: "" } }, { id: "t20", x: 2, y: 0, terrain: "road", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road-straight", thumbnailUrl: "" } }, { id: "t30", x: 3, y: 0, terrain: "building", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-a.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "low-detail-building-a", thumbnailUrl: "" } }, { id: "t40", x: 4, y: 0, terrain: "building", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-c.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "low-detail-building-c", thumbnailUrl: "" } }, { id: "t50", x: 5, y: 0, terrain: "building", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-a.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-a", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "building", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-b.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-b", thumbnailUrl: "" } }, { id: "t11", x: 1, y: 1, terrain: "shop", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-c.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-c", thumbnailUrl: "" } }, { id: "t21", x: 2, y: 1, terrain: "road", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road-straight", thumbnailUrl: "" } }, { id: "t31", x: 3, y: 1, terrain: "building", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-a.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "low-detail-building-a", thumbnailUrl: "" } }, { id: "t41", x: 4, y: 1, terrain: "shop", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-f.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-f", thumbnailUrl: "" } }, { id: "t51", x: 5, y: 1, terrain: "building", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-c.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "low-detail-building-c", thumbnailUrl: "" } }, { id: "t02", x: 0, y: 2, terrain: "road", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road-straight", thumbnailUrl: "" } }, { id: "t12", x: 1, y: 2, terrain: "road", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road-straight", thumbnailUrl: "" } }, { id: "t22", x: 2, y: 2, terrain: "intersection", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-crossroad.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road-crossroad", thumbnailUrl: "" } }, { id: "t32", x: 3, y: 2, terrain: "road", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road-straight", thumbnailUrl: "" } }, { id: "t42", x: 4, y: 2, terrain: "road", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road-straight", thumbnailUrl: "" } }, { id: "t52", x: 5, y: 2, terrain: "road", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road-straight", thumbnailUrl: "" } }, { id: "t03", x: 0, y: 3, terrain: "building", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-a.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-a", thumbnailUrl: "" } }, { id: "t13", x: 1, y: 3, terrain: "building", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-b.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-b", thumbnailUrl: "" } }, { id: "t23", x: 2, y: 3, terrain: "road", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road-straight", thumbnailUrl: "" } }, { id: "t33", x: 3, y: 3, terrain: "industrial", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-a.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-a", thumbnailUrl: "" } }, { id: "t43", x: 4, y: 3, terrain: "industrial", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-c.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-c", thumbnailUrl: "" } }, { id: "t53", x: 5, y: 3, terrain: "industrial", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-e.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-e", thumbnailUrl: "" } }, { id: "t04", x: 0, y: 4, terrain: "building", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-a.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "low-detail-building-a", thumbnailUrl: "" } }, { id: "t14", x: 1, y: 4, terrain: "shop", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-h.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-h", thumbnailUrl: "" } }, { id: "t24", x: 2, y: 4, terrain: "road", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road-straight", thumbnailUrl: "" } }, { id: "t34", x: 3, y: 4, terrain: "industrial", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-a.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-a", thumbnailUrl: "" } }, { id: "t44", x: 4, y: 4, terrain: "industrial", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-c.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-c", thumbnailUrl: "" } }, { id: "t54", x: 5, y: 4, terrain: "industrial", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-e.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-e", thumbnailUrl: "" } }, { id: "t05", x: 0, y: 5, terrain: "building", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-c.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "low-detail-building-c", thumbnailUrl: "" } }, { id: "t15", x: 1, y: 5, terrain: "building", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-a.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-a", thumbnailUrl: "" } }, { id: "t25", x: 2, y: 5, terrain: "road", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "road-straight", thumbnailUrl: "" } }, { id: "t35", x: 3, y: 5, terrain: "industrial", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-a.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-a", thumbnailUrl: "" } }, { id: "t45", x: 4, y: 5, terrain: "industrial", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-c.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-c", thumbnailUrl: "" } }, { id: "t55", x: 5, y: 5, terrain: "industrial", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-e.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "building-e", thumbnailUrl: "" } }]
+        @label "Tiles"
+        @description "6x6 city grid — roads passable, building lots impassable."
+        @tier "presentation"
+      units : [CityBoard3DUnitsItem] = [{ id: "car1", position: { x: 2, y: 2 }, unitType: "courier", name: "Courier Car", team: player, health: 1, maxHealth: 1, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-car-kit/units/delivery.glb", role: "player", category: "units", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "delivery", thumbnailUrl: "" }, routeA: { x: 2, y: 2 }, routeB: { x: 2, y: 2 }, headingToB: false }, { id: "npc-taxi", position: { x: 2, y: 0 }, unitType: "traffic", name: "Taxi", team: neutral, health: 1, maxHealth: 1, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-car-kit/units/taxi.glb", role: "npc", category: "units", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "taxi", thumbnailUrl: "" }, routeA: { x: 2, y: 0 }, routeB: { x: 2, y: 5 }, headingToB: false }, { id: "npc-tram", position: { x: 0, y: 2 }, unitType: "traffic", name: "Tram", team: neutral, health: 1, maxHealth: 1, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-train-kit/units/train-tram-classic.glb", role: "npc", category: "units", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "train-tram-classic", thumbnailUrl: "" }, routeA: { x: 0, y: 2 }, routeB: { x: 5, y: 2 }, headingToB: false }]
+        @label "Units"
+        @description "Player courier car plus a wandering taxi and tram."
+        @tier "presentation"
+      targets : [CityBoard3DTargetsItem] = [{ id: "shop1", x: 1, y: 1, delivered: false }, { id: "shop2", x: 4, y: 1, delivered: false }, { id: "shop3", x: 1, y: 4, delivered: false }]
+        @label "Delivery Targets"
+        @description "The 3 shop cells the courier must reach."
+        @tier "presentation"
+      features : [CityBoard3DFeaturesItem] = [{ id: "f-shop1", x: 1, y: 1, type: "delivery_target", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/detail-awning.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "detail-awning", thumbnailUrl: "" } }, { id: "f-shop2", x: 4, y: 1, type: "delivery_target", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/detail-awning-wide.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "detail-awning-wide", thumbnailUrl: "" } }, { id: "f-shop3", x: 1, y: 4, type: "delivery_target", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/detail-parasol-a.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "detail-parasol-a", thumbnailUrl: "" } }, { id: "f-sign", x: 5, y: 2, type: "signage", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/features/sign-highway.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "sign-highway", thumbnailUrl: "" } }, { id: "f-chimney", x: 4, y: 4, type: "industrial_detail", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/chimney-small.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "chimney-small", thumbnailUrl: "" } }]
+        @label "Features"
+        @description "Delivery markers, signage and industrial decoration."
+        @tier "presentation"
+      scale : number = 0.4
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+    }
+  }
+
+  page "/city-board-3d" as CityBoard3DPage -> CityBoard3DRender
+}

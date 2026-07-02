@@ -17,6 +17,97 @@ orbital GameCanvas3dOrbital {
     x : number!
     z : number!
   }
+  type GameCanvas3dPlayer = {
+    x : number!
+    y : number!
+    width : number
+    height : number
+    vx : number
+    vy : number
+    grounded : boolean
+    facingRight : boolean
+    animation : string
+    frame : number
+  }
+  type GameCanvas3dPlatformsItem = {
+    x : number!
+    y : number!
+    width : number!
+    height : number!
+    type : "ground" | "platform" | "hazard" | "goal"
+  }
+  type GameCanvas3dPlayerSprite = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type GameCanvas3dTileSpritesValue = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type GameCanvas3dAssetManifest = {
+    terrains : Map string GameCanvas3dAssetManifestTerrainsValue
+    units : Map string GameCanvas3dAssetManifestUnitsValue
+    features : Map string GameCanvas3dAssetManifestFeaturesValue
+    effects : Map string GameCanvas3dAssetManifestEffectsValue
+  }
+  type GameCanvas3dAssetManifestTerrainsValue = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type GameCanvas3dAssetManifestUnitsValue = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type GameCanvas3dAssetManifestFeaturesValue = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type GameCanvas3dAssetManifestEffectsValue = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
 
   entity GameCanvas3dItem [runtime] {
     id : string!
@@ -67,6 +158,17 @@ orbital GameCanvas3dOrbital {
           selectedUnitId: @config.selectedUnitId
           unitScale: @config.unitScale
           scale: @config.scale
+          keyMap: @config.keyMap
+          keyUpMap: @config.keyUpMap
+          player: @config.player
+          platforms: @config.platforms
+          worldWidth: @config.worldWidth
+          worldHeight: @config.worldHeight
+          pixelsPerUnit: @config.pixelsPerUnit
+          playerSprite: @config.playerSprite
+          tileSprites: @config.tileSprites
+          assetManifest: @config.assetManifest
+          interpolateUnits: @config.interpolateUnits
           type: game-canvas-3d
         })
     }
@@ -245,6 +347,50 @@ orbital GameCanvas3dOrbital {
       scale : number = 0
         @label "Scale"
         @description "Board zoom/group scale. Applied to the scene group. Default 0.45."
+        @tier "presentation"
+      keyMap : Map string string = { item: "Item" }
+        @label "Key Map"
+        @description "Maps a keydown `e.code` → the board's SEMANTIC event, e.g. `{ ArrowLeft: 'LEFT', Space: 'JUMP' }`. The input layer emits `UI:<event>` so the FSM stays device-agnostic — keyboard and d-pad converge."
+        @tier "presentation"
+      keyUpMap : Map string string = { item: "Item" }
+        @label "Key Up Map"
+        @description "Maps a keyup `e.code` → the board's SEMANTIC event, e.g. `{ ArrowLeft: 'STOP' }`."
+        @tier "presentation"
+      player : GameCanvas3dPlayer = { x: 1, y: 1, width: 1, height: 1, vx: 1, vy: 1, grounded: false, facingRight: false, animation: "Animation", frame: 1 }
+        @label "Player"
+        @description "Side-view player (pixel coords, LOLO-owned physics) — presence switches to side-scroller rendering."
+        @tier "presentation"
+      platforms : [GameCanvas3dPlatformsItem] = [{ x: 1, y: 1, width: 1, height: 1, type: ground }, { x: 2, y: 2, width: 2, height: 2, type: platform }]
+        @label "Platforms"
+        @description "Side-view level geometry (pixel AABBs, same contract as Canvas2D)."
+        @tier "presentation"
+      worldWidth : number = 0
+        @label "World Width"
+        @description "Side-view world size in pixels."
+        @tier "presentation"
+      worldHeight : number = 400
+        @label "World Height"
+        @description "Side-view world size in pixels."
+        @tier "presentation"
+      pixelsPerUnit : number = 32
+        @label "Pixels Per Unit"
+        @description "Pixel→world-unit divisor for side view (default 32 = one 2D tile per 3D cell)."
+        @tier "presentation"
+      playerSprite : GameCanvas3dPlayerSprite = { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "player", category: "playerSprite", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "playerSprite", thumbnailUrl: "" }
+        @label "Player Sprite"
+        @description "Player model — named for 2D parity; in 3D the Asset's url is a GLB."
+        @tier "presentation"
+      tileSprites : Map string GameCanvas3dTileSpritesValue = {}
+        @label "Tile Sprites"
+        @description "Platform-type → model map — named for 2D parity; values are GLB Assets."
+        @tier "presentation"
+      assetManifest : GameCanvas3dAssetManifest = { terrains: { grass: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, dirt: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/floor.png", role: "tile", category: "dirt", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "dirt", thumbnailUrl: "" }, stone: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, forest: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/grass.png", role: "tile", category: "forest", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "forest", thumbnailUrl: "" }, castle: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png", role: "tile", category: "castle", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "castle", thumbnailUrl: "" } }, units: { worker: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/units/creep.png", role: "npc", category: "worker", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" }, guardian: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/units/hero.png", role: "npc", category: "guardian", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" }, scrapper: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/enemy.png", role: "npc", category: "scrapper", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "scrapper", thumbnailUrl: "" }, mender: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "mender", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "mender", thumbnailUrl: "" } }, features: { gold_mine: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/features/tower.png", role: "decoration", category: "gold_mine", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" }, portal: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/health_potion.png", role: "decoration", category: "portal", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "portal", thumbnailUrl: "" }, castle: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/features/tower.png", role: "decoration", category: "castle", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "castle", thumbnailUrl: "" } }, effects: {} }
+        @label "Asset Manifest"
+        @description "Per-role model manifest; resolves tiles/units/features without explicit modelUrl/assetUrl."
+        @tier "presentation"
+      interpolateUnits : boolean = false
+        @label "Interpolate Units"
+        @description "Opt-in: smooth-lerp unit positions between LOLO tick snapshots. DEFAULT OFF."
         @tier "presentation"
     }
   }

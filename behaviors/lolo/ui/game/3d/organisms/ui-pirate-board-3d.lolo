@@ -1,0 +1,328 @@
+app ui-pirate-board-3d "1.0.0"
+"PirateBoard3D — naval 3D tactics board: 2 player ships vs 2 enemy corsair ships across a 6×6 sea grid."
+orbital PirateBoard3DOrbital {
+  type PirateBoard3DError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type Asset = {
+      url : asset
+      role : string
+      category : string
+      animations : [string]
+      style : string
+      dimension : string
+      aspect : string
+      name : string
+      thumbnailUrl : string
+    }
+  type PirateBoard3DTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    type : string
+    passable : boolean
+    modelUrl : Asset
+  }
+  type PirateBoard3DUnitsItem = {
+    id : string!
+    position : PirateBoard3DUnitsItemPosition
+    unitType : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    modelUrl : Asset
+  }
+  type PirateBoard3DUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type PirateBoard3DFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    type : string!
+    assetUrl : Asset
+  }
+  type PirateBoard3DValidMovesItem = {
+    x : number!
+    z : number!
+  }
+  type PirateBoard3DAttackTargetsItem = {
+    x : number!
+    z : number!
+  }
+
+  entity PirateBoard3DItem [runtime] {
+    id : string!
+    units : [PirateBoard3DUnitsItem]
+    selectedUnitId : string
+    validMoves : [PirateBoard3DValidMovesItem]
+    attackTargets : [PirateBoard3DAttackTargetsItem]
+    phase : "observation" | "selection" | "movement" | "action" | "enemy_turn" | "game_over" = "observation"
+    turn : number = 0
+    result : "none" | "victory" | "defeat" = none
+    currentTeam : "player" | "enemy" = "player"
+    gridWidth : number = 6
+    gridHeight : number = 6
+    movementRange : number = 3
+    enemyTurn : boolean = false
+  }
+
+  trait PirateBoard3DRender -> @rebindable PirateBoard3DItem [interaction, instance] {
+    initial: playing
+
+    state menu {
+      START -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.currentTeam "player")
+        (set @entity.enemyTurn false)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+    }
+
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.currentTeam "player")
+        (set @entity.enemyTurn false)
+        (set @entity.gridWidth 6)
+        (set @entity.gridHeight 6)
+        (set @entity.movementRange 3)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.phase "action")
+        (set @entity.attackTargets (array/map (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn s (== @s.id @entity.selectedUnitId))) position) (object/get @u position)) 1)))) (fn u { x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y) })))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+
+      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.phase "selection")
+        (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== (object/get @t passable) true) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0)))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+        (set @entity.attackTargets [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+
+      ATTACK -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)) }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+
+      END_TURN -> playing when (== @entity.result "none")
+        (set @entity.turn (+ @entity.turn 1))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.enemyTurn true)
+        (set @entity.currentTeam "enemy")
+        (set @entity.phase "enemy_turn")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+
+      GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "defeat" "victory"))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (set @entity.phase "game_over")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> menu
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.currentTeam "player")
+        (set @entity.enemyTurn false)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+    }
+
+    ticks {
+      enemyAiTick every 1s
+        when (and (== @entity.enemyTurn true) (== @entity.result "none"))
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 1)) }) @u) @u))))
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (if (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.health 0)) (== (grid/manhattan-distance (object/get @u position) (object/get @p position)) 1))))) 0) (let ((target (array/first (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.health 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)) } })) @u) @u))))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (set @entity.enemyTurn false)
+        (set @entity.currentTeam "player")
+        (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+        })
+    }
+
+    emits {
+      ATTACK -> external {
+        attacker : object
+        target : object
+        damage : number
+        attackerId : string!
+        targetId : string!
+      }
+        @description "Cannon fire between adjacent ships"
+        @tier "domain"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when the naval skirmish ends"
+        @tier "domain"
+      UNIT_MOVE -> external {
+        unit : object
+        to : PirateBoard3DValidMovesItem
+      }
+        @description "Called after a ship moves"
+        @tier "domain"
+      TILE_CLICK -> external {
+        x : number!
+        z : number!
+        tileId : string
+      }
+        @description "Sea tile clicked"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+        x : number
+        z : number
+      }
+        @description "Emits UI:{unitClickEvent} with { unitId } on ship click"
+        @tier "domain"
+      END_TURN -> external {
+        id : string
+      }
+        @description "Emits UI:{endTurnEvent} with {} on end turn"
+        @tier "domain"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Emits UI:{cancelEvent} with {} on cancel"
+        @tier "domain"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "domain"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : PirateBoard3DError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      tiles : [PirateBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "island", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/patch-sand.glb", role: "tile", category: "sand", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "sand-island", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "water", type: "water", passable: true }, { id: "t20", x: 2, y: 0, terrain: "water", type: "water", passable: true }, { id: "t30", x: 3, y: 0, terrain: "water", type: "water", passable: true }, { id: "t40", x: 4, y: 0, terrain: "dock", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/structure-platform-dock.glb", role: "tile", category: "dock", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "dock", thumbnailUrl: "" } }, { id: "t50", x: 5, y: 0, terrain: "fort", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/structure-platform.glb", role: "tile", category: "fort-platform", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "fort-platform", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "water", type: "water", passable: true }, { id: "t11", x: 1, y: 1, terrain: "water", type: "water", passable: true }, { id: "t21", x: 2, y: 1, terrain: "water", type: "water", passable: true }, { id: "t31", x: 3, y: 1, terrain: "water", type: "water", passable: true }, { id: "t41", x: 4, y: 1, terrain: "water", type: "water", passable: true }, { id: "t51", x: 5, y: 1, terrain: "water", type: "water", passable: true }, { id: "t02", x: 0, y: 2, terrain: "water", type: "water", passable: true }, { id: "t12", x: 1, y: 2, terrain: "water", type: "water", passable: true }, { id: "t22", x: 2, y: 2, terrain: "water", type: "water", passable: true }, { id: "t32", x: 3, y: 2, terrain: "water", type: "water", passable: true }, { id: "t42", x: 4, y: 2, terrain: "water", type: "water", passable: true }, { id: "t52", x: 5, y: 2, terrain: "water", type: "water", passable: true }, { id: "t03", x: 0, y: 3, terrain: "water", type: "water", passable: true }, { id: "t13", x: 1, y: 3, terrain: "water", type: "water", passable: true }, { id: "t23", x: 2, y: 3, terrain: "reef", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/rocks-sand-b.glb", role: "tile", category: "reef", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "reef-rocks", thumbnailUrl: "" } }, { id: "t33", x: 3, y: 3, terrain: "water", type: "water", passable: true }, { id: "t43", x: 4, y: 3, terrain: "water", type: "water", passable: true }, { id: "t53", x: 5, y: 3, terrain: "water", type: "water", passable: true }, { id: "t04", x: 0, y: 4, terrain: "water", type: "water", passable: true }, { id: "t14", x: 1, y: 4, terrain: "water", type: "water", passable: true }, { id: "t24", x: 2, y: 4, terrain: "water", type: "water", passable: true }, { id: "t34", x: 3, y: 4, terrain: "water", type: "water", passable: true }, { id: "t44", x: 4, y: 4, terrain: "water", type: "water", passable: true }, { id: "t54", x: 5, y: 4, terrain: "water", type: "water", passable: true }, { id: "t05", x: 0, y: 5, terrain: "fort", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/structure-platform.glb", role: "tile", category: "fort-platform", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "fort-platform", thumbnailUrl: "" } }, { id: "t15", x: 1, y: 5, terrain: "dock", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/structure-platform-dock.glb", role: "tile", category: "dock", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "dock", thumbnailUrl: "" } }, { id: "t25", x: 2, y: 5, terrain: "water", type: "water", passable: true }, { id: "t35", x: 3, y: 5, terrain: "water", type: "water", passable: true }, { id: "t45", x: 4, y: 5, terrain: "water", type: "water", passable: true }, { id: "t55", x: 5, y: 5, terrain: "island", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/patch-sand.glb", role: "tile", category: "sand", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "sand-island", thumbnailUrl: "" } }]
+        @label "Tiles"
+        @description "6×6 sea grid tile data — takes priority over entity-derived tiles."
+        @tier "presentation"
+      units : [PirateBoard3DUnitsItem] = [{ id: "p1", position: { x: 1, y: 4 }, unitType: "ship-medium", name: "Player Galleon", team: player, health: 10, maxHealth: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/units/ship-medium.glb", role: "player", category: "ship-medium", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "ship-medium", thumbnailUrl: "" } }, { id: "p2", position: { x: 2, y: 4 }, unitType: "ship-small", name: "Player Sloop", team: player, health: 8, maxHealth: 8, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/units/ship-small.glb", role: "player", category: "ship-small", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "ship-small", thumbnailUrl: "" } }, { id: "e1", position: { x: 4, y: 1 }, unitType: "ship-pirate-medium", name: "Corsair Galleon", team: enemy, health: 10, maxHealth: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/units/ship-pirate-medium.glb", role: "enemy", category: "ship-pirate-medium", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "ship-pirate-medium", thumbnailUrl: "" } }, { id: "e2", position: { x: 3, y: 1 }, unitType: "ship-pirate-small", name: "Corsair Sloop", team: enemy, health: 8, maxHealth: 8, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/units/ship-pirate-small.glb", role: "enemy", category: "ship-pirate-small", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "ship-pirate-small", thumbnailUrl: "" } }]
+        @label "Units"
+        @description "Initial fleet (2 player ships + 2 enemy corsairs) — takes priority over entity-derived units."
+        @tier "presentation"
+      features : [PirateBoard3DFeaturesItem] = [{ id: "f1", x: 0, y: 0, type: "palm", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/palm-straight.glb", role: "decoration", category: "palm", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "palm-straight", thumbnailUrl: "" } }, { id: "f2", x: 5, y: 5, type: "palm", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/palm-bend.glb", role: "decoration", category: "palm", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "palm-bend", thumbnailUrl: "" } }, { id: "f3", x: 5, y: 0, type: "tower", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/tower-watch.glb", role: "decoration", category: "tower", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tower-watch", thumbnailUrl: "" } }, { id: "f4", x: 5, y: 0, type: "cannon", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/cannon-mobile.glb", role: "decoration", category: "cannon", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "cannon-mobile", thumbnailUrl: "" } }, { id: "f5", x: 0, y: 5, type: "tower", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/tower-watch.glb", role: "decoration", category: "tower", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tower-watch", thumbnailUrl: "" } }, { id: "f6", x: 0, y: 5, type: "cannon", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/cannon-mobile.glb", role: "decoration", category: "cannon", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "cannon-mobile", thumbnailUrl: "" } }, { id: "f7", x: 4, y: 0, type: "barrel", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/barrel.glb", role: "decoration", category: "barrel", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "barrel", thumbnailUrl: "" } }, { id: "f8", x: 4, y: 0, type: "crate", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/crate.glb", role: "decoration", category: "crate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "crate", thumbnailUrl: "" } }, { id: "f9", x: 1, y: 5, type: "barrel", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/barrel.glb", role: "decoration", category: "barrel", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "barrel", thumbnailUrl: "" } }, { id: "f10", x: 1, y: 5, type: "crate", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/crate.glb", role: "decoration", category: "crate", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "crate", thumbnailUrl: "" } }]
+        @label "Features"
+        @description "Decorative features on the board (palms, watch towers, cannons, dock crates/barrels)."
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+      bgColor : string = "#123a52"
+        @label "Bg Color"
+        @description "Canvas background color (deep sea)"
+        @tier "presentation"
+    }
+  }
+
+  page "/pirate-board-3d" as PirateBoard3DPage -> PirateBoard3DRender
+}

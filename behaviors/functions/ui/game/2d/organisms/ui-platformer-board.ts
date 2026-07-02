@@ -122,9 +122,9 @@ export interface StdUiPlatformerBoardConfig {
   moveSpeed?: number;
   /** Default: `[{"height":32,"type":"ground","width":800,"x":0,"y":368},{"height":16,"type":"platform","width":160,"x":150,"y":280},{"height":16,"type":"platform","width":160,"x":420,"y":220},{"height":16,"type":"hazard","width":80,"x":580,"y":300},{"height":28,"type":"goal","width":64,"x":700,"y":340}]` */
   platforms?: EntityRow[];
-  /** Default: `{"animations":["idle","walk","jump","hit","death"],"aspect":"1:1","category":"player","dimension":"2d","name":"player","role":"player","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/units/player.png","variant":""}` */
+  /** Default: `{"animations":["idle","walk","jump","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-platformer-characters-1/units/kenney-platformer-characters-1.generated.json","category":"player","dimension":"2d","name":"player","role":"player","sprite":"adventurer_idle.png","style":"flat-shaded","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-platformer-characters-1/units/kenney-platformer-characters-1.generated.png","variant":""}` */
   playerSprite?: EntityRow;
-  /** Default: `{"goal":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.json","category":"goal","dimension":"2d","name":"goal","role":"tile","sprite":"tileBlue_01.png","style":"flat-shaded","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.png","variant":""},"ground":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.json","category":"ground","dimension":"2d","name":"ground","role":"tile","sprite":"tileGreen_01.png","style":"flat-shaded","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.png","variant":""},"hazard":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.json","category":"hazard","dimension":"2d","name":"hazard","role":"tile","sprite":"tileYellow_01.png","style":"flat-shaded","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.png","variant":""},"platform":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.json","category":"platform","dimension":"2d","name":"platform","role":"tile","sprite":"tileBrown_01.png","style":"flat-shaded","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.png","variant":""}}` */
+  /** Default: `{"goal":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"goal","dimension":"2d","name":"goal","role":"tile","sprite":"tileBlue_01.png","style":"flat-shaded","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""},"ground":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"ground","dimension":"2d","name":"ground","role":"tile","sprite":"tileGreen_01.png","style":"flat-shaded","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""},"hazard":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"hazard","dimension":"2d","name":"hazard","role":"tile","sprite":"tileYellow_01.png","style":"flat-shaded","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""},"platform":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"platform","dimension":"2d","name":"platform","role":"tile","sprite":"tileBrown_01.png","style":"flat-shaded","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""}}` */
   tileSprites?: Record<string, TraitConfig>;
   /** Default: `400` */
   worldHeight?: number;
@@ -652,13 +652,15 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                 'death',
               ],
               'aspect': '1:1',
+              'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-platformer-characters-1/units/kenney-platformer-characters-1.generated.json',
               'category': 'player',
               'dimension': '2d',
               'name': 'player',
               'role': 'player',
-              'style': 'pixel',
+              'sprite': 'adventurer_idle.png',
+              'style': 'flat-shaded',
               'thumbnailUrl': '',
-              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/units/player.png',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-platformer-characters-1/units/kenney-platformer-characters-1.generated.png',
               'variant': '',
             },
             'description': 'Player sprite Asset',
@@ -738,7 +740,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   'static',
                 ],
                 'aspect': '1:1',
-                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.json',
+                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json',
                 'category': 'goal',
                 'dimension': '2d',
                 'name': 'goal',
@@ -746,7 +748,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                 'sprite': 'tileBlue_01.png',
                 'style': 'flat-shaded',
                 'thumbnailUrl': '',
-                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.png',
+                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png',
                 'variant': '',
               },
               'ground': {
@@ -754,7 +756,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   'static',
                 ],
                 'aspect': '1:1',
-                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.json',
+                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json',
                 'category': 'ground',
                 'dimension': '2d',
                 'name': 'ground',
@@ -762,7 +764,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                 'sprite': 'tileGreen_01.png',
                 'style': 'flat-shaded',
                 'thumbnailUrl': '',
-                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.png',
+                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png',
                 'variant': '',
               },
               'hazard': {
@@ -770,7 +772,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   'static',
                 ],
                 'aspect': '1:1',
-                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.json',
+                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json',
                 'category': 'hazard',
                 'dimension': '2d',
                 'name': 'hazard',
@@ -778,7 +780,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                 'sprite': 'tileYellow_01.png',
                 'style': 'flat-shaded',
                 'thumbnailUrl': '',
-                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.png',
+                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png',
                 'variant': '',
               },
               'platform': {
@@ -786,7 +788,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   'static',
                 ],
                 'aspect': '1:1',
-                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.json',
+                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json',
                 'category': 'platform',
                 'dimension': '2d',
                 'name': 'platform',
@@ -794,7 +796,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                 'sprite': 'tileBrown_01.png',
                 'style': 'flat-shaded',
                 'thumbnailUrl': '',
-                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/terrain/kenney-abstract-platformer/spritesheet_tiles.png',
+                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png',
                 'variant': '',
               },
             },

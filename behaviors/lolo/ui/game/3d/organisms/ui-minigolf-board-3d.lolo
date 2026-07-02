@@ -1,0 +1,242 @@
+app ui-minigolf-board-3d "1.0.0"
+"MinigolfBoard3D — 3D grid mini-golf board organism; putt an S-shaped fairway past obstacles into the hole within par."
+orbital MinigolfBoard3DOrbital {
+  type MinigolfBoard3DError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type Asset = {
+      url : asset
+      atlas : asset
+      sprite : string
+      role : string
+      category : string
+      animations : [string]
+      style : string
+      variant : string
+      dimension : string
+      aspect : string
+      name : string
+      thumbnailUrl : string
+    }
+  type MinigolfBoard3DTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    passable : boolean
+    modelUrl : Asset
+  }
+  type MinigolfBoard3DUnitsItem = {
+    id : string!
+    position : MinigolfBoard3DUnitsItemPosition
+    unitType : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    modelUrl : Asset
+  }
+  type MinigolfBoard3DUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type MinigolfBoard3DFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    type : string!
+    assetUrl : Asset
+  }
+  type MinigolfBoard3DValidMovesItem = {
+    x : number!
+    z : number!
+  }
+  type MinigolfBoard3DAttackTargetsItem = {
+    x : number!
+    z : number!
+  }
+
+  entity MinigolfBoard3DItem [runtime] {
+    id : string!
+    units : [MinigolfBoard3DUnitsItem]
+    selectedUnitId : string
+    validMoves : [MinigolfBoard3DValidMovesItem]
+    attackTargets : [MinigolfBoard3DAttackTargetsItem]
+    strokes : number = 0
+    par : number = 8
+    result : "none" | "won" | "lost" = none
+    gridWidth : number = 6
+    gridHeight : number = 6
+    movementRange : number = 2
+  }
+
+  trait MinigolfBoard3DRender -> @rebindable MinigolfBoard3DItem [interaction, instance] {
+    initial: playing
+
+    state menu {
+      START -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.strokes 0)
+        (set @entity.par @config.par)
+        (set @entity.result "none")
+        (set @entity.gridWidth 6)
+        (set @entity.gridHeight 6)
+        (set @entity.movementRange 2)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+    }
+
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.strokes 0)
+        (set @entity.par @config.par)
+        (set @entity.result "none")
+        (set @entity.gridWidth 6)
+        (set @entity.gridHeight 6)
+        (set @entity.movementRange 2)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+
+      UNIT_CLICK -> playing
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== (object/get @t passable) true) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange)))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (and (== (object/get (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) passable) true) (!= (object/get (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) terrain) "hole")))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
+        (set @entity.strokes (+ @entity.strokes 1))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+
+      TILE_CLICK -> gameover when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (and (== (object/get (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) passable) true) (== (object/get (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) terrain) "hole")))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
+        (set @entity.strokes (+ @entity.strokes 1))
+        (set @entity.result (if (<= (+ @entity.strokes 1) @entity.par) "won" "lost"))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> menu
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.strokes 0)
+        (set @entity.par @config.par)
+        (set @entity.result "none")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+    }
+
+    emits {
+      TILE_CLICK -> external {
+        tileId : string
+        x : number!
+        z : number
+      }
+        @description "Emits UI:{tileClickEvent} with { tileId, x, z } — putts the selected ball toward the target tile"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+        x : number
+        z : number
+      }
+        @description "Emits UI:{unitClickEvent} with { unitId, x, z } on ball click"
+        @tier "domain"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Emits UI:{cancelEvent} with {} on cancel / deselect"
+        @tier "domain"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "domain"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : MinigolfBoard3DError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      tiles : [MinigolfBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "tee", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/start.glb", role: "tile", category: "features", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "start", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "straight", thumbnailUrl: "" } }, { id: "t20", x: 2, y: 0, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "straight", thumbnailUrl: "" } }, { id: "t30", x: 3, y: 0, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "straight", thumbnailUrl: "" } }, { id: "t40", x: 4, y: 0, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "straight", thumbnailUrl: "" } }, { id: "t50", x: 5, y: 0, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/corner.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "corner", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "block", thumbnailUrl: "" } }, { id: "t11", x: 1, y: 1, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "block", thumbnailUrl: "" } }, { id: "t21", x: 2, y: 1, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/windmill.glb", role: "tile", category: "features", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "windmill", thumbnailUrl: "" } }, { id: "t31", x: 3, y: 1, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "block", thumbnailUrl: "" } }, { id: "t41", x: 4, y: 1, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "block", thumbnailUrl: "" } }, { id: "t51", x: 5, y: 1, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "straight", thumbnailUrl: "" } }, { id: "t02", x: 0, y: 2, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/corner.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "corner", thumbnailUrl: "" } }, { id: "t12", x: 1, y: 2, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "straight", thumbnailUrl: "" } }, { id: "t22", x: 2, y: 2, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "straight", thumbnailUrl: "" } }, { id: "t32", x: 3, y: 2, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "straight", thumbnailUrl: "" } }, { id: "t42", x: 4, y: 2, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "straight", thumbnailUrl: "" } }, { id: "t52", x: 5, y: 2, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/corner.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "corner", thumbnailUrl: "" } }, { id: "t03", x: 0, y: 3, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "straight", thumbnailUrl: "" } }, { id: "t13", x: 1, y: 3, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "block", thumbnailUrl: "" } }, { id: "t23", x: 2, y: 3, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "block", thumbnailUrl: "" } }, { id: "t33", x: 3, y: 3, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/castle.glb", role: "tile", category: "features", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "castle", thumbnailUrl: "" } }, { id: "t43", x: 4, y: 3, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "block", thumbnailUrl: "" } }, { id: "t53", x: 5, y: 3, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "block", thumbnailUrl: "" } }, { id: "t04", x: 0, y: 4, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/corner.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "corner", thumbnailUrl: "" } }, { id: "t14", x: 1, y: 4, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "straight", thumbnailUrl: "" } }, { id: "t24", x: 2, y: 4, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "straight", thumbnailUrl: "" } }, { id: "t34", x: 3, y: 4, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "straight", thumbnailUrl: "" } }, { id: "t44", x: 4, y: 4, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "straight", thumbnailUrl: "" } }, { id: "t54", x: 5, y: 4, terrain: "fairway", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/corner.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "corner", thumbnailUrl: "" } }, { id: "t05", x: 0, y: 5, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "block", thumbnailUrl: "" } }, { id: "t15", x: 1, y: 5, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "block", thumbnailUrl: "" } }, { id: "t25", x: 2, y: 5, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/windmill.glb", role: "tile", category: "features", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "windmill", thumbnailUrl: "" } }, { id: "t35", x: 3, y: 5, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "block", thumbnailUrl: "" } }, { id: "t45", x: 4, y: 5, terrain: "obstacle", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "block", thumbnailUrl: "" } }, { id: "t55", x: 5, y: 5, terrain: "hole", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/hole-round.glb", role: "tile", category: "features", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "hole-round", thumbnailUrl: "" } }]
+        @label "Tiles"
+        @description "6×6 S-shaped fairway grid — takes priority over entity-derived tiles."
+        @tier "presentation"
+      units : [MinigolfBoard3DUnitsItem] = [{ id: "ball", position: { x: 0, y: 0 }, unitType: "ball", name: "Ball", team: player, health: 1, maxHealth: 1, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/ball-blue.glb", role: "player", category: "features", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "ball-blue", thumbnailUrl: "" } }]
+        @label "Units"
+        @description "The putting ball, starting at the tee (t00)."
+        @tier "presentation"
+      features : [MinigolfBoard3DFeaturesItem] = [{ id: "f1", x: 5, y: 5, type: "flag", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/flag-red.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "flag-red", thumbnailUrl: "" } }, { id: "f2", x: 0, y: 1, type: "peg_wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/supports.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "supports", thumbnailUrl: "" } }, { id: "f3", x: 5, y: 3, type: "peg_wall", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/supports.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "supports", thumbnailUrl: "" } }]
+        @label "Features"
+        @description "Pin flag at the hole plus wooden peg-wall borders along the rough."
+        @tier "presentation"
+      par : number = 8
+        @label "Par"
+        @description "Stroke target — holing out at or under this value wins"
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+    }
+  }
+
+  page "/minigolf-board-3d" as MinigolfBoard3DPage -> MinigolfBoard3DRender
+}

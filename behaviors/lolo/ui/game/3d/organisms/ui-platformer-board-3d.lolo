@@ -1,0 +1,247 @@
+app ui-platformer-board-3d "1.0.0"
+"PlatformerBoard3D — 3D twin of ui-platformer-board: same entity/events/physics, game-canvas-3d side view with follow camera and GLB clips."
+orbital PlatformerBoard3DOrbital {
+  type PlatformerBoard3DPlayer = {
+    x : number!
+    y : number!
+    width : number
+    height : number
+    vx : number
+    vy : number
+    grounded : boolean
+    facingRight : boolean
+    animation : string
+    frame : number
+  }
+  type Asset = {
+      url : asset
+      atlas : asset
+      sprite : string
+      role : string
+      category : string
+      animations : [string]
+      style : string
+      variant : string
+      dimension : string
+      aspect : string
+      name : string
+      thumbnailUrl : string
+    }
+  type PlatformerBoard3DPlatformsItem = {
+    x : number!
+    y : number!
+    width : number!
+    height : number!
+    type : "ground" | "platform" | "hazard" | "goal"
+  }
+  type PlatformerBoard3DEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
+  }
+
+  entity PlatformerBoard3DItem [runtime] {
+    id : string!
+    level : number = 1
+    score : number = 0
+    lives : number = 3
+    result : "none" | "won" | "lost" = none
+    player : PlatformerBoard3DPlayer = { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 }
+    goalX : number = 720
+    worldWidth : number = 800
+    worldHeight : number = 400
+    effects : [PlatformerBoard3DEffectItem] = []
+    selectedUnitId : string = ""
+    validMoves : [PlatformerBoard3DPlayer] = []
+  }
+
+  trait PlatformerBoard3DRender -> @rebindable PlatformerBoard3DItem [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.level 1)
+        (set @entity.score 0)
+        (set @entity.lives 3)
+        (set @entity.result "none")
+        (set @entity.effects [])
+        (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 })
+        (set @entity.goalX @config.goalX)
+        (set @entity.worldWidth @config.worldWidth)
+        (set @entity.worldHeight @config.worldHeight)
+        (render-ui main {
+          type: game-shell
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beigeLight.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "hud-panel", thumbnailUrl: "" }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: control-grid, kind: "dpad", directionEvents: { left: "LEFT", right: "RIGHT", up: "JUMP" }, directionReleaseEvents: { left: "STOP", right: "STOP" }, directionAssets: { up: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_up", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-up", thumbnailUrl: "" }, down: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_down", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-down", thumbnailUrl: "" }, left: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_left", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-left", thumbnailUrl: "" }, right: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_right", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-right", thumbnailUrl: "" } } }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, cameraMode: "follow", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, pixelsPerUnit: 32, interpolateUnits: true, backgroundColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, keyMap: { ArrowLeft: "LEFT", KeyA: "LEFT", ArrowRight: "RIGHT", KeyD: "RIGHT", ArrowUp: "JUMP", KeyW: "JUMP", Space: "JUMP" }, keyUpMap: { ArrowLeft: "STOP", KeyA: "STOP", ArrowRight: "STOP", KeyD: "STOP" } } ]
+        })
+
+      LEFT -> playing when (== @entity.result "none")
+        (set @entity.player (object/merge @entity.player { vx: (- 0 @config.moveSpeed), facingRight: false, animation: "walk" }))
+
+      RIGHT -> playing when (== @entity.result "none")
+        (set @entity.player (object/merge @entity.player { vx: @config.moveSpeed, facingRight: true, animation: "walk" }))
+
+      JUMP -> playing when (and (== @entity.result "none") (== @entity.player.grounded true))
+        (set @entity.player (object/merge @entity.player { vy: (- 0 @config.jumpStrength), grounded: false, animation: "jump" }))
+
+      STOP -> playing when (== @entity.result "none")
+        (set @entity.player (object/merge @entity.player { vx: 0, animation: "idle" }))
+
+      TILE_CLICK -> playing
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+
+      UNIT_CLICK -> playing
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.validMoves [])
+
+      GAME_END -> won when (== @entity.result "won")
+
+      GAME_END -> lost when (== @entity.result "lost")
+    }
+
+    state won {
+      PLAY_AGAIN -> playing
+        (set @entity.level (+ @entity.level 1))
+        (set @entity.result "none")
+        (set @entity.effects [])
+        (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 })
+    }
+
+    state lost {
+      PLAY_AGAIN -> playing
+        (set @entity.level 1)
+        (set @entity.score 0)
+        (set @entity.lives 3)
+        (set @entity.result "none")
+        (set @entity.effects [])
+        (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 })
+    }
+
+    ticks {
+      gameflowTick every 33ms
+        when (== @entity.result "none")
+        (let ((vy1 (math/clamp (+ @entity.player.vy @config.gravity) (- 0 @config.jumpStrength) @config.maxFallSpeed)) (px1 (math/clamp (+ @entity.player.x @entity.player.vx) 0 (- @entity.worldWidth @entity.player.width))) (pw @entity.player.width) (ph @entity.player.height) (livesLeft (- @entity.lives 1))) (let ((py1 (+ @entity.player.y @vy1))) (let ((playerRect { x: @px1, y: @py1, w: @pw, h: @ph })) (let ((hit (array/find @config.platforms (fn p (and (!= (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((hazardHit (array/find @config.platforms (fn p (and (== (object/get @p type) "hazard") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((goalHit (array/find @config.platforms (fn p (and (== (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((hitY (object/get @hit "y" @entity.worldHeight)) (landed (and (!= @hit null) (> @vy1 0)))) (let ((py2 (if @landed (- @hitY @ph) @py1)) (vy2 (if @landed 0 @vy1))) (let ((atGround (>= (+ @py2 @ph) @entity.worldHeight))) (let ((py3 (if @atGround (- @entity.worldHeight @ph) @py2)) (vy3 (if @atGround 0 @vy2)) (grounded (or @landed @atGround))) (let ((fell (> @py3 @entity.worldHeight))) (let ((damaged (or (!= @hazardHit null) @fell))) (do (set @entity.player (object/merge @entity.player { x: @px1, y: @py3, vy: @vy3, grounded: @grounded })) (set @entity.result (if (!= @goalHit null) "won" (if (and @damaged (<= @livesLeft 0)) "lost" "none"))) (set @entity.score (if (!= @goalHit null) (+ @entity.score 100) @entity.score)) (set @entity.lives (if (and @damaged (> @entity.lives 0) (== @entity.result "none")) @livesLeft @entity.lives)) (set @entity.player (if (and @damaged (== @entity.result "none")) { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 } @entity.player)))))))))))))))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+
+      animTick every 100ms
+        (set @entity.player (object/merge @entity.player { frame: (% (+ (object/get @entity.player frame) 1) 8) }))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beigeLight.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "hud-panel", thumbnailUrl: "" }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: control-grid, kind: "dpad", directionEvents: { left: "LEFT", right: "RIGHT", up: "JUMP" }, directionReleaseEvents: { left: "STOP", right: "STOP" }, directionAssets: { up: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_up", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-up", thumbnailUrl: "" }, down: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_down", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-down", thumbnailUrl: "" }, left: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_left", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-left", thumbnailUrl: "" }, right: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_right", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-right", thumbnailUrl: "" } } }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, cameraMode: "follow", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, pixelsPerUnit: 32, interpolateUnits: true, backgroundColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, keyMap: { ArrowLeft: "LEFT", KeyA: "LEFT", ArrowRight: "RIGHT", KeyD: "RIGHT", ArrowUp: "JUMP", KeyW: "JUMP", Space: "JUMP" }, keyUpMap: { ArrowLeft: "STOP", KeyA: "STOP", ArrowRight: "STOP", KeyD: "STOP" } } ]
+        })
+
+    }
+
+    emits {
+      TILE_CLICK -> external {
+        tileId : string
+        x : number!
+        z : number
+      }
+        @description "Tile click passthrough — platformer is keyboard-driven; click coordinates for jump target"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+        x : number
+        z : number
+      }
+        @description "Unit click passthrough"
+        @tier "domain"
+      GAME_END -> external {
+        result : string!
+      }
+        @description "Emitted when result becomes won or lost"
+        @tier "domain"
+      LEFT -> external {
+        id : string
+      }
+        @description "Move-left intent (keyboard keyMap or d-pad directionEvents)"
+        @tier "domain"
+      RIGHT -> external {
+        id : string
+      }
+        @description "Move-right intent (keyboard keyMap or d-pad directionEvents)"
+        @tier "domain"
+      JUMP -> external {
+        id : string
+      }
+        @description "Jump intent (keyboard keyMap or d-pad directionEvents)"
+        @tier "domain"
+      STOP -> external {
+        id : string
+      }
+        @description "Stop-horizontal intent (keyboard keyUpMap or d-pad directionReleaseEvents)"
+        @tier "domain"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} on restart"
+        @tier "domain"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      platforms : [PlatformerBoard3DPlatformsItem] = [{ x: 0, y: 368, width: 800, height: 32, type: ground }, { x: 150, y: 280, width: 160, height: 16, type: platform }, { x: 420, y: 220, width: 160, height: 16, type: platform }, { x: 580, y: 300, width: 80, height: 16, type: hazard }, { x: 700, y: 340, width: 64, height: 28, type: goal }]
+        @label "Platforms"
+        @description "Level geometry including hazard and goal tiles"
+        @tier "presentation"
+      goalX : number = 720
+        @label "Goal X"
+        @description "X pixel of the goal tile (used for display)"
+        @tier "presentation"
+      worldWidth : number = 800
+        @label "World Width"
+        @description "World pixel width"
+        @tier "presentation"
+      worldHeight : number = 400
+        @label "World Height"
+        @description "World pixel height"
+        @tier "presentation"
+      gravity : number = 0.6
+        @label "Gravity"
+        @description "vy delta per 33ms tick"
+        @tier "presentation"
+      jumpStrength : number = 12
+        @label "Jump Strength"
+        @description "vy set to -(jumpStrength) on JUMP"
+        @tier "presentation"
+      maxFallSpeed : number = 20
+        @label "Max Fall Speed"
+        @description "Terminal velocity cap"
+        @tier "presentation"
+      moveSpeed : number = 4
+        @label "Move Speed"
+        @description "Horizontal vx magnitude"
+        @tier "presentation"
+      playerSprite : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-platformer-board-3d/kenney-platformer-kit/units/character-oobi.glb", role: "player", category: "player", animations: ["idle","walk","sprint","jump","fall"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "player", thumbnailUrl: "" }
+        @label "Player Model"
+        @description "Player GLB Asset — named clips driven by the entity's animation field"
+        @tier "presentation"
+      tileSprites : Map string Asset = { ground: { url: "https://almadar-kflow-assets.web.app/shared/ui-platformer-board-3d/kenney-platformer-kit/terrain/block-grass.glb", role: "tile", category: "ground", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "ground", thumbnailUrl: "" }, platform: { url: "https://almadar-kflow-assets.web.app/shared/ui-platformer-board-3d/kenney-platformer-kit/terrain/block-grass-low.glb", role: "tile", category: "platform", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "platform", thumbnailUrl: "" }, hazard: { url: "https://almadar-kflow-assets.web.app/shared/ui-platformer-board-3d/kenney-platformer-kit/features/trap-spikes.glb", role: "tile", category: "hazard", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "hazard", thumbnailUrl: "" }, goal: { url: "https://almadar-kflow-assets.web.app/shared/ui-platformer-board-3d/kenney-platformer-kit/features/flag.glb", role: "tile", category: "goal", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "goal", thumbnailUrl: "" } }
+        @label "Tile Models"
+        @description "Map of platform type to GLB Asset"
+        @tier "presentation"
+      assetBaseUrl : string = "https://almadar-kflow-assets.web.app/shared/"
+        @label "Asset Base Url"
+        @description "Base URL prefix for asset URLs"
+        @tier "presentation"
+      bgColor : string = "#87ceeb"
+        @label "Bg Color"
+        @description "Canvas background color"
+        @tier "presentation"
+    }
+  }
+
+  page "/platformer-board-3d" as PlatformerBoard3DPage -> PlatformerBoard3DRender
+}
