@@ -1,0 +1,1377 @@
+{
+  "description": "A* engine — each tick expands the min-f (g+straight-line-h) node toward the goal on the weighted biology-canvas.",
+  "name": "std-algo-astargraph",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "nodes",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "edges",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                },
+                "w": {
+                  "name": "w",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "wedges",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "d": {
+                  "name": "d",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "gscore",
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "string"
+            },
+            "name": "visited",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "f": {
+                  "name": "f",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "openF",
+            "type": "array"
+          },
+          {
+            "default": "",
+            "name": "goal",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "goalX",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "goalY",
+            "type": "number"
+          },
+          {
+            "default": "",
+            "name": "cur",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "minF",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "distU",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "done",
+            "type": "boolean"
+          },
+          {
+            "default": true,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "AstarScene",
+        "persistence": "runtime"
+      },
+      "name": "AstarGraphEngineOrbital",
+      "pages": [
+        {
+          "name": "AstarGraphEnginePage",
+          "path": "/algo-astargraph",
+          "traits": [
+            {
+              "ref": "AstarSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "edges": {
+              "default": [
+                {
+                  "color": "#9ca3af",
+                  "from": "A",
+                  "label": "186",
+                  "to": "B"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "A",
+                  "label": "142",
+                  "to": "C"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "B",
+                  "label": "143",
+                  "to": "C"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "B",
+                  "label": "163",
+                  "to": "D"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "C",
+                  "label": "162",
+                  "to": "E"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "D",
+                  "label": "163",
+                  "to": "E"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "D",
+                  "label": "163",
+                  "to": "F"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "E",
+                  "label": "200",
+                  "to": "F"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "E",
+                  "label": "182",
+                  "to": "G"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "F",
+                  "label": "148",
+                  "to": "G"
+                }
+              ],
+              "description": "Rendered undirected edges (weight in label); drawing only, A* reads wedges.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Edges",
+              "tier": "domain",
+              "type": "[GraphEdge]"
+            },
+            "goal": {
+              "default": "G",
+              "description": "Id of the target node; A* stops once it is expanded.",
+              "label": "Goal Node",
+              "tier": "domain",
+              "type": "string"
+            },
+            "gscore": {
+              "default": [
+                {
+                  "d": 0.0,
+                  "id": "A"
+                },
+                {
+                  "d": 9999.0,
+                  "id": "B"
+                },
+                {
+                  "d": 9999.0,
+                  "id": "C"
+                },
+                {
+                  "d": 9999.0,
+                  "id": "D"
+                },
+                {
+                  "d": 9999.0,
+                  "id": "E"
+                },
+                {
+                  "d": 9999.0,
+                  "id": "F"
+                },
+                {
+                  "d": 9999.0,
+                  "id": "G"
+                }
+              ],
+              "description": "Best-known cost from start per node; start 0, others 9999 (infinity sentinel). Not rendered.",
+              "items": {
+                "properties": {
+                  "d": {
+                    "name": "d",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "G Scores",
+              "tier": "domain",
+              "type": "[Dist]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "nodes": {
+              "default": [
+                {
+                  "color": "#f59e0b",
+                  "id": "A",
+                  "kind": "cell",
+                  "label": "A",
+                  "radius": 20.0,
+                  "x": 60.0,
+                  "y": 340.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "B",
+                  "kind": "cell",
+                  "label": "B",
+                  "radius": 20.0,
+                  "x": 180.0,
+                  "y": 200.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "C",
+                  "kind": "cell",
+                  "label": "C",
+                  "radius": 20.0,
+                  "x": 200.0,
+                  "y": 340.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "D",
+                  "kind": "cell",
+                  "label": "D",
+                  "radius": 20.0,
+                  "x": 340.0,
+                  "y": 180.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "E",
+                  "kind": "cell",
+                  "label": "E",
+                  "radius": 20.0,
+                  "x": 360.0,
+                  "y": 340.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "F",
+                  "kind": "cell",
+                  "label": "F",
+                  "radius": 20.0,
+                  "x": 500.0,
+                  "y": 200.0
+                },
+                {
+                  "color": "#ef4444",
+                  "id": "G",
+                  "kind": "cell",
+                  "label": "G",
+                  "radius": 20.0,
+                  "x": 540.0,
+                  "y": 340.0
+                }
+              ],
+              "description": "Graph vertices; A* recolours them slate→amber(open)→green(closed), blue=current, red=goal.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "name": "kind",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "cell",
+                      "organelle",
+                      "molecule",
+                      "organism"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Nodes",
+              "tier": "domain",
+              "type": "[GraphNode]"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick expands one node per step; toggle to start/pause the search.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "start": {
+              "default": "A",
+              "description": "Id of the node A* searches from.",
+              "label": "Start Node",
+              "tier": "domain",
+              "type": "string"
+            },
+            "wedges": {
+              "default": [
+                {
+                  "from": "A",
+                  "to": "B",
+                  "w": 186.0
+                },
+                {
+                  "from": "A",
+                  "to": "C",
+                  "w": 142.0
+                },
+                {
+                  "from": "B",
+                  "to": "C",
+                  "w": 143.0
+                },
+                {
+                  "from": "B",
+                  "to": "D",
+                  "w": 163.0
+                },
+                {
+                  "from": "C",
+                  "to": "E",
+                  "w": 162.0
+                },
+                {
+                  "from": "D",
+                  "to": "E",
+                  "w": 163.0
+                },
+                {
+                  "from": "D",
+                  "to": "F",
+                  "w": 163.0
+                },
+                {
+                  "from": "E",
+                  "to": "F",
+                  "w": 200.0
+                },
+                {
+                  "from": "E",
+                  "to": "G",
+                  "w": 182.0
+                },
+                {
+                  "from": "F",
+                  "to": "G",
+                  "w": 148.0
+                }
+              ],
+              "description": "Undirected weighted adjacency A* relaxes; each weight exceeds its edge's straight-line length so the heuristic stays admissible.",
+              "items": {
+                "properties": {
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "w": {
+                    "name": "w",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Weighted Edges",
+              "tier": "domain",
+              "type": "[WEdge]"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The graph each step — a composed listener can subscribe; a harmless no-op standalone.",
+              "event": "NODES_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "nodes",
+                  "type": "[GraphNode]"
+                },
+                {
+                  "name": "edges",
+                  "type": "[GraphEdge]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, expand, heuristic, astar, goal, path",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "cur",
+              "distU",
+              "done",
+              "edges",
+              "goal",
+              "goalX",
+              "goalY",
+              "gscore",
+              "minF",
+              "nodes",
+              "openF",
+              "running",
+              "visited",
+              "wedges"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "AstarScene",
+          "name": "AstarSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The graph each step — a composed listener can subscribe; a harmless no-op standalone.",
+                "key": "NODES_UPDATED",
+                "name": "Nodes Updated",
+                "payloadSchema": [
+                  {
+                    "name": "nodes",
+                    "type": "[GraphNode]"
+                  },
+                  {
+                    "name": "edges",
+                    "type": "[GraphEdge]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, expand, heuristic, astar, goal, path",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.nodes",
+                    "@config.nodes"
+                  ],
+                  [
+                    "set",
+                    "@entity.edges",
+                    "@config.edges"
+                  ],
+                  [
+                    "set",
+                    "@entity.wedges",
+                    "@config.wedges"
+                  ],
+                  [
+                    "set",
+                    "@entity.gscore",
+                    "@config.gscore"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "set",
+                    "@entity.goal",
+                    "@config.goal"
+                  ],
+                  [
+                    "set",
+                    "@entity.goalX",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        [
+                          "array/filter",
+                          "@entity.nodes",
+                          [
+                            "fn",
+                            "nd",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@nd",
+                                "id"
+                              ],
+                              "@config.goal"
+                            ]
+                          ]
+                        ]
+                      ],
+                      "x"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.goalY",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        [
+                          "array/filter",
+                          "@entity.nodes",
+                          [
+                            "fn",
+                            "nd",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@nd",
+                                "id"
+                              ],
+                              "@config.goal"
+                            ]
+                          ]
+                        ]
+                      ],
+                      "y"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.visited",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.openF",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.cur",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.minF",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.distU",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.done",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "edges": "@entity.edges",
+                      "height": "@config.height",
+                      "nodes": "@entity.nodes",
+                      "type": "biology-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "NODES_UPDATED",
+                    {
+                      "edges": "@entity.edges",
+                      "nodes": "@entity.nodes"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.openF",
+                  [
+                    "array/map",
+                    [
+                      "array/filter",
+                      "@entity.gscore",
+                      [
+                        "fn",
+                        "gs",
+                        [
+                          "and",
+                          [
+                            "not",
+                            [
+                              "array/includes",
+                              "@entity.visited",
+                              [
+                                "object/get",
+                                "@gs",
+                                "id"
+                              ]
+                            ]
+                          ],
+                          [
+                            "<",
+                            [
+                              "object/get",
+                              "@gs",
+                              "d"
+                            ],
+                            9999.0
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "gs",
+                      [
+                        "let",
+                        [
+                          [
+                            "gid",
+                            [
+                              "object/get",
+                              "@gs",
+                              "id"
+                            ]
+                          ],
+                          [
+                            "gd",
+                            [
+                              "object/get",
+                              "@gs",
+                              "d"
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "nd",
+                              [
+                                "array/first",
+                                [
+                                  "array/filter",
+                                  "@entity.nodes",
+                                  [
+                                    "fn",
+                                    "n2",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "@n2",
+                                        "id"
+                                      ],
+                                      "@gid"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "nx",
+                                [
+                                  "object/get",
+                                  "@nd",
+                                  "x"
+                                ]
+                              ],
+                              [
+                                "ny",
+                                [
+                                  "object/get",
+                                  "@nd",
+                                  "y"
+                                ]
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "hh",
+                                  [
+                                    "math/round",
+                                    [
+                                      "math/sqrt",
+                                      [
+                                        "+",
+                                        [
+                                          "*",
+                                          [
+                                            "-",
+                                            "@nx",
+                                            "@entity.goalX"
+                                          ],
+                                          [
+                                            "-",
+                                            "@nx",
+                                            "@entity.goalX"
+                                          ]
+                                        ],
+                                        [
+                                          "*",
+                                          [
+                                            "-",
+                                            "@ny",
+                                            "@entity.goalY"
+                                          ],
+                                          [
+                                            "-",
+                                            "@ny",
+                                            "@entity.goalY"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "f": [
+                                  "+",
+                                  "@gd",
+                                  "@hh"
+                                ],
+                                "id": "@gid"
+                              }
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.minF",
+                  [
+                    "array/min",
+                    [
+                      "array/map",
+                      "@entity.openF",
+                      [
+                        "fn",
+                        "of",
+                        [
+                          "object/get",
+                          "@of",
+                          "f"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.cur",
+                  [
+                    "object/get",
+                    [
+                      "array/first",
+                      [
+                        "array/filter",
+                        "@entity.openF",
+                        [
+                          "fn",
+                          "of",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              "@of",
+                              "f"
+                            ],
+                            "@entity.minF"
+                          ]
+                        ]
+                      ]
+                    ],
+                    "id"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.distU",
+                  [
+                    "object/get",
+                    [
+                      "array/first",
+                      [
+                        "array/filter",
+                        "@entity.gscore",
+                        [
+                          "fn",
+                          "gs",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              "@gs",
+                              "id"
+                            ],
+                            "@entity.cur"
+                          ]
+                        ]
+                      ]
+                    ],
+                    "d"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.visited",
+                  [
+                    "array/append",
+                    "@entity.visited",
+                    "@entity.cur"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.gscore",
+                  [
+                    "array/map",
+                    "@entity.gscore",
+                    [
+                      "fn",
+                      "row",
+                      [
+                        "let",
+                        [
+                          [
+                            "nid",
+                            [
+                              "object/get",
+                              "@row",
+                              "id"
+                            ]
+                          ],
+                          [
+                            "dcur",
+                            [
+                              "object/get",
+                              "@row",
+                              "d"
+                            ]
+                          ]
+                        ],
+                        [
+                          "object/merge",
+                          "@row",
+                          {
+                            "d": [
+                              "let",
+                              [
+                                [
+                                  "matches",
+                                  [
+                                    "array/filter",
+                                    "@entity.wedges",
+                                    [
+                                      "fn",
+                                      "w",
+                                      [
+                                        "or",
+                                        [
+                                          "and",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@w",
+                                              "from"
+                                            ],
+                                            "@entity.cur"
+                                          ],
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@w",
+                                              "to"
+                                            ],
+                                            "@nid"
+                                          ]
+                                        ],
+                                        [
+                                          "and",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@w",
+                                              "from"
+                                            ],
+                                            "@nid"
+                                          ],
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@w",
+                                              "to"
+                                            ],
+                                            "@entity.cur"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "if",
+                                [
+                                  "==",
+                                  [
+                                    "array/len",
+                                    "@matches"
+                                  ],
+                                  0.0
+                                ],
+                                "@dcur",
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "ww",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@matches"
+                                        ],
+                                        "w"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "<",
+                                      [
+                                        "+",
+                                        "@entity.distU",
+                                        "@ww"
+                                      ],
+                                      "@dcur"
+                                    ],
+                                    [
+                                      "+",
+                                      "@entity.distU",
+                                      "@ww"
+                                    ],
+                                    "@dcur"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.nodes",
+                  [
+                    "array/map",
+                    "@entity.nodes",
+                    [
+                      "fn",
+                      "nd",
+                      [
+                        "let",
+                        [
+                          [
+                            "nid",
+                            [
+                              "object/get",
+                              "@nd",
+                              "id"
+                            ]
+                          ]
+                        ],
+                        [
+                          "object/merge",
+                          "@nd",
+                          {
+                            "color": [
+                              "if",
+                              [
+                                "and",
+                                [
+                                  "==",
+                                  "@nid",
+                                  "@entity.goal"
+                                ],
+                                [
+                                  "not",
+                                  [
+                                    "array/includes",
+                                    "@entity.visited",
+                                    "@entity.goal"
+                                  ]
+                                ]
+                              ],
+                              "#ef4444",
+                              [
+                                "if",
+                                [
+                                  "==",
+                                  "@nid",
+                                  "@entity.cur"
+                                ],
+                                "#3b82f6",
+                                [
+                                  "if",
+                                  [
+                                    "array/includes",
+                                    "@entity.visited",
+                                    "@nid"
+                                  ],
+                                  "#22c55e",
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "grec",
+                                        [
+                                          "array/first",
+                                          [
+                                            "array/filter",
+                                            "@entity.gscore",
+                                            [
+                                              "fn",
+                                              "gs",
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "@gs",
+                                                  "id"
+                                                ],
+                                                "@nid"
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "<",
+                                        [
+                                          "object/get",
+                                          "@grec",
+                                          "d"
+                                        ],
+                                        9999.0
+                                      ],
+                                      "#f59e0b",
+                                      "#64748b"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.done",
+                  [
+                    "==",
+                    "@entity.cur",
+                    "@entity.goal"
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "edges": "@entity.edges",
+                    "height": "@config.height",
+                    "nodes": "@entity.nodes",
+                    "type": "biology-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "NODES_UPDATED",
+                  {
+                    "edges": "@entity.edges",
+                    "nodes": "@entity.nodes"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                "@entity.running",
+                [
+                  "not",
+                  "@entity.done"
+                ]
+              ],
+              "interval": 500.0,
+              "name": "astarTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

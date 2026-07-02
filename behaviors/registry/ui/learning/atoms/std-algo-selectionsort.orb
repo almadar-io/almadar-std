@@ -1,0 +1,525 @@
+{
+  "description": "Selection-sort engine — one scan-compare or swap step per tick over a bar array on algorithm-canvas; composed by a learning orbital via `uses`.",
+  "name": "std-algo-selectionsort",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "bars",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "i",
+            "type": "number"
+          },
+          {
+            "default": 1.0,
+            "name": "j",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "m",
+            "type": "number"
+          },
+          {
+            "default": true,
+            "name": "scanning",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "done",
+            "type": "boolean"
+          },
+          {
+            "default": true,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "SelectionScene",
+        "persistence": "runtime"
+      },
+      "name": "SelectionSortEngineOrbital",
+      "pages": [
+        {
+          "name": "SelectionSortEnginePage",
+          "path": "/algo-selectionsort",
+          "traits": [
+            {
+              "ref": "SelectionSortSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bars": {
+              "default": [
+                {
+                  "color": "#3b82f6",
+                  "label": "5",
+                  "value": 5.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "2",
+                  "value": 2.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "8",
+                  "value": 8.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "1",
+                  "value": 1.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "9",
+                  "value": 9.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "3",
+                  "value": 3.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "7",
+                  "value": 7.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "4",
+                  "value": 4.0
+                }
+              ],
+              "description": "Initial unsorted array; each bar's height is proportional to its value.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bars",
+              "tier": "domain",
+              "type": "[AlgoBar]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick performs one scan-compare or swap step; toggle to start/pause the sort.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current bar array each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone.",
+              "event": "BARS_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "bars",
+                  "type": "[AlgoBar]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw, compare, select, swap",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "bars",
+              "done",
+              "i",
+              "j",
+              "m",
+              "running",
+              "scanning"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "SelectionScene",
+          "name": "SelectionSortSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current bar array each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone.",
+                "key": "BARS_UPDATED",
+                "name": "Bars Updated",
+                "payloadSchema": [
+                  {
+                    "name": "bars",
+                    "type": "[AlgoBar]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw, compare, select, swap",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bars",
+                    "@config.bars"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "bars": "@entity.bars",
+                      "height": "@config.height",
+                      "type": "algorithm-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BARS_UPDATED",
+                    {
+                      "bars": "@entity.bars"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.scanning",
+                  [
+                    "<",
+                    "@entity.j",
+                    [
+                      "array/len",
+                      "@entity.bars"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.bars",
+                  [
+                    "let",
+                    [
+                      [
+                        "a",
+                        [
+                          "array/nth",
+                          "@entity.bars",
+                          "@entity.i"
+                        ]
+                      ],
+                      [
+                        "b",
+                        [
+                          "array/nth",
+                          "@entity.bars",
+                          "@entity.m"
+                        ]
+                      ]
+                    ],
+                    [
+                      "array/map",
+                      "@entity.bars",
+                      [
+                        "object/merge",
+                        "@item",
+                        {
+                          "color": [
+                            "if",
+                            [
+                              "<",
+                              "@index",
+                              "@entity.i"
+                            ],
+                            "#22c55e",
+                            [
+                              "if",
+                              [
+                                "==",
+                                "@index",
+                                "@entity.m"
+                              ],
+                              "#f59e0b",
+                              [
+                                "if",
+                                [
+                                  "==",
+                                  "@index",
+                                  "@entity.j"
+                                ],
+                                "#a855f7",
+                                "#3b82f6"
+                              ]
+                            ]
+                          ],
+                          "value": [
+                            "if",
+                            [
+                              "and",
+                              [
+                                "not",
+                                "@entity.scanning"
+                              ],
+                              [
+                                "==",
+                                "@index",
+                                "@entity.i"
+                              ]
+                            ],
+                            [
+                              "object/get",
+                              "@b",
+                              "value"
+                            ],
+                            [
+                              "if",
+                              [
+                                "and",
+                                [
+                                  "not",
+                                  "@entity.scanning"
+                                ],
+                                [
+                                  "==",
+                                  "@index",
+                                  "@entity.m"
+                                ]
+                              ],
+                              [
+                                "object/get",
+                                "@a",
+                                "value"
+                              ],
+                              [
+                                "object/get",
+                                "@item",
+                                "value"
+                              ]
+                            ]
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.m",
+                  [
+                    "if",
+                    "@entity.scanning",
+                    [
+                      "if",
+                      [
+                        "<",
+                        [
+                          "object/get",
+                          [
+                            "array/nth",
+                            "@entity.bars",
+                            "@entity.j"
+                          ],
+                          "value"
+                        ],
+                        [
+                          "object/get",
+                          [
+                            "array/nth",
+                            "@entity.bars",
+                            "@entity.m"
+                          ],
+                          "value"
+                        ]
+                      ],
+                      "@entity.j",
+                      "@entity.m"
+                    ],
+                    [
+                      "+",
+                      "@entity.i",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.i",
+                  [
+                    "if",
+                    "@entity.scanning",
+                    "@entity.i",
+                    [
+                      "+",
+                      "@entity.i",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.j",
+                  [
+                    "if",
+                    "@entity.scanning",
+                    [
+                      "+",
+                      "@entity.j",
+                      1.0
+                    ],
+                    [
+                      "+",
+                      "@entity.i",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.done",
+                  [
+                    ">=",
+                    "@entity.i",
+                    [
+                      "-",
+                      [
+                        "array/len",
+                        "@entity.bars"
+                      ],
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "bars": "@entity.bars",
+                    "height": "@config.height",
+                    "type": "algorithm-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "BARS_UPDATED",
+                  {
+                    "bars": "@entity.bars"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                "@entity.running",
+                [
+                  "not",
+                  "@entity.done"
+                ]
+              ],
+              "interval": 300.0,
+              "name": "selectionTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

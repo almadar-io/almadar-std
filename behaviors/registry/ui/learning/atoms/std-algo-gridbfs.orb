@@ -1,0 +1,1594 @@
+{
+  "description": "Grid BFS wavefront — each tick dequeues one open cell and enqueues its non-wall 4-neighbours, expanding toward the target on algorithm-canvas cells.",
+  "name": "std-algo-gridbfs",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "col": {
+                  "name": "col",
+                  "required": true,
+                  "type": "number"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "number"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "row": {
+                  "name": "row",
+                  "required": true,
+                  "type": "number"
+                },
+                "value": {
+                  "name": "value",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "cells",
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "number"
+            },
+            "name": "queue",
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "number"
+            },
+            "name": "seen",
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "number"
+            },
+            "name": "visited",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "cur",
+            "type": "number"
+          },
+          {
+            "items": {
+              "type": "number"
+            },
+            "name": "newIds",
+            "type": "array"
+          },
+          {
+            "default": false,
+            "name": "done",
+            "type": "boolean"
+          },
+          {
+            "default": true,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "GridBfsScene",
+        "persistence": "runtime"
+      },
+      "name": "GridBfsEngineOrbital",
+      "pages": [
+        {
+          "name": "GridBfsEnginePage",
+          "path": "/algo-gridbfs",
+          "traits": [
+            {
+              "ref": "GridBfsSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#0f172a",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "cells": {
+              "default": [
+                {
+                  "col": 0.0,
+                  "color": "#3b82f6",
+                  "id": 0.0,
+                  "label": "",
+                  "row": 0.0,
+                  "value": 2.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#334155",
+                  "id": 1.0,
+                  "label": "",
+                  "row": 0.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#334155",
+                  "id": 2.0,
+                  "label": "",
+                  "row": 0.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#334155",
+                  "id": 3.0,
+                  "label": "",
+                  "row": 0.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#334155",
+                  "id": 4.0,
+                  "label": "",
+                  "row": 0.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 5.0,
+                  "label": "",
+                  "row": 0.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#334155",
+                  "id": 6.0,
+                  "label": "",
+                  "row": 0.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#334155",
+                  "id": 7.0,
+                  "label": "",
+                  "row": 0.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#334155",
+                  "id": 8.0,
+                  "label": "",
+                  "row": 0.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#334155",
+                  "id": 9.0,
+                  "label": "",
+                  "row": 0.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#334155",
+                  "id": 10.0,
+                  "label": "",
+                  "row": 0.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 11.0,
+                  "color": "#334155",
+                  "id": 11.0,
+                  "label": "",
+                  "row": 0.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#334155",
+                  "id": 12.0,
+                  "label": "",
+                  "row": 1.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#334155",
+                  "id": 13.0,
+                  "label": "",
+                  "row": 1.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#334155",
+                  "id": 14.0,
+                  "label": "",
+                  "row": 1.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#334155",
+                  "id": 15.0,
+                  "label": "",
+                  "row": 1.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#334155",
+                  "id": 16.0,
+                  "label": "",
+                  "row": 1.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 17.0,
+                  "label": "",
+                  "row": 1.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#334155",
+                  "id": 18.0,
+                  "label": "",
+                  "row": 1.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#334155",
+                  "id": 19.0,
+                  "label": "",
+                  "row": 1.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#334155",
+                  "id": 20.0,
+                  "label": "",
+                  "row": 1.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#334155",
+                  "id": 21.0,
+                  "label": "",
+                  "row": 1.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#334155",
+                  "id": 22.0,
+                  "label": "",
+                  "row": 1.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 11.0,
+                  "color": "#334155",
+                  "id": 23.0,
+                  "label": "",
+                  "row": 1.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#334155",
+                  "id": 24.0,
+                  "label": "",
+                  "row": 2.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#334155",
+                  "id": 25.0,
+                  "label": "",
+                  "row": 2.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#334155",
+                  "id": 26.0,
+                  "label": "",
+                  "row": 2.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#334155",
+                  "id": 27.0,
+                  "label": "",
+                  "row": 2.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#334155",
+                  "id": 28.0,
+                  "label": "",
+                  "row": 2.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 29.0,
+                  "label": "",
+                  "row": 2.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#334155",
+                  "id": 30.0,
+                  "label": "",
+                  "row": 2.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#334155",
+                  "id": 31.0,
+                  "label": "",
+                  "row": 2.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#334155",
+                  "id": 32.0,
+                  "label": "",
+                  "row": 2.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#334155",
+                  "id": 33.0,
+                  "label": "",
+                  "row": 2.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#334155",
+                  "id": 34.0,
+                  "label": "",
+                  "row": 2.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 11.0,
+                  "color": "#334155",
+                  "id": 35.0,
+                  "label": "",
+                  "row": 2.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#334155",
+                  "id": 36.0,
+                  "label": "",
+                  "row": 3.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#334155",
+                  "id": 37.0,
+                  "label": "",
+                  "row": 3.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#334155",
+                  "id": 38.0,
+                  "label": "",
+                  "row": 3.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#334155",
+                  "id": 39.0,
+                  "label": "",
+                  "row": 3.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#334155",
+                  "id": 40.0,
+                  "label": "",
+                  "row": 3.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 41.0,
+                  "label": "",
+                  "row": 3.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#334155",
+                  "id": 42.0,
+                  "label": "",
+                  "row": 3.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#334155",
+                  "id": 43.0,
+                  "label": "",
+                  "row": 3.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 44.0,
+                  "label": "",
+                  "row": 3.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#334155",
+                  "id": 45.0,
+                  "label": "",
+                  "row": 3.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#334155",
+                  "id": 46.0,
+                  "label": "",
+                  "row": 3.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 11.0,
+                  "color": "#334155",
+                  "id": 47.0,
+                  "label": "",
+                  "row": 3.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#334155",
+                  "id": 48.0,
+                  "label": "",
+                  "row": 4.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#334155",
+                  "id": 49.0,
+                  "label": "",
+                  "row": 4.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#334155",
+                  "id": 50.0,
+                  "label": "",
+                  "row": 4.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#334155",
+                  "id": 51.0,
+                  "label": "",
+                  "row": 4.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#334155",
+                  "id": 52.0,
+                  "label": "",
+                  "row": 4.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 53.0,
+                  "label": "",
+                  "row": 4.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#334155",
+                  "id": 54.0,
+                  "label": "",
+                  "row": 4.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#334155",
+                  "id": 55.0,
+                  "label": "",
+                  "row": 4.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 56.0,
+                  "label": "",
+                  "row": 4.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#334155",
+                  "id": 57.0,
+                  "label": "",
+                  "row": 4.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#334155",
+                  "id": 58.0,
+                  "label": "",
+                  "row": 4.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 11.0,
+                  "color": "#334155",
+                  "id": 59.0,
+                  "label": "",
+                  "row": 4.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#334155",
+                  "id": 60.0,
+                  "label": "",
+                  "row": 5.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#334155",
+                  "id": 61.0,
+                  "label": "",
+                  "row": 5.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#334155",
+                  "id": 62.0,
+                  "label": "",
+                  "row": 5.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#334155",
+                  "id": 63.0,
+                  "label": "",
+                  "row": 5.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#334155",
+                  "id": 64.0,
+                  "label": "",
+                  "row": 5.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 65.0,
+                  "label": "",
+                  "row": 5.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#334155",
+                  "id": 66.0,
+                  "label": "",
+                  "row": 5.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#334155",
+                  "id": 67.0,
+                  "label": "",
+                  "row": 5.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 68.0,
+                  "label": "",
+                  "row": 5.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#334155",
+                  "id": 69.0,
+                  "label": "",
+                  "row": 5.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#334155",
+                  "id": 70.0,
+                  "label": "",
+                  "row": 5.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 11.0,
+                  "color": "#334155",
+                  "id": 71.0,
+                  "label": "",
+                  "row": 5.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#334155",
+                  "id": 72.0,
+                  "label": "",
+                  "row": 6.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#334155",
+                  "id": 73.0,
+                  "label": "",
+                  "row": 6.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#334155",
+                  "id": 74.0,
+                  "label": "",
+                  "row": 6.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#334155",
+                  "id": 75.0,
+                  "label": "",
+                  "row": 6.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#334155",
+                  "id": 76.0,
+                  "label": "",
+                  "row": 6.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 77.0,
+                  "label": "",
+                  "row": 6.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#334155",
+                  "id": 78.0,
+                  "label": "",
+                  "row": 6.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#334155",
+                  "id": 79.0,
+                  "label": "",
+                  "row": 6.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 80.0,
+                  "label": "",
+                  "row": 6.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#334155",
+                  "id": 81.0,
+                  "label": "",
+                  "row": 6.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#334155",
+                  "id": 82.0,
+                  "label": "",
+                  "row": 6.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 11.0,
+                  "color": "#334155",
+                  "id": 83.0,
+                  "label": "",
+                  "row": 6.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#334155",
+                  "id": 84.0,
+                  "label": "",
+                  "row": 7.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#334155",
+                  "id": 85.0,
+                  "label": "",
+                  "row": 7.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#334155",
+                  "id": 86.0,
+                  "label": "",
+                  "row": 7.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#334155",
+                  "id": 87.0,
+                  "label": "",
+                  "row": 7.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#334155",
+                  "id": 88.0,
+                  "label": "",
+                  "row": 7.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#334155",
+                  "id": 89.0,
+                  "label": "",
+                  "row": 7.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#334155",
+                  "id": 90.0,
+                  "label": "",
+                  "row": 7.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#334155",
+                  "id": 91.0,
+                  "label": "",
+                  "row": 7.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 92.0,
+                  "label": "",
+                  "row": 7.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#334155",
+                  "id": 93.0,
+                  "label": "",
+                  "row": 7.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#334155",
+                  "id": 94.0,
+                  "label": "",
+                  "row": 7.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 11.0,
+                  "color": "#334155",
+                  "id": 95.0,
+                  "label": "",
+                  "row": 7.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#334155",
+                  "id": 96.0,
+                  "label": "",
+                  "row": 8.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#334155",
+                  "id": 97.0,
+                  "label": "",
+                  "row": 8.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#334155",
+                  "id": 98.0,
+                  "label": "",
+                  "row": 8.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#334155",
+                  "id": 99.0,
+                  "label": "",
+                  "row": 8.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#334155",
+                  "id": 100.0,
+                  "label": "",
+                  "row": 8.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#334155",
+                  "id": 101.0,
+                  "label": "",
+                  "row": 8.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#334155",
+                  "id": 102.0,
+                  "label": "",
+                  "row": 8.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#334155",
+                  "id": 103.0,
+                  "label": "",
+                  "row": 8.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 104.0,
+                  "label": "",
+                  "row": 8.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#334155",
+                  "id": 105.0,
+                  "label": "",
+                  "row": 8.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#334155",
+                  "id": 106.0,
+                  "label": "",
+                  "row": 8.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 11.0,
+                  "color": "#334155",
+                  "id": 107.0,
+                  "label": "",
+                  "row": 8.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#334155",
+                  "id": 108.0,
+                  "label": "",
+                  "row": 9.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#334155",
+                  "id": 109.0,
+                  "label": "",
+                  "row": 9.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#334155",
+                  "id": 110.0,
+                  "label": "",
+                  "row": 9.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#334155",
+                  "id": 111.0,
+                  "label": "",
+                  "row": 9.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#334155",
+                  "id": 112.0,
+                  "label": "",
+                  "row": 9.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#334155",
+                  "id": 113.0,
+                  "label": "",
+                  "row": 9.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#334155",
+                  "id": 114.0,
+                  "label": "",
+                  "row": 9.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#334155",
+                  "id": 115.0,
+                  "label": "",
+                  "row": 9.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 116.0,
+                  "label": "",
+                  "row": 9.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#334155",
+                  "id": 117.0,
+                  "label": "",
+                  "row": 9.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#334155",
+                  "id": 118.0,
+                  "label": "",
+                  "row": 9.0,
+                  "value": 0.0
+                },
+                {
+                  "col": 11.0,
+                  "color": "#ef4444",
+                  "id": 119.0,
+                  "label": "",
+                  "row": 9.0,
+                  "value": 3.0
+                }
+              ],
+              "description": "The initial grid; value 0 = open, 1 = wall, 2 = start, 3 = target.",
+              "items": {
+                "properties": {
+                  "col": {
+                    "name": "col",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "row": {
+                    "name": "row",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Cells",
+              "tier": "domain",
+              "type": "[AlgoCell]"
+            },
+            "height": {
+              "default": 600.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick expands the wavefront one cell per step; toggle to start/pause.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "startId": {
+              "default": 0.0,
+              "description": "Id (row*cols+col) of the cell BFS starts from.",
+              "label": "Start Cell",
+              "tier": "domain",
+              "type": "number"
+            },
+            "targetId": {
+              "default": 119.0,
+              "description": "Id (row*cols+col) of the goal; BFS stops when its wavefront reaches it.",
+              "label": "Target Cell",
+              "tier": "domain",
+              "type": "number"
+            },
+            "width": {
+              "default": 720.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The grid each step — a composed listener can subscribe; a harmless no-op standalone.",
+              "event": "CELLS_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "cells",
+                  "type": "[AlgoCell]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, wavefront, traverse",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "cells",
+              "cur",
+              "done",
+              "newIds",
+              "queue",
+              "running",
+              "seen",
+              "visited"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "GridBfsScene",
+          "name": "GridBfsSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The grid each step — a composed listener can subscribe; a harmless no-op standalone.",
+                "key": "CELLS_UPDATED",
+                "name": "Cells Updated",
+                "payloadSchema": [
+                  {
+                    "name": "cells",
+                    "type": "[AlgoCell]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, wavefront, traverse",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cells",
+                    "@config.cells"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "set",
+                    "@entity.queue",
+                    [
+                      "@config.startId"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.seen",
+                    [
+                      "@config.startId"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.visited",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.done",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "cells": "@entity.cells",
+                      "height": "@config.height",
+                      "type": "algorithm-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "CELLS_UPDATED",
+                    {
+                      "cells": "@entity.cells"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.cur",
+                  [
+                    "array/first",
+                    "@entity.queue"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.newIds",
+                  [
+                    "let",
+                    [
+                      [
+                        "curcell",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@entity.cells",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@item",
+                                "id"
+                              ],
+                              "@entity.cur"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "cr",
+                          [
+                            "object/get",
+                            "@curcell",
+                            "row"
+                          ]
+                        ],
+                        [
+                          "cc",
+                          [
+                            "object/get",
+                            "@curcell",
+                            "col"
+                          ]
+                        ]
+                      ],
+                      [
+                        "array/map",
+                        [
+                          "array/filter",
+                          "@entity.cells",
+                          [
+                            "and",
+                            [
+                              "==",
+                              [
+                                "+",
+                                [
+                                  "math/abs",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@item",
+                                      "row"
+                                    ],
+                                    "@cr"
+                                  ]
+                                ],
+                                [
+                                  "math/abs",
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      "@item",
+                                      "col"
+                                    ],
+                                    "@cc"
+                                  ]
+                                ]
+                              ],
+                              1.0
+                            ],
+                            [
+                              "and",
+                              [
+                                "not",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    "@item",
+                                    "value"
+                                  ],
+                                  1.0
+                                ]
+                              ],
+                              [
+                                "not",
+                                [
+                                  "array/includes",
+                                  "@entity.seen",
+                                  [
+                                    "object/get",
+                                    "@item",
+                                    "id"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "object/get",
+                          "@item",
+                          "id"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.visited",
+                  [
+                    "array/append",
+                    "@entity.visited",
+                    "@entity.cur"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.seen",
+                  [
+                    "array/concat",
+                    "@entity.seen",
+                    "@entity.newIds"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.queue",
+                  [
+                    "array/concat",
+                    [
+                      "array/drop",
+                      "@entity.queue",
+                      1.0
+                    ],
+                    "@entity.newIds"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.done",
+                  [
+                    "or",
+                    [
+                      "==",
+                      [
+                        "array/len",
+                        "@entity.queue"
+                      ],
+                      0.0
+                    ],
+                    [
+                      "array/includes",
+                      "@entity.visited",
+                      "@config.targetId"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.cells",
+                  [
+                    "array/map",
+                    "@entity.cells",
+                    [
+                      "object/merge",
+                      "@item",
+                      {
+                        "color": [
+                          "if",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              "@item",
+                              "value"
+                            ],
+                            1.0
+                          ],
+                          "#0f172a",
+                          [
+                            "if",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@item",
+                                "id"
+                              ],
+                              "@config.startId"
+                            ],
+                            "#3b82f6",
+                            [
+                              "if",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@item",
+                                  "id"
+                                ],
+                                "@config.targetId"
+                              ],
+                              [
+                                "if",
+                                [
+                                  "array/includes",
+                                  "@entity.visited",
+                                  [
+                                    "object/get",
+                                    "@item",
+                                    "id"
+                                  ]
+                                ],
+                                "#22c55e",
+                                "#ef4444"
+                              ],
+                              [
+                                "if",
+                                [
+                                  "array/includes",
+                                  "@entity.visited",
+                                  [
+                                    "object/get",
+                                    "@item",
+                                    "id"
+                                  ]
+                                ],
+                                "#22c55e",
+                                [
+                                  "if",
+                                  [
+                                    "array/includes",
+                                    "@entity.seen",
+                                    [
+                                      "object/get",
+                                      "@item",
+                                      "id"
+                                    ]
+                                  ],
+                                  "#f59e0b",
+                                  "#334155"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "cells": "@entity.cells",
+                    "height": "@config.height",
+                    "type": "algorithm-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "CELLS_UPDATED",
+                  {
+                    "cells": "@entity.cells"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                "@entity.running",
+                [
+                  "not",
+                  "@entity.done"
+                ]
+              ],
+              "interval": 300.0,
+              "name": "bfsTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

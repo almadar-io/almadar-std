@@ -1,0 +1,144 @@
+app std-algo-toposort "1.0.0"
+"Topological sort engine (Kahn) — each tick emits the first node whose predecessors are all ordered, recolours the DAG on biology-canvas."
+orbital ToposortEngineOrbital {
+  type GraphNode = {
+    id : string!
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    kind : "cell" | "organelle" | "molecule" | "organism"
+  }
+  type GraphEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+
+  entity ToposortScene [runtime] {
+    id : string!
+    nodes : [GraphNode]
+    edges : [GraphEdge]
+    order : [string]
+    ready : [string]
+    cur : string = ""
+    done : boolean = false
+    running : boolean = true
+  }
+
+  trait ToposortSim -> @rebindable ToposortScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.nodes @config.nodes)
+        (set @entity.edges @config.edges)
+        (set @entity.running @config.running)
+        (set @entity.order [])
+        (set @entity.ready [])
+        (set @entity.cur "")
+        (render-ui main {
+          type: biology-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          nodes: @entity.nodes
+          edges: @entity.edges
+        })
+        (emit NODES_UPDATED { nodes: @entity.nodes, edges: @entity.edges })
+    }
+
+    ticks {
+      topoTick every 400ms
+        when (and @entity.running (not @entity.done))
+        (set @entity.ready
+          (array/map
+            (array/filter @entity.nodes
+              (let ( (nid (object/get @item id)) )
+              (and
+                (not (array/includes @entity.order @nid))
+                (== (array/len
+                      (array/filter
+                        (array/map
+                          (array/filter @entity.edges (== (object/get @item to) @nid))
+                          (object/get @item from))
+                        (not (array/includes @entity.order @item))))
+                    0))))
+            (object/get @item id)))
+        (set @entity.cur (array/first @entity.ready))
+        (set @entity.order (array/append @entity.order @entity.cur))
+        (set @entity.done (== (array/len @entity.order) (array/len @entity.nodes)))
+        (set @entity.nodes
+          (array/map @entity.nodes
+            (object/merge @item {
+              color: (if (array/includes @entity.order (object/get @item id)) "#22c55e"
+                       (if (array/includes @entity.ready (object/get @item id)) "#f59e0b"
+                         "#cbd5e1"))
+            })))
+        (render-ui main {
+          type: biology-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          nodes: @entity.nodes
+          edges: @entity.edges
+        })
+        (emit NODES_UPDATED { nodes: @entity.nodes, edges: @entity.edges })
+    }
+
+    emits {
+      NODES_UPDATED -> external {
+        nodes : [GraphNode]
+        edges : [GraphEdge]
+      }
+        @description "The graph each step — a composed listener can subscribe; a harmless no-op standalone."
+        @synonyms "tick, frame, step, emit, order, sort"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick emits one ready node per step; toggle to start/pause the sort."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      nodes : [GraphNode] = [
+        { id: "A", x: 150, y: 60, radius: 20, color: "#cbd5e1", label: "A", kind: cell },
+        { id: "B", x: 450, y: 60, radius: 20, color: "#cbd5e1", label: "B", kind: cell },
+        { id: "C", x: 300, y: 170, radius: 20, color: "#cbd5e1", label: "C", kind: cell },
+        { id: "D", x: 180, y: 270, radius: 20, color: "#cbd5e1", label: "D", kind: cell },
+        { id: "E", x: 420, y: 270, radius: 20, color: "#cbd5e1", label: "E", kind: cell },
+        { id: "F", x: 300, y: 360, radius: 20, color: "#cbd5e1", label: "F", kind: cell }
+      ]
+        @label "Nodes"
+        @description "DAG vertices; toposort recolours them slate→amber(ready)→green(ordered)."
+        @tier "domain"
+      edges : [GraphEdge] = [
+        { from: "A", to: "C", color: "#9ca3af", label: "" },
+        { from: "B", to: "C", color: "#9ca3af", label: "" },
+        { from: "C", to: "D", color: "#9ca3af", label: "" },
+        { from: "C", to: "E", color: "#9ca3af", label: "" },
+        { from: "D", to: "F", color: "#9ca3af", label: "" },
+        { from: "E", to: "F", color: "#9ca3af", label: "" }
+      ]
+        @label "Edges"
+        @description "Directed acyclic edges from→to; a node is ready once every predecessor is ordered."
+        @tier "domain"
+    }
+  }
+
+  page "/algo-toposort" as ToposortEnginePage -> ToposortSim
+}

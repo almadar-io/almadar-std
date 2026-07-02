@@ -1,0 +1,267 @@
+app std-algo-mazegen "1.0.0"
+"Randomized-DFS maze carving — each tick carves to a random unvisited room two cells away or backtracks, on cells."
+orbital MazeGenEngineOrbital {
+  type AlgoCell = {
+    id : number!
+    row : number!
+    col : number!
+    value : number
+    color : string
+    label : string
+    room : number
+  }
+
+  entity MazeScene [runtime] {
+    id : string!
+    cells : [AlgoCell]
+    stack : [number]
+    visited : [number]
+    cur : number = 0
+    picked : number = -1
+    done : boolean = false
+    running : boolean = true
+  }
+
+  trait MazeGenSim -> @rebindable MazeScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.cells
+          (array/map @config.cells
+            (if (== (object/get @item id) @config.startId)
+              (object/merge @item { value: 0, color: "#f59e0b" })
+              @item)))
+        (set @entity.running @config.running)
+        (set @entity.stack [@config.startId])
+        (set @entity.visited [@config.startId])
+        (set @entity.cur @config.startId)
+        (set @entity.picked -1)
+        (set @entity.done false)
+        (render-ui main {
+          type: algorithm-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          cells: @entity.cells
+        })
+        (emit CELLS_UPDATED { cells: @entity.cells })
+    }
+
+    ticks {
+      mazeTick every 200ms
+        when (and @entity.running (not @entity.done))
+        (set @entity.cur (array/last @entity.stack))
+        (set @entity.picked
+          (let ( (curcell (array/first (array/filter @entity.cells (== (object/get @item id) @entity.cur)))) )
+          (let ( (cr (object/get @curcell row)) (cc (object/get @curcell col)) )
+          (let ( (cands (array/map
+                          (array/filter @entity.cells
+                            (and (== (object/get @item room) 1)
+                              (and (== (+ (math/abs (- (object/get @item row) @cr)) (math/abs (- (object/get @item col) @cc))) 2)
+                                (not (array/includes @entity.visited (object/get @item id))))))
+                          (object/get @item id))) )
+          (if (== (array/len @cands) 0)
+            -1
+            (array/nth @cands (math/floor (* (math/random) (array/len @cands)))))))))
+        (set @entity.stack
+          (if (>= @entity.picked 0)
+            (array/append @entity.stack @entity.picked)
+            (array/dropLast @entity.stack 1)))
+        (set @entity.visited
+          (if (>= @entity.picked 0)
+            (array/append @entity.visited @entity.picked)
+            @entity.visited))
+        (set @entity.cells
+          (if (>= @entity.picked 0)
+            (let ( (curcell (array/first (array/filter @entity.cells (== (object/get @item id) @entity.cur))))
+                   (pcell (array/first (array/filter @entity.cells (== (object/get @item id) @entity.picked)))) )
+            (let ( (cr (object/get @curcell row)) (cc (object/get @curcell col))
+                   (pr (object/get @pcell row)) (pc (object/get @pcell col)) )
+            (array/map @entity.cells
+              (if (or (== (object/get @item id) @entity.picked)
+                    (and (== (+ (math/abs (- (object/get @item row) @cr)) (math/abs (- (object/get @item col) @cc))) 1)
+                      (== (+ (math/abs (- (object/get @item row) @pr)) (math/abs (- (object/get @item col) @pc))) 1)))
+                (object/merge @item { value: 0 })
+                @item))))
+            @entity.cells))
+        (set @entity.cells
+          (array/map @entity.cells
+            (object/merge @item {
+              color: (if (== (object/get @item value) 1) "#0f172a"
+                       (if (== (object/get @item id) @entity.cur) "#f59e0b"
+                         (if (and (== (object/get @item room) 1) (array/includes @entity.visited (object/get @item id))) "#22c55e"
+                           "#94a3b8")))
+            })))
+        (set @entity.done (== (array/len @entity.stack) 0))
+        (render-ui main {
+          type: algorithm-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          cells: @entity.cells
+        })
+        (emit CELLS_UPDATED { cells: @entity.cells })
+    }
+
+    emits {
+      CELLS_UPDATED -> external {
+        cells : [AlgoCell]
+      }
+        @description "The grid each carve step — a composed listener can subscribe; a harmless no-op standalone."
+        @synonyms "tick, frame, step, carve, maze"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick carves one room per step; toggle to start/pause."
+        @tier "domain"
+      startId : number = 0
+        @label "Start Room"
+        @description "Id (row*cols+col) of the even/even room cell the carve starts from."
+        @tier "domain"
+      width : number = 660
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 660
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#0f172a"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      cells : [AlgoCell] = [
+        { id: 0, row: 0, col: 0, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 1, row: 0, col: 1, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 2, row: 0, col: 2, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 3, row: 0, col: 3, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 4, row: 0, col: 4, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 5, row: 0, col: 5, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 6, row: 0, col: 6, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 7, row: 0, col: 7, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 8, row: 0, col: 8, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 9, row: 0, col: 9, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 10, row: 0, col: 10, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 11, row: 1, col: 0, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 12, row: 1, col: 1, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 13, row: 1, col: 2, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 14, row: 1, col: 3, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 15, row: 1, col: 4, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 16, row: 1, col: 5, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 17, row: 1, col: 6, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 18, row: 1, col: 7, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 19, row: 1, col: 8, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 20, row: 1, col: 9, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 21, row: 1, col: 10, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 22, row: 2, col: 0, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 23, row: 2, col: 1, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 24, row: 2, col: 2, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 25, row: 2, col: 3, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 26, row: 2, col: 4, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 27, row: 2, col: 5, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 28, row: 2, col: 6, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 29, row: 2, col: 7, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 30, row: 2, col: 8, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 31, row: 2, col: 9, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 32, row: 2, col: 10, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 33, row: 3, col: 0, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 34, row: 3, col: 1, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 35, row: 3, col: 2, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 36, row: 3, col: 3, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 37, row: 3, col: 4, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 38, row: 3, col: 5, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 39, row: 3, col: 6, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 40, row: 3, col: 7, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 41, row: 3, col: 8, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 42, row: 3, col: 9, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 43, row: 3, col: 10, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 44, row: 4, col: 0, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 45, row: 4, col: 1, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 46, row: 4, col: 2, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 47, row: 4, col: 3, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 48, row: 4, col: 4, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 49, row: 4, col: 5, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 50, row: 4, col: 6, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 51, row: 4, col: 7, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 52, row: 4, col: 8, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 53, row: 4, col: 9, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 54, row: 4, col: 10, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 55, row: 5, col: 0, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 56, row: 5, col: 1, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 57, row: 5, col: 2, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 58, row: 5, col: 3, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 59, row: 5, col: 4, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 60, row: 5, col: 5, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 61, row: 5, col: 6, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 62, row: 5, col: 7, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 63, row: 5, col: 8, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 64, row: 5, col: 9, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 65, row: 5, col: 10, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 66, row: 6, col: 0, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 67, row: 6, col: 1, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 68, row: 6, col: 2, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 69, row: 6, col: 3, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 70, row: 6, col: 4, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 71, row: 6, col: 5, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 72, row: 6, col: 6, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 73, row: 6, col: 7, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 74, row: 6, col: 8, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 75, row: 6, col: 9, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 76, row: 6, col: 10, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 77, row: 7, col: 0, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 78, row: 7, col: 1, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 79, row: 7, col: 2, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 80, row: 7, col: 3, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 81, row: 7, col: 4, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 82, row: 7, col: 5, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 83, row: 7, col: 6, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 84, row: 7, col: 7, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 85, row: 7, col: 8, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 86, row: 7, col: 9, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 87, row: 7, col: 10, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 88, row: 8, col: 0, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 89, row: 8, col: 1, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 90, row: 8, col: 2, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 91, row: 8, col: 3, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 92, row: 8, col: 4, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 93, row: 8, col: 5, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 94, row: 8, col: 6, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 95, row: 8, col: 7, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 96, row: 8, col: 8, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 97, row: 8, col: 9, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 98, row: 8, col: 10, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 99, row: 9, col: 0, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 100, row: 9, col: 1, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 101, row: 9, col: 2, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 102, row: 9, col: 3, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 103, row: 9, col: 4, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 104, row: 9, col: 5, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 105, row: 9, col: 6, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 106, row: 9, col: 7, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 107, row: 9, col: 8, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 108, row: 9, col: 9, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 109, row: 9, col: 10, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 110, row: 10, col: 0, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 111, row: 10, col: 1, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 112, row: 10, col: 2, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 113, row: 10, col: 3, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 114, row: 10, col: 4, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 115, row: 10, col: 5, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 116, row: 10, col: 6, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 117, row: 10, col: 7, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 118, row: 10, col: 8, value: 1, color: "#0f172a", label: "", room: 1 },
+        { id: 119, row: 10, col: 9, value: 1, color: "#0f172a", label: "", room: 0 },
+        { id: 120, row: 10, col: 10, value: 1, color: "#0f172a", label: "", room: 1 }
+      ]
+        @label "Cells"
+        @description "The 11x11 grid; value 1 = wall, 0 = passage; room = 1 on even/even room cells."
+        @tier "domain"
+    }
+  }
+
+  page "/algo-mazegen" as MazeGenEnginePage -> MazeGenSim
+}

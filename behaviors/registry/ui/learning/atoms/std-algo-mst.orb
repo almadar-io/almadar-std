@@ -1,0 +1,1120 @@
+{
+  "description": "Prim minimum-spanning-tree engine — each tick adds the lightest edge crossing the tree cut on biology-canvas.",
+  "name": "std-algo-mst",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "nodes",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "edges",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                },
+                "w": {
+                  "name": "w",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "wedges",
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "string"
+            },
+            "name": "inTree",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "treeEdges",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "minW",
+            "type": "number"
+          },
+          {
+            "default": "",
+            "name": "chosenFrom",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "chosenTo",
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "done",
+            "type": "boolean"
+          },
+          {
+            "default": true,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "MstScene",
+        "persistence": "runtime"
+      },
+      "name": "MstEngineOrbital",
+      "pages": [
+        {
+          "name": "MstEnginePage",
+          "path": "/algo-mst",
+          "traits": [
+            {
+              "ref": "MstSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "edges": {
+              "default": [
+                {
+                  "color": "#9ca3af",
+                  "from": "A",
+                  "label": "4",
+                  "to": "B"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "A",
+                  "label": "3",
+                  "to": "C"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "B",
+                  "label": "1",
+                  "to": "C"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "B",
+                  "label": "5",
+                  "to": "D"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "C",
+                  "label": "6",
+                  "to": "D"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "C",
+                  "label": "8",
+                  "to": "E"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "D",
+                  "label": "2",
+                  "to": "E"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "D",
+                  "label": "7",
+                  "to": "F"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "E",
+                  "label": "3",
+                  "to": "F"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "E",
+                  "label": "9",
+                  "to": "G"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "F",
+                  "label": "4",
+                  "to": "G"
+                }
+              ],
+              "description": "Rendered undirected edges (weight in label); tree edges recolour green as Prim picks them.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Edges",
+              "tier": "domain",
+              "type": "[GraphEdge]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "nodes": {
+              "default": [
+                {
+                  "color": "#22c55e",
+                  "id": "A",
+                  "kind": "cell",
+                  "label": "A",
+                  "radius": 20.0,
+                  "x": 300.0,
+                  "y": 60.0
+                },
+                {
+                  "color": "#64748b",
+                  "id": "B",
+                  "kind": "cell",
+                  "label": "B",
+                  "radius": 20.0,
+                  "x": 150.0,
+                  "y": 160.0
+                },
+                {
+                  "color": "#64748b",
+                  "id": "C",
+                  "kind": "cell",
+                  "label": "C",
+                  "radius": 20.0,
+                  "x": 450.0,
+                  "y": 160.0
+                },
+                {
+                  "color": "#64748b",
+                  "id": "D",
+                  "kind": "cell",
+                  "label": "D",
+                  "radius": 20.0,
+                  "x": 90.0,
+                  "y": 300.0
+                },
+                {
+                  "color": "#64748b",
+                  "id": "E",
+                  "kind": "cell",
+                  "label": "E",
+                  "radius": 20.0,
+                  "x": 240.0,
+                  "y": 300.0
+                },
+                {
+                  "color": "#64748b",
+                  "id": "F",
+                  "kind": "cell",
+                  "label": "F",
+                  "radius": 20.0,
+                  "x": 400.0,
+                  "y": 300.0
+                },
+                {
+                  "color": "#64748b",
+                  "id": "G",
+                  "kind": "cell",
+                  "label": "G",
+                  "radius": 20.0,
+                  "x": 520.0,
+                  "y": 300.0
+                }
+              ],
+              "description": "Graph vertices; Prim recolours them slate→green as they enter the spanning tree.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "name": "kind",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "cell",
+                      "organelle",
+                      "molecule",
+                      "organism"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Nodes",
+              "tier": "domain",
+              "type": "[GraphNode]"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick adds one tree edge per step; toggle to start/pause Prim's growth.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "start": {
+              "default": "A",
+              "description": "Id of the node Prim's tree grows from.",
+              "label": "Start Node",
+              "tier": "domain",
+              "type": "string"
+            },
+            "wedges": {
+              "default": [
+                {
+                  "from": "A",
+                  "to": "B",
+                  "w": 4.0
+                },
+                {
+                  "from": "A",
+                  "to": "C",
+                  "w": 3.0
+                },
+                {
+                  "from": "B",
+                  "to": "C",
+                  "w": 1.0
+                },
+                {
+                  "from": "B",
+                  "to": "D",
+                  "w": 5.0
+                },
+                {
+                  "from": "C",
+                  "to": "D",
+                  "w": 6.0
+                },
+                {
+                  "from": "C",
+                  "to": "E",
+                  "w": 8.0
+                },
+                {
+                  "from": "D",
+                  "to": "E",
+                  "w": 2.0
+                },
+                {
+                  "from": "D",
+                  "to": "F",
+                  "w": 7.0
+                },
+                {
+                  "from": "E",
+                  "to": "F",
+                  "w": 3.0
+                },
+                {
+                  "from": "E",
+                  "to": "G",
+                  "w": 9.0
+                },
+                {
+                  "from": "F",
+                  "to": "G",
+                  "w": 4.0
+                }
+              ],
+              "description": "Undirected weighted adjacency Prim scans for the lightest cut-crossing edge; one per drawn edge.",
+              "items": {
+                "properties": {
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "w": {
+                    "name": "w",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Weighted Edges",
+              "tier": "domain",
+              "type": "[WEdge]"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The graph each step — a composed listener can subscribe; a harmless no-op standalone.",
+              "event": "NODES_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "nodes",
+                  "type": "[GraphNode]"
+                },
+                {
+                  "name": "edges",
+                  "type": "[GraphEdge]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, spanning, tree, prim, cut",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "chosenFrom",
+              "chosenTo",
+              "done",
+              "edges",
+              "inTree",
+              "minW",
+              "nodes",
+              "running",
+              "treeEdges",
+              "wedges"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "MstScene",
+          "name": "MstSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The graph each step — a composed listener can subscribe; a harmless no-op standalone.",
+                "key": "NODES_UPDATED",
+                "name": "Nodes Updated",
+                "payloadSchema": [
+                  {
+                    "name": "nodes",
+                    "type": "[GraphNode]"
+                  },
+                  {
+                    "name": "edges",
+                    "type": "[GraphEdge]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, spanning, tree, prim, cut",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.nodes",
+                    "@config.nodes"
+                  ],
+                  [
+                    "set",
+                    "@entity.edges",
+                    "@config.edges"
+                  ],
+                  [
+                    "set",
+                    "@entity.wedges",
+                    "@config.wedges"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "set",
+                    "@entity.inTree",
+                    [
+                      "@config.start"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.treeEdges",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.minW",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.chosenFrom",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.chosenTo",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.done",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "edges": "@entity.edges",
+                      "height": "@config.height",
+                      "nodes": "@entity.nodes",
+                      "type": "biology-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "NODES_UPDATED",
+                    {
+                      "edges": "@entity.edges",
+                      "nodes": "@entity.nodes"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.minW",
+                  [
+                    "array/min",
+                    [
+                      "array/map",
+                      [
+                        "array/filter",
+                        "@entity.wedges",
+                        [
+                          "fn",
+                          "w",
+                          [
+                            "let",
+                            [
+                              [
+                                "inF",
+                                [
+                                  "array/includes",
+                                  "@entity.inTree",
+                                  [
+                                    "object/get",
+                                    "@w",
+                                    "from"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "inT",
+                                [
+                                  "array/includes",
+                                  "@entity.inTree",
+                                  [
+                                    "object/get",
+                                    "@w",
+                                    "to"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "or",
+                              [
+                                "and",
+                                "@inF",
+                                [
+                                  "not",
+                                  "@inT"
+                                ]
+                              ],
+                              [
+                                "and",
+                                [
+                                  "not",
+                                  "@inF"
+                                ],
+                                "@inT"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "w",
+                        [
+                          "object/get",
+                          "@w",
+                          "w"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.chosenFrom",
+                  [
+                    "object/get",
+                    [
+                      "array/first",
+                      [
+                        "array/filter",
+                        "@entity.wedges",
+                        [
+                          "fn",
+                          "w",
+                          [
+                            "let",
+                            [
+                              [
+                                "inF",
+                                [
+                                  "array/includes",
+                                  "@entity.inTree",
+                                  [
+                                    "object/get",
+                                    "@w",
+                                    "from"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "inT",
+                                [
+                                  "array/includes",
+                                  "@entity.inTree",
+                                  [
+                                    "object/get",
+                                    "@w",
+                                    "to"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "and",
+                              [
+                                "or",
+                                [
+                                  "and",
+                                  "@inF",
+                                  [
+                                    "not",
+                                    "@inT"
+                                  ]
+                                ],
+                                [
+                                  "and",
+                                  [
+                                    "not",
+                                    "@inF"
+                                  ],
+                                  "@inT"
+                                ]
+                              ],
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@w",
+                                  "w"
+                                ],
+                                "@entity.minW"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    "from"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.chosenTo",
+                  [
+                    "object/get",
+                    [
+                      "array/first",
+                      [
+                        "array/filter",
+                        "@entity.wedges",
+                        [
+                          "fn",
+                          "w",
+                          [
+                            "let",
+                            [
+                              [
+                                "inF",
+                                [
+                                  "array/includes",
+                                  "@entity.inTree",
+                                  [
+                                    "object/get",
+                                    "@w",
+                                    "from"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "inT",
+                                [
+                                  "array/includes",
+                                  "@entity.inTree",
+                                  [
+                                    "object/get",
+                                    "@w",
+                                    "to"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "and",
+                              [
+                                "or",
+                                [
+                                  "and",
+                                  "@inF",
+                                  [
+                                    "not",
+                                    "@inT"
+                                  ]
+                                ],
+                                [
+                                  "and",
+                                  [
+                                    "not",
+                                    "@inF"
+                                  ],
+                                  "@inT"
+                                ]
+                              ],
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@w",
+                                  "w"
+                                ],
+                                "@entity.minW"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    "to"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.treeEdges",
+                  [
+                    "array/append",
+                    "@entity.treeEdges",
+                    {
+                      "from": "@entity.chosenFrom",
+                      "to": "@entity.chosenTo"
+                    }
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.inTree",
+                  [
+                    "array/append",
+                    "@entity.inTree",
+                    [
+                      "if",
+                      [
+                        "array/includes",
+                        "@entity.inTree",
+                        "@entity.chosenFrom"
+                      ],
+                      "@entity.chosenTo",
+                      "@entity.chosenFrom"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.nodes",
+                  [
+                    "array/map",
+                    "@entity.nodes",
+                    [
+                      "fn",
+                      "nd",
+                      [
+                        "object/merge",
+                        "@nd",
+                        {
+                          "color": [
+                            "if",
+                            [
+                              "array/includes",
+                              "@entity.inTree",
+                              [
+                                "object/get",
+                                "@nd",
+                                "id"
+                              ]
+                            ],
+                            "#22c55e",
+                            "#64748b"
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.edges",
+                  [
+                    "array/map",
+                    "@entity.edges",
+                    [
+                      "fn",
+                      "ed",
+                      [
+                        "let",
+                        [
+                          [
+                            "ef",
+                            [
+                              "object/get",
+                              "@ed",
+                              "from"
+                            ]
+                          ],
+                          [
+                            "et",
+                            [
+                              "object/get",
+                              "@ed",
+                              "to"
+                            ]
+                          ]
+                        ],
+                        [
+                          "object/merge",
+                          "@ed",
+                          {
+                            "color": [
+                              "if",
+                              [
+                                "array/some",
+                                "@entity.treeEdges",
+                                [
+                                  "fn",
+                                  "te",
+                                  [
+                                    "or",
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@te",
+                                          "from"
+                                        ],
+                                        "@ef"
+                                      ],
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@te",
+                                          "to"
+                                        ],
+                                        "@et"
+                                      ]
+                                    ],
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@te",
+                                          "from"
+                                        ],
+                                        "@et"
+                                      ],
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@te",
+                                          "to"
+                                        ],
+                                        "@ef"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              "#22c55e",
+                              "#9ca3af"
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.done",
+                  [
+                    ">=",
+                    [
+                      "array/len",
+                      "@entity.inTree"
+                    ],
+                    [
+                      "array/len",
+                      "@entity.nodes"
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "edges": "@entity.edges",
+                    "height": "@config.height",
+                    "nodes": "@entity.nodes",
+                    "type": "biology-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "NODES_UPDATED",
+                  {
+                    "edges": "@entity.edges",
+                    "nodes": "@entity.nodes"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                "@entity.running",
+                [
+                  "not",
+                  "@entity.done"
+                ]
+              ],
+              "interval": 500.0,
+              "name": "mstTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

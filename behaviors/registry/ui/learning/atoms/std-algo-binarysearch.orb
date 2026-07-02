@@ -1,0 +1,594 @@
+{
+  "description": "Binary-search engine — one lo/hi/mid narrowing step per tick over a sorted bar array on algorithm-canvas; composed via `uses`.",
+  "name": "std-algo-binarysearch",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "bars",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "index": {
+                  "name": "index",
+                  "required": true,
+                  "type": "number"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "pointers",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "lo",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "hi",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "mid",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "cur",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "found",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "done",
+            "type": "boolean"
+          },
+          {
+            "default": true,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "BinarySearchScene",
+        "persistence": "runtime"
+      },
+      "name": "BinarySearchEngineOrbital",
+      "pages": [
+        {
+          "name": "BinarySearchEnginePage",
+          "path": "/algo-binarysearch",
+          "traits": [
+            {
+              "ref": "BinarySearchSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bars": {
+              "default": [
+                {
+                  "color": "#3b82f6",
+                  "label": "1",
+                  "value": 1.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "3",
+                  "value": 3.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "5",
+                  "value": 5.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "7",
+                  "value": 7.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "9",
+                  "value": 9.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "11",
+                  "value": 11.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "13",
+                  "value": 13.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "15",
+                  "value": 15.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "17",
+                  "value": 17.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "19",
+                  "value": 19.0
+                }
+              ],
+              "description": "Initial sorted array; each bar's height is proportional to its value.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bars",
+              "tier": "domain",
+              "type": "[AlgoBar]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick performs one narrowing step; toggle to start/pause the search.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "target": {
+              "default": 15.0,
+              "description": "The value being searched for in the sorted array.",
+              "label": "Target",
+              "tier": "domain",
+              "type": "number"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current bars + lo/hi/mid cursors each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone.",
+              "event": "RANGE_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "bars",
+                  "type": "[AlgoBar]"
+                },
+                {
+                  "name": "pointers",
+                  "type": "[AlgoPointer]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, narrow, compare, search",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "bars",
+              "cur",
+              "done",
+              "found",
+              "hi",
+              "lo",
+              "mid",
+              "pointers",
+              "running"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "BinarySearchScene",
+          "name": "BinarySearchSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current bars + lo/hi/mid cursors each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone.",
+                "key": "RANGE_UPDATED",
+                "name": "Range Updated",
+                "payloadSchema": [
+                  {
+                    "name": "bars",
+                    "type": "[AlgoBar]"
+                  },
+                  {
+                    "name": "pointers",
+                    "type": "[AlgoPointer]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, narrow, compare, search",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bars",
+                    "@config.bars"
+                  ],
+                  [
+                    "set",
+                    "@entity.lo",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.hi",
+                    [
+                      "-",
+                      [
+                        "array/len",
+                        "@config.bars"
+                      ],
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.mid",
+                    [
+                      "math/floor",
+                      [
+                        "/",
+                        [
+                          "-",
+                          [
+                            "array/len",
+                            "@config.bars"
+                          ],
+                          1.0
+                        ],
+                        2.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "set",
+                    "@entity.pointers",
+                    [
+                      {
+                        "color": "#2563eb",
+                        "index": "@entity.lo",
+                        "label": "lo"
+                      },
+                      {
+                        "color": "#dc2626",
+                        "index": "@entity.hi",
+                        "label": "hi"
+                      },
+                      {
+                        "color": "#f59e0b",
+                        "index": "@entity.mid",
+                        "label": "mid"
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "bars": "@entity.bars",
+                      "height": "@config.height",
+                      "pointers": "@entity.pointers",
+                      "type": "algorithm-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "RANGE_UPDATED",
+                    {
+                      "bars": "@entity.bars",
+                      "pointers": "@entity.pointers"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.cur",
+                  [
+                    "object/get",
+                    [
+                      "array/nth",
+                      "@entity.bars",
+                      "@entity.mid"
+                    ],
+                    "value"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.lo",
+                  [
+                    "if",
+                    [
+                      "<",
+                      "@entity.cur",
+                      "@config.target"
+                    ],
+                    [
+                      "+",
+                      "@entity.mid",
+                      1.0
+                    ],
+                    "@entity.lo"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.hi",
+                  [
+                    "if",
+                    [
+                      ">",
+                      "@entity.cur",
+                      "@config.target"
+                    ],
+                    [
+                      "-",
+                      "@entity.mid",
+                      1.0
+                    ],
+                    "@entity.hi"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.found",
+                  [
+                    "==",
+                    "@entity.cur",
+                    "@config.target"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.done",
+                  [
+                    "or",
+                    "@entity.found",
+                    [
+                      ">",
+                      "@entity.lo",
+                      "@entity.hi"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.mid",
+                  [
+                    "if",
+                    "@entity.done",
+                    "@entity.mid",
+                    [
+                      "math/floor",
+                      [
+                        "/",
+                        [
+                          "+",
+                          "@entity.lo",
+                          "@entity.hi"
+                        ],
+                        2.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.bars",
+                  [
+                    "array/map",
+                    "@entity.bars",
+                    [
+                      "object/merge",
+                      "@item",
+                      {
+                        "color": [
+                          "if",
+                          [
+                            "or",
+                            [
+                              "<",
+                              "@index",
+                              "@entity.lo"
+                            ],
+                            [
+                              ">",
+                              "@index",
+                              "@entity.hi"
+                            ]
+                          ],
+                          "#cbd5e1",
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@index",
+                              "@entity.mid"
+                            ],
+                            [
+                              "if",
+                              "@entity.found",
+                              "#22c55e",
+                              "#f59e0b"
+                            ],
+                            "#3b82f6"
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.pointers",
+                  [
+                    {
+                      "color": "#2563eb",
+                      "index": "@entity.lo",
+                      "label": "lo"
+                    },
+                    {
+                      "color": "#dc2626",
+                      "index": "@entity.hi",
+                      "label": "hi"
+                    },
+                    {
+                      "color": "#f59e0b",
+                      "index": "@entity.mid",
+                      "label": "mid"
+                    }
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "bars": "@entity.bars",
+                    "height": "@config.height",
+                    "pointers": "@entity.pointers",
+                    "type": "algorithm-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "RANGE_UPDATED",
+                  {
+                    "bars": "@entity.bars",
+                    "pointers": "@entity.pointers"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                "@entity.running",
+                [
+                  "not",
+                  "@entity.done"
+                ]
+              ],
+              "interval": 350.0,
+              "name": "binaryTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

@@ -1,0 +1,912 @@
+{
+  "description": "Bottom-up mergesort engine — one merged element copied per tick from an aux snapshot over a bar array on algorithm-canvas; composed by a learning orbital via `uses`.",
+  "name": "std-algo-mergesort",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "bars",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "aux",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "n",
+            "type": "number"
+          },
+          {
+            "default": 1.0,
+            "name": "width",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "lo",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "i",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "j",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "k",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "done",
+            "type": "boolean"
+          },
+          {
+            "default": true,
+            "name": "running",
+            "type": "boolean"
+          },
+          {
+            "default": 0.0,
+            "name": "curMid",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "curHi",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "copying",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "takeLeft",
+            "type": "boolean"
+          },
+          {
+            "default": 0.0,
+            "name": "srcVal",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "advancing",
+            "type": "boolean"
+          },
+          {
+            "default": 0.0,
+            "name": "nextLo",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "moreMerges",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "levelEnd",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "moreLevels",
+            "type": "boolean"
+          },
+          {
+            "default": 0.0,
+            "name": "newWidth",
+            "type": "number"
+          }
+        ],
+        "name": "MergeScene",
+        "persistence": "runtime"
+      },
+      "name": "MergeSortEngineOrbital",
+      "pages": [
+        {
+          "name": "MergeSortEnginePage",
+          "path": "/algo-mergesort",
+          "traits": [
+            {
+              "ref": "MergeSortSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bars": {
+              "default": [
+                {
+                  "color": "#3b82f6",
+                  "label": "5",
+                  "value": 5.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "2",
+                  "value": 2.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "8",
+                  "value": 8.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "1",
+                  "value": 1.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "9",
+                  "value": 9.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "3",
+                  "value": 3.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "7",
+                  "value": 7.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "4",
+                  "value": 4.0
+                }
+              ],
+              "description": "Initial unsorted array; each bar's height is proportional to its value.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bars",
+              "tier": "domain",
+              "type": "[AlgoBar]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick copies one merged element; toggle to start/pause the sort.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current bar array each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone.",
+              "event": "BARS_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "bars",
+                  "type": "[AlgoBar]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw, compare, copy, merge, run",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "advancing",
+              "aux",
+              "bars",
+              "copying",
+              "curHi",
+              "curMid",
+              "done",
+              "i",
+              "j",
+              "k",
+              "levelEnd",
+              "lo",
+              "moreLevels",
+              "moreMerges",
+              "n",
+              "newWidth",
+              "nextLo",
+              "running",
+              "srcVal",
+              "takeLeft",
+              "width"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "MergeScene",
+          "name": "MergeSortSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current bar array each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone.",
+                "key": "BARS_UPDATED",
+                "name": "Bars Updated",
+                "payloadSchema": [
+                  {
+                    "name": "bars",
+                    "type": "[AlgoBar]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw, compare, copy, merge, run",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bars",
+                    "@config.bars"
+                  ],
+                  [
+                    "set",
+                    "@entity.aux",
+                    "@config.bars"
+                  ],
+                  [
+                    "set",
+                    "@entity.n",
+                    [
+                      "array/len",
+                      "@config.bars"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.width",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lo",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.i",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.j",
+                    [
+                      "math/min",
+                      1.0,
+                      [
+                        "array/len",
+                        "@config.bars"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.k",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.done",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "bars": "@entity.bars",
+                      "height": "@config.height",
+                      "type": "algorithm-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BARS_UPDATED",
+                    {
+                      "bars": "@entity.bars"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.curMid",
+                  [
+                    "math/min",
+                    [
+                      "+",
+                      "@entity.lo",
+                      "@entity.width"
+                    ],
+                    "@entity.n"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.curHi",
+                  [
+                    "math/min",
+                    [
+                      "+",
+                      "@entity.lo",
+                      [
+                        "*",
+                        2.0,
+                        "@entity.width"
+                      ]
+                    ],
+                    "@entity.n"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.copying",
+                  [
+                    "and",
+                    [
+                      "<",
+                      "@entity.width",
+                      "@entity.n"
+                    ],
+                    [
+                      "<",
+                      "@entity.k",
+                      "@entity.curHi"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.takeLeft",
+                  [
+                    "and",
+                    "@entity.copying",
+                    [
+                      "and",
+                      [
+                        "<",
+                        "@entity.i",
+                        "@entity.curMid"
+                      ],
+                      [
+                        "or",
+                        [
+                          ">=",
+                          "@entity.j",
+                          "@entity.curHi"
+                        ],
+                        [
+                          "<=",
+                          [
+                            "object/get",
+                            [
+                              "array/nth",
+                              "@entity.aux",
+                              [
+                                "math/min",
+                                "@entity.i",
+                                [
+                                  "math/max",
+                                  0.0,
+                                  [
+                                    "-",
+                                    "@entity.curMid",
+                                    1.0
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "value"
+                          ],
+                          [
+                            "object/get",
+                            [
+                              "array/nth",
+                              "@entity.aux",
+                              [
+                                "math/min",
+                                "@entity.j",
+                                [
+                                  "math/max",
+                                  0.0,
+                                  [
+                                    "-",
+                                    "@entity.curHi",
+                                    1.0
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "value"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.srcVal",
+                  [
+                    "if",
+                    "@entity.copying",
+                    [
+                      "if",
+                      "@entity.takeLeft",
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.aux",
+                          "@entity.i"
+                        ],
+                        "value"
+                      ],
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.aux",
+                          "@entity.j"
+                        ],
+                        "value"
+                      ]
+                    ],
+                    0.0
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.advancing",
+                  [
+                    "and",
+                    [
+                      "<",
+                      "@entity.width",
+                      "@entity.n"
+                    ],
+                    [
+                      "not",
+                      "@entity.copying"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.nextLo",
+                  [
+                    "+",
+                    "@entity.lo",
+                    [
+                      "*",
+                      2.0,
+                      "@entity.width"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.moreMerges",
+                  [
+                    "and",
+                    "@entity.advancing",
+                    [
+                      "<",
+                      "@entity.nextLo",
+                      "@entity.n"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.levelEnd",
+                  [
+                    "and",
+                    "@entity.advancing",
+                    [
+                      ">=",
+                      "@entity.nextLo",
+                      "@entity.n"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.newWidth",
+                  [
+                    "*",
+                    2.0,
+                    "@entity.width"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.moreLevels",
+                  [
+                    "and",
+                    "@entity.levelEnd",
+                    [
+                      "<",
+                      "@entity.newWidth",
+                      "@entity.n"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.bars",
+                  [
+                    "array/map",
+                    "@entity.bars",
+                    [
+                      "object/merge",
+                      "@item",
+                      {
+                        "color": [
+                          "if",
+                          [
+                            "and",
+                            "@entity.levelEnd",
+                            [
+                              "not",
+                              "@entity.moreLevels"
+                            ]
+                          ],
+                          "#22c55e",
+                          [
+                            "if",
+                            "@entity.copying",
+                            [
+                              "if",
+                              [
+                                "==",
+                                "@index",
+                                "@entity.k"
+                              ],
+                              "#f59e0b",
+                              [
+                                "if",
+                                [
+                                  "and",
+                                  [
+                                    ">=",
+                                    "@index",
+                                    "@entity.lo"
+                                  ],
+                                  [
+                                    "<",
+                                    "@index",
+                                    "@entity.curHi"
+                                  ]
+                                ],
+                                "#fbbf24",
+                                "#3b82f6"
+                              ]
+                            ],
+                            "#3b82f6"
+                          ]
+                        ],
+                        "value": [
+                          "if",
+                          [
+                            "and",
+                            "@entity.copying",
+                            [
+                              "==",
+                              "@index",
+                              "@entity.k"
+                            ]
+                          ],
+                          "@entity.srcVal",
+                          [
+                            "object/get",
+                            "@item",
+                            "value"
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.lo",
+                  [
+                    "if",
+                    "@entity.moreMerges",
+                    "@entity.nextLo",
+                    [
+                      "if",
+                      "@entity.levelEnd",
+                      0.0,
+                      "@entity.lo"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.i",
+                  [
+                    "if",
+                    "@entity.copying",
+                    [
+                      "if",
+                      "@entity.takeLeft",
+                      [
+                        "+",
+                        "@entity.i",
+                        1.0
+                      ],
+                      "@entity.i"
+                    ],
+                    [
+                      "if",
+                      "@entity.moreMerges",
+                      "@entity.nextLo",
+                      [
+                        "if",
+                        "@entity.levelEnd",
+                        0.0,
+                        "@entity.i"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.j",
+                  [
+                    "if",
+                    "@entity.copying",
+                    [
+                      "if",
+                      "@entity.takeLeft",
+                      "@entity.j",
+                      [
+                        "+",
+                        "@entity.j",
+                        1.0
+                      ]
+                    ],
+                    [
+                      "if",
+                      "@entity.moreMerges",
+                      [
+                        "math/min",
+                        [
+                          "+",
+                          "@entity.nextLo",
+                          "@entity.width"
+                        ],
+                        "@entity.n"
+                      ],
+                      [
+                        "if",
+                        "@entity.levelEnd",
+                        [
+                          "math/min",
+                          "@entity.newWidth",
+                          "@entity.n"
+                        ],
+                        "@entity.j"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.k",
+                  [
+                    "if",
+                    "@entity.copying",
+                    [
+                      "+",
+                      "@entity.k",
+                      1.0
+                    ],
+                    [
+                      "if",
+                      "@entity.moreMerges",
+                      "@entity.nextLo",
+                      [
+                        "if",
+                        "@entity.levelEnd",
+                        0.0,
+                        "@entity.k"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.aux",
+                  [
+                    "if",
+                    "@entity.moreLevels",
+                    "@entity.bars",
+                    "@entity.aux"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.width",
+                  [
+                    "if",
+                    "@entity.levelEnd",
+                    "@entity.newWidth",
+                    "@entity.width"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.done",
+                  [
+                    "and",
+                    "@entity.levelEnd",
+                    [
+                      "not",
+                      "@entity.moreLevels"
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "bars": "@entity.bars",
+                    "height": "@config.height",
+                    "type": "algorithm-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "BARS_UPDATED",
+                  {
+                    "bars": "@entity.bars"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                "@entity.running",
+                [
+                  "not",
+                  "@entity.done"
+                ]
+              ],
+              "interval": 350.0,
+              "name": "mergeTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

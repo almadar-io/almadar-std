@@ -17,6 +17,68 @@ import { mergeCallSiteConfigOverrides } from '@almadar/core/factory-runtime';
 import type { OrbitalParamsManifest, ParamFieldDescriptor } from '@almadar/core/factory-runtime';
 
 import {
+  stdLearningAlgorithmsAstargraphOrbital,
+  StdLearningAlgorithmsAstargraphOrbitalManifest,
+  isStdLearningAlgorithmsAstargraphOrbitalParams,
+  stdLearningAlgorithmsAstargridOrbital,
+  StdLearningAlgorithmsAstargridOrbitalManifest,
+  isStdLearningAlgorithmsAstargridOrbitalParams,
+  stdLearningAlgorithmsBfsOrbital,
+  StdLearningAlgorithmsBfsOrbitalManifest,
+  isStdLearningAlgorithmsBfsOrbitalParams,
+  stdLearningAlgorithmsBinarysearchOrbital,
+  StdLearningAlgorithmsBinarysearchOrbitalManifest,
+  isStdLearningAlgorithmsBinarysearchOrbitalParams,
+  stdLearningAlgorithmsBubblesortOrbital,
+  StdLearningAlgorithmsBubblesortOrbitalManifest,
+  isStdLearningAlgorithmsBubblesortOrbitalParams,
+  stdLearningAlgorithmsDfsOrbital,
+  StdLearningAlgorithmsDfsOrbitalManifest,
+  isStdLearningAlgorithmsDfsOrbitalParams,
+  stdLearningAlgorithmsDijkstraOrbital,
+  StdLearningAlgorithmsDijkstraOrbitalManifest,
+  isStdLearningAlgorithmsDijkstraOrbitalParams,
+  stdLearningAlgorithmsFloodfillOrbital,
+  StdLearningAlgorithmsFloodfillOrbitalManifest,
+  isStdLearningAlgorithmsFloodfillOrbitalParams,
+  stdLearningAlgorithmsGameoflifeOrbital,
+  StdLearningAlgorithmsGameoflifeOrbitalManifest,
+  isStdLearningAlgorithmsGameoflifeOrbitalParams,
+  stdLearningAlgorithmsGridbfsOrbital,
+  StdLearningAlgorithmsGridbfsOrbitalManifest,
+  isStdLearningAlgorithmsGridbfsOrbitalParams,
+  stdLearningAlgorithmsHeapsortOrbital,
+  StdLearningAlgorithmsHeapsortOrbitalManifest,
+  isStdLearningAlgorithmsHeapsortOrbitalParams,
+  stdLearningAlgorithmsInsertionsortOrbital,
+  StdLearningAlgorithmsInsertionsortOrbitalManifest,
+  isStdLearningAlgorithmsInsertionsortOrbitalParams,
+  stdLearningAlgorithmsMazegenOrbital,
+  StdLearningAlgorithmsMazegenOrbitalManifest,
+  isStdLearningAlgorithmsMazegenOrbitalParams,
+  stdLearningAlgorithmsMergesortOrbital,
+  StdLearningAlgorithmsMergesortOrbitalManifest,
+  isStdLearningAlgorithmsMergesortOrbitalParams,
+  stdLearningAlgorithmsMstOrbital,
+  StdLearningAlgorithmsMstOrbitalManifest,
+  isStdLearningAlgorithmsMstOrbitalParams,
+  stdLearningAlgorithmsQuicksortOrbital,
+  StdLearningAlgorithmsQuicksortOrbitalManifest,
+  isStdLearningAlgorithmsQuicksortOrbitalParams,
+  stdLearningAlgorithmsSelectionsortOrbital,
+  StdLearningAlgorithmsSelectionsortOrbitalManifest,
+  isStdLearningAlgorithmsSelectionsortOrbitalParams,
+  stdLearningAlgorithmsSlidingwindowOrbital,
+  StdLearningAlgorithmsSlidingwindowOrbitalManifest,
+  isStdLearningAlgorithmsSlidingwindowOrbitalParams,
+  stdLearningAlgorithmsToposortOrbital,
+  StdLearningAlgorithmsToposortOrbitalManifest,
+  isStdLearningAlgorithmsToposortOrbitalParams,
+  stdLearningAlgorithmsTwopointerOrbital,
+  StdLearningAlgorithmsTwopointerOrbitalManifest,
+  isStdLearningAlgorithmsTwopointerOrbitalParams,
+} from './ui/learning/organisms/learning-algorithms.js';
+import {
   stdLearningBiologyPredatorPreyOrbital,
   StdLearningBiologyPredatorPreyOrbitalManifest,
   isStdLearningBiologyPredatorPreyOrbitalParams,
@@ -631,6 +693,186 @@ interface DispatchEntry {
 }
 
 const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEntry>([
+  ['learning-algorithms::AstargraphOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsAstargraphOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::AstargraphOrbital');
+      }
+      return stdLearningAlgorithmsAstargraphOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsAstargraphOrbitalManifest,
+  }],
+  ['learning-algorithms::AstargridOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsAstargridOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::AstargridOrbital');
+      }
+      return stdLearningAlgorithmsAstargridOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsAstargridOrbitalManifest,
+  }],
+  ['learning-algorithms::BfsOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsBfsOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::BfsOrbital');
+      }
+      return stdLearningAlgorithmsBfsOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsBfsOrbitalManifest,
+  }],
+  ['learning-algorithms::BinarysearchOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsBinarysearchOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::BinarysearchOrbital');
+      }
+      return stdLearningAlgorithmsBinarysearchOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsBinarysearchOrbitalManifest,
+  }],
+  ['learning-algorithms::BubblesortOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsBubblesortOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::BubblesortOrbital');
+      }
+      return stdLearningAlgorithmsBubblesortOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsBubblesortOrbitalManifest,
+  }],
+  ['learning-algorithms::DfsOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsDfsOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::DfsOrbital');
+      }
+      return stdLearningAlgorithmsDfsOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsDfsOrbitalManifest,
+  }],
+  ['learning-algorithms::DijkstraOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsDijkstraOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::DijkstraOrbital');
+      }
+      return stdLearningAlgorithmsDijkstraOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsDijkstraOrbitalManifest,
+  }],
+  ['learning-algorithms::FloodfillOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsFloodfillOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::FloodfillOrbital');
+      }
+      return stdLearningAlgorithmsFloodfillOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsFloodfillOrbitalManifest,
+  }],
+  ['learning-algorithms::GameoflifeOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsGameoflifeOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::GameoflifeOrbital');
+      }
+      return stdLearningAlgorithmsGameoflifeOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsGameoflifeOrbitalManifest,
+  }],
+  ['learning-algorithms::GridbfsOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsGridbfsOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::GridbfsOrbital');
+      }
+      return stdLearningAlgorithmsGridbfsOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsGridbfsOrbitalManifest,
+  }],
+  ['learning-algorithms::HeapsortOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsHeapsortOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::HeapsortOrbital');
+      }
+      return stdLearningAlgorithmsHeapsortOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsHeapsortOrbitalManifest,
+  }],
+  ['learning-algorithms::InsertionsortOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsInsertionsortOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::InsertionsortOrbital');
+      }
+      return stdLearningAlgorithmsInsertionsortOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsInsertionsortOrbitalManifest,
+  }],
+  ['learning-algorithms::MazegenOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsMazegenOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::MazegenOrbital');
+      }
+      return stdLearningAlgorithmsMazegenOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsMazegenOrbitalManifest,
+  }],
+  ['learning-algorithms::MergesortOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsMergesortOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::MergesortOrbital');
+      }
+      return stdLearningAlgorithmsMergesortOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsMergesortOrbitalManifest,
+  }],
+  ['learning-algorithms::MstOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsMstOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::MstOrbital');
+      }
+      return stdLearningAlgorithmsMstOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsMstOrbitalManifest,
+  }],
+  ['learning-algorithms::QuicksortOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsQuicksortOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::QuicksortOrbital');
+      }
+      return stdLearningAlgorithmsQuicksortOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsQuicksortOrbitalManifest,
+  }],
+  ['learning-algorithms::SelectionsortOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsSelectionsortOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::SelectionsortOrbital');
+      }
+      return stdLearningAlgorithmsSelectionsortOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsSelectionsortOrbitalManifest,
+  }],
+  ['learning-algorithms::SlidingwindowOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsSlidingwindowOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::SlidingwindowOrbital');
+      }
+      return stdLearningAlgorithmsSlidingwindowOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsSlidingwindowOrbitalManifest,
+  }],
+  ['learning-algorithms::ToposortOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsToposortOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::ToposortOrbital');
+      }
+      return stdLearningAlgorithmsToposortOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsToposortOrbitalManifest,
+  }],
+  ['learning-algorithms::TwopointerOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningAlgorithmsTwopointerOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-algorithms::TwopointerOrbital');
+      }
+      return stdLearningAlgorithmsTwopointerOrbital(p);
+    },
+    manifest: StdLearningAlgorithmsTwopointerOrbitalManifest,
+  }],
   ['learning-biology::PredatorPreyOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdLearningBiologyPredatorPreyOrbitalParams(p)) {

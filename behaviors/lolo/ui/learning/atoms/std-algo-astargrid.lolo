@@ -1,0 +1,283 @@
+app std-algo-astargrid "1.0.0"
+"A* shortest path on a walled grid — each tick expands the open cell of least f=g+h, Manhattan heuristic, on cells."
+orbital AstarGridEngineOrbital {
+  type AlgoCell = {
+    id : number!
+    row : number!
+    col : number!
+    value : number
+    color : string
+    label : string
+    g : number
+  }
+
+  entity AstarScene [runtime] {
+    id : string!
+    cells : [AlgoCell]
+    open : [number]
+    closed : [number]
+    cur : number = 0
+    gcur : number = 0
+    tr : number = 0
+    tc : number = 0
+    reached : boolean = false
+    done : boolean = false
+    running : boolean = true
+  }
+
+  trait AstarGridSim -> @rebindable AstarScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.cells
+          (array/map @config.cells
+            (object/merge @item { g: (if (== (object/get @item id) @config.startId) 0 9999) })))
+        (set @entity.running @config.running)
+        (set @entity.open [@config.startId])
+        (set @entity.closed [])
+        (set @entity.cur @config.startId)
+        (set @entity.gcur 0)
+        (set @entity.tr (object/get (array/first (array/filter @config.cells (== (object/get @item id) @config.targetId))) row))
+        (set @entity.tc (object/get (array/first (array/filter @config.cells (== (object/get @item id) @config.targetId))) col))
+        (set @entity.reached false)
+        (set @entity.done false)
+        (render-ui main {
+          type: algorithm-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          cells: @entity.cells
+        })
+        (emit CELLS_UPDATED { cells: @entity.cells })
+    }
+
+    ticks {
+      astarTick every 250ms
+        when (and @entity.running (not @entity.done))
+        (set @entity.cur
+          (let ( (fvals (array/map @entity.open
+                          (let ( (nid @item) )
+                          (let ( (ncell (array/first (array/filter @entity.cells (== (object/get @item id) @nid)))) )
+                          (+ (object/get @ncell g)
+                             (+ (math/abs (- (object/get @ncell row) @entity.tr)) (math/abs (- (object/get @ncell col) @entity.tc)))))))) )
+          (let ( (minf (array/first (array/filter @fvals
+                         (let ( (x @item) )
+                         (== (array/len (array/filter @fvals (< @item @x))) 0))))) )
+          (array/first (array/filter @entity.open
+            (let ( (nid @item) )
+            (let ( (ncell (array/first (array/filter @entity.cells (== (object/get @item id) @nid)))) )
+            (== (+ (object/get @ncell g)
+                   (+ (math/abs (- (object/get @ncell row) @entity.tr)) (math/abs (- (object/get @ncell col) @entity.tc))))
+                @minf))))))))
+        (set @entity.reached (== @entity.cur @config.targetId))
+        (set @entity.gcur (object/get (array/first (array/filter @entity.cells (== (object/get @item id) @entity.cur))) g))
+        (set @entity.cells
+          (let ( (curcell (array/first (array/filter @entity.cells (== (object/get @item id) @entity.cur)))) )
+          (let ( (cr (object/get @curcell row)) (cc (object/get @curcell col)) )
+          (array/map @entity.cells
+            (if (and (== (+ (math/abs (- (object/get @item row) @cr)) (math/abs (- (object/get @item col) @cc))) 1)
+                  (and (not (== (object/get @item value) 1))
+                    (and (not (array/includes @entity.closed (object/get @item id)))
+                      (< (+ @entity.gcur 1) (object/get @item g)))))
+              (object/merge @item { g: (+ @entity.gcur 1) })
+              @item)))))
+        (set @entity.open
+          (let ( (curcell (array/first (array/filter @entity.cells (== (object/get @item id) @entity.cur)))) )
+          (let ( (cr (object/get @curcell row)) (cc (object/get @curcell col)) )
+          (let ( (newn (array/map
+                         (array/filter @entity.cells
+                           (and (== (+ (math/abs (- (object/get @item row) @cr)) (math/abs (- (object/get @item col) @cc))) 1)
+                             (and (not (== (object/get @item value) 1))
+                               (and (not (array/includes @entity.closed (object/get @item id)))
+                                 (not (array/includes @entity.open (object/get @item id)))))))
+                         (object/get @item id))) )
+          (array/concat @entity.open @newn)))))
+        (set @entity.closed (array/append @entity.closed @entity.cur))
+        (set @entity.open (array/filter @entity.open (not (== @item @entity.cur))))
+        (set @entity.done (or @entity.reached (== (array/len @entity.open) 0)))
+        (set @entity.cells
+          (array/map @entity.cells
+            (object/merge @item {
+              color: (if (== (object/get @item value) 1) "#0f172a"
+                       (if (== (object/get @item id) @config.startId) "#3b82f6"
+                         (if (== (object/get @item id) @config.targetId)
+                           (if @entity.reached "#22c55e" "#ef4444")
+                           (if (array/includes @entity.closed (object/get @item id)) "#22c55e"
+                             (if (array/includes @entity.open (object/get @item id)) "#f59e0b"
+                               "#334155")))))
+            })))
+        (render-ui main {
+          type: algorithm-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          cells: @entity.cells
+        })
+        (emit CELLS_UPDATED { cells: @entity.cells })
+    }
+
+    emits {
+      CELLS_UPDATED -> external {
+        cells : [AlgoCell]
+      }
+        @description "The grid each expansion — a composed listener can subscribe; a harmless no-op standalone."
+        @synonyms "tick, frame, step, expand, path"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick expands one open cell per step; toggle to start/pause."
+        @tier "domain"
+      startId : number = 0
+        @label "Start Cell"
+        @description "Id (row*cols+col) of the cell A* searches from."
+        @tier "domain"
+      targetId : number = 119
+        @label "Target Cell"
+        @description "Id (row*cols+col) of the goal; A* stops when it is expanded."
+        @tier "domain"
+      width : number = 720
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 600
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#0f172a"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      cells : [AlgoCell] = [
+        { id: 0, row: 0, col: 0, value: 2, color: "#3b82f6", label: "" },
+        { id: 1, row: 0, col: 1, value: 0, color: "#334155", label: "" },
+        { id: 2, row: 0, col: 2, value: 0, color: "#334155", label: "" },
+        { id: 3, row: 0, col: 3, value: 0, color: "#334155", label: "" },
+        { id: 4, row: 0, col: 4, value: 0, color: "#334155", label: "" },
+        { id: 5, row: 0, col: 5, value: 0, color: "#334155", label: "" },
+        { id: 6, row: 0, col: 6, value: 0, color: "#334155", label: "" },
+        { id: 7, row: 0, col: 7, value: 0, color: "#334155", label: "" },
+        { id: 8, row: 0, col: 8, value: 0, color: "#334155", label: "" },
+        { id: 9, row: 0, col: 9, value: 0, color: "#334155", label: "" },
+        { id: 10, row: 0, col: 10, value: 0, color: "#334155", label: "" },
+        { id: 11, row: 0, col: 11, value: 0, color: "#334155", label: "" },
+        { id: 12, row: 1, col: 0, value: 0, color: "#334155", label: "" },
+        { id: 13, row: 1, col: 1, value: 0, color: "#334155", label: "" },
+        { id: 14, row: 1, col: 2, value: 0, color: "#334155", label: "" },
+        { id: 15, row: 1, col: 3, value: 0, color: "#334155", label: "" },
+        { id: 16, row: 1, col: 4, value: 0, color: "#334155", label: "" },
+        { id: 17, row: 1, col: 5, value: 0, color: "#334155", label: "" },
+        { id: 18, row: 1, col: 6, value: 0, color: "#334155", label: "" },
+        { id: 19, row: 1, col: 7, value: 0, color: "#334155", label: "" },
+        { id: 20, row: 1, col: 8, value: 0, color: "#334155", label: "" },
+        { id: 21, row: 1, col: 9, value: 0, color: "#334155", label: "" },
+        { id: 22, row: 1, col: 10, value: 0, color: "#334155", label: "" },
+        { id: 23, row: 1, col: 11, value: 0, color: "#334155", label: "" },
+        { id: 24, row: 2, col: 0, value: 0, color: "#334155", label: "" },
+        { id: 25, row: 2, col: 1, value: 1, color: "#0f172a", label: "" },
+        { id: 26, row: 2, col: 2, value: 1, color: "#0f172a", label: "" },
+        { id: 27, row: 2, col: 3, value: 1, color: "#0f172a", label: "" },
+        { id: 28, row: 2, col: 4, value: 1, color: "#0f172a", label: "" },
+        { id: 29, row: 2, col: 5, value: 1, color: "#0f172a", label: "" },
+        { id: 30, row: 2, col: 6, value: 1, color: "#0f172a", label: "" },
+        { id: 31, row: 2, col: 7, value: 1, color: "#0f172a", label: "" },
+        { id: 32, row: 2, col: 8, value: 1, color: "#0f172a", label: "" },
+        { id: 33, row: 2, col: 9, value: 1, color: "#0f172a", label: "" },
+        { id: 34, row: 2, col: 10, value: 1, color: "#0f172a", label: "" },
+        { id: 35, row: 2, col: 11, value: 1, color: "#0f172a", label: "" },
+        { id: 36, row: 3, col: 0, value: 0, color: "#334155", label: "" },
+        { id: 37, row: 3, col: 1, value: 0, color: "#334155", label: "" },
+        { id: 38, row: 3, col: 2, value: 0, color: "#334155", label: "" },
+        { id: 39, row: 3, col: 3, value: 0, color: "#334155", label: "" },
+        { id: 40, row: 3, col: 4, value: 0, color: "#334155", label: "" },
+        { id: 41, row: 3, col: 5, value: 0, color: "#334155", label: "" },
+        { id: 42, row: 3, col: 6, value: 0, color: "#334155", label: "" },
+        { id: 43, row: 3, col: 7, value: 0, color: "#334155", label: "" },
+        { id: 44, row: 3, col: 8, value: 0, color: "#334155", label: "" },
+        { id: 45, row: 3, col: 9, value: 0, color: "#334155", label: "" },
+        { id: 46, row: 3, col: 10, value: 0, color: "#334155", label: "" },
+        { id: 47, row: 3, col: 11, value: 0, color: "#334155", label: "" },
+        { id: 48, row: 4, col: 0, value: 0, color: "#334155", label: "" },
+        { id: 49, row: 4, col: 1, value: 0, color: "#334155", label: "" },
+        { id: 50, row: 4, col: 2, value: 0, color: "#334155", label: "" },
+        { id: 51, row: 4, col: 3, value: 0, color: "#334155", label: "" },
+        { id: 52, row: 4, col: 4, value: 0, color: "#334155", label: "" },
+        { id: 53, row: 4, col: 5, value: 0, color: "#334155", label: "" },
+        { id: 54, row: 4, col: 6, value: 0, color: "#334155", label: "" },
+        { id: 55, row: 4, col: 7, value: 0, color: "#334155", label: "" },
+        { id: 56, row: 4, col: 8, value: 0, color: "#334155", label: "" },
+        { id: 57, row: 4, col: 9, value: 0, color: "#334155", label: "" },
+        { id: 58, row: 4, col: 10, value: 0, color: "#334155", label: "" },
+        { id: 59, row: 4, col: 11, value: 0, color: "#334155", label: "" },
+        { id: 60, row: 5, col: 0, value: 1, color: "#0f172a", label: "" },
+        { id: 61, row: 5, col: 1, value: 1, color: "#0f172a", label: "" },
+        { id: 62, row: 5, col: 2, value: 1, color: "#0f172a", label: "" },
+        { id: 63, row: 5, col: 3, value: 1, color: "#0f172a", label: "" },
+        { id: 64, row: 5, col: 4, value: 1, color: "#0f172a", label: "" },
+        { id: 65, row: 5, col: 5, value: 1, color: "#0f172a", label: "" },
+        { id: 66, row: 5, col: 6, value: 1, color: "#0f172a", label: "" },
+        { id: 67, row: 5, col: 7, value: 1, color: "#0f172a", label: "" },
+        { id: 68, row: 5, col: 8, value: 1, color: "#0f172a", label: "" },
+        { id: 69, row: 5, col: 9, value: 1, color: "#0f172a", label: "" },
+        { id: 70, row: 5, col: 10, value: 1, color: "#0f172a", label: "" },
+        { id: 71, row: 5, col: 11, value: 0, color: "#334155", label: "" },
+        { id: 72, row: 6, col: 0, value: 0, color: "#334155", label: "" },
+        { id: 73, row: 6, col: 1, value: 0, color: "#334155", label: "" },
+        { id: 74, row: 6, col: 2, value: 0, color: "#334155", label: "" },
+        { id: 75, row: 6, col: 3, value: 0, color: "#334155", label: "" },
+        { id: 76, row: 6, col: 4, value: 0, color: "#334155", label: "" },
+        { id: 77, row: 6, col: 5, value: 0, color: "#334155", label: "" },
+        { id: 78, row: 6, col: 6, value: 0, color: "#334155", label: "" },
+        { id: 79, row: 6, col: 7, value: 0, color: "#334155", label: "" },
+        { id: 80, row: 6, col: 8, value: 0, color: "#334155", label: "" },
+        { id: 81, row: 6, col: 9, value: 0, color: "#334155", label: "" },
+        { id: 82, row: 6, col: 10, value: 0, color: "#334155", label: "" },
+        { id: 83, row: 6, col: 11, value: 0, color: "#334155", label: "" },
+        { id: 84, row: 7, col: 0, value: 0, color: "#334155", label: "" },
+        { id: 85, row: 7, col: 1, value: 1, color: "#0f172a", label: "" },
+        { id: 86, row: 7, col: 2, value: 1, color: "#0f172a", label: "" },
+        { id: 87, row: 7, col: 3, value: 1, color: "#0f172a", label: "" },
+        { id: 88, row: 7, col: 4, value: 1, color: "#0f172a", label: "" },
+        { id: 89, row: 7, col: 5, value: 1, color: "#0f172a", label: "" },
+        { id: 90, row: 7, col: 6, value: 1, color: "#0f172a", label: "" },
+        { id: 91, row: 7, col: 7, value: 1, color: "#0f172a", label: "" },
+        { id: 92, row: 7, col: 8, value: 1, color: "#0f172a", label: "" },
+        { id: 93, row: 7, col: 9, value: 1, color: "#0f172a", label: "" },
+        { id: 94, row: 7, col: 10, value: 1, color: "#0f172a", label: "" },
+        { id: 95, row: 7, col: 11, value: 1, color: "#0f172a", label: "" },
+        { id: 96, row: 8, col: 0, value: 0, color: "#334155", label: "" },
+        { id: 97, row: 8, col: 1, value: 0, color: "#334155", label: "" },
+        { id: 98, row: 8, col: 2, value: 0, color: "#334155", label: "" },
+        { id: 99, row: 8, col: 3, value: 0, color: "#334155", label: "" },
+        { id: 100, row: 8, col: 4, value: 0, color: "#334155", label: "" },
+        { id: 101, row: 8, col: 5, value: 0, color: "#334155", label: "" },
+        { id: 102, row: 8, col: 6, value: 0, color: "#334155", label: "" },
+        { id: 103, row: 8, col: 7, value: 0, color: "#334155", label: "" },
+        { id: 104, row: 8, col: 8, value: 0, color: "#334155", label: "" },
+        { id: 105, row: 8, col: 9, value: 0, color: "#334155", label: "" },
+        { id: 106, row: 8, col: 10, value: 0, color: "#334155", label: "" },
+        { id: 107, row: 8, col: 11, value: 0, color: "#334155", label: "" },
+        { id: 108, row: 9, col: 0, value: 0, color: "#334155", label: "" },
+        { id: 109, row: 9, col: 1, value: 0, color: "#334155", label: "" },
+        { id: 110, row: 9, col: 2, value: 0, color: "#334155", label: "" },
+        { id: 111, row: 9, col: 3, value: 0, color: "#334155", label: "" },
+        { id: 112, row: 9, col: 4, value: 0, color: "#334155", label: "" },
+        { id: 113, row: 9, col: 5, value: 0, color: "#334155", label: "" },
+        { id: 114, row: 9, col: 6, value: 0, color: "#334155", label: "" },
+        { id: 115, row: 9, col: 7, value: 0, color: "#334155", label: "" },
+        { id: 116, row: 9, col: 8, value: 0, color: "#334155", label: "" },
+        { id: 117, row: 9, col: 9, value: 0, color: "#334155", label: "" },
+        { id: 118, row: 9, col: 10, value: 0, color: "#334155", label: "" },
+        { id: 119, row: 9, col: 11, value: 3, color: "#ef4444", label: "" }
+      ]
+        @label "Cells"
+        @description "The 10x12 grid; value 0 = open, 1 = wall, 2 = start, 3 = target."
+        @tier "domain"
+    }
+  }
+
+  page "/algo-astargrid" as AstarGridEnginePage -> AstarGridSim
+}

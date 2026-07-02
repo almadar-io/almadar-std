@@ -1,0 +1,528 @@
+{
+  "description": "Bubble-sort engine — one adjacent compare/swap per tick over a bar array on algorithm-canvas; composed by a learning orbital via `uses`.",
+  "name": "std-algo-bubblesort",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "bars",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "i",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "n",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "pass",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "done",
+            "type": "boolean"
+          },
+          {
+            "default": true,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "BubbleScene",
+        "persistence": "runtime"
+      },
+      "name": "BubbleSortEngineOrbital",
+      "pages": [
+        {
+          "name": "BubbleSortEnginePage",
+          "path": "/algo-bubblesort",
+          "traits": [
+            {
+              "ref": "BubbleSortSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bars": {
+              "default": [
+                {
+                  "color": "#3b82f6",
+                  "label": "5",
+                  "value": 5.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "2",
+                  "value": 2.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "8",
+                  "value": 8.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "1",
+                  "value": 1.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "9",
+                  "value": 9.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "3",
+                  "value": 3.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "7",
+                  "value": 7.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "4",
+                  "value": 4.0
+                }
+              ],
+              "description": "Initial unsorted array; each bar's height is proportional to its value.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bars",
+              "tier": "domain",
+              "type": "[AlgoBar]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick performs one compare/swap step; toggle to start/pause the sort.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current bar array each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone.",
+              "event": "BARS_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "bars",
+                  "type": "[AlgoBar]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw, compare, swap",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "bars",
+              "done",
+              "i",
+              "n",
+              "pass",
+              "running"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "BubbleScene",
+          "name": "BubbleSortSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current bar array each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone.",
+                "key": "BARS_UPDATED",
+                "name": "Bars Updated",
+                "payloadSchema": [
+                  {
+                    "name": "bars",
+                    "type": "[AlgoBar]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw, compare, swap",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bars",
+                    "@config.bars"
+                  ],
+                  [
+                    "set",
+                    "@entity.n",
+                    [
+                      "array/len",
+                      "@config.bars"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "bars": "@entity.bars",
+                      "height": "@config.height",
+                      "type": "algorithm-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BARS_UPDATED",
+                    {
+                      "bars": "@entity.bars"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.bars",
+                  [
+                    "let",
+                    [
+                      [
+                        "a",
+                        [
+                          "array/nth",
+                          "@entity.bars",
+                          "@entity.i"
+                        ]
+                      ],
+                      [
+                        "b",
+                        [
+                          "array/nth",
+                          "@entity.bars",
+                          [
+                            "+",
+                            "@entity.i",
+                            1.0
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "swap",
+                          [
+                            "and",
+                            [
+                              ">",
+                              [
+                                "object/get",
+                                "@a",
+                                "value"
+                              ],
+                              [
+                                "object/get",
+                                "@b",
+                                "value"
+                              ]
+                            ],
+                            [
+                              "<",
+                              "@entity.i",
+                              [
+                                "-",
+                                "@entity.n",
+                                1.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "array/map",
+                        "@entity.bars",
+                        [
+                          "object/merge",
+                          "@item",
+                          {
+                            "color": [
+                              "if",
+                              [
+                                "or",
+                                [
+                                  ">=",
+                                  "@index",
+                                  "@entity.n"
+                                ],
+                                [
+                                  "<=",
+                                  "@entity.n",
+                                  1.0
+                                ]
+                              ],
+                              "#22c55e",
+                              [
+                                "if",
+                                [
+                                  "and",
+                                  [
+                                    ">=",
+                                    "@index",
+                                    "@entity.i"
+                                  ],
+                                  [
+                                    "<=",
+                                    "@index",
+                                    [
+                                      "+",
+                                      "@entity.i",
+                                      1.0
+                                    ]
+                                  ]
+                                ],
+                                "#f59e0b",
+                                "#3b82f6"
+                              ]
+                            ],
+                            "value": [
+                              "if",
+                              [
+                                "and",
+                                "@swap",
+                                [
+                                  "==",
+                                  "@index",
+                                  "@entity.i"
+                                ]
+                              ],
+                              [
+                                "object/get",
+                                "@b",
+                                "value"
+                              ],
+                              [
+                                "if",
+                                [
+                                  "and",
+                                  "@swap",
+                                  [
+                                    "==",
+                                    "@index",
+                                    [
+                                      "+",
+                                      "@entity.i",
+                                      1.0
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "object/get",
+                                  "@a",
+                                  "value"
+                                ],
+                                [
+                                  "object/get",
+                                  "@item",
+                                  "value"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.pass",
+                  [
+                    ">=",
+                    "@entity.i",
+                    [
+                      "-",
+                      "@entity.n",
+                      2.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.done",
+                  [
+                    "and",
+                    "@entity.pass",
+                    [
+                      "<=",
+                      "@entity.n",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.n",
+                  [
+                    "if",
+                    "@entity.pass",
+                    [
+                      "-",
+                      "@entity.n",
+                      1.0
+                    ],
+                    "@entity.n"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.i",
+                  [
+                    "if",
+                    "@entity.pass",
+                    0.0,
+                    [
+                      "+",
+                      "@entity.i",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "bars": "@entity.bars",
+                    "height": "@config.height",
+                    "type": "algorithm-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "BARS_UPDATED",
+                  {
+                    "bars": "@entity.bars"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                "@entity.running",
+                [
+                  "not",
+                  "@entity.done"
+                ]
+              ],
+              "interval": 300.0,
+              "name": "bubbleTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

@@ -1,0 +1,572 @@
+{
+  "description": "Two-pointer engine — one left/right pair-sum step per tick over a sorted bar array on algorithm-canvas; composed via `uses`.",
+  "name": "std-algo-twopointer",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "bars",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "index": {
+                  "name": "index",
+                  "required": true,
+                  "type": "number"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "pointers",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "left",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "right",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "sum",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "found",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "done",
+            "type": "boolean"
+          },
+          {
+            "default": true,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "TwoPointerScene",
+        "persistence": "runtime"
+      },
+      "name": "TwoPointerEngineOrbital",
+      "pages": [
+        {
+          "name": "TwoPointerEnginePage",
+          "path": "/algo-twopointer",
+          "traits": [
+            {
+              "ref": "TwoPointerSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bars": {
+              "default": [
+                {
+                  "color": "#3b82f6",
+                  "label": "1",
+                  "value": 1.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "3",
+                  "value": 3.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "5",
+                  "value": 5.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "7",
+                  "value": 7.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "9",
+                  "value": 9.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "11",
+                  "value": 11.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "13",
+                  "value": 13.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "15",
+                  "value": 15.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "17",
+                  "value": 17.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "19",
+                  "value": 19.0
+                }
+              ],
+              "description": "Initial sorted array; each bar's height is proportional to its value.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bars",
+              "tier": "domain",
+              "type": "[AlgoBar]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick performs one pair-sum step; toggle to start/pause the scan.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "target": {
+              "default": 24.0,
+              "description": "The pair sum being searched for in the sorted array.",
+              "label": "Target",
+              "tier": "domain",
+              "type": "number"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current bars + left/right cursors each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone.",
+              "event": "PAIR_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "bars",
+                  "type": "[AlgoBar]"
+                },
+                {
+                  "name": "pointers",
+                  "type": "[AlgoPointer]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, converge, pair, sum",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "bars",
+              "done",
+              "found",
+              "left",
+              "pointers",
+              "right",
+              "running",
+              "sum"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "TwoPointerScene",
+          "name": "TwoPointerSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current bars + left/right cursors each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone.",
+                "key": "PAIR_UPDATED",
+                "name": "Pair Updated",
+                "payloadSchema": [
+                  {
+                    "name": "bars",
+                    "type": "[AlgoBar]"
+                  },
+                  {
+                    "name": "pointers",
+                    "type": "[AlgoPointer]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, converge, pair, sum",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bars",
+                    "@config.bars"
+                  ],
+                  [
+                    "set",
+                    "@entity.left",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.right",
+                    [
+                      "-",
+                      [
+                        "array/len",
+                        "@config.bars"
+                      ],
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "set",
+                    "@entity.pointers",
+                    [
+                      {
+                        "color": "#2563eb",
+                        "index": "@entity.left",
+                        "label": "left"
+                      },
+                      {
+                        "color": "#dc2626",
+                        "index": "@entity.right",
+                        "label": "right"
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "bars": "@entity.bars",
+                      "height": "@config.height",
+                      "pointers": "@entity.pointers",
+                      "type": "algorithm-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "PAIR_UPDATED",
+                    {
+                      "bars": "@entity.bars",
+                      "pointers": "@entity.pointers"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.sum",
+                  [
+                    "+",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@entity.bars",
+                        "@entity.left"
+                      ],
+                      "value"
+                    ],
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@entity.bars",
+                        "@entity.right"
+                      ],
+                      "value"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.found",
+                  [
+                    "==",
+                    "@entity.sum",
+                    "@config.target"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.left",
+                  [
+                    "if",
+                    [
+                      "and",
+                      [
+                        "not",
+                        "@entity.found"
+                      ],
+                      [
+                        "<",
+                        "@entity.sum",
+                        "@config.target"
+                      ]
+                    ],
+                    [
+                      "+",
+                      "@entity.left",
+                      1.0
+                    ],
+                    "@entity.left"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.right",
+                  [
+                    "if",
+                    [
+                      "and",
+                      [
+                        "not",
+                        "@entity.found"
+                      ],
+                      [
+                        ">",
+                        "@entity.sum",
+                        "@config.target"
+                      ]
+                    ],
+                    [
+                      "-",
+                      "@entity.right",
+                      1.0
+                    ],
+                    "@entity.right"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.done",
+                  [
+                    "or",
+                    "@entity.found",
+                    [
+                      ">=",
+                      "@entity.left",
+                      "@entity.right"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.bars",
+                  [
+                    "array/map",
+                    "@entity.bars",
+                    [
+                      "object/merge",
+                      "@item",
+                      {
+                        "color": [
+                          "if",
+                          [
+                            "or",
+                            [
+                              "<",
+                              "@index",
+                              "@entity.left"
+                            ],
+                            [
+                              ">",
+                              "@index",
+                              "@entity.right"
+                            ]
+                          ],
+                          "#cbd5e1",
+                          [
+                            "if",
+                            [
+                              "or",
+                              [
+                                "==",
+                                "@index",
+                                "@entity.left"
+                              ],
+                              [
+                                "==",
+                                "@index",
+                                "@entity.right"
+                              ]
+                            ],
+                            [
+                              "if",
+                              "@entity.found",
+                              "#22c55e",
+                              "#f59e0b"
+                            ],
+                            "#3b82f6"
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.pointers",
+                  [
+                    {
+                      "color": "#2563eb",
+                      "index": "@entity.left",
+                      "label": "left"
+                    },
+                    {
+                      "color": "#dc2626",
+                      "index": "@entity.right",
+                      "label": "right"
+                    }
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "bars": "@entity.bars",
+                    "height": "@config.height",
+                    "pointers": "@entity.pointers",
+                    "type": "algorithm-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "PAIR_UPDATED",
+                  {
+                    "bars": "@entity.bars",
+                    "pointers": "@entity.pointers"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                "@entity.running",
+                [
+                  "not",
+                  "@entity.done"
+                ]
+              ],
+              "interval": 350.0,
+              "name": "twoPointerTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

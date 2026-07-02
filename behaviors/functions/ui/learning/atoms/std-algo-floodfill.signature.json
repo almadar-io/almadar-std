@@ -1,0 +1,996 @@
+[
+  {
+    "organism": "std-algo-floodfill",
+    "orbital": "FloodFillEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-algo-floodfill.ts",
+    "entities": [
+      {
+        "name": "FloodScene",
+        "fields": [
+          {
+            "name": "cells",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "queue",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "seen",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "visited",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "seedValue",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "cur",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "newIds",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "FloodFillSim",
+        "emittedEvents": [
+          "CELLS_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CELLS_UPDATED",
+            "direction": "emit",
+            "description": "The grid each step — a composed listener can subscribe; a harmless no-op standalone.",
+            "synonyms": "tick, frame, step, fill, flood",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#0f172a",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "cells",
+            "type": "[AlgoCell]",
+            "default": [
+              {
+                "col": 0,
+                "color": "#1e293b",
+                "id": 0,
+                "label": "",
+                "row": 0,
+                "value": 0
+              },
+              {
+                "col": 1,
+                "color": "#1e293b",
+                "id": 1,
+                "label": "",
+                "row": 0,
+                "value": 0
+              },
+              {
+                "col": 2,
+                "color": "#1e293b",
+                "id": 2,
+                "label": "",
+                "row": 0,
+                "value": 0
+              },
+              {
+                "col": 3,
+                "color": "#1e293b",
+                "id": 3,
+                "label": "",
+                "row": 0,
+                "value": 0
+              },
+              {
+                "col": 4,
+                "color": "#1e293b",
+                "id": 4,
+                "label": "",
+                "row": 0,
+                "value": 0
+              },
+              {
+                "col": 5,
+                "color": "#1e293b",
+                "id": 5,
+                "label": "",
+                "row": 0,
+                "value": 0
+              },
+              {
+                "col": 6,
+                "color": "#1e293b",
+                "id": 6,
+                "label": "",
+                "row": 0,
+                "value": 0
+              },
+              {
+                "col": 7,
+                "color": "#1e293b",
+                "id": 7,
+                "label": "",
+                "row": 0,
+                "value": 0
+              },
+              {
+                "col": 8,
+                "color": "#1e293b",
+                "id": 8,
+                "label": "",
+                "row": 0,
+                "value": 0
+              },
+              {
+                "col": 9,
+                "color": "#1e293b",
+                "id": 9,
+                "label": "",
+                "row": 0,
+                "value": 0
+              },
+              {
+                "col": 0,
+                "color": "#1e293b",
+                "id": 10,
+                "label": "",
+                "row": 1,
+                "value": 0
+              },
+              {
+                "col": 1,
+                "color": "#1e293b",
+                "id": 11,
+                "label": "",
+                "row": 1,
+                "value": 0
+              },
+              {
+                "col": 2,
+                "color": "#8b5cf6",
+                "id": 12,
+                "label": "",
+                "row": 1,
+                "value": 1
+              },
+              {
+                "col": 3,
+                "color": "#8b5cf6",
+                "id": 13,
+                "label": "",
+                "row": 1,
+                "value": 1
+              },
+              {
+                "col": 4,
+                "color": "#8b5cf6",
+                "id": 14,
+                "label": "",
+                "row": 1,
+                "value": 1
+              },
+              {
+                "col": 5,
+                "color": "#8b5cf6",
+                "id": 15,
+                "label": "",
+                "row": 1,
+                "value": 1
+              },
+              {
+                "col": 6,
+                "color": "#1e293b",
+                "id": 16,
+                "label": "",
+                "row": 1,
+                "value": 0
+              },
+              {
+                "col": 7,
+                "color": "#1e293b",
+                "id": 17,
+                "label": "",
+                "row": 1,
+                "value": 0
+              },
+              {
+                "col": 8,
+                "color": "#1e293b",
+                "id": 18,
+                "label": "",
+                "row": 1,
+                "value": 0
+              },
+              {
+                "col": 9,
+                "color": "#1e293b",
+                "id": 19,
+                "label": "",
+                "row": 1,
+                "value": 0
+              },
+              {
+                "col": 0,
+                "color": "#1e293b",
+                "id": 20,
+                "label": "",
+                "row": 2,
+                "value": 0
+              },
+              {
+                "col": 1,
+                "color": "#1e293b",
+                "id": 21,
+                "label": "",
+                "row": 2,
+                "value": 0
+              },
+              {
+                "col": 2,
+                "color": "#8b5cf6",
+                "id": 22,
+                "label": "",
+                "row": 2,
+                "value": 1
+              },
+              {
+                "col": 3,
+                "color": "#8b5cf6",
+                "id": 23,
+                "label": "",
+                "row": 2,
+                "value": 1
+              },
+              {
+                "col": 4,
+                "color": "#8b5cf6",
+                "id": 24,
+                "label": "",
+                "row": 2,
+                "value": 1
+              },
+              {
+                "col": 5,
+                "color": "#8b5cf6",
+                "id": 25,
+                "label": "",
+                "row": 2,
+                "value": 1
+              },
+              {
+                "col": 6,
+                "color": "#1e293b",
+                "id": 26,
+                "label": "",
+                "row": 2,
+                "value": 0
+              },
+              {
+                "col": 7,
+                "color": "#1e293b",
+                "id": 27,
+                "label": "",
+                "row": 2,
+                "value": 0
+              },
+              {
+                "col": 8,
+                "color": "#1e293b",
+                "id": 28,
+                "label": "",
+                "row": 2,
+                "value": 0
+              },
+              {
+                "col": 9,
+                "color": "#1e293b",
+                "id": 29,
+                "label": "",
+                "row": 2,
+                "value": 0
+              },
+              {
+                "col": 0,
+                "color": "#1e293b",
+                "id": 30,
+                "label": "",
+                "row": 3,
+                "value": 0
+              },
+              {
+                "col": 1,
+                "color": "#1e293b",
+                "id": 31,
+                "label": "",
+                "row": 3,
+                "value": 0
+              },
+              {
+                "col": 2,
+                "color": "#8b5cf6",
+                "id": 32,
+                "label": "",
+                "row": 3,
+                "value": 1
+              },
+              {
+                "col": 3,
+                "color": "#8b5cf6",
+                "id": 33,
+                "label": "",
+                "row": 3,
+                "value": 1
+              },
+              {
+                "col": 4,
+                "color": "#8b5cf6",
+                "id": 34,
+                "label": "",
+                "row": 3,
+                "value": 1
+              },
+              {
+                "col": 5,
+                "color": "#8b5cf6",
+                "id": 35,
+                "label": "",
+                "row": 3,
+                "value": 1
+              },
+              {
+                "col": 6,
+                "color": "#1e293b",
+                "id": 36,
+                "label": "",
+                "row": 3,
+                "value": 0
+              },
+              {
+                "col": 7,
+                "color": "#1e293b",
+                "id": 37,
+                "label": "",
+                "row": 3,
+                "value": 0
+              },
+              {
+                "col": 8,
+                "color": "#1e293b",
+                "id": 38,
+                "label": "",
+                "row": 3,
+                "value": 0
+              },
+              {
+                "col": 9,
+                "color": "#1e293b",
+                "id": 39,
+                "label": "",
+                "row": 3,
+                "value": 0
+              },
+              {
+                "col": 0,
+                "color": "#1e293b",
+                "id": 40,
+                "label": "",
+                "row": 4,
+                "value": 0
+              },
+              {
+                "col": 1,
+                "color": "#1e293b",
+                "id": 41,
+                "label": "",
+                "row": 4,
+                "value": 0
+              },
+              {
+                "col": 2,
+                "color": "#8b5cf6",
+                "id": 42,
+                "label": "",
+                "row": 4,
+                "value": 1
+              },
+              {
+                "col": 3,
+                "color": "#8b5cf6",
+                "id": 43,
+                "label": "",
+                "row": 4,
+                "value": 1
+              },
+              {
+                "col": 4,
+                "color": "#8b5cf6",
+                "id": 44,
+                "label": "",
+                "row": 4,
+                "value": 1
+              },
+              {
+                "col": 5,
+                "color": "#8b5cf6",
+                "id": 45,
+                "label": "",
+                "row": 4,
+                "value": 1
+              },
+              {
+                "col": 6,
+                "color": "#8b5cf6",
+                "id": 46,
+                "label": "",
+                "row": 4,
+                "value": 1
+              },
+              {
+                "col": 7,
+                "color": "#8b5cf6",
+                "id": 47,
+                "label": "",
+                "row": 4,
+                "value": 1
+              },
+              {
+                "col": 8,
+                "color": "#8b5cf6",
+                "id": 48,
+                "label": "",
+                "row": 4,
+                "value": 1
+              },
+              {
+                "col": 9,
+                "color": "#1e293b",
+                "id": 49,
+                "label": "",
+                "row": 4,
+                "value": 0
+              },
+              {
+                "col": 0,
+                "color": "#1e293b",
+                "id": 50,
+                "label": "",
+                "row": 5,
+                "value": 0
+              },
+              {
+                "col": 1,
+                "color": "#1e293b",
+                "id": 51,
+                "label": "",
+                "row": 5,
+                "value": 0
+              },
+              {
+                "col": 2,
+                "color": "#1e293b",
+                "id": 52,
+                "label": "",
+                "row": 5,
+                "value": 0
+              },
+              {
+                "col": 3,
+                "color": "#1e293b",
+                "id": 53,
+                "label": "",
+                "row": 5,
+                "value": 0
+              },
+              {
+                "col": 4,
+                "color": "#1e293b",
+                "id": 54,
+                "label": "",
+                "row": 5,
+                "value": 0
+              },
+              {
+                "col": 5,
+                "color": "#1e293b",
+                "id": 55,
+                "label": "",
+                "row": 5,
+                "value": 0
+              },
+              {
+                "col": 6,
+                "color": "#1e293b",
+                "id": 56,
+                "label": "",
+                "row": 5,
+                "value": 0
+              },
+              {
+                "col": 7,
+                "color": "#1e293b",
+                "id": 57,
+                "label": "",
+                "row": 5,
+                "value": 0
+              },
+              {
+                "col": 8,
+                "color": "#1e293b",
+                "id": 58,
+                "label": "",
+                "row": 5,
+                "value": 0
+              },
+              {
+                "col": 9,
+                "color": "#1e293b",
+                "id": 59,
+                "label": "",
+                "row": 5,
+                "value": 0
+              },
+              {
+                "col": 0,
+                "color": "#1e293b",
+                "id": 60,
+                "label": "",
+                "row": 6,
+                "value": 0
+              },
+              {
+                "col": 1,
+                "color": "#1e293b",
+                "id": 61,
+                "label": "",
+                "row": 6,
+                "value": 0
+              },
+              {
+                "col": 2,
+                "color": "#1e293b",
+                "id": 62,
+                "label": "",
+                "row": 6,
+                "value": 0
+              },
+              {
+                "col": 3,
+                "color": "#1e293b",
+                "id": 63,
+                "label": "",
+                "row": 6,
+                "value": 0
+              },
+              {
+                "col": 4,
+                "color": "#1e293b",
+                "id": 64,
+                "label": "",
+                "row": 6,
+                "value": 0
+              },
+              {
+                "col": 5,
+                "color": "#1e293b",
+                "id": 65,
+                "label": "",
+                "row": 6,
+                "value": 0
+              },
+              {
+                "col": 6,
+                "color": "#334155",
+                "id": 66,
+                "label": "",
+                "row": 6,
+                "value": 2
+              },
+              {
+                "col": 7,
+                "color": "#334155",
+                "id": 67,
+                "label": "",
+                "row": 6,
+                "value": 2
+              },
+              {
+                "col": 8,
+                "color": "#334155",
+                "id": 68,
+                "label": "",
+                "row": 6,
+                "value": 2
+              },
+              {
+                "col": 9,
+                "color": "#1e293b",
+                "id": 69,
+                "label": "",
+                "row": 6,
+                "value": 0
+              },
+              {
+                "col": 0,
+                "color": "#1e293b",
+                "id": 70,
+                "label": "",
+                "row": 7,
+                "value": 0
+              },
+              {
+                "col": 1,
+                "color": "#1e293b",
+                "id": 71,
+                "label": "",
+                "row": 7,
+                "value": 0
+              },
+              {
+                "col": 2,
+                "color": "#1e293b",
+                "id": 72,
+                "label": "",
+                "row": 7,
+                "value": 0
+              },
+              {
+                "col": 3,
+                "color": "#1e293b",
+                "id": 73,
+                "label": "",
+                "row": 7,
+                "value": 0
+              },
+              {
+                "col": 4,
+                "color": "#1e293b",
+                "id": 74,
+                "label": "",
+                "row": 7,
+                "value": 0
+              },
+              {
+                "col": 5,
+                "color": "#1e293b",
+                "id": 75,
+                "label": "",
+                "row": 7,
+                "value": 0
+              },
+              {
+                "col": 6,
+                "color": "#334155",
+                "id": 76,
+                "label": "",
+                "row": 7,
+                "value": 2
+              },
+              {
+                "col": 7,
+                "color": "#334155",
+                "id": 77,
+                "label": "",
+                "row": 7,
+                "value": 2
+              },
+              {
+                "col": 8,
+                "color": "#334155",
+                "id": 78,
+                "label": "",
+                "row": 7,
+                "value": 2
+              },
+              {
+                "col": 9,
+                "color": "#1e293b",
+                "id": 79,
+                "label": "",
+                "row": 7,
+                "value": 0
+              },
+              {
+                "col": 0,
+                "color": "#1e293b",
+                "id": 80,
+                "label": "",
+                "row": 8,
+                "value": 0
+              },
+              {
+                "col": 1,
+                "color": "#1e293b",
+                "id": 81,
+                "label": "",
+                "row": 8,
+                "value": 0
+              },
+              {
+                "col": 2,
+                "color": "#1e293b",
+                "id": 82,
+                "label": "",
+                "row": 8,
+                "value": 0
+              },
+              {
+                "col": 3,
+                "color": "#1e293b",
+                "id": 83,
+                "label": "",
+                "row": 8,
+                "value": 0
+              },
+              {
+                "col": 4,
+                "color": "#1e293b",
+                "id": 84,
+                "label": "",
+                "row": 8,
+                "value": 0
+              },
+              {
+                "col": 5,
+                "color": "#1e293b",
+                "id": 85,
+                "label": "",
+                "row": 8,
+                "value": 0
+              },
+              {
+                "col": 6,
+                "color": "#334155",
+                "id": 86,
+                "label": "",
+                "row": 8,
+                "value": 2
+              },
+              {
+                "col": 7,
+                "color": "#334155",
+                "id": 87,
+                "label": "",
+                "row": 8,
+                "value": 2
+              },
+              {
+                "col": 8,
+                "color": "#334155",
+                "id": 88,
+                "label": "",
+                "row": 8,
+                "value": 2
+              },
+              {
+                "col": 9,
+                "color": "#1e293b",
+                "id": 89,
+                "label": "",
+                "row": 8,
+                "value": 0
+              },
+              {
+                "col": 0,
+                "color": "#1e293b",
+                "id": 90,
+                "label": "",
+                "row": 9,
+                "value": 0
+              },
+              {
+                "col": 1,
+                "color": "#1e293b",
+                "id": 91,
+                "label": "",
+                "row": 9,
+                "value": 0
+              },
+              {
+                "col": 2,
+                "color": "#1e293b",
+                "id": 92,
+                "label": "",
+                "row": 9,
+                "value": 0
+              },
+              {
+                "col": 3,
+                "color": "#1e293b",
+                "id": 93,
+                "label": "",
+                "row": 9,
+                "value": 0
+              },
+              {
+                "col": 4,
+                "color": "#1e293b",
+                "id": 94,
+                "label": "",
+                "row": 9,
+                "value": 0
+              },
+              {
+                "col": 5,
+                "color": "#1e293b",
+                "id": 95,
+                "label": "",
+                "row": 9,
+                "value": 0
+              },
+              {
+                "col": 6,
+                "color": "#1e293b",
+                "id": 96,
+                "label": "",
+                "row": 9,
+                "value": 0
+              },
+              {
+                "col": 7,
+                "color": "#1e293b",
+                "id": 97,
+                "label": "",
+                "row": 9,
+                "value": 0
+              },
+              {
+                "col": 8,
+                "color": "#1e293b",
+                "id": 98,
+                "label": "",
+                "row": 9,
+                "value": 0
+              },
+              {
+                "col": 9,
+                "color": "#1e293b",
+                "id": 99,
+                "label": "",
+                "row": 9,
+                "value": 0
+              }
+            ],
+            "label": "Cells",
+            "description": "The initial grid; value 1 = the seeded region, 2 = a second region, 0 = background.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "col": {
+                  "name": "col",
+                  "required": true,
+                  "type": "number"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "number"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "row": {
+                  "name": "row",
+                  "required": true,
+                  "type": "number"
+                },
+                "value": {
+                  "name": "value",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 600,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick fills one cell per step; toggle to start/pause the flood.",
+            "tier": "domain"
+          },
+          {
+            "key": "seedId",
+            "type": "number",
+            "default": 23,
+            "label": "Seed Cell",
+            "description": "Id (row*cols+col) of the cell the flood starts from; its value defines the region.",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "cells",
+            "cur",
+            "done",
+            "newIds",
+            "queue",
+            "running",
+            "seedValue",
+            "seen",
+            "visited"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "FloodFillEnginePage",
+        "defaultPath": "/algo-floodfill",
+        "primaryEntity": "FloodScene"
+      }
+    ],
+    "emittedEvents": [
+      "CELLS_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

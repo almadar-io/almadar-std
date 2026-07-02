@@ -1,0 +1,908 @@
+{
+  "description": "Iterative quicksort engine — one Lomuto micro-step per tick over a bar array on algorithm-canvas, driven by an explicit range stack; composed by a learning orbital via `uses`.",
+  "name": "std-algo-quicksort",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "bars",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "hi": {
+                  "name": "hi",
+                  "required": true,
+                  "type": "number"
+                },
+                "lo": {
+                  "name": "lo",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "stack",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "lo",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "hi",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "pivot",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "si",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "j",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "active",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "done",
+            "type": "boolean"
+          },
+          {
+            "default": true,
+            "name": "running",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "sEmpty",
+            "type": "boolean"
+          },
+          {
+            "default": 0.0,
+            "name": "topLo",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "topHi",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "cmpLess",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "doSwap",
+            "type": "boolean"
+          },
+          {
+            "default": 0.0,
+            "name": "swapA",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "swapB",
+            "type": "number"
+          }
+        ],
+        "name": "QuickScene",
+        "persistence": "runtime"
+      },
+      "name": "QuickSortEngineOrbital",
+      "pages": [
+        {
+          "name": "QuickSortEnginePage",
+          "path": "/algo-quicksort",
+          "traits": [
+            {
+              "ref": "QuickSortSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bars": {
+              "default": [
+                {
+                  "color": "#3b82f6",
+                  "label": "5",
+                  "value": 5.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "2",
+                  "value": 2.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "8",
+                  "value": 8.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "1",
+                  "value": 1.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "9",
+                  "value": 9.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "3",
+                  "value": 3.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "7",
+                  "value": 7.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "4",
+                  "value": 4.0
+                }
+              ],
+              "description": "Initial unsorted array; each bar's height is proportional to its value.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bars",
+              "tier": "domain",
+              "type": "[AlgoBar]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick performs one partition micro-step; toggle to start/pause the sort.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current bar array each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone.",
+              "event": "BARS_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "bars",
+                  "type": "[AlgoBar]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw, compare, swap, partition, pivot",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "active",
+              "bars",
+              "cmpLess",
+              "doSwap",
+              "done",
+              "hi",
+              "j",
+              "lo",
+              "pivot",
+              "running",
+              "sEmpty",
+              "si",
+              "stack",
+              "swapA",
+              "swapB",
+              "topHi",
+              "topLo"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "QuickScene",
+          "name": "QuickSortSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current bar array each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone.",
+                "key": "BARS_UPDATED",
+                "name": "Bars Updated",
+                "payloadSchema": [
+                  {
+                    "name": "bars",
+                    "type": "[AlgoBar]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw, compare, swap, partition, pivot",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bars",
+                    "@config.bars"
+                  ],
+                  [
+                    "set",
+                    "@entity.stack",
+                    [
+                      {
+                        "hi": [
+                          "-",
+                          [
+                            "array/len",
+                            "@config.bars"
+                          ],
+                          1.0
+                        ],
+                        "lo": 0.0
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.lo",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.hi",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.pivot",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.si",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.j",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.active",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.done",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "bars": "@entity.bars",
+                      "height": "@config.height",
+                      "type": "algorithm-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BARS_UPDATED",
+                    {
+                      "bars": "@entity.bars"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.sEmpty",
+                  [
+                    "==",
+                    [
+                      "array/len",
+                      "@entity.stack"
+                    ],
+                    0.0
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.topLo",
+                  [
+                    "if",
+                    "@entity.sEmpty",
+                    0.0,
+                    [
+                      "object/get",
+                      [
+                        "array/last",
+                        "@entity.stack"
+                      ],
+                      "lo"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.topHi",
+                  [
+                    "if",
+                    "@entity.sEmpty",
+                    0.0,
+                    [
+                      "object/get",
+                      [
+                        "array/last",
+                        "@entity.stack"
+                      ],
+                      "hi"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.cmpLess",
+                  [
+                    "<",
+                    [
+                      "object/get",
+                      [
+                        "array/nth",
+                        "@entity.bars",
+                        "@entity.j"
+                      ],
+                      "value"
+                    ],
+                    "@entity.pivot"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.doSwap",
+                  [
+                    "and",
+                    "@entity.active",
+                    [
+                      "or",
+                      [
+                        "==",
+                        "@entity.j",
+                        "@entity.hi"
+                      ],
+                      "@entity.cmpLess"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.swapA",
+                  "@entity.si"
+                ],
+                [
+                  "set",
+                  "@entity.swapB",
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@entity.j",
+                      "@entity.hi"
+                    ],
+                    "@entity.hi",
+                    "@entity.j"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.bars",
+                  [
+                    "array/map",
+                    "@entity.bars",
+                    [
+                      "object/merge",
+                      "@item",
+                      {
+                        "color": [
+                          "if",
+                          [
+                            "and",
+                            [
+                              "not",
+                              "@entity.active"
+                            ],
+                            "@entity.sEmpty"
+                          ],
+                          "#22c55e",
+                          [
+                            "if",
+                            [
+                              "and",
+                              "@entity.active",
+                              [
+                                ">=",
+                                "@index",
+                                "@entity.lo"
+                              ],
+                              [
+                                "<=",
+                                "@index",
+                                "@entity.hi"
+                              ]
+                            ],
+                            [
+                              "if",
+                              [
+                                "==",
+                                "@index",
+                                "@entity.hi"
+                              ],
+                              "#a855f7",
+                              [
+                                "if",
+                                [
+                                  "==",
+                                  "@index",
+                                  "@entity.j"
+                                ],
+                                "#f59e0b",
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@index",
+                                    "@entity.si"
+                                  ],
+                                  "#fbbf24",
+                                  "#3b82f6"
+                                ]
+                              ]
+                            ],
+                            "#3b82f6"
+                          ]
+                        ],
+                        "value": [
+                          "if",
+                          [
+                            "and",
+                            "@entity.doSwap",
+                            [
+                              "==",
+                              "@index",
+                              "@entity.swapA"
+                            ]
+                          ],
+                          [
+                            "object/get",
+                            [
+                              "array/nth",
+                              "@entity.bars",
+                              "@entity.swapB"
+                            ],
+                            "value"
+                          ],
+                          [
+                            "if",
+                            [
+                              "and",
+                              "@entity.doSwap",
+                              [
+                                "==",
+                                "@index",
+                                "@entity.swapB"
+                              ]
+                            ],
+                            [
+                              "object/get",
+                              [
+                                "array/nth",
+                                "@entity.bars",
+                                "@entity.swapA"
+                              ],
+                              "value"
+                            ],
+                            [
+                              "object/get",
+                              "@item",
+                              "value"
+                            ]
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.stack",
+                  [
+                    "if",
+                    [
+                      "and",
+                      "@entity.active",
+                      [
+                        "==",
+                        "@entity.j",
+                        "@entity.hi"
+                      ]
+                    ],
+                    [
+                      "array/append",
+                      [
+                        "array/append",
+                        "@entity.stack",
+                        {
+                          "hi": [
+                            "-",
+                            "@entity.si",
+                            1.0
+                          ],
+                          "lo": "@entity.lo"
+                        }
+                      ],
+                      {
+                        "hi": "@entity.hi",
+                        "lo": [
+                          "+",
+                          "@entity.si",
+                          1.0
+                        ]
+                      }
+                    ],
+                    [
+                      "if",
+                      [
+                        "and",
+                        [
+                          "not",
+                          "@entity.active"
+                        ],
+                        [
+                          "not",
+                          "@entity.sEmpty"
+                        ]
+                      ],
+                      [
+                        "array/dropLast",
+                        "@entity.stack",
+                        1.0
+                      ],
+                      "@entity.stack"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.lo",
+                  [
+                    "if",
+                    "@entity.active",
+                    "@entity.lo",
+                    [
+                      "if",
+                      "@entity.sEmpty",
+                      "@entity.lo",
+                      "@entity.topLo"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.hi",
+                  [
+                    "if",
+                    "@entity.active",
+                    "@entity.hi",
+                    [
+                      "if",
+                      "@entity.sEmpty",
+                      "@entity.hi",
+                      "@entity.topHi"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.pivot",
+                  [
+                    "if",
+                    "@entity.active",
+                    "@entity.pivot",
+                    [
+                      "if",
+                      [
+                        "and",
+                        [
+                          "not",
+                          "@entity.sEmpty"
+                        ],
+                        [
+                          "<",
+                          "@entity.topLo",
+                          "@entity.topHi"
+                        ]
+                      ],
+                      [
+                        "object/get",
+                        [
+                          "array/nth",
+                          "@entity.bars",
+                          "@entity.topHi"
+                        ],
+                        "value"
+                      ],
+                      "@entity.pivot"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.si",
+                  [
+                    "if",
+                    "@entity.active",
+                    [
+                      "if",
+                      [
+                        "==",
+                        "@entity.j",
+                        "@entity.hi"
+                      ],
+                      "@entity.si",
+                      [
+                        "if",
+                        "@entity.cmpLess",
+                        [
+                          "+",
+                          "@entity.si",
+                          1.0
+                        ],
+                        "@entity.si"
+                      ]
+                    ],
+                    [
+                      "if",
+                      [
+                        "and",
+                        [
+                          "not",
+                          "@entity.sEmpty"
+                        ],
+                        [
+                          "<",
+                          "@entity.topLo",
+                          "@entity.topHi"
+                        ]
+                      ],
+                      "@entity.topLo",
+                      "@entity.si"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.j",
+                  [
+                    "if",
+                    "@entity.active",
+                    [
+                      "if",
+                      [
+                        "==",
+                        "@entity.j",
+                        "@entity.hi"
+                      ],
+                      "@entity.j",
+                      [
+                        "+",
+                        "@entity.j",
+                        1.0
+                      ]
+                    ],
+                    [
+                      "if",
+                      [
+                        "and",
+                        [
+                          "not",
+                          "@entity.sEmpty"
+                        ],
+                        [
+                          "<",
+                          "@entity.topLo",
+                          "@entity.topHi"
+                        ]
+                      ],
+                      "@entity.topLo",
+                      "@entity.j"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.done",
+                  [
+                    "and",
+                    [
+                      "not",
+                      "@entity.active"
+                    ],
+                    "@entity.sEmpty"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.active",
+                  [
+                    "if",
+                    "@entity.active",
+                    [
+                      "if",
+                      [
+                        "==",
+                        "@entity.j",
+                        "@entity.hi"
+                      ],
+                      false,
+                      true
+                    ],
+                    [
+                      "if",
+                      "@entity.sEmpty",
+                      false,
+                      [
+                        "<",
+                        "@entity.topLo",
+                        "@entity.topHi"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "bars": "@entity.bars",
+                    "height": "@config.height",
+                    "type": "algorithm-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "BARS_UPDATED",
+                  {
+                    "bars": "@entity.bars"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                "@entity.running",
+                [
+                  "not",
+                  "@entity.done"
+                ]
+              ],
+              "interval": 350.0,
+              "name": "quickTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

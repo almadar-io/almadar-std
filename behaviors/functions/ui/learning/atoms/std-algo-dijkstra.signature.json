@@ -1,0 +1,512 @@
+[
+  {
+    "organism": "std-algo-dijkstra",
+    "orbital": "DijkstraEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-algo-dijkstra.ts",
+    "entities": [
+      {
+        "name": "DijkstraScene",
+        "fields": [
+          {
+            "name": "nodes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "edges",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "wedges",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "dists",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "visited",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "cur",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "minD",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "distU",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "DijkstraSim",
+        "emittedEvents": [
+          "NODES_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "NODES_UPDATED",
+            "direction": "emit",
+            "description": "The graph each step — a composed listener can subscribe; a harmless no-op standalone.",
+            "synonyms": "tick, frame, step, relax, settle, shortest, path",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "dists",
+            "type": "[Dist]",
+            "default": [
+              {
+                "d": 0,
+                "id": "A"
+              },
+              {
+                "d": 9999,
+                "id": "B"
+              },
+              {
+                "d": 9999,
+                "id": "C"
+              },
+              {
+                "d": 9999,
+                "id": "D"
+              },
+              {
+                "d": 9999,
+                "id": "E"
+              },
+              {
+                "d": 9999,
+                "id": "F"
+              },
+              {
+                "d": 9999,
+                "id": "G"
+              }
+            ],
+            "label": "Distances",
+            "description": "Best-known distance per node; start 0, others 9999 (infinity sentinel). Not rendered.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "d": {
+                  "name": "d",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "edges",
+            "type": "[GraphEdge]",
+            "default": [
+              {
+                "color": "#9ca3af",
+                "from": "A",
+                "label": "4",
+                "to": "B"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "A",
+                "label": "3",
+                "to": "C"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "B",
+                "label": "1",
+                "to": "C"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "B",
+                "label": "5",
+                "to": "D"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "C",
+                "label": "6",
+                "to": "D"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "C",
+                "label": "8",
+                "to": "E"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "D",
+                "label": "2",
+                "to": "E"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "D",
+                "label": "7",
+                "to": "F"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "E",
+                "label": "3",
+                "to": "F"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "E",
+                "label": "9",
+                "to": "G"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "F",
+                "label": "4",
+                "to": "G"
+              }
+            ],
+            "label": "Edges",
+            "description": "Rendered undirected edges (weight in label); drawing only, algorithm reads wedges.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "nodes",
+            "type": "[GraphNode]",
+            "default": [
+              {
+                "color": "#f59e0b",
+                "id": "A",
+                "kind": "cell",
+                "label": "A",
+                "radius": 20,
+                "x": 300,
+                "y": 60
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "B",
+                "kind": "cell",
+                "label": "B",
+                "radius": 20,
+                "x": 150,
+                "y": 160
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "C",
+                "kind": "cell",
+                "label": "C",
+                "radius": 20,
+                "x": 450,
+                "y": 160
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "D",
+                "kind": "cell",
+                "label": "D",
+                "radius": 20,
+                "x": 90,
+                "y": 300
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "E",
+                "kind": "cell",
+                "label": "E",
+                "radius": 20,
+                "x": 240,
+                "y": 300
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "F",
+                "kind": "cell",
+                "label": "F",
+                "radius": 20,
+                "x": 400,
+                "y": 300
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "G",
+                "kind": "cell",
+                "label": "G",
+                "radius": 20,
+                "x": 520,
+                "y": 300
+              }
+            ],
+            "label": "Nodes",
+            "description": "Graph vertices; Dijkstra recolours them slate→amber(reached)→green(settled), blue=current.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick settles one node per step; toggle to start/pause the search.",
+            "tier": "domain"
+          },
+          {
+            "key": "start",
+            "type": "string",
+            "default": "A",
+            "label": "Start Node",
+            "description": "Id of the source node Dijkstra measures distances from.",
+            "tier": "domain"
+          },
+          {
+            "key": "wedges",
+            "type": "[WEdge]",
+            "default": [
+              {
+                "from": "A",
+                "to": "B",
+                "w": 4
+              },
+              {
+                "from": "A",
+                "to": "C",
+                "w": 3
+              },
+              {
+                "from": "B",
+                "to": "C",
+                "w": 1
+              },
+              {
+                "from": "B",
+                "to": "D",
+                "w": 5
+              },
+              {
+                "from": "C",
+                "to": "D",
+                "w": 6
+              },
+              {
+                "from": "C",
+                "to": "E",
+                "w": 8
+              },
+              {
+                "from": "D",
+                "to": "E",
+                "w": 2
+              },
+              {
+                "from": "D",
+                "to": "F",
+                "w": 7
+              },
+              {
+                "from": "E",
+                "to": "F",
+                "w": 3
+              },
+              {
+                "from": "E",
+                "to": "G",
+                "w": 9
+              },
+              {
+                "from": "F",
+                "to": "G",
+                "w": 4
+              }
+            ],
+            "label": "Weighted Edges",
+            "description": "Undirected weighted adjacency the relaxation reads; one wedge per drawn edge.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                },
+                "w": {
+                  "name": "w",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "cur",
+            "distU",
+            "dists",
+            "done",
+            "edges",
+            "minD",
+            "nodes",
+            "running",
+            "visited",
+            "wedges"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "DijkstraEnginePage",
+        "defaultPath": "/algo-dijkstra",
+        "primaryEntity": "DijkstraScene"
+      }
+    ],
+    "emittedEvents": [
+      "NODES_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

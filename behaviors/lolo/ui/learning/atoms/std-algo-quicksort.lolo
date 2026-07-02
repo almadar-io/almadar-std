@@ -1,0 +1,159 @@
+app std-algo-quicksort "1.0.0"
+"Iterative quicksort engine — one Lomuto micro-step per tick over a bar array on algorithm-canvas, driven by an explicit range stack; composed by a learning orbital via `uses`."
+orbital QuickSortEngineOrbital {
+  type AlgoBar = {
+    value : number!
+    color : string
+    label : string
+  }
+
+  type Range = {
+    lo : number!
+    hi : number!
+  }
+
+  entity QuickScene [runtime] {
+    id : string!
+    bars : [AlgoBar]
+    stack : [Range]
+    lo : number = 0
+    hi : number = 0
+    pivot : number = 0
+    si : number = 0
+    j : number = 0
+    active : boolean = false
+    done : boolean = false
+    running : boolean = true
+    sEmpty : boolean = false
+    topLo : number = 0
+    topHi : number = 0
+    cmpLess : boolean = false
+    doSwap : boolean = false
+    swapA : number = 0
+    swapB : number = 0
+  }
+
+  trait QuickSortSim -> @rebindable QuickScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.bars @config.bars)
+        (set @entity.stack [ { lo: 0, hi: (- (array/len @config.bars) 1) } ])
+        (set @entity.lo 0)
+        (set @entity.hi 0)
+        (set @entity.pivot 0)
+        (set @entity.si 0)
+        (set @entity.j 0)
+        (set @entity.active false)
+        (set @entity.done false)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: algorithm-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          bars: @entity.bars
+        })
+        (emit BARS_UPDATED { bars: @entity.bars })
+    }
+
+    ticks {
+      quickTick every 350ms
+        when (and @entity.running (not @entity.done))
+        (set @entity.sEmpty (== (array/len @entity.stack) 0))
+        (set @entity.topLo (if @entity.sEmpty 0 (object/get (array/last @entity.stack) lo)))
+        (set @entity.topHi (if @entity.sEmpty 0 (object/get (array/last @entity.stack) hi)))
+        (set @entity.cmpLess (< (object/get (array/nth @entity.bars @entity.j) value) @entity.pivot))
+        (set @entity.doSwap (and @entity.active (or (== @entity.j @entity.hi) @entity.cmpLess)))
+        (set @entity.swapA @entity.si)
+        (set @entity.swapB (if (== @entity.j @entity.hi) @entity.hi @entity.j))
+        (set @entity.bars
+          (array/map @entity.bars
+            (object/merge @item {
+              value: (if (and @entity.doSwap (== @index @entity.swapA)) (object/get (array/nth @entity.bars @entity.swapB) value)
+                       (if (and @entity.doSwap (== @index @entity.swapB)) (object/get (array/nth @entity.bars @entity.swapA) value)
+                         (object/get @item value)))
+              color: (if (and (not @entity.active) @entity.sEmpty) "#22c55e"
+                       (if (and @entity.active (>= @index @entity.lo) (<= @index @entity.hi))
+                         (if (== @index @entity.hi) "#a855f7"
+                           (if (== @index @entity.j) "#f59e0b"
+                             (if (== @index @entity.si) "#fbbf24" "#3b82f6")))
+                         "#3b82f6"))
+            })))
+        (set @entity.stack
+          (if (and @entity.active (== @entity.j @entity.hi))
+            (array/append (array/append @entity.stack { lo: @entity.lo, hi: (- @entity.si 1) }) { lo: (+ @entity.si 1), hi: @entity.hi })
+            (if (and (not @entity.active) (not @entity.sEmpty))
+              (array/dropLast @entity.stack 1)
+              @entity.stack)))
+        (set @entity.lo (if @entity.active @entity.lo (if @entity.sEmpty @entity.lo @entity.topLo)))
+        (set @entity.hi (if @entity.active @entity.hi (if @entity.sEmpty @entity.hi @entity.topHi)))
+        (set @entity.pivot (if @entity.active @entity.pivot
+                             (if (and (not @entity.sEmpty) (< @entity.topLo @entity.topHi))
+                               (object/get (array/nth @entity.bars @entity.topHi) value)
+                               @entity.pivot)))
+        (set @entity.si (if @entity.active
+                          (if (== @entity.j @entity.hi) @entity.si (if @entity.cmpLess (+ @entity.si 1) @entity.si))
+                          (if (and (not @entity.sEmpty) (< @entity.topLo @entity.topHi)) @entity.topLo @entity.si)))
+        (set @entity.j (if @entity.active
+                         (if (== @entity.j @entity.hi) @entity.j (+ @entity.j 1))
+                         (if (and (not @entity.sEmpty) (< @entity.topLo @entity.topHi)) @entity.topLo @entity.j)))
+        (set @entity.done (and (not @entity.active) @entity.sEmpty))
+        (set @entity.active (if @entity.active
+                              (if (== @entity.j @entity.hi) false true)
+                              (if @entity.sEmpty false (< @entity.topLo @entity.topHi))))
+        (render-ui main {
+          type: algorithm-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          bars: @entity.bars
+        })
+        (emit BARS_UPDATED { bars: @entity.bars })
+    }
+
+    emits {
+      BARS_UPDATED -> external {
+        bars : [AlgoBar]
+      }
+        @description "The current bar array each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone."
+        @synonyms "tick, frame, step, redraw, compare, swap, partition, pivot"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick performs one partition micro-step; toggle to start/pause the sort."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      bars : [AlgoBar] = [
+        { value: 5, color: "#3b82f6", label: "5" },
+        { value: 2, color: "#3b82f6", label: "2" },
+        { value: 8, color: "#3b82f6", label: "8" },
+        { value: 1, color: "#3b82f6", label: "1" },
+        { value: 9, color: "#3b82f6", label: "9" },
+        { value: 3, color: "#3b82f6", label: "3" },
+        { value: 7, color: "#3b82f6", label: "7" },
+        { value: 4, color: "#3b82f6", label: "4" }
+      ]
+        @label "Bars"
+        @description "Initial unsorted array; each bar's height is proportional to its value."
+        @tier "domain"
+    }
+  }
+
+  page "/algo-quicksort" as QuickSortEnginePage -> QuickSortSim
+}

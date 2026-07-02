@@ -1,0 +1,746 @@
+app learning-algorithms "1.0.0"
+"Algorithms learning app — orbitals are individual computer-science algorithms, each composed via `uses` from a per-algorithm engine atom on algorithm-canvas (bars/cells) or biology-canvas (graphs)."
+orbital AstargraphOrbital {
+  uses Astargraph from "std/behaviors/std-algo-astargraph"
+
+    type GraphNode = {
+      id : string!
+      x : number!
+      y : number!
+      radius : number
+      color : string
+      label : string
+      kind : "cell" | "organelle" | "molecule" | "organism"
+    }
+    type GraphEdge = {
+      from : string!
+      to : string!
+      color : string
+      label : string
+    }
+    type WEdge = {
+      from : string!
+      to : string!
+      w : number!
+    }
+    type Dist = {
+      id : string!
+      d : number!
+    }
+    type FEntry = {
+      id : string!
+      f : number!
+    }
+
+    entity AstargraphScene [runtime] {
+      id : string!
+      nodes : [GraphNode]
+      edges : [GraphEdge]
+      wedges : [WEdge]
+      gscore : [Dist]
+      visited : [string]
+      openF : [FEntry]
+      goal : string = ""
+      goalX : number = 0
+      goalY : number = 0
+      cur : string = ""
+      minF : number = 0
+      distU : number = 0
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait AstargraphEngine = Astargraph.traits.AstarSim -> AstargraphScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/astargraph" as AstargraphPage -> AstargraphEngine
+}
+orbital AstargridOrbital {
+  uses Astargrid from "std/behaviors/std-algo-astargrid"
+
+    type AlgoCell = {
+      id : number!
+      row : number!
+      col : number!
+      value : number
+      color : string
+      label : string
+      g : number
+    }
+
+    entity AstargridScene [runtime] {
+      id : string!
+      cells : [AlgoCell]
+      open : [number]
+      closed : [number]
+      cur : number = 0
+      gcur : number = 0
+      tr : number = 0
+      tc : number = 0
+      reached : boolean = false
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait AstargridEngine = Astargrid.traits.AstarGridSim -> AstargridScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/astargrid" as AstargridPage -> AstargridEngine
+}
+orbital BfsOrbital {
+  uses Bfs from "std/behaviors/std-algo-bfs"
+
+    type GraphNode = {
+      id : string!
+      x : number!
+      y : number!
+      radius : number
+      color : string
+      label : string
+      kind : "cell" | "organelle" | "molecule" | "organism"
+    }
+    type GraphEdge = {
+      from : string!
+      to : string!
+      color : string
+      label : string
+    }
+
+    entity BfsScene [runtime] {
+      id : string!
+      nodes : [GraphNode]
+      edges : [GraphEdge]
+      queue : [string]
+      seen : [string]
+      visited : [string]
+      cur : string = ""
+      newIds : [string]
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait BfsEngine = Bfs.traits.BfsSim -> BfsScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/bfs" as BfsPage -> BfsEngine
+}
+orbital BinarysearchOrbital {
+  uses Binarysearch from "std/behaviors/std-algo-binarysearch"
+
+    type AlgoBar = {
+      value : number!
+      color : string
+      label : string
+    }
+
+    type AlgoPointer = {
+      index : number!
+      label : string
+      color : string
+    }
+
+    entity BinarysearchScene [runtime] {
+      id : string!
+      bars : [AlgoBar]
+      pointers : [AlgoPointer]
+      lo : number = 0
+      hi : number = 0
+      mid : number = 0
+      cur : number = 0
+      found : boolean = false
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait BinarysearchEngine = Binarysearch.traits.BinarySearchSim -> BinarysearchScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/binarysearch" as BinarysearchPage -> BinarysearchEngine
+}
+orbital BubblesortOrbital {
+  uses Bubblesort from "std/behaviors/std-algo-bubblesort"
+
+    type AlgoBar = {
+      value : number!
+      color : string
+      label : string
+    }
+
+    entity BubblesortScene [runtime] {
+      id : string!
+      bars : [AlgoBar]
+      i : number = 0
+      n : number = 0
+      pass : boolean = false
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait BubblesortEngine = Bubblesort.traits.BubbleSortSim -> BubblesortScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/bubblesort" as BubblesortPage -> BubblesortEngine
+}
+orbital DfsOrbital {
+  uses Dfs from "std/behaviors/std-algo-dfs"
+
+    type GraphNode = {
+      id : string!
+      x : number!
+      y : number!
+      radius : number
+      color : string
+      label : string
+      kind : "cell" | "organelle" | "molecule" | "organism"
+    }
+    type GraphEdge = {
+      from : string!
+      to : string!
+      color : string
+      label : string
+    }
+
+    entity DfsScene [runtime] {
+      id : string!
+      nodes : [GraphNode]
+      edges : [GraphEdge]
+      stack : [string]
+      seen : [string]
+      visited : [string]
+      cur : string = ""
+      newIds : [string]
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait DfsEngine = Dfs.traits.DfsSim -> DfsScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/dfs" as DfsPage -> DfsEngine
+}
+orbital DijkstraOrbital {
+  uses Dijkstra from "std/behaviors/std-algo-dijkstra"
+
+    type GraphNode = {
+      id : string!
+      x : number!
+      y : number!
+      radius : number
+      color : string
+      label : string
+      kind : "cell" | "organelle" | "molecule" | "organism"
+    }
+    type GraphEdge = {
+      from : string!
+      to : string!
+      color : string
+      label : string
+    }
+    type WEdge = {
+      from : string!
+      to : string!
+      w : number!
+    }
+    type Dist = {
+      id : string!
+      d : number!
+    }
+
+    entity DijkstraScene [runtime] {
+      id : string!
+      nodes : [GraphNode]
+      edges : [GraphEdge]
+      wedges : [WEdge]
+      dists : [Dist]
+      visited : [string]
+      cur : string = ""
+      minD : number = 0
+      distU : number = 0
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait DijkstraEngine = Dijkstra.traits.DijkstraSim -> DijkstraScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/dijkstra" as DijkstraPage -> DijkstraEngine
+}
+orbital FloodfillOrbital {
+  uses Floodfill from "std/behaviors/std-algo-floodfill"
+
+    type AlgoCell = {
+      id : number!
+      row : number!
+      col : number!
+      value : number
+      color : string
+      label : string
+    }
+
+    entity FloodfillScene [runtime] {
+      id : string!
+      cells : [AlgoCell]
+      queue : [number]
+      seen : [number]
+      visited : [number]
+      seedValue : number = 0
+      cur : number = 0
+      newIds : [number]
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait FloodfillEngine = Floodfill.traits.FloodFillSim -> FloodfillScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/floodfill" as FloodfillPage -> FloodfillEngine
+}
+orbital GameoflifeOrbital {
+  uses Gameoflife from "std/behaviors/std-algo-gameoflife"
+
+    type AlgoCell = {
+      row : number!
+      col : number!
+      value : number
+      color : string
+      label : string
+    }
+
+    entity GameoflifeScene [runtime] {
+      id : string!
+      cells : [AlgoCell]
+      running : boolean = true
+    }
+
+  trait GameoflifeEngine = Gameoflife.traits.GameOfLifeSim -> GameoflifeScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/gameoflife" as GameoflifePage -> GameoflifeEngine
+}
+orbital GridbfsOrbital {
+  uses Gridbfs from "std/behaviors/std-algo-gridbfs"
+
+    type AlgoCell = {
+      id : number!
+      row : number!
+      col : number!
+      value : number
+      color : string
+      label : string
+    }
+
+    entity GridbfsScene [runtime] {
+      id : string!
+      cells : [AlgoCell]
+      queue : [number]
+      seen : [number]
+      visited : [number]
+      cur : number = 0
+      newIds : [number]
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait GridbfsEngine = Gridbfs.traits.GridBfsSim -> GridbfsScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/gridbfs" as GridbfsPage -> GridbfsEngine
+}
+orbital HeapsortOrbital {
+  uses Heapsort from "std/behaviors/std-algo-heapsort"
+
+    type AlgoBar = {
+      value : number!
+      color : string
+      label : string
+    }
+
+    entity HeapsortScene [runtime] {
+      id : string!
+      bars : [AlgoBar]
+      heapSize : number = 0
+      phase : number = 0
+      origin : number = 0
+      root : number = 0
+      done : boolean = false
+      running : boolean = true
+      largest : number = 0
+      willSwap : boolean = false
+      buildMore : boolean = false
+      buildDone : boolean = false
+      sortExtract : boolean = false
+      finished : boolean = false
+      doSwap : boolean = false
+      swapA : number = 0
+      swapB : number = 0
+    }
+
+  trait HeapsortEngine = Heapsort.traits.HeapSortSim -> HeapsortScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/heapsort" as HeapsortPage -> HeapsortEngine
+}
+orbital InsertionsortOrbital {
+  uses Insertionsort from "std/behaviors/std-algo-insertionsort"
+
+    type AlgoBar = {
+      value : number!
+      color : string
+      label : string
+    }
+
+    entity InsertionsortScene [runtime] {
+      id : string!
+      bars : [AlgoBar]
+      i : number = 1
+      j : number = 1
+      shift : boolean = false
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait InsertionsortEngine = Insertionsort.traits.InsertionSortSim -> InsertionsortScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/insertionsort" as InsertionsortPage -> InsertionsortEngine
+}
+orbital MazegenOrbital {
+  uses Mazegen from "std/behaviors/std-algo-mazegen"
+
+    type AlgoCell = {
+      id : number!
+      row : number!
+      col : number!
+      value : number
+      color : string
+      label : string
+      room : number
+    }
+
+    entity MazegenScene [runtime] {
+      id : string!
+      cells : [AlgoCell]
+      stack : [number]
+      visited : [number]
+      cur : number = 0
+      picked : number = -1
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait MazegenEngine = Mazegen.traits.MazeGenSim -> MazegenScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/mazegen" as MazegenPage -> MazegenEngine
+}
+orbital MergesortOrbital {
+  uses Mergesort from "std/behaviors/std-algo-mergesort"
+
+    type AlgoBar = {
+      value : number!
+      color : string
+      label : string
+    }
+
+    entity MergesortScene [runtime] {
+      id : string!
+      bars : [AlgoBar]
+      aux : [AlgoBar]
+      n : number = 0
+      width : number = 1
+      lo : number = 0
+      i : number = 0
+      j : number = 0
+      k : number = 0
+      done : boolean = false
+      running : boolean = true
+      curMid : number = 0
+      curHi : number = 0
+      copying : boolean = false
+      takeLeft : boolean = false
+      srcVal : number = 0
+      advancing : boolean = false
+      nextLo : number = 0
+      moreMerges : boolean = false
+      levelEnd : boolean = false
+      moreLevels : boolean = false
+      newWidth : number = 0
+    }
+
+  trait MergesortEngine = Mergesort.traits.MergeSortSim -> MergesortScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/mergesort" as MergesortPage -> MergesortEngine
+}
+orbital MstOrbital {
+  uses Mst from "std/behaviors/std-algo-mst"
+
+    type GraphNode = {
+      id : string!
+      x : number!
+      y : number!
+      radius : number
+      color : string
+      label : string
+      kind : "cell" | "organelle" | "molecule" | "organism"
+    }
+    type GraphEdge = {
+      from : string!
+      to : string!
+      color : string
+      label : string
+    }
+    type WEdge = {
+      from : string!
+      to : string!
+      w : number!
+    }
+    type TreeEdge = {
+      from : string!
+      to : string!
+    }
+
+    entity MstScene [runtime] {
+      id : string!
+      nodes : [GraphNode]
+      edges : [GraphEdge]
+      wedges : [WEdge]
+      inTree : [string]
+      treeEdges : [TreeEdge]
+      minW : number = 0
+      chosenFrom : string = ""
+      chosenTo : string = ""
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait MstEngine = Mst.traits.MstSim -> MstScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/mst" as MstPage -> MstEngine
+}
+orbital QuicksortOrbital {
+  uses Quicksort from "std/behaviors/std-algo-quicksort"
+
+    type AlgoBar = {
+      value : number!
+      color : string
+      label : string
+    }
+
+    type Range = {
+      lo : number!
+      hi : number!
+    }
+
+    entity QuicksortScene [runtime] {
+      id : string!
+      bars : [AlgoBar]
+      stack : [Range]
+      lo : number = 0
+      hi : number = 0
+      pivot : number = 0
+      si : number = 0
+      j : number = 0
+      active : boolean = false
+      done : boolean = false
+      running : boolean = true
+      sEmpty : boolean = false
+      topLo : number = 0
+      topHi : number = 0
+      cmpLess : boolean = false
+      doSwap : boolean = false
+      swapA : number = 0
+      swapB : number = 0
+    }
+
+  trait QuicksortEngine = Quicksort.traits.QuickSortSim -> QuicksortScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/quicksort" as QuicksortPage -> QuicksortEngine
+}
+orbital SelectionsortOrbital {
+  uses Selectionsort from "std/behaviors/std-algo-selectionsort"
+
+    type AlgoBar = {
+      value : number!
+      color : string
+      label : string
+    }
+
+    entity SelectionsortScene [runtime] {
+      id : string!
+      bars : [AlgoBar]
+      i : number = 0
+      j : number = 1
+      m : number = 0
+      scanning : boolean = true
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait SelectionsortEngine = Selectionsort.traits.SelectionSortSim -> SelectionsortScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/selectionsort" as SelectionsortPage -> SelectionsortEngine
+}
+orbital SlidingwindowOrbital {
+  uses Slidingwindow from "std/behaviors/std-algo-slidingwindow"
+
+    type AlgoBar = {
+      value : number!
+      color : string
+      label : string
+    }
+
+    type AlgoPointer = {
+      index : number!
+      label : string
+      color : string
+    }
+
+    entity SlidingwindowScene [runtime] {
+      id : string!
+      bars : [AlgoBar]
+      pointers : [AlgoPointer]
+      l : number = 0
+      r : number = 0
+      bestL : number = 0
+      bestSum : number = 0
+      winSum : number = 0
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait SlidingwindowEngine = Slidingwindow.traits.SlidingWindowSim -> SlidingwindowScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/slidingwindow" as SlidingwindowPage -> SlidingwindowEngine
+}
+orbital ToposortOrbital {
+  uses Toposort from "std/behaviors/std-algo-toposort"
+
+    type GraphNode = {
+      id : string!
+      x : number!
+      y : number!
+      radius : number
+      color : string
+      label : string
+      kind : "cell" | "organelle" | "molecule" | "organism"
+    }
+    type GraphEdge = {
+      from : string!
+      to : string!
+      color : string
+      label : string
+    }
+
+    entity ToposortScene [runtime] {
+      id : string!
+      nodes : [GraphNode]
+      edges : [GraphEdge]
+      order : [string]
+      ready : [string]
+      cur : string = ""
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait ToposortEngine = Toposort.traits.ToposortSim -> ToposortScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/toposort" as ToposortPage -> ToposortEngine
+}
+orbital TwopointerOrbital {
+  uses Twopointer from "std/behaviors/std-algo-twopointer"
+
+    type AlgoBar = {
+      value : number!
+      color : string
+      label : string
+    }
+
+    type AlgoPointer = {
+      index : number!
+      label : string
+      color : string
+    }
+
+    entity TwopointerScene [runtime] {
+      id : string!
+      bars : [AlgoBar]
+      pointers : [AlgoPointer]
+      left : number = 0
+      right : number = 0
+      sum : number = 0
+      found : boolean = false
+      done : boolean = false
+      running : boolean = true
+    }
+
+  trait TwopointerEngine = Twopointer.traits.TwoPointerSim -> TwopointerScene {
+    config {
+      running: true
+    }
+  }
+
+  page "/algorithms/twopointer" as TwopointerPage -> TwopointerEngine
+}

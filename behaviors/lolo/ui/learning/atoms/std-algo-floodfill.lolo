@@ -1,0 +1,223 @@
+app std-algo-floodfill "1.0.0"
+"Flood fill — each tick dequeues one cell, recolours it, and enqueues its 4-neighbours sharing the seed's value on algorithm-canvas cells."
+orbital FloodFillEngineOrbital {
+  type AlgoCell = {
+    id : number!
+    row : number!
+    col : number!
+    value : number
+    color : string
+    label : string
+  }
+
+  entity FloodScene [runtime] {
+    id : string!
+    cells : [AlgoCell]
+    queue : [number]
+    seen : [number]
+    visited : [number]
+    seedValue : number = 0
+    cur : number = 0
+    newIds : [number]
+    done : boolean = false
+    running : boolean = true
+  }
+
+  trait FloodFillSim -> @rebindable FloodScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.cells @config.cells)
+        (set @entity.running @config.running)
+        (set @entity.seedValue
+          (object/get (array/first (array/filter @entity.cells (== (object/get @item id) @config.seedId))) value))
+        (set @entity.queue [@config.seedId])
+        (set @entity.seen [@config.seedId])
+        (set @entity.visited [])
+        (set @entity.done false)
+        (render-ui main {
+          type: algorithm-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          cells: @entity.cells
+        })
+        (emit CELLS_UPDATED { cells: @entity.cells })
+    }
+
+    ticks {
+      floodTick every 300ms
+        when (and @entity.running (not @entity.done))
+        (set @entity.cur (array/first @entity.queue))
+        (set @entity.newIds
+          (let ( (curcell (array/first (array/filter @entity.cells (== (object/get @item id) @entity.cur)))) )
+          (let ( (cr (object/get @curcell row)) (cc (object/get @curcell col)) )
+          (array/map
+            (array/filter @entity.cells
+              (and (== (+ (math/abs (- (object/get @item row) @cr)) (math/abs (- (object/get @item col) @cc))) 1)
+                (and (== (object/get @item value) @entity.seedValue)
+                  (not (array/includes @entity.seen (object/get @item id))))))
+            (object/get @item id)))))
+        (set @entity.visited (array/append @entity.visited @entity.cur))
+        (set @entity.seen (array/concat @entity.seen @entity.newIds))
+        (set @entity.queue (array/concat (array/drop @entity.queue 1) @entity.newIds))
+        (set @entity.done (== (array/len @entity.queue) 0))
+        (set @entity.cells
+          (array/map @entity.cells
+            (object/merge @item {
+              color: (if (array/includes @entity.visited (object/get @item id)) "#22c55e"
+                       (if (array/includes @entity.seen (object/get @item id)) "#f59e0b"
+                         (if (== (object/get @item value) @entity.seedValue) "#8b5cf6"
+                           "#1e293b")))
+            })))
+        (render-ui main {
+          type: algorithm-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          cells: @entity.cells
+        })
+        (emit CELLS_UPDATED { cells: @entity.cells })
+    }
+
+    emits {
+      CELLS_UPDATED -> external {
+        cells : [AlgoCell]
+      }
+        @description "The grid each step — a composed listener can subscribe; a harmless no-op standalone."
+        @synonyms "tick, frame, step, fill, flood"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick fills one cell per step; toggle to start/pause the flood."
+        @tier "domain"
+      seedId : number = 23
+        @label "Seed Cell"
+        @description "Id (row*cols+col) of the cell the flood starts from; its value defines the region."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 600
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#0f172a"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      cells : [AlgoCell] = [
+        { id: 0, row: 0, col: 0, value: 0, color: "#1e293b", label: "" },
+        { id: 1, row: 0, col: 1, value: 0, color: "#1e293b", label: "" },
+        { id: 2, row: 0, col: 2, value: 0, color: "#1e293b", label: "" },
+        { id: 3, row: 0, col: 3, value: 0, color: "#1e293b", label: "" },
+        { id: 4, row: 0, col: 4, value: 0, color: "#1e293b", label: "" },
+        { id: 5, row: 0, col: 5, value: 0, color: "#1e293b", label: "" },
+        { id: 6, row: 0, col: 6, value: 0, color: "#1e293b", label: "" },
+        { id: 7, row: 0, col: 7, value: 0, color: "#1e293b", label: "" },
+        { id: 8, row: 0, col: 8, value: 0, color: "#1e293b", label: "" },
+        { id: 9, row: 0, col: 9, value: 0, color: "#1e293b", label: "" },
+        { id: 10, row: 1, col: 0, value: 0, color: "#1e293b", label: "" },
+        { id: 11, row: 1, col: 1, value: 0, color: "#1e293b", label: "" },
+        { id: 12, row: 1, col: 2, value: 1, color: "#8b5cf6", label: "" },
+        { id: 13, row: 1, col: 3, value: 1, color: "#8b5cf6", label: "" },
+        { id: 14, row: 1, col: 4, value: 1, color: "#8b5cf6", label: "" },
+        { id: 15, row: 1, col: 5, value: 1, color: "#8b5cf6", label: "" },
+        { id: 16, row: 1, col: 6, value: 0, color: "#1e293b", label: "" },
+        { id: 17, row: 1, col: 7, value: 0, color: "#1e293b", label: "" },
+        { id: 18, row: 1, col: 8, value: 0, color: "#1e293b", label: "" },
+        { id: 19, row: 1, col: 9, value: 0, color: "#1e293b", label: "" },
+        { id: 20, row: 2, col: 0, value: 0, color: "#1e293b", label: "" },
+        { id: 21, row: 2, col: 1, value: 0, color: "#1e293b", label: "" },
+        { id: 22, row: 2, col: 2, value: 1, color: "#8b5cf6", label: "" },
+        { id: 23, row: 2, col: 3, value: 1, color: "#8b5cf6", label: "" },
+        { id: 24, row: 2, col: 4, value: 1, color: "#8b5cf6", label: "" },
+        { id: 25, row: 2, col: 5, value: 1, color: "#8b5cf6", label: "" },
+        { id: 26, row: 2, col: 6, value: 0, color: "#1e293b", label: "" },
+        { id: 27, row: 2, col: 7, value: 0, color: "#1e293b", label: "" },
+        { id: 28, row: 2, col: 8, value: 0, color: "#1e293b", label: "" },
+        { id: 29, row: 2, col: 9, value: 0, color: "#1e293b", label: "" },
+        { id: 30, row: 3, col: 0, value: 0, color: "#1e293b", label: "" },
+        { id: 31, row: 3, col: 1, value: 0, color: "#1e293b", label: "" },
+        { id: 32, row: 3, col: 2, value: 1, color: "#8b5cf6", label: "" },
+        { id: 33, row: 3, col: 3, value: 1, color: "#8b5cf6", label: "" },
+        { id: 34, row: 3, col: 4, value: 1, color: "#8b5cf6", label: "" },
+        { id: 35, row: 3, col: 5, value: 1, color: "#8b5cf6", label: "" },
+        { id: 36, row: 3, col: 6, value: 0, color: "#1e293b", label: "" },
+        { id: 37, row: 3, col: 7, value: 0, color: "#1e293b", label: "" },
+        { id: 38, row: 3, col: 8, value: 0, color: "#1e293b", label: "" },
+        { id: 39, row: 3, col: 9, value: 0, color: "#1e293b", label: "" },
+        { id: 40, row: 4, col: 0, value: 0, color: "#1e293b", label: "" },
+        { id: 41, row: 4, col: 1, value: 0, color: "#1e293b", label: "" },
+        { id: 42, row: 4, col: 2, value: 1, color: "#8b5cf6", label: "" },
+        { id: 43, row: 4, col: 3, value: 1, color: "#8b5cf6", label: "" },
+        { id: 44, row: 4, col: 4, value: 1, color: "#8b5cf6", label: "" },
+        { id: 45, row: 4, col: 5, value: 1, color: "#8b5cf6", label: "" },
+        { id: 46, row: 4, col: 6, value: 1, color: "#8b5cf6", label: "" },
+        { id: 47, row: 4, col: 7, value: 1, color: "#8b5cf6", label: "" },
+        { id: 48, row: 4, col: 8, value: 1, color: "#8b5cf6", label: "" },
+        { id: 49, row: 4, col: 9, value: 0, color: "#1e293b", label: "" },
+        { id: 50, row: 5, col: 0, value: 0, color: "#1e293b", label: "" },
+        { id: 51, row: 5, col: 1, value: 0, color: "#1e293b", label: "" },
+        { id: 52, row: 5, col: 2, value: 0, color: "#1e293b", label: "" },
+        { id: 53, row: 5, col: 3, value: 0, color: "#1e293b", label: "" },
+        { id: 54, row: 5, col: 4, value: 0, color: "#1e293b", label: "" },
+        { id: 55, row: 5, col: 5, value: 0, color: "#1e293b", label: "" },
+        { id: 56, row: 5, col: 6, value: 0, color: "#1e293b", label: "" },
+        { id: 57, row: 5, col: 7, value: 0, color: "#1e293b", label: "" },
+        { id: 58, row: 5, col: 8, value: 0, color: "#1e293b", label: "" },
+        { id: 59, row: 5, col: 9, value: 0, color: "#1e293b", label: "" },
+        { id: 60, row: 6, col: 0, value: 0, color: "#1e293b", label: "" },
+        { id: 61, row: 6, col: 1, value: 0, color: "#1e293b", label: "" },
+        { id: 62, row: 6, col: 2, value: 0, color: "#1e293b", label: "" },
+        { id: 63, row: 6, col: 3, value: 0, color: "#1e293b", label: "" },
+        { id: 64, row: 6, col: 4, value: 0, color: "#1e293b", label: "" },
+        { id: 65, row: 6, col: 5, value: 0, color: "#1e293b", label: "" },
+        { id: 66, row: 6, col: 6, value: 2, color: "#334155", label: "" },
+        { id: 67, row: 6, col: 7, value: 2, color: "#334155", label: "" },
+        { id: 68, row: 6, col: 8, value: 2, color: "#334155", label: "" },
+        { id: 69, row: 6, col: 9, value: 0, color: "#1e293b", label: "" },
+        { id: 70, row: 7, col: 0, value: 0, color: "#1e293b", label: "" },
+        { id: 71, row: 7, col: 1, value: 0, color: "#1e293b", label: "" },
+        { id: 72, row: 7, col: 2, value: 0, color: "#1e293b", label: "" },
+        { id: 73, row: 7, col: 3, value: 0, color: "#1e293b", label: "" },
+        { id: 74, row: 7, col: 4, value: 0, color: "#1e293b", label: "" },
+        { id: 75, row: 7, col: 5, value: 0, color: "#1e293b", label: "" },
+        { id: 76, row: 7, col: 6, value: 2, color: "#334155", label: "" },
+        { id: 77, row: 7, col: 7, value: 2, color: "#334155", label: "" },
+        { id: 78, row: 7, col: 8, value: 2, color: "#334155", label: "" },
+        { id: 79, row: 7, col: 9, value: 0, color: "#1e293b", label: "" },
+        { id: 80, row: 8, col: 0, value: 0, color: "#1e293b", label: "" },
+        { id: 81, row: 8, col: 1, value: 0, color: "#1e293b", label: "" },
+        { id: 82, row: 8, col: 2, value: 0, color: "#1e293b", label: "" },
+        { id: 83, row: 8, col: 3, value: 0, color: "#1e293b", label: "" },
+        { id: 84, row: 8, col: 4, value: 0, color: "#1e293b", label: "" },
+        { id: 85, row: 8, col: 5, value: 0, color: "#1e293b", label: "" },
+        { id: 86, row: 8, col: 6, value: 2, color: "#334155", label: "" },
+        { id: 87, row: 8, col: 7, value: 2, color: "#334155", label: "" },
+        { id: 88, row: 8, col: 8, value: 2, color: "#334155", label: "" },
+        { id: 89, row: 8, col: 9, value: 0, color: "#1e293b", label: "" },
+        { id: 90, row: 9, col: 0, value: 0, color: "#1e293b", label: "" },
+        { id: 91, row: 9, col: 1, value: 0, color: "#1e293b", label: "" },
+        { id: 92, row: 9, col: 2, value: 0, color: "#1e293b", label: "" },
+        { id: 93, row: 9, col: 3, value: 0, color: "#1e293b", label: "" },
+        { id: 94, row: 9, col: 4, value: 0, color: "#1e293b", label: "" },
+        { id: 95, row: 9, col: 5, value: 0, color: "#1e293b", label: "" },
+        { id: 96, row: 9, col: 6, value: 0, color: "#1e293b", label: "" },
+        { id: 97, row: 9, col: 7, value: 0, color: "#1e293b", label: "" },
+        { id: 98, row: 9, col: 8, value: 0, color: "#1e293b", label: "" },
+        { id: 99, row: 9, col: 9, value: 0, color: "#1e293b", label: "" }
+      ]
+        @label "Cells"
+        @description "The initial grid; value 1 = the seeded region, 2 = a second region, 0 = background."
+        @tier "domain"
+    }
+  }
+
+  page "/algo-floodfill" as FloodFillEnginePage -> FloodFillSim
+}

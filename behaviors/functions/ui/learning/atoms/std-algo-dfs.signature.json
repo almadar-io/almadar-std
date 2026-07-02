@@ -1,0 +1,346 @@
+[
+  {
+    "organism": "std-algo-dfs",
+    "orbital": "DfsEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-algo-dfs.ts",
+    "entities": [
+      {
+        "name": "DfsScene",
+        "fields": [
+          {
+            "name": "nodes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "edges",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "stack",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "seen",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "visited",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "cur",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "newIds",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "DfsSim",
+        "emittedEvents": [
+          "NODES_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "NODES_UPDATED",
+            "direction": "emit",
+            "description": "The graph each step — a composed listener can subscribe; a harmless no-op standalone.",
+            "synonyms": "tick, frame, step, visit, traverse",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "edges",
+            "type": "[GraphEdge]",
+            "default": [
+              {
+                "color": "#9ca3af",
+                "from": "A",
+                "label": "",
+                "to": "B"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "A",
+                "label": "",
+                "to": "C"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "B",
+                "label": "",
+                "to": "D"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "B",
+                "label": "",
+                "to": "E"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "C",
+                "label": "",
+                "to": "F"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "C",
+                "label": "",
+                "to": "G"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "E",
+                "label": "",
+                "to": "F"
+              }
+            ],
+            "label": "Edges",
+            "description": "Undirected adjacency; each tick pushes the deepest frontier along them.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "nodes",
+            "type": "[GraphNode]",
+            "default": [
+              {
+                "color": "#f59e0b",
+                "id": "A",
+                "kind": "cell",
+                "label": "A",
+                "radius": 20,
+                "x": 300,
+                "y": 60
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "B",
+                "kind": "cell",
+                "label": "B",
+                "radius": 20,
+                "x": 150,
+                "y": 160
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "C",
+                "kind": "cell",
+                "label": "C",
+                "radius": 20,
+                "x": 450,
+                "y": 160
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "D",
+                "kind": "cell",
+                "label": "D",
+                "radius": 20,
+                "x": 90,
+                "y": 300
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "E",
+                "kind": "cell",
+                "label": "E",
+                "radius": 20,
+                "x": 240,
+                "y": 300
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "F",
+                "kind": "cell",
+                "label": "F",
+                "radius": 20,
+                "x": 400,
+                "y": 300
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "G",
+                "kind": "cell",
+                "label": "G",
+                "radius": 20,
+                "x": 520,
+                "y": 300
+              }
+            ],
+            "label": "Nodes",
+            "description": "Graph vertices; DFS recolours them slate→amber(frontier)→green(visited).",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick visits one node per step; toggle to start/pause the traversal.",
+            "tier": "domain"
+          },
+          {
+            "key": "start",
+            "type": "string",
+            "default": "A",
+            "label": "Start Node",
+            "description": "Id of the node DFS starts from.",
+            "tier": "domain"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "cur",
+            "done",
+            "edges",
+            "newIds",
+            "nodes",
+            "running",
+            "seen",
+            "stack",
+            "visited"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "DfsEnginePage",
+        "defaultPath": "/algo-dfs",
+        "primaryEntity": "DfsScene"
+      }
+    ],
+    "emittedEvents": [
+      "NODES_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

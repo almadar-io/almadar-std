@@ -1,0 +1,148 @@
+app std-algo-dfs "1.0.0"
+"Depth-first search engine — pops one node per tick off a LIFO stack, pushes its unseen neighbours, recolours the graph on biology-canvas."
+orbital DfsEngineOrbital {
+  type GraphNode = {
+    id : string!
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    kind : "cell" | "organelle" | "molecule" | "organism"
+  }
+  type GraphEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+
+  entity DfsScene [runtime] {
+    id : string!
+    nodes : [GraphNode]
+    edges : [GraphEdge]
+    stack : [string]
+    seen : [string]
+    visited : [string]
+    cur : string = ""
+    newIds : [string]
+    done : boolean = false
+    running : boolean = true
+  }
+
+  trait DfsSim -> @rebindable DfsScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.nodes @config.nodes)
+        (set @entity.edges @config.edges)
+        (set @entity.running @config.running)
+        (set @entity.stack [@config.start])
+        (set @entity.seen [@config.start])
+        (set @entity.visited [])
+        (render-ui main {
+          type: biology-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          nodes: @entity.nodes
+          edges: @entity.edges
+        })
+        (emit NODES_UPDATED { nodes: @entity.nodes, edges: @entity.edges })
+    }
+
+    ticks {
+      dfsTick every 400ms
+        when (and @entity.running (not @entity.done))
+        (set @entity.cur (array/last @entity.stack))
+        (set @entity.newIds
+          (let ( (u @entity.cur) )
+          (array/filter
+            (array/map
+              (array/filter @entity.edges
+                (or (== (object/get @item from) @u) (== (object/get @item to) @u)))
+              (if (== (object/get @item from) @u) (object/get @item to) (object/get @item from)))
+            (not (array/includes @entity.seen @item)))))
+        (set @entity.visited (array/append @entity.visited @entity.cur))
+        (set @entity.seen (array/concat @entity.seen @entity.newIds))
+        (set @entity.stack (array/concat (array/dropLast @entity.stack 1) @entity.newIds))
+        (set @entity.done (== (array/len @entity.stack) 0))
+        (set @entity.nodes
+          (array/map @entity.nodes
+            (object/merge @item {
+              color: (if (array/includes @entity.visited (object/get @item id)) "#22c55e"
+                       (if (array/includes @entity.seen (object/get @item id)) "#f59e0b"
+                         "#cbd5e1"))
+            })))
+        (render-ui main {
+          type: biology-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          nodes: @entity.nodes
+          edges: @entity.edges
+        })
+        (emit NODES_UPDATED { nodes: @entity.nodes, edges: @entity.edges })
+    }
+
+    emits {
+      NODES_UPDATED -> external {
+        nodes : [GraphNode]
+        edges : [GraphEdge]
+      }
+        @description "The graph each step — a composed listener can subscribe; a harmless no-op standalone."
+        @synonyms "tick, frame, step, visit, traverse"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick visits one node per step; toggle to start/pause the traversal."
+        @tier "domain"
+      start : string = "A"
+        @label "Start Node"
+        @description "Id of the node DFS starts from."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      nodes : [GraphNode] = [
+        { id: "A", x: 300, y: 60, radius: 20, color: "#f59e0b", label: "A", kind: cell },
+        { id: "B", x: 150, y: 160, radius: 20, color: "#cbd5e1", label: "B", kind: cell },
+        { id: "C", x: 450, y: 160, radius: 20, color: "#cbd5e1", label: "C", kind: cell },
+        { id: "D", x: 90, y: 300, radius: 20, color: "#cbd5e1", label: "D", kind: cell },
+        { id: "E", x: 240, y: 300, radius: 20, color: "#cbd5e1", label: "E", kind: cell },
+        { id: "F", x: 400, y: 300, radius: 20, color: "#cbd5e1", label: "F", kind: cell },
+        { id: "G", x: 520, y: 300, radius: 20, color: "#cbd5e1", label: "G", kind: cell }
+      ]
+        @label "Nodes"
+        @description "Graph vertices; DFS recolours them slate→amber(frontier)→green(visited)."
+        @tier "domain"
+      edges : [GraphEdge] = [
+        { from: "A", to: "B", color: "#9ca3af", label: "" },
+        { from: "A", to: "C", color: "#9ca3af", label: "" },
+        { from: "B", to: "D", color: "#9ca3af", label: "" },
+        { from: "B", to: "E", color: "#9ca3af", label: "" },
+        { from: "C", to: "F", color: "#9ca3af", label: "" },
+        { from: "C", to: "G", color: "#9ca3af", label: "" },
+        { from: "E", to: "F", color: "#9ca3af", label: "" }
+      ]
+        @label "Edges"
+        @description "Undirected adjacency; each tick pushes the deepest frontier along them."
+        @tier "domain"
+    }
+  }
+
+  page "/algo-dfs" as DfsEnginePage -> DfsSim
+}

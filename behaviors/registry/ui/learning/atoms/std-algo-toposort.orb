@@ -1,0 +1,665 @@
+{
+  "description": "Topological sort engine (Kahn) — each tick emits the first node whose predecessors are all ordered, recolours the DAG on biology-canvas.",
+  "name": "std-algo-toposort",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "nodes",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "edges",
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "string"
+            },
+            "name": "order",
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "string"
+            },
+            "name": "ready",
+            "type": "array"
+          },
+          {
+            "default": "",
+            "name": "cur",
+            "type": "string"
+          },
+          {
+            "default": false,
+            "name": "done",
+            "type": "boolean"
+          },
+          {
+            "default": true,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "ToposortScene",
+        "persistence": "runtime"
+      },
+      "name": "ToposortEngineOrbital",
+      "pages": [
+        {
+          "name": "ToposortEnginePage",
+          "path": "/algo-toposort",
+          "traits": [
+            {
+              "ref": "ToposortSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "edges": {
+              "default": [
+                {
+                  "color": "#9ca3af",
+                  "from": "A",
+                  "label": "",
+                  "to": "C"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "B",
+                  "label": "",
+                  "to": "C"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "C",
+                  "label": "",
+                  "to": "D"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "C",
+                  "label": "",
+                  "to": "E"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "D",
+                  "label": "",
+                  "to": "F"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "E",
+                  "label": "",
+                  "to": "F"
+                }
+              ],
+              "description": "Directed acyclic edges from→to; a node is ready once every predecessor is ordered.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Edges",
+              "tier": "domain",
+              "type": "[GraphEdge]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "nodes": {
+              "default": [
+                {
+                  "color": "#cbd5e1",
+                  "id": "A",
+                  "kind": "cell",
+                  "label": "A",
+                  "radius": 20.0,
+                  "x": 150.0,
+                  "y": 60.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "B",
+                  "kind": "cell",
+                  "label": "B",
+                  "radius": 20.0,
+                  "x": 450.0,
+                  "y": 60.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "C",
+                  "kind": "cell",
+                  "label": "C",
+                  "radius": 20.0,
+                  "x": 300.0,
+                  "y": 170.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "D",
+                  "kind": "cell",
+                  "label": "D",
+                  "radius": 20.0,
+                  "x": 180.0,
+                  "y": 270.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "E",
+                  "kind": "cell",
+                  "label": "E",
+                  "radius": 20.0,
+                  "x": 420.0,
+                  "y": 270.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "F",
+                  "kind": "cell",
+                  "label": "F",
+                  "radius": 20.0,
+                  "x": 300.0,
+                  "y": 360.0
+                }
+              ],
+              "description": "DAG vertices; toposort recolours them slate→amber(ready)→green(ordered).",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "name": "kind",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "cell",
+                      "organelle",
+                      "molecule",
+                      "organism"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Nodes",
+              "tier": "domain",
+              "type": "[GraphNode]"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick emits one ready node per step; toggle to start/pause the sort.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The graph each step — a composed listener can subscribe; a harmless no-op standalone.",
+              "event": "NODES_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "nodes",
+                  "type": "[GraphNode]"
+                },
+                {
+                  "name": "edges",
+                  "type": "[GraphEdge]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, emit, order, sort",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "cur",
+              "done",
+              "edges",
+              "nodes",
+              "order",
+              "ready",
+              "running"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ToposortScene",
+          "name": "ToposortSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The graph each step — a composed listener can subscribe; a harmless no-op standalone.",
+                "key": "NODES_UPDATED",
+                "name": "Nodes Updated",
+                "payloadSchema": [
+                  {
+                    "name": "nodes",
+                    "type": "[GraphNode]"
+                  },
+                  {
+                    "name": "edges",
+                    "type": "[GraphEdge]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, emit, order, sort",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.nodes",
+                    "@config.nodes"
+                  ],
+                  [
+                    "set",
+                    "@entity.edges",
+                    "@config.edges"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "set",
+                    "@entity.order",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.ready",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.cur",
+                    ""
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "edges": "@entity.edges",
+                      "height": "@config.height",
+                      "nodes": "@entity.nodes",
+                      "type": "biology-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "NODES_UPDATED",
+                    {
+                      "edges": "@entity.edges",
+                      "nodes": "@entity.nodes"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.ready",
+                  [
+                    "array/map",
+                    [
+                      "array/filter",
+                      "@entity.nodes",
+                      [
+                        "let",
+                        [
+                          [
+                            "nid",
+                            [
+                              "object/get",
+                              "@item",
+                              "id"
+                            ]
+                          ]
+                        ],
+                        [
+                          "and",
+                          [
+                            "not",
+                            [
+                              "array/includes",
+                              "@entity.order",
+                              "@nid"
+                            ]
+                          ],
+                          [
+                            "==",
+                            [
+                              "array/len",
+                              [
+                                "array/filter",
+                                [
+                                  "array/map",
+                                  [
+                                    "array/filter",
+                                    "@entity.edges",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "@item",
+                                        "to"
+                                      ],
+                                      "@nid"
+                                    ]
+                                  ],
+                                  [
+                                    "object/get",
+                                    "@item",
+                                    "from"
+                                  ]
+                                ],
+                                [
+                                  "not",
+                                  [
+                                    "array/includes",
+                                    "@entity.order",
+                                    "@item"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            0.0
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "object/get",
+                      "@item",
+                      "id"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.cur",
+                  [
+                    "array/first",
+                    "@entity.ready"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.order",
+                  [
+                    "array/append",
+                    "@entity.order",
+                    "@entity.cur"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.done",
+                  [
+                    "==",
+                    [
+                      "array/len",
+                      "@entity.order"
+                    ],
+                    [
+                      "array/len",
+                      "@entity.nodes"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.nodes",
+                  [
+                    "array/map",
+                    "@entity.nodes",
+                    [
+                      "object/merge",
+                      "@item",
+                      {
+                        "color": [
+                          "if",
+                          [
+                            "array/includes",
+                            "@entity.order",
+                            [
+                              "object/get",
+                              "@item",
+                              "id"
+                            ]
+                          ],
+                          "#22c55e",
+                          [
+                            "if",
+                            [
+                              "array/includes",
+                              "@entity.ready",
+                              [
+                                "object/get",
+                                "@item",
+                                "id"
+                              ]
+                            ],
+                            "#f59e0b",
+                            "#cbd5e1"
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "edges": "@entity.edges",
+                    "height": "@config.height",
+                    "nodes": "@entity.nodes",
+                    "type": "biology-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "NODES_UPDATED",
+                  {
+                    "edges": "@entity.edges",
+                    "nodes": "@entity.nodes"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                "@entity.running",
+                [
+                  "not",
+                  "@entity.done"
+                ]
+              ],
+              "interval": 400.0,
+              "name": "topoTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

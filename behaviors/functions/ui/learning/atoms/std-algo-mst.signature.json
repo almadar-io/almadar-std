@@ -1,0 +1,460 @@
+[
+  {
+    "organism": "std-algo-mst",
+    "orbital": "MstEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-algo-mst.ts",
+    "entities": [
+      {
+        "name": "MstScene",
+        "fields": [
+          {
+            "name": "nodes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "edges",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "wedges",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "inTree",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "treeEdges",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "minW",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "chosenFrom",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "chosenTo",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "MstSim",
+        "emittedEvents": [
+          "NODES_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "NODES_UPDATED",
+            "direction": "emit",
+            "description": "The graph each step — a composed listener can subscribe; a harmless no-op standalone.",
+            "synonyms": "tick, frame, step, spanning, tree, prim, cut",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "edges",
+            "type": "[GraphEdge]",
+            "default": [
+              {
+                "color": "#9ca3af",
+                "from": "A",
+                "label": "4",
+                "to": "B"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "A",
+                "label": "3",
+                "to": "C"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "B",
+                "label": "1",
+                "to": "C"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "B",
+                "label": "5",
+                "to": "D"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "C",
+                "label": "6",
+                "to": "D"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "C",
+                "label": "8",
+                "to": "E"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "D",
+                "label": "2",
+                "to": "E"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "D",
+                "label": "7",
+                "to": "F"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "E",
+                "label": "3",
+                "to": "F"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "E",
+                "label": "9",
+                "to": "G"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "F",
+                "label": "4",
+                "to": "G"
+              }
+            ],
+            "label": "Edges",
+            "description": "Rendered undirected edges (weight in label); tree edges recolour green as Prim picks them.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "nodes",
+            "type": "[GraphNode]",
+            "default": [
+              {
+                "color": "#22c55e",
+                "id": "A",
+                "kind": "cell",
+                "label": "A",
+                "radius": 20,
+                "x": 300,
+                "y": 60
+              },
+              {
+                "color": "#64748b",
+                "id": "B",
+                "kind": "cell",
+                "label": "B",
+                "radius": 20,
+                "x": 150,
+                "y": 160
+              },
+              {
+                "color": "#64748b",
+                "id": "C",
+                "kind": "cell",
+                "label": "C",
+                "radius": 20,
+                "x": 450,
+                "y": 160
+              },
+              {
+                "color": "#64748b",
+                "id": "D",
+                "kind": "cell",
+                "label": "D",
+                "radius": 20,
+                "x": 90,
+                "y": 300
+              },
+              {
+                "color": "#64748b",
+                "id": "E",
+                "kind": "cell",
+                "label": "E",
+                "radius": 20,
+                "x": 240,
+                "y": 300
+              },
+              {
+                "color": "#64748b",
+                "id": "F",
+                "kind": "cell",
+                "label": "F",
+                "radius": 20,
+                "x": 400,
+                "y": 300
+              },
+              {
+                "color": "#64748b",
+                "id": "G",
+                "kind": "cell",
+                "label": "G",
+                "radius": 20,
+                "x": 520,
+                "y": 300
+              }
+            ],
+            "label": "Nodes",
+            "description": "Graph vertices; Prim recolours them slate→green as they enter the spanning tree.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick adds one tree edge per step; toggle to start/pause Prim's growth.",
+            "tier": "domain"
+          },
+          {
+            "key": "start",
+            "type": "string",
+            "default": "A",
+            "label": "Start Node",
+            "description": "Id of the node Prim's tree grows from.",
+            "tier": "domain"
+          },
+          {
+            "key": "wedges",
+            "type": "[WEdge]",
+            "default": [
+              {
+                "from": "A",
+                "to": "B",
+                "w": 4
+              },
+              {
+                "from": "A",
+                "to": "C",
+                "w": 3
+              },
+              {
+                "from": "B",
+                "to": "C",
+                "w": 1
+              },
+              {
+                "from": "B",
+                "to": "D",
+                "w": 5
+              },
+              {
+                "from": "C",
+                "to": "D",
+                "w": 6
+              },
+              {
+                "from": "C",
+                "to": "E",
+                "w": 8
+              },
+              {
+                "from": "D",
+                "to": "E",
+                "w": 2
+              },
+              {
+                "from": "D",
+                "to": "F",
+                "w": 7
+              },
+              {
+                "from": "E",
+                "to": "F",
+                "w": 3
+              },
+              {
+                "from": "E",
+                "to": "G",
+                "w": 9
+              },
+              {
+                "from": "F",
+                "to": "G",
+                "w": 4
+              }
+            ],
+            "label": "Weighted Edges",
+            "description": "Undirected weighted adjacency Prim scans for the lightest cut-crossing edge; one per drawn edge.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                },
+                "w": {
+                  "name": "w",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "chosenFrom",
+            "chosenTo",
+            "done",
+            "edges",
+            "inTree",
+            "minW",
+            "nodes",
+            "running",
+            "treeEdges",
+            "wedges"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MstEnginePage",
+        "defaultPath": "/algo-mst",
+        "primaryEntity": "MstScene"
+      }
+    ],
+    "emittedEvents": [
+      "NODES_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

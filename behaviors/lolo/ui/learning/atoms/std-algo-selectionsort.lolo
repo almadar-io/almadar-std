@@ -1,0 +1,119 @@
+app std-algo-selectionsort "1.0.0"
+"Selection-sort engine — one scan-compare or swap step per tick over a bar array on algorithm-canvas; composed by a learning orbital via `uses`."
+orbital SelectionSortEngineOrbital {
+  type AlgoBar = {
+    value : number!
+    color : string
+    label : string
+  }
+
+  entity SelectionScene [runtime] {
+    id : string!
+    bars : [AlgoBar]
+    i : number = 0
+    j : number = 1
+    m : number = 0
+    scanning : boolean = true
+    done : boolean = false
+    running : boolean = true
+  }
+
+  trait SelectionSortSim -> @rebindable SelectionScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.bars @config.bars)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: algorithm-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          bars: @entity.bars
+        })
+        (emit BARS_UPDATED { bars: @entity.bars })
+    }
+
+    ticks {
+      selectionTick every 300ms
+        when (and @entity.running (not @entity.done))
+        (set @entity.scanning (< @entity.j (array/len @entity.bars)))
+        (set @entity.bars
+          (let (
+            (a (array/nth @entity.bars @entity.i))
+            (b (array/nth @entity.bars @entity.m))
+          )
+          (array/map @entity.bars
+            (object/merge @item {
+              value: (if (and (not @entity.scanning) (== @index @entity.i)) (object/get @b value)
+                       (if (and (not @entity.scanning) (== @index @entity.m)) (object/get @a value)
+                         (object/get @item value)))
+              color: (if (< @index @entity.i) "#22c55e"
+                       (if (== @index @entity.m) "#f59e0b"
+                         (if (== @index @entity.j) "#a855f7"
+                           "#3b82f6")))
+            }))))
+        (set @entity.m
+          (if @entity.scanning
+            (if (< (object/get (array/nth @entity.bars @entity.j) value)
+                   (object/get (array/nth @entity.bars @entity.m) value))
+              @entity.j @entity.m)
+            (+ @entity.i 1)))
+        (set @entity.i (if @entity.scanning @entity.i (+ @entity.i 1)))
+        (set @entity.j (if @entity.scanning (+ @entity.j 1) (+ @entity.i 1)))
+        (set @entity.done (>= @entity.i (- (array/len @entity.bars) 1)))
+        (render-ui main {
+          type: algorithm-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          bars: @entity.bars
+        })
+        (emit BARS_UPDATED { bars: @entity.bars })
+    }
+
+    emits {
+      BARS_UPDATED -> external {
+        bars : [AlgoBar]
+      }
+        @description "The current bar array each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone."
+        @synonyms "tick, frame, step, redraw, compare, select, swap"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick performs one scan-compare or swap step; toggle to start/pause the sort."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      bars : [AlgoBar] = [
+        { value: 5, color: "#3b82f6", label: "5" },
+        { value: 2, color: "#3b82f6", label: "2" },
+        { value: 8, color: "#3b82f6", label: "8" },
+        { value: 1, color: "#3b82f6", label: "1" },
+        { value: 9, color: "#3b82f6", label: "9" },
+        { value: 3, color: "#3b82f6", label: "3" },
+        { value: 7, color: "#3b82f6", label: "7" },
+        { value: 4, color: "#3b82f6", label: "4" }
+      ]
+        @label "Bars"
+        @description "Initial unsorted array; each bar's height is proportional to its value."
+        @tier "domain"
+    }
+  }
+
+  page "/algo-selectionsort" as SelectionSortEnginePage -> SelectionSortSim
+}

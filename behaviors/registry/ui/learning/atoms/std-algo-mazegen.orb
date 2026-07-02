@@ -1,0 +1,1938 @@
+{
+  "description": "Randomized-DFS maze carving — each tick carves to a random unvisited room two cells away or backtracks, on cells.",
+  "name": "std-algo-mazegen",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "col": {
+                  "name": "col",
+                  "required": true,
+                  "type": "number"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "number"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "room": {
+                  "name": "room",
+                  "required": false,
+                  "type": "number"
+                },
+                "row": {
+                  "name": "row",
+                  "required": true,
+                  "type": "number"
+                },
+                "value": {
+                  "name": "value",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "cells",
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "number"
+            },
+            "name": "stack",
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "number"
+            },
+            "name": "visited",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "cur",
+            "type": "number"
+          },
+          {
+            "default": -1.0,
+            "name": "picked",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "done",
+            "type": "boolean"
+          },
+          {
+            "default": true,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "MazeScene",
+        "persistence": "runtime"
+      },
+      "name": "MazeGenEngineOrbital",
+      "pages": [
+        {
+          "name": "MazeGenEnginePage",
+          "path": "/algo-mazegen",
+          "traits": [
+            {
+              "ref": "MazeGenSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#0f172a",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "cells": {
+              "default": [
+                {
+                  "col": 0.0,
+                  "color": "#0f172a",
+                  "id": 0.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 0.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#0f172a",
+                  "id": 1.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 0.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#0f172a",
+                  "id": 2.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 0.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#0f172a",
+                  "id": 3.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 0.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#0f172a",
+                  "id": 4.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 0.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 5.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 0.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#0f172a",
+                  "id": 6.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 0.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#0f172a",
+                  "id": 7.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 0.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 8.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 0.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#0f172a",
+                  "id": 9.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 0.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#0f172a",
+                  "id": 10.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 0.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#0f172a",
+                  "id": 11.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 1.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#0f172a",
+                  "id": 12.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 1.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#0f172a",
+                  "id": 13.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 1.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#0f172a",
+                  "id": 14.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 1.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#0f172a",
+                  "id": 15.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 1.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 16.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 1.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#0f172a",
+                  "id": 17.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 1.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#0f172a",
+                  "id": 18.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 1.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 19.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 1.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#0f172a",
+                  "id": 20.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 1.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#0f172a",
+                  "id": 21.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 1.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#0f172a",
+                  "id": 22.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 2.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#0f172a",
+                  "id": 23.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 2.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#0f172a",
+                  "id": 24.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 2.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#0f172a",
+                  "id": 25.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 2.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#0f172a",
+                  "id": 26.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 2.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 27.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 2.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#0f172a",
+                  "id": 28.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 2.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#0f172a",
+                  "id": 29.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 2.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 30.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 2.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#0f172a",
+                  "id": 31.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 2.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#0f172a",
+                  "id": 32.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 2.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#0f172a",
+                  "id": 33.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 3.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#0f172a",
+                  "id": 34.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 3.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#0f172a",
+                  "id": 35.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 3.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#0f172a",
+                  "id": 36.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 3.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#0f172a",
+                  "id": 37.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 3.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 38.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 3.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#0f172a",
+                  "id": 39.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 3.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#0f172a",
+                  "id": 40.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 3.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 41.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 3.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#0f172a",
+                  "id": 42.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 3.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#0f172a",
+                  "id": 43.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 3.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#0f172a",
+                  "id": 44.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 4.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#0f172a",
+                  "id": 45.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 4.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#0f172a",
+                  "id": 46.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 4.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#0f172a",
+                  "id": 47.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 4.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#0f172a",
+                  "id": 48.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 4.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 49.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 4.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#0f172a",
+                  "id": 50.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 4.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#0f172a",
+                  "id": 51.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 4.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 52.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 4.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#0f172a",
+                  "id": 53.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 4.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#0f172a",
+                  "id": 54.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 4.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#0f172a",
+                  "id": 55.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 5.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#0f172a",
+                  "id": 56.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 5.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#0f172a",
+                  "id": 57.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 5.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#0f172a",
+                  "id": 58.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 5.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#0f172a",
+                  "id": 59.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 5.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 60.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 5.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#0f172a",
+                  "id": 61.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 5.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#0f172a",
+                  "id": 62.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 5.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 63.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 5.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#0f172a",
+                  "id": 64.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 5.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#0f172a",
+                  "id": 65.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 5.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#0f172a",
+                  "id": 66.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 6.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#0f172a",
+                  "id": 67.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 6.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#0f172a",
+                  "id": 68.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 6.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#0f172a",
+                  "id": 69.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 6.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#0f172a",
+                  "id": 70.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 6.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 71.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 6.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#0f172a",
+                  "id": 72.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 6.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#0f172a",
+                  "id": 73.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 6.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 74.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 6.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#0f172a",
+                  "id": 75.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 6.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#0f172a",
+                  "id": 76.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 6.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#0f172a",
+                  "id": 77.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 7.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#0f172a",
+                  "id": 78.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 7.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#0f172a",
+                  "id": 79.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 7.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#0f172a",
+                  "id": 80.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 7.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#0f172a",
+                  "id": 81.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 7.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 82.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 7.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#0f172a",
+                  "id": 83.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 7.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#0f172a",
+                  "id": 84.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 7.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 85.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 7.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#0f172a",
+                  "id": 86.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 7.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#0f172a",
+                  "id": 87.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 7.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#0f172a",
+                  "id": 88.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 8.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#0f172a",
+                  "id": 89.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 8.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#0f172a",
+                  "id": 90.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 8.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#0f172a",
+                  "id": 91.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 8.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#0f172a",
+                  "id": 92.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 8.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 93.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 8.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#0f172a",
+                  "id": 94.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 8.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#0f172a",
+                  "id": 95.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 8.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 96.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 8.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#0f172a",
+                  "id": 97.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 8.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#0f172a",
+                  "id": 98.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 8.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#0f172a",
+                  "id": 99.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 9.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#0f172a",
+                  "id": 100.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 9.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#0f172a",
+                  "id": 101.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 9.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#0f172a",
+                  "id": 102.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 9.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#0f172a",
+                  "id": 103.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 9.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 104.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 9.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#0f172a",
+                  "id": 105.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 9.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#0f172a",
+                  "id": 106.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 9.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 107.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 9.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#0f172a",
+                  "id": 108.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 9.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#0f172a",
+                  "id": 109.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 9.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 0.0,
+                  "color": "#0f172a",
+                  "id": 110.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 10.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 1.0,
+                  "color": "#0f172a",
+                  "id": 111.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 10.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 2.0,
+                  "color": "#0f172a",
+                  "id": 112.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 10.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 3.0,
+                  "color": "#0f172a",
+                  "id": 113.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 10.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 4.0,
+                  "color": "#0f172a",
+                  "id": 114.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 10.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 5.0,
+                  "color": "#0f172a",
+                  "id": 115.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 10.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 6.0,
+                  "color": "#0f172a",
+                  "id": 116.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 10.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 7.0,
+                  "color": "#0f172a",
+                  "id": 117.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 10.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 8.0,
+                  "color": "#0f172a",
+                  "id": 118.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 10.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 9.0,
+                  "color": "#0f172a",
+                  "id": 119.0,
+                  "label": "",
+                  "room": 0.0,
+                  "row": 10.0,
+                  "value": 1.0
+                },
+                {
+                  "col": 10.0,
+                  "color": "#0f172a",
+                  "id": 120.0,
+                  "label": "",
+                  "room": 1.0,
+                  "row": 10.0,
+                  "value": 1.0
+                }
+              ],
+              "description": "The 11x11 grid; value 1 = wall, 0 = passage; room = 1 on even/even room cells.",
+              "items": {
+                "properties": {
+                  "col": {
+                    "name": "col",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "room": {
+                    "name": "room",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "row": {
+                    "name": "row",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Cells",
+              "tier": "domain",
+              "type": "[AlgoCell]"
+            },
+            "height": {
+              "default": 660.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick carves one room per step; toggle to start/pause.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "startId": {
+              "default": 0.0,
+              "description": "Id (row*cols+col) of the even/even room cell the carve starts from.",
+              "label": "Start Room",
+              "tier": "domain",
+              "type": "number"
+            },
+            "width": {
+              "default": 660.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The grid each carve step — a composed listener can subscribe; a harmless no-op standalone.",
+              "event": "CELLS_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "cells",
+                  "type": "[AlgoCell]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, carve, maze",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "cells",
+              "cur",
+              "done",
+              "picked",
+              "running",
+              "stack",
+              "visited"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "MazeScene",
+          "name": "MazeGenSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The grid each carve step — a composed listener can subscribe; a harmless no-op standalone.",
+                "key": "CELLS_UPDATED",
+                "name": "Cells Updated",
+                "payloadSchema": [
+                  {
+                    "name": "cells",
+                    "type": "[AlgoCell]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, carve, maze",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.cells",
+                    [
+                      "array/map",
+                      "@config.cells",
+                      [
+                        "if",
+                        [
+                          "==",
+                          [
+                            "object/get",
+                            "@item",
+                            "id"
+                          ],
+                          "@config.startId"
+                        ],
+                        [
+                          "object/merge",
+                          "@item",
+                          {
+                            "color": "#f59e0b",
+                            "value": 0.0
+                          }
+                        ],
+                        "@item"
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "set",
+                    "@entity.stack",
+                    [
+                      "@config.startId"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.visited",
+                    [
+                      "@config.startId"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.cur",
+                    "@config.startId"
+                  ],
+                  [
+                    "set",
+                    "@entity.picked",
+                    -1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.done",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "cells": "@entity.cells",
+                      "height": "@config.height",
+                      "type": "algorithm-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "CELLS_UPDATED",
+                    {
+                      "cells": "@entity.cells"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.cur",
+                  [
+                    "array/last",
+                    "@entity.stack"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.picked",
+                  [
+                    "let",
+                    [
+                      [
+                        "curcell",
+                        [
+                          "array/first",
+                          [
+                            "array/filter",
+                            "@entity.cells",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@item",
+                                "id"
+                              ],
+                              "@entity.cur"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "cr",
+                          [
+                            "object/get",
+                            "@curcell",
+                            "row"
+                          ]
+                        ],
+                        [
+                          "cc",
+                          [
+                            "object/get",
+                            "@curcell",
+                            "col"
+                          ]
+                        ]
+                      ],
+                      [
+                        "let",
+                        [
+                          [
+                            "cands",
+                            [
+                              "array/map",
+                              [
+                                "array/filter",
+                                "@entity.cells",
+                                [
+                                  "and",
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "@item",
+                                      "room"
+                                    ],
+                                    1.0
+                                  ],
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "+",
+                                        [
+                                          "math/abs",
+                                          [
+                                            "-",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "row"
+                                            ],
+                                            "@cr"
+                                          ]
+                                        ],
+                                        [
+                                          "math/abs",
+                                          [
+                                            "-",
+                                            [
+                                              "object/get",
+                                              "@item",
+                                              "col"
+                                            ],
+                                            "@cc"
+                                          ]
+                                        ]
+                                      ],
+                                      2.0
+                                    ],
+                                    [
+                                      "not",
+                                      [
+                                        "array/includes",
+                                        "@entity.visited",
+                                        [
+                                          "object/get",
+                                          "@item",
+                                          "id"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "object/get",
+                                "@item",
+                                "id"
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "if",
+                          [
+                            "==",
+                            [
+                              "array/len",
+                              "@cands"
+                            ],
+                            0.0
+                          ],
+                          -1.0,
+                          [
+                            "array/nth",
+                            "@cands",
+                            [
+                              "math/floor",
+                              [
+                                "*",
+                                [
+                                  "math/random"
+                                ],
+                                [
+                                  "array/len",
+                                  "@cands"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.stack",
+                  [
+                    "if",
+                    [
+                      ">=",
+                      "@entity.picked",
+                      0.0
+                    ],
+                    [
+                      "array/append",
+                      "@entity.stack",
+                      "@entity.picked"
+                    ],
+                    [
+                      "array/dropLast",
+                      "@entity.stack",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.visited",
+                  [
+                    "if",
+                    [
+                      ">=",
+                      "@entity.picked",
+                      0.0
+                    ],
+                    [
+                      "array/append",
+                      "@entity.visited",
+                      "@entity.picked"
+                    ],
+                    "@entity.visited"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.cells",
+                  [
+                    "if",
+                    [
+                      ">=",
+                      "@entity.picked",
+                      0.0
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "curcell",
+                          [
+                            "array/first",
+                            [
+                              "array/filter",
+                              "@entity.cells",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@item",
+                                  "id"
+                                ],
+                                "@entity.cur"
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "pcell",
+                          [
+                            "array/first",
+                            [
+                              "array/filter",
+                              "@entity.cells",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@item",
+                                  "id"
+                                ],
+                                "@entity.picked"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "let",
+                        [
+                          [
+                            "cr",
+                            [
+                              "object/get",
+                              "@curcell",
+                              "row"
+                            ]
+                          ],
+                          [
+                            "cc",
+                            [
+                              "object/get",
+                              "@curcell",
+                              "col"
+                            ]
+                          ],
+                          [
+                            "pr",
+                            [
+                              "object/get",
+                              "@pcell",
+                              "row"
+                            ]
+                          ],
+                          [
+                            "pc",
+                            [
+                              "object/get",
+                              "@pcell",
+                              "col"
+                            ]
+                          ]
+                        ],
+                        [
+                          "array/map",
+                          "@entity.cells",
+                          [
+                            "if",
+                            [
+                              "or",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@item",
+                                  "id"
+                                ],
+                                "@entity.picked"
+                              ],
+                              [
+                                "and",
+                                [
+                                  "==",
+                                  [
+                                    "+",
+                                    [
+                                      "math/abs",
+                                      [
+                                        "-",
+                                        [
+                                          "object/get",
+                                          "@item",
+                                          "row"
+                                        ],
+                                        "@cr"
+                                      ]
+                                    ],
+                                    [
+                                      "math/abs",
+                                      [
+                                        "-",
+                                        [
+                                          "object/get",
+                                          "@item",
+                                          "col"
+                                        ],
+                                        "@cc"
+                                      ]
+                                    ]
+                                  ],
+                                  1.0
+                                ],
+                                [
+                                  "==",
+                                  [
+                                    "+",
+                                    [
+                                      "math/abs",
+                                      [
+                                        "-",
+                                        [
+                                          "object/get",
+                                          "@item",
+                                          "row"
+                                        ],
+                                        "@pr"
+                                      ]
+                                    ],
+                                    [
+                                      "math/abs",
+                                      [
+                                        "-",
+                                        [
+                                          "object/get",
+                                          "@item",
+                                          "col"
+                                        ],
+                                        "@pc"
+                                      ]
+                                    ]
+                                  ],
+                                  1.0
+                                ]
+                              ]
+                            ],
+                            [
+                              "object/merge",
+                              "@item",
+                              {
+                                "value": 0.0
+                              }
+                            ],
+                            "@item"
+                          ]
+                        ]
+                      ]
+                    ],
+                    "@entity.cells"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.cells",
+                  [
+                    "array/map",
+                    "@entity.cells",
+                    [
+                      "object/merge",
+                      "@item",
+                      {
+                        "color": [
+                          "if",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              "@item",
+                              "value"
+                            ],
+                            1.0
+                          ],
+                          "#0f172a",
+                          [
+                            "if",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@item",
+                                "id"
+                              ],
+                              "@entity.cur"
+                            ],
+                            "#f59e0b",
+                            [
+                              "if",
+                              [
+                                "and",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    "@item",
+                                    "room"
+                                  ],
+                                  1.0
+                                ],
+                                [
+                                  "array/includes",
+                                  "@entity.visited",
+                                  [
+                                    "object/get",
+                                    "@item",
+                                    "id"
+                                  ]
+                                ]
+                              ],
+                              "#22c55e",
+                              "#94a3b8"
+                            ]
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.done",
+                  [
+                    "==",
+                    [
+                      "array/len",
+                      "@entity.stack"
+                    ],
+                    0.0
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "cells": "@entity.cells",
+                    "height": "@config.height",
+                    "type": "algorithm-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "CELLS_UPDATED",
+                  {
+                    "cells": "@entity.cells"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                "@entity.running",
+                [
+                  "not",
+                  "@entity.done"
+                ]
+              ],
+              "interval": 200.0,
+              "name": "mazeTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

@@ -1,0 +1,187 @@
+app ui-algorithm-canvas "1.0.0"
+"AlgorithmCanvas — UI factory (1:1 with the @almadar/ui algorithm-canvas pattern)."
+orbital AlgorithmCanvasOrbital {
+  type AlgorithmCanvasBarsItem = {
+    value : number!
+    color : string
+    label : string
+  }
+  type AlgorithmCanvasCellsItem = {
+    row : number!
+    col : number!
+    value : number
+    color : string
+    label : string
+  }
+  type AlgorithmCanvasPointersItem = {
+    index : number!
+    label : string
+    color : string
+  }
+  type AlgorithmCanvasShapesItem = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [AlgorithmCanvasShapesItemPointsItem]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type AlgorithmCanvasShapesItemPointsItem = {
+    x : number!
+    y : number!
+  }
+  type AlgorithmCanvasError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type AlgorithmCanvasSHAPECLICKPayload = {
+    id : string
+    type : string
+    index : number!
+  }
+
+  entity AlgorithmCanvasItem [runtime] {
+    id : string!
+  }
+
+  trait AlgorithmCanvasRender -> @rebindable AlgorithmCanvasItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          width: @config.width
+          height: @config.height
+          title: @config.title
+          backgroundColor: @config.backgroundColor
+          bars: @config.bars
+          cells: @config.cells
+          pointers: @config.pointers
+          shapes: @config.shapes
+          interactive: @config.interactive
+          animate: @config.animate
+          onShapeClick: SHAPE_CLICK
+          isLoading: @config.isLoading
+          error: @config.error
+          type: algorithm-canvas
+        })
+      UPDATE -> idle
+        (render-ui main {
+          className: @config.className
+          width: @config.width
+          height: @config.height
+          title: @config.title
+          backgroundColor: @config.backgroundColor
+          bars: @payload.bars
+          cells: @payload.cells
+          pointers: @payload.pointers
+          shapes: @payload.shapes
+          interactive: @config.interactive
+          animate: @config.animate
+          onShapeClick: SHAPE_CLICK
+          isLoading: @config.isLoading
+          error: @config.error
+          type: algorithm-canvas
+        })
+    }
+
+    emits {
+      SHAPE_CLICK -> external {
+        payload : AlgorithmCanvasSHAPECLICKPayload
+      }
+        @description "onShapeClick prop"
+        @tier "essential"
+    }
+
+    listens {
+      UPDATE {
+        bars : [AlgorithmCanvasBarsItem]
+        cells : [AlgorithmCanvasCellsItem]
+        pointers : [AlgorithmCanvasPointersItem]
+        shapes : [AlgorithmCanvasShapesItem]
+      }
+        @description "Live scene update; payload carries the current drawable state."
+        @synonyms "tick, redraw, animate, frame"
+        @tier "domain"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "width prop"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "height prop"
+        @tier "presentation"
+      title : string = "Title"
+        @label "Title"
+        @description "title prop"
+        @tier "presentation"
+      backgroundColor : string = "Background Color"
+        @label "Background Color"
+        @description "backgroundColor prop"
+        @tier "presentation"
+      bars : [AlgorithmCanvasBarsItem] = [{ value: 1, color: "Color", label: "Label" }, { value: 2, color: "Color 2", label: "Label 2" }]
+        @label "Bars"
+        @description "Sorting/histogram bars; laid out left-to-right, height proportional to value."
+        @tier "presentation"
+      cells : [AlgorithmCanvasCellsItem] = [{ row: 1, col: 1, value: 1, color: "Color", label: "Label" }, { row: 2, col: 2, value: 2, color: "Color 2", label: "Label 2" }]
+        @label "Cells"
+        @description "Grid/array/DP cells; laid out on a row/col lattice sized to the extent."
+        @tier "presentation"
+      pointers : [AlgorithmCanvasPointersItem] = [{ index: 1, label: "Label", color: "Color" }, { index: 2, label: "Label 2", color: "Color 2" }]
+        @label "Pointers"
+        @description "Index cursors (i/j/lo/hi/mid); drawn as markers beneath the referenced bar/cell column."
+        @tier "presentation"
+      shapes : [AlgorithmCanvasShapesItem] = [{ type: line, id: "Id", x: 1, y: 1, x1: 1, y1: 1, x2: 1, y2: 1, radius: 1, width: 1, height: 1, points: [{ x: 1, y: 1 }, { x: 2, y: 2 }], path: "Path", text: "Text", label: "Label", fontSize: 1, align: left, axis: x, min: 1, max: 1, step: 1, color: "Color", fill: "Fill", lineWidth: 1, opacity: 1 }, { type: arrow, id: "Id 2", x: 2, y: 2, x1: 2, y1: 2, x2: 2, y2: 2, radius: 2, width: 2, height: 2, points: [{ x: 1, y: 1 }, { x: 2, y: 2 }], path: "Path 2", text: "Text 2", label: "Label 2", fontSize: 2, align: center, axis: y, min: 2, max: 2, step: 2, color: "Color 2", fill: "Fill 2", lineWidth: 2, opacity: 2 }]
+        @label "Shapes"
+        @description "Extra declarative shapes in canvas pixel coordinates."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "interactive prop"
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "animate prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "isLoading prop"
+        @tier "presentation"
+      error : AlgorithmCanvasError
+        @label "Error"
+        @description "error prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/algorithm-canvas" as AlgorithmCanvasPage -> AlgorithmCanvasRender
+}

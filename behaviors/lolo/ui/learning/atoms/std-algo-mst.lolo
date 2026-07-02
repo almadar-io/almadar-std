@@ -1,0 +1,207 @@
+app std-algo-mst "1.0.0"
+"Prim minimum-spanning-tree engine — each tick adds the lightest edge crossing the tree cut on biology-canvas."
+orbital MstEngineOrbital {
+  type GraphNode = {
+    id : string!
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    kind : "cell" | "organelle" | "molecule" | "organism"
+  }
+  type GraphEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+  type WEdge = {
+    from : string!
+    to : string!
+    w : number!
+  }
+  type TreeEdge = {
+    from : string!
+    to : string!
+  }
+
+  entity MstScene [runtime] {
+    id : string!
+    nodes : [GraphNode]
+    edges : [GraphEdge]
+    wedges : [WEdge]
+    inTree : [string]
+    treeEdges : [TreeEdge]
+    minW : number = 0
+    chosenFrom : string = ""
+    chosenTo : string = ""
+    done : boolean = false
+    running : boolean = true
+  }
+
+  trait MstSim -> @rebindable MstScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.nodes @config.nodes)
+        (set @entity.edges @config.edges)
+        (set @entity.wedges @config.wedges)
+        (set @entity.running @config.running)
+        (set @entity.inTree [@config.start])
+        (set @entity.treeEdges [])
+        (set @entity.minW 0)
+        (set @entity.chosenFrom "")
+        (set @entity.chosenTo "")
+        (set @entity.done false)
+        (render-ui main {
+          type: biology-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          nodes: @entity.nodes
+          edges: @entity.edges
+        })
+        (emit NODES_UPDATED { nodes: @entity.nodes, edges: @entity.edges })
+    }
+
+    ticks {
+      mstTick every 500ms
+        when (and @entity.running (not @entity.done))
+        (set @entity.minW
+          (array/min
+            (array/map
+              (array/filter @entity.wedges (fn w
+                (let ( (inF (array/includes @entity.inTree (object/get @w from)))
+                       (inT (array/includes @entity.inTree (object/get @w to))) )
+                  (or (and @inF (not @inT)) (and (not @inF) @inT)))))
+              (fn w (object/get @w w)))))
+        (set @entity.chosenFrom
+          (object/get
+            (array/first
+              (array/filter @entity.wedges (fn w
+                (let ( (inF (array/includes @entity.inTree (object/get @w from)))
+                       (inT (array/includes @entity.inTree (object/get @w to))) )
+                  (and (or (and @inF (not @inT)) (and (not @inF) @inT))
+                       (== (object/get @w w) @entity.minW))))))
+            from))
+        (set @entity.chosenTo
+          (object/get
+            (array/first
+              (array/filter @entity.wedges (fn w
+                (let ( (inF (array/includes @entity.inTree (object/get @w from)))
+                       (inT (array/includes @entity.inTree (object/get @w to))) )
+                  (and (or (and @inF (not @inT)) (and (not @inF) @inT))
+                       (== (object/get @w w) @entity.minW))))))
+            to))
+        (set @entity.treeEdges (array/append @entity.treeEdges { from: @entity.chosenFrom, to: @entity.chosenTo }))
+        (set @entity.inTree
+          (array/append @entity.inTree
+            (if (array/includes @entity.inTree @entity.chosenFrom) @entity.chosenTo @entity.chosenFrom)))
+        (set @entity.nodes
+          (array/map @entity.nodes (fn nd
+            (object/merge @nd {
+              color: (if (array/includes @entity.inTree (object/get @nd id)) "#22c55e" "#64748b")
+            }))))
+        (set @entity.edges
+          (array/map @entity.edges (fn ed
+            (let ( (ef (object/get @ed from)) (et (object/get @ed to)) )
+              (object/merge @ed {
+                color: (if (array/some @entity.treeEdges (fn te
+                           (or (and (== (object/get @te from) @ef) (== (object/get @te to) @et))
+                               (and (== (object/get @te from) @et) (== (object/get @te to) @ef)))))
+                         "#22c55e" "#9ca3af")
+              })))))
+        (set @entity.done (>= (array/len @entity.inTree) (array/len @entity.nodes)))
+        (render-ui main {
+          type: biology-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          nodes: @entity.nodes
+          edges: @entity.edges
+        })
+        (emit NODES_UPDATED { nodes: @entity.nodes, edges: @entity.edges })
+    }
+
+    emits {
+      NODES_UPDATED -> external {
+        nodes : [GraphNode]
+        edges : [GraphEdge]
+      }
+        @description "The graph each step — a composed listener can subscribe; a harmless no-op standalone."
+        @synonyms "tick, frame, step, spanning, tree, prim, cut"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick adds one tree edge per step; toggle to start/pause Prim's growth."
+        @tier "domain"
+      start : string = "A"
+        @label "Start Node"
+        @description "Id of the node Prim's tree grows from."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      nodes : [GraphNode] = [
+        { id: "A", x: 300, y: 60, radius: 20, color: "#22c55e", label: "A", kind: cell },
+        { id: "B", x: 150, y: 160, radius: 20, color: "#64748b", label: "B", kind: cell },
+        { id: "C", x: 450, y: 160, radius: 20, color: "#64748b", label: "C", kind: cell },
+        { id: "D", x: 90, y: 300, radius: 20, color: "#64748b", label: "D", kind: cell },
+        { id: "E", x: 240, y: 300, radius: 20, color: "#64748b", label: "E", kind: cell },
+        { id: "F", x: 400, y: 300, radius: 20, color: "#64748b", label: "F", kind: cell },
+        { id: "G", x: 520, y: 300, radius: 20, color: "#64748b", label: "G", kind: cell }
+      ]
+        @label "Nodes"
+        @description "Graph vertices; Prim recolours them slate→green as they enter the spanning tree."
+        @tier "domain"
+      edges : [GraphEdge] = [
+        { from: "A", to: "B", color: "#9ca3af", label: "4" },
+        { from: "A", to: "C", color: "#9ca3af", label: "3" },
+        { from: "B", to: "C", color: "#9ca3af", label: "1" },
+        { from: "B", to: "D", color: "#9ca3af", label: "5" },
+        { from: "C", to: "D", color: "#9ca3af", label: "6" },
+        { from: "C", to: "E", color: "#9ca3af", label: "8" },
+        { from: "D", to: "E", color: "#9ca3af", label: "2" },
+        { from: "D", to: "F", color: "#9ca3af", label: "7" },
+        { from: "E", to: "F", color: "#9ca3af", label: "3" },
+        { from: "E", to: "G", color: "#9ca3af", label: "9" },
+        { from: "F", to: "G", color: "#9ca3af", label: "4" }
+      ]
+        @label "Edges"
+        @description "Rendered undirected edges (weight in label); tree edges recolour green as Prim picks them."
+        @tier "domain"
+      wedges : [WEdge] = [
+        { from: "A", to: "B", w: 4 },
+        { from: "A", to: "C", w: 3 },
+        { from: "B", to: "C", w: 1 },
+        { from: "B", to: "D", w: 5 },
+        { from: "C", to: "D", w: 6 },
+        { from: "C", to: "E", w: 8 },
+        { from: "D", to: "E", w: 2 },
+        { from: "D", to: "F", w: 7 },
+        { from: "E", to: "F", w: 3 },
+        { from: "E", to: "G", w: 9 },
+        { from: "F", to: "G", w: 4 }
+      ]
+        @label "Weighted Edges"
+        @description "Undirected weighted adjacency Prim scans for the lightest cut-crossing edge; one per drawn edge."
+        @tier "domain"
+    }
+  }
+
+  page "/algo-mst" as MstEnginePage -> MstSim
+}

@@ -1,0 +1,855 @@
+{
+  "description": "Heapsort engine — one sift-down compare/swap or extract-max micro-step per tick over a bar array on algorithm-canvas; composed by a learning orbital via `uses`.",
+  "name": "std-algo-heapsort",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "bars",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "heapSize",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "phase",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "origin",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "root",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "done",
+            "type": "boolean"
+          },
+          {
+            "default": true,
+            "name": "running",
+            "type": "boolean"
+          },
+          {
+            "default": 0.0,
+            "name": "largest",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "willSwap",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "buildMore",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "buildDone",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "sortExtract",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "finished",
+            "type": "boolean"
+          },
+          {
+            "default": false,
+            "name": "doSwap",
+            "type": "boolean"
+          },
+          {
+            "default": 0.0,
+            "name": "swapA",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "swapB",
+            "type": "number"
+          }
+        ],
+        "name": "HeapScene",
+        "persistence": "runtime"
+      },
+      "name": "HeapSortEngineOrbital",
+      "pages": [
+        {
+          "name": "HeapSortEnginePage",
+          "path": "/algo-heapsort",
+          "traits": [
+            {
+              "ref": "HeapSortSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bars": {
+              "default": [
+                {
+                  "color": "#3b82f6",
+                  "label": "5",
+                  "value": 5.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "2",
+                  "value": 2.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "8",
+                  "value": 8.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "1",
+                  "value": 1.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "9",
+                  "value": 9.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "3",
+                  "value": 3.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "7",
+                  "value": 7.0
+                },
+                {
+                  "color": "#3b82f6",
+                  "label": "4",
+                  "value": 4.0
+                }
+              ],
+              "description": "Initial unsorted array; each bar's height is proportional to its value.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bars",
+              "tier": "domain",
+              "type": "[AlgoBar]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick performs one sift/extract micro-step; toggle to start/pause the sort.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The current bar array each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone.",
+              "event": "BARS_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "bars",
+                  "type": "[AlgoBar]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, redraw, compare, swap, sift, heapify, extract",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "bars",
+              "buildDone",
+              "buildMore",
+              "doSwap",
+              "done",
+              "finished",
+              "heapSize",
+              "largest",
+              "origin",
+              "phase",
+              "root",
+              "running",
+              "sortExtract",
+              "swapA",
+              "swapB",
+              "willSwap"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "HeapScene",
+          "name": "HeapSortSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The current bar array each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone.",
+                "key": "BARS_UPDATED",
+                "name": "Bars Updated",
+                "payloadSchema": [
+                  {
+                    "name": "bars",
+                    "type": "[AlgoBar]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, redraw, compare, swap, sift, heapify, extract",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.bars",
+                    "@config.bars"
+                  ],
+                  [
+                    "set",
+                    "@entity.heapSize",
+                    [
+                      "array/len",
+                      "@config.bars"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.origin",
+                    [
+                      "-",
+                      [
+                        "math/floor",
+                        [
+                          "/",
+                          [
+                            "array/len",
+                            "@config.bars"
+                          ],
+                          2.0
+                        ]
+                      ],
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.root",
+                    [
+                      "-",
+                      [
+                        "math/floor",
+                        [
+                          "/",
+                          [
+                            "array/len",
+                            "@config.bars"
+                          ],
+                          2.0
+                        ]
+                      ],
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.done",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "bars": "@entity.bars",
+                      "height": "@config.height",
+                      "type": "algorithm-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "BARS_UPDATED",
+                    {
+                      "bars": "@entity.bars"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.largest",
+                  [
+                    "let",
+                    [
+                      [
+                        "lc",
+                        [
+                          "+",
+                          [
+                            "*",
+                            2.0,
+                            "@entity.root"
+                          ],
+                          1.0
+                        ]
+                      ],
+                      [
+                        "rc",
+                        [
+                          "+",
+                          [
+                            "*",
+                            2.0,
+                            "@entity.root"
+                          ],
+                          2.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "afterL",
+                          [
+                            "if",
+                            [
+                              "and",
+                              [
+                                "<",
+                                "lc",
+                                "@entity.heapSize"
+                              ],
+                              [
+                                ">",
+                                [
+                                  "object/get",
+                                  [
+                                    "array/nth",
+                                    "@entity.bars",
+                                    "lc"
+                                  ],
+                                  "value"
+                                ],
+                                [
+                                  "object/get",
+                                  [
+                                    "array/nth",
+                                    "@entity.bars",
+                                    "@entity.root"
+                                  ],
+                                  "value"
+                                ]
+                              ]
+                            ],
+                            "lc",
+                            "@entity.root"
+                          ]
+                        ]
+                      ],
+                      [
+                        "if",
+                        [
+                          "and",
+                          [
+                            "<",
+                            "rc",
+                            "@entity.heapSize"
+                          ],
+                          [
+                            ">",
+                            [
+                              "object/get",
+                              [
+                                "array/nth",
+                                "@entity.bars",
+                                "rc"
+                              ],
+                              "value"
+                            ],
+                            [
+                              "object/get",
+                              [
+                                "array/nth",
+                                "@entity.bars",
+                                "afterL"
+                              ],
+                              "value"
+                            ]
+                          ]
+                        ],
+                        "rc",
+                        "afterL"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.willSwap",
+                  [
+                    "not",
+                    [
+                      "==",
+                      "@entity.largest",
+                      "@entity.root"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.buildMore",
+                  [
+                    "and",
+                    [
+                      "not",
+                      "@entity.willSwap"
+                    ],
+                    [
+                      "==",
+                      "@entity.phase",
+                      0.0
+                    ],
+                    [
+                      ">=",
+                      "@entity.origin",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.buildDone",
+                  [
+                    "and",
+                    [
+                      "not",
+                      "@entity.willSwap"
+                    ],
+                    [
+                      "==",
+                      "@entity.phase",
+                      0.0
+                    ],
+                    [
+                      "==",
+                      "@entity.origin",
+                      0.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.sortExtract",
+                  [
+                    "and",
+                    [
+                      "not",
+                      "@entity.willSwap"
+                    ],
+                    [
+                      "==",
+                      "@entity.phase",
+                      1.0
+                    ],
+                    [
+                      ">",
+                      "@entity.heapSize",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.finished",
+                  [
+                    "and",
+                    [
+                      "not",
+                      "@entity.willSwap"
+                    ],
+                    [
+                      "==",
+                      "@entity.phase",
+                      1.0
+                    ],
+                    [
+                      "<=",
+                      "@entity.heapSize",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.doSwap",
+                  [
+                    "or",
+                    "@entity.willSwap",
+                    [
+                      "or",
+                      "@entity.buildDone",
+                      "@entity.sortExtract"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.swapA",
+                  [
+                    "if",
+                    "@entity.willSwap",
+                    "@entity.root",
+                    0.0
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.swapB",
+                  [
+                    "if",
+                    "@entity.willSwap",
+                    "@entity.largest",
+                    [
+                      "-",
+                      "@entity.heapSize",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.bars",
+                  [
+                    "array/map",
+                    "@entity.bars",
+                    [
+                      "object/merge",
+                      "@item",
+                      {
+                        "color": [
+                          "if",
+                          "@entity.finished",
+                          "#22c55e",
+                          [
+                            "if",
+                            [
+                              ">=",
+                              "@index",
+                              "@entity.heapSize"
+                            ],
+                            "#22c55e",
+                            [
+                              "if",
+                              [
+                                "==",
+                                "@index",
+                                "@entity.root"
+                              ],
+                              "#f59e0b",
+                              [
+                                "if",
+                                [
+                                  "and",
+                                  "@entity.willSwap",
+                                  [
+                                    "==",
+                                    "@index",
+                                    "@entity.largest"
+                                  ]
+                                ],
+                                "#fbbf24",
+                                "#3b82f6"
+                              ]
+                            ]
+                          ]
+                        ],
+                        "value": [
+                          "if",
+                          [
+                            "and",
+                            "@entity.doSwap",
+                            [
+                              "==",
+                              "@index",
+                              "@entity.swapA"
+                            ]
+                          ],
+                          [
+                            "object/get",
+                            [
+                              "array/nth",
+                              "@entity.bars",
+                              "@entity.swapB"
+                            ],
+                            "value"
+                          ],
+                          [
+                            "if",
+                            [
+                              "and",
+                              "@entity.doSwap",
+                              [
+                                "==",
+                                "@index",
+                                "@entity.swapB"
+                              ]
+                            ],
+                            [
+                              "object/get",
+                              [
+                                "array/nth",
+                                "@entity.bars",
+                                "@entity.swapA"
+                              ],
+                              "value"
+                            ],
+                            [
+                              "object/get",
+                              "@item",
+                              "value"
+                            ]
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.root",
+                  [
+                    "if",
+                    "@entity.willSwap",
+                    "@entity.largest",
+                    [
+                      "if",
+                      "@entity.buildMore",
+                      [
+                        "-",
+                        "@entity.origin",
+                        1.0
+                      ],
+                      [
+                        "if",
+                        "@entity.buildDone",
+                        0.0,
+                        [
+                          "if",
+                          "@entity.sortExtract",
+                          0.0,
+                          "@entity.root"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.origin",
+                  [
+                    "if",
+                    "@entity.buildMore",
+                    [
+                      "-",
+                      "@entity.origin",
+                      1.0
+                    ],
+                    "@entity.origin"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.phase",
+                  [
+                    "if",
+                    [
+                      "and",
+                      [
+                        "==",
+                        "@entity.phase",
+                        0.0
+                      ],
+                      [
+                        "not",
+                        "@entity.buildDone"
+                      ]
+                    ],
+                    0.0,
+                    1.0
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.heapSize",
+                  [
+                    "if",
+                    [
+                      "or",
+                      "@entity.buildDone",
+                      "@entity.sortExtract"
+                    ],
+                    [
+                      "-",
+                      "@entity.heapSize",
+                      1.0
+                    ],
+                    "@entity.heapSize"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.done",
+                  "@entity.finished"
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "bars": "@entity.bars",
+                    "height": "@config.height",
+                    "type": "algorithm-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "BARS_UPDATED",
+                  {
+                    "bars": "@entity.bars"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                "@entity.running",
+                [
+                  "not",
+                  "@entity.done"
+                ]
+              ],
+              "interval": 350.0,
+              "name": "heapTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

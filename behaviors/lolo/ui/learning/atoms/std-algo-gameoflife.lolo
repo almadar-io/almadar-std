@@ -1,0 +1,198 @@
+app std-algo-gameoflife "1.0.0"
+"Conway's Game of Life — each tick recomputes every cell's next state from its eight neighbours, on algorithm-canvas cells."
+orbital GameOfLifeEngineOrbital {
+  type AlgoCell = {
+    row : number!
+    col : number!
+    value : number
+    color : string
+    label : string
+  }
+
+  entity LifeScene [runtime] {
+    id : string!
+    cells : [AlgoCell]
+    running : boolean = true
+  }
+
+  trait GameOfLifeSim -> @rebindable LifeScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.cells @config.cells)
+        (set @entity.running @config.running)
+        (render-ui main {
+          type: algorithm-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          cells: @entity.cells
+        })
+        (emit CELLS_UPDATED { cells: @entity.cells })
+    }
+
+    ticks {
+      lifeTick every 400ms
+        when @entity.running
+        (set @entity.cells
+          (array/map @entity.cells
+            (let ( (r (object/get @item row)) (c (object/get @item col)) (self (object/get @item value)) )
+            (let ( (live (array/len (array/filter @entity.cells
+                     (and (<= (math/abs (- (object/get @item row) @r)) 1)
+                       (and (<= (math/abs (- (object/get @item col) @c)) 1)
+                         (and (== (object/get @item value) 1)
+                           (not (and (== (object/get @item row) @r) (== (object/get @item col) @c))))))))) )
+            (let ( (next (if (== @self 1)
+                           (if (or (== @live 2) (== @live 3)) 1 0)
+                           (if (== @live 3) 1 0))) )
+            (object/merge @item {
+              value: @next
+              color: (if (== @next 1) "#22c55e" "#1e293b")
+            }))))))
+        (render-ui main {
+          type: algorithm-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          cells: @entity.cells
+        })
+        (emit CELLS_UPDATED { cells: @entity.cells })
+    }
+
+    emits {
+      CELLS_UPDATED -> external {
+        cells : [AlgoCell]
+      }
+        @description "The grid each generation — a composed listener can subscribe; a harmless no-op standalone."
+        @synonyms "tick, frame, generation, step"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick advances one generation; toggle to start/pause."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#0f172a"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      cells : [AlgoCell] = [
+        { row: 0, col: 0, value: 0, color: "#1e293b", label: "" },
+        { row: 0, col: 1, value: 1, color: "#22c55e", label: "" },
+        { row: 0, col: 2, value: 0, color: "#1e293b", label: "" },
+        { row: 0, col: 3, value: 0, color: "#1e293b", label: "" },
+        { row: 0, col: 4, value: 0, color: "#1e293b", label: "" },
+        { row: 0, col: 5, value: 0, color: "#1e293b", label: "" },
+        { row: 0, col: 6, value: 0, color: "#1e293b", label: "" },
+        { row: 0, col: 7, value: 0, color: "#1e293b", label: "" },
+        { row: 0, col: 8, value: 0, color: "#1e293b", label: "" },
+        { row: 0, col: 9, value: 0, color: "#1e293b", label: "" },
+        { row: 1, col: 0, value: 0, color: "#1e293b", label: "" },
+        { row: 1, col: 1, value: 0, color: "#1e293b", label: "" },
+        { row: 1, col: 2, value: 1, color: "#22c55e", label: "" },
+        { row: 1, col: 3, value: 0, color: "#1e293b", label: "" },
+        { row: 1, col: 4, value: 0, color: "#1e293b", label: "" },
+        { row: 1, col: 5, value: 0, color: "#1e293b", label: "" },
+        { row: 1, col: 6, value: 0, color: "#1e293b", label: "" },
+        { row: 1, col: 7, value: 0, color: "#1e293b", label: "" },
+        { row: 1, col: 8, value: 0, color: "#1e293b", label: "" },
+        { row: 1, col: 9, value: 0, color: "#1e293b", label: "" },
+        { row: 2, col: 0, value: 1, color: "#22c55e", label: "" },
+        { row: 2, col: 1, value: 1, color: "#22c55e", label: "" },
+        { row: 2, col: 2, value: 1, color: "#22c55e", label: "" },
+        { row: 2, col: 3, value: 0, color: "#1e293b", label: "" },
+        { row: 2, col: 4, value: 0, color: "#1e293b", label: "" },
+        { row: 2, col: 5, value: 0, color: "#1e293b", label: "" },
+        { row: 2, col: 6, value: 0, color: "#1e293b", label: "" },
+        { row: 2, col: 7, value: 0, color: "#1e293b", label: "" },
+        { row: 2, col: 8, value: 0, color: "#1e293b", label: "" },
+        { row: 2, col: 9, value: 0, color: "#1e293b", label: "" },
+        { row: 3, col: 0, value: 0, color: "#1e293b", label: "" },
+        { row: 3, col: 1, value: 0, color: "#1e293b", label: "" },
+        { row: 3, col: 2, value: 0, color: "#1e293b", label: "" },
+        { row: 3, col: 3, value: 0, color: "#1e293b", label: "" },
+        { row: 3, col: 4, value: 0, color: "#1e293b", label: "" },
+        { row: 3, col: 5, value: 0, color: "#1e293b", label: "" },
+        { row: 3, col: 6, value: 0, color: "#1e293b", label: "" },
+        { row: 3, col: 7, value: 0, color: "#1e293b", label: "" },
+        { row: 3, col: 8, value: 0, color: "#1e293b", label: "" },
+        { row: 3, col: 9, value: 0, color: "#1e293b", label: "" },
+        { row: 4, col: 0, value: 0, color: "#1e293b", label: "" },
+        { row: 4, col: 1, value: 0, color: "#1e293b", label: "" },
+        { row: 4, col: 2, value: 0, color: "#1e293b", label: "" },
+        { row: 4, col: 3, value: 0, color: "#1e293b", label: "" },
+        { row: 4, col: 4, value: 0, color: "#1e293b", label: "" },
+        { row: 4, col: 5, value: 0, color: "#1e293b", label: "" },
+        { row: 4, col: 6, value: 0, color: "#1e293b", label: "" },
+        { row: 4, col: 7, value: 0, color: "#1e293b", label: "" },
+        { row: 4, col: 8, value: 0, color: "#1e293b", label: "" },
+        { row: 4, col: 9, value: 0, color: "#1e293b", label: "" },
+        { row: 5, col: 0, value: 0, color: "#1e293b", label: "" },
+        { row: 5, col: 1, value: 0, color: "#1e293b", label: "" },
+        { row: 5, col: 2, value: 0, color: "#1e293b", label: "" },
+        { row: 5, col: 3, value: 0, color: "#1e293b", label: "" },
+        { row: 5, col: 4, value: 0, color: "#1e293b", label: "" },
+        { row: 5, col: 5, value: 1, color: "#22c55e", label: "" },
+        { row: 5, col: 6, value: 1, color: "#22c55e", label: "" },
+        { row: 5, col: 7, value: 1, color: "#22c55e", label: "" },
+        { row: 5, col: 8, value: 0, color: "#1e293b", label: "" },
+        { row: 5, col: 9, value: 0, color: "#1e293b", label: "" },
+        { row: 6, col: 0, value: 0, color: "#1e293b", label: "" },
+        { row: 6, col: 1, value: 0, color: "#1e293b", label: "" },
+        { row: 6, col: 2, value: 0, color: "#1e293b", label: "" },
+        { row: 6, col: 3, value: 0, color: "#1e293b", label: "" },
+        { row: 6, col: 4, value: 0, color: "#1e293b", label: "" },
+        { row: 6, col: 5, value: 0, color: "#1e293b", label: "" },
+        { row: 6, col: 6, value: 0, color: "#1e293b", label: "" },
+        { row: 6, col: 7, value: 0, color: "#1e293b", label: "" },
+        { row: 6, col: 8, value: 0, color: "#1e293b", label: "" },
+        { row: 6, col: 9, value: 0, color: "#1e293b", label: "" },
+        { row: 7, col: 0, value: 0, color: "#1e293b", label: "" },
+        { row: 7, col: 1, value: 1, color: "#22c55e", label: "" },
+        { row: 7, col: 2, value: 1, color: "#22c55e", label: "" },
+        { row: 7, col: 3, value: 0, color: "#1e293b", label: "" },
+        { row: 7, col: 4, value: 0, color: "#1e293b", label: "" },
+        { row: 7, col: 5, value: 0, color: "#1e293b", label: "" },
+        { row: 7, col: 6, value: 0, color: "#1e293b", label: "" },
+        { row: 7, col: 7, value: 0, color: "#1e293b", label: "" },
+        { row: 7, col: 8, value: 0, color: "#1e293b", label: "" },
+        { row: 7, col: 9, value: 0, color: "#1e293b", label: "" },
+        { row: 8, col: 0, value: 0, color: "#1e293b", label: "" },
+        { row: 8, col: 1, value: 1, color: "#22c55e", label: "" },
+        { row: 8, col: 2, value: 1, color: "#22c55e", label: "" },
+        { row: 8, col: 3, value: 0, color: "#1e293b", label: "" },
+        { row: 8, col: 4, value: 0, color: "#1e293b", label: "" },
+        { row: 8, col: 5, value: 0, color: "#1e293b", label: "" },
+        { row: 8, col: 6, value: 0, color: "#1e293b", label: "" },
+        { row: 8, col: 7, value: 0, color: "#1e293b", label: "" },
+        { row: 8, col: 8, value: 0, color: "#1e293b", label: "" },
+        { row: 8, col: 9, value: 0, color: "#1e293b", label: "" },
+        { row: 9, col: 0, value: 0, color: "#1e293b", label: "" },
+        { row: 9, col: 1, value: 0, color: "#1e293b", label: "" },
+        { row: 9, col: 2, value: 0, color: "#1e293b", label: "" },
+        { row: 9, col: 3, value: 0, color: "#1e293b", label: "" },
+        { row: 9, col: 4, value: 0, color: "#1e293b", label: "" },
+        { row: 9, col: 5, value: 0, color: "#1e293b", label: "" },
+        { row: 9, col: 6, value: 0, color: "#1e293b", label: "" },
+        { row: 9, col: 7, value: 0, color: "#1e293b", label: "" },
+        { row: 9, col: 8, value: 0, color: "#1e293b", label: "" },
+        { row: 9, col: 9, value: 0, color: "#1e293b", label: "" }
+      ]
+        @label "Cells"
+        @description "The initial grid; value 1 = alive, 0 = dead."
+        @tier "domain"
+    }
+  }
+
+  page "/algo-gameoflife" as GameOfLifeEnginePage -> GameOfLifeSim
+}

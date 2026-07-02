@@ -1,0 +1,134 @@
+app std-algo-twopointer "1.0.0"
+"Two-pointer engine — one left/right pair-sum step per tick over a sorted bar array on algorithm-canvas; composed via `uses`."
+orbital TwoPointerEngineOrbital {
+  type AlgoBar = {
+    value : number!
+    color : string
+    label : string
+  }
+
+  type AlgoPointer = {
+    index : number!
+    label : string
+    color : string
+  }
+
+  entity TwoPointerScene [runtime] {
+    id : string!
+    bars : [AlgoBar]
+    pointers : [AlgoPointer]
+    left : number = 0
+    right : number = 0
+    sum : number = 0
+    found : boolean = false
+    done : boolean = false
+    running : boolean = true
+  }
+
+  trait TwoPointerSim -> @rebindable TwoPointerScene [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.bars @config.bars)
+        (set @entity.left 0)
+        (set @entity.right (- (array/len @config.bars) 1))
+        (set @entity.running @config.running)
+        (set @entity.pointers [
+          { index: @entity.left, label: "left", color: "#2563eb" },
+          { index: @entity.right, label: "right", color: "#dc2626" }
+        ])
+        (render-ui main {
+          type: algorithm-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          bars: @entity.bars
+          pointers: @entity.pointers
+        })
+        (emit PAIR_UPDATED { bars: @entity.bars pointers: @entity.pointers })
+    }
+
+    ticks {
+      twoPointerTick every 350ms
+        when (and @entity.running (not @entity.done))
+        (set @entity.sum
+          (+ (object/get (array/nth @entity.bars @entity.left) value)
+             (object/get (array/nth @entity.bars @entity.right) value)))
+        (set @entity.found (== @entity.sum @config.target))
+        (set @entity.left (if (and (not @entity.found) (< @entity.sum @config.target)) (+ @entity.left 1) @entity.left))
+        (set @entity.right (if (and (not @entity.found) (> @entity.sum @config.target)) (- @entity.right 1) @entity.right))
+        (set @entity.done (or @entity.found (>= @entity.left @entity.right)))
+        (set @entity.bars
+          (array/map @entity.bars
+            (object/merge @item {
+              color: (if (or (< @index @entity.left) (> @index @entity.right)) "#cbd5e1"
+                       (if (or (== @index @entity.left) (== @index @entity.right)) (if @entity.found "#22c55e" "#f59e0b")
+                         "#3b82f6"))
+            })))
+        (set @entity.pointers [
+          { index: @entity.left, label: "left", color: "#2563eb" },
+          { index: @entity.right, label: "right", color: "#dc2626" }
+        ])
+        (render-ui main {
+          type: algorithm-canvas
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          bars: @entity.bars
+          pointers: @entity.pointers
+        })
+        (emit PAIR_UPDATED { bars: @entity.bars pointers: @entity.pointers })
+    }
+
+    emits {
+      PAIR_UPDATED -> external {
+        bars : [AlgoBar]
+        pointers : [AlgoPointer]
+      }
+        @description "The current bars + left/right cursors each step — a composed listener (a mirror canvas, a readout) can subscribe; a harmless no-op standalone."
+        @synonyms "tick, frame, step, converge, pair, sum"
+        @tier "domain"
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true the tick performs one pair-sum step; toggle to start/pause the scan."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      target : number = 24
+        @label "Target"
+        @description "The pair sum being searched for in the sorted array."
+        @tier "domain"
+      bars : [AlgoBar] = [
+        { value: 1, color: "#3b82f6", label: "1" },
+        { value: 3, color: "#3b82f6", label: "3" },
+        { value: 5, color: "#3b82f6", label: "5" },
+        { value: 7, color: "#3b82f6", label: "7" },
+        { value: 9, color: "#3b82f6", label: "9" },
+        { value: 11, color: "#3b82f6", label: "11" },
+        { value: 13, color: "#3b82f6", label: "13" },
+        { value: 15, color: "#3b82f6", label: "15" },
+        { value: 17, color: "#3b82f6", label: "17" },
+        { value: 19, color: "#3b82f6", label: "19" }
+      ]
+        @label "Bars"
+        @description "Initial sorted array; each bar's height is proportional to its value."
+        @tier "domain"
+    }
+  }
+
+  page "/algo-twopointer" as TwoPointerEnginePage -> TwoPointerSim
+}

@@ -1,0 +1,533 @@
+[
+  {
+    "organism": "std-algo-astargraph",
+    "orbital": "AstarGraphEngineOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/learning/atoms/std-algo-astargraph.ts",
+    "entities": [
+      {
+        "name": "AstarScene",
+        "fields": [
+          {
+            "name": "nodes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "edges",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "wedges",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "gscore",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "visited",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "openF",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "goal",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "goalX",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "goalY",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "cur",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "minF",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "distU",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "done",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AstarSim",
+        "emittedEvents": [
+          "NODES_UPDATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "NODES_UPDATED",
+            "direction": "emit",
+            "description": "The graph each step — a composed listener can subscribe; a harmless no-op standalone.",
+            "synonyms": "tick, frame, step, expand, heuristic, astar, goal, path",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "backgroundColor",
+            "type": "string",
+            "default": "#f8fafc",
+            "label": "Background Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "edges",
+            "type": "[GraphEdge]",
+            "default": [
+              {
+                "color": "#9ca3af",
+                "from": "A",
+                "label": "186",
+                "to": "B"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "A",
+                "label": "142",
+                "to": "C"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "B",
+                "label": "143",
+                "to": "C"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "B",
+                "label": "163",
+                "to": "D"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "C",
+                "label": "162",
+                "to": "E"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "D",
+                "label": "163",
+                "to": "E"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "D",
+                "label": "163",
+                "to": "F"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "E",
+                "label": "200",
+                "to": "F"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "E",
+                "label": "182",
+                "to": "G"
+              },
+              {
+                "color": "#9ca3af",
+                "from": "F",
+                "label": "148",
+                "to": "G"
+              }
+            ],
+            "label": "Edges",
+            "description": "Rendered undirected edges (weight in label); drawing only, A* reads wedges.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "goal",
+            "type": "string",
+            "default": "G",
+            "label": "Goal Node",
+            "description": "Id of the target node; A* stops once it is expanded.",
+            "tier": "domain"
+          },
+          {
+            "key": "gscore",
+            "type": "[Dist]",
+            "default": [
+              {
+                "d": 0,
+                "id": "A"
+              },
+              {
+                "d": 9999,
+                "id": "B"
+              },
+              {
+                "d": 9999,
+                "id": "C"
+              },
+              {
+                "d": 9999,
+                "id": "D"
+              },
+              {
+                "d": 9999,
+                "id": "E"
+              },
+              {
+                "d": 9999,
+                "id": "F"
+              },
+              {
+                "d": 9999,
+                "id": "G"
+              }
+            ],
+            "label": "G Scores",
+            "description": "Best-known cost from start per node; start 0, others 9999 (infinity sentinel). Not rendered.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "d": {
+                  "name": "d",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "nodes",
+            "type": "[GraphNode]",
+            "default": [
+              {
+                "color": "#f59e0b",
+                "id": "A",
+                "kind": "cell",
+                "label": "A",
+                "radius": 20,
+                "x": 60,
+                "y": 340
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "B",
+                "kind": "cell",
+                "label": "B",
+                "radius": 20,
+                "x": 180,
+                "y": 200
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "C",
+                "kind": "cell",
+                "label": "C",
+                "radius": 20,
+                "x": 200,
+                "y": 340
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "D",
+                "kind": "cell",
+                "label": "D",
+                "radius": 20,
+                "x": 340,
+                "y": 180
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "E",
+                "kind": "cell",
+                "label": "E",
+                "radius": 20,
+                "x": 360,
+                "y": 340
+              },
+              {
+                "color": "#cbd5e1",
+                "id": "F",
+                "kind": "cell",
+                "label": "F",
+                "radius": 20,
+                "x": 500,
+                "y": 200
+              },
+              {
+                "color": "#ef4444",
+                "id": "G",
+                "kind": "cell",
+                "label": "G",
+                "radius": 20,
+                "x": 540,
+                "y": 340
+              }
+            ],
+            "label": "Nodes",
+            "description": "Graph vertices; A* recolours them slate→amber(open)→green(closed), blue=current, red=goal.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true the tick expands one node per step; toggle to start/pause the search.",
+            "tier": "domain"
+          },
+          {
+            "key": "start",
+            "type": "string",
+            "default": "A",
+            "label": "Start Node",
+            "description": "Id of the node A* searches from.",
+            "tier": "domain"
+          },
+          {
+            "key": "wedges",
+            "type": "[WEdge]",
+            "default": [
+              {
+                "from": "A",
+                "to": "B",
+                "w": 186
+              },
+              {
+                "from": "A",
+                "to": "C",
+                "w": 142
+              },
+              {
+                "from": "B",
+                "to": "C",
+                "w": 143
+              },
+              {
+                "from": "B",
+                "to": "D",
+                "w": 163
+              },
+              {
+                "from": "C",
+                "to": "E",
+                "w": 162
+              },
+              {
+                "from": "D",
+                "to": "E",
+                "w": 163
+              },
+              {
+                "from": "D",
+                "to": "F",
+                "w": 163
+              },
+              {
+                "from": "E",
+                "to": "F",
+                "w": 200
+              },
+              {
+                "from": "E",
+                "to": "G",
+                "w": 182
+              },
+              {
+                "from": "F",
+                "to": "G",
+                "w": 148
+              }
+            ],
+            "label": "Weighted Edges",
+            "description": "Undirected weighted adjacency A* relaxes; each weight exceeds its edge's straight-line length so the heuristic stays admissible.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                },
+                "w": {
+                  "name": "w",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 600,
+            "label": "Width",
+            "description": "Canvas width in pixels.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "cur",
+            "distU",
+            "done",
+            "edges",
+            "goal",
+            "goalX",
+            "goalY",
+            "gscore",
+            "minF",
+            "nodes",
+            "openF",
+            "running",
+            "visited",
+            "wedges"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "AstarGraphEnginePage",
+        "defaultPath": "/algo-astargraph",
+        "primaryEntity": "AstarScene"
+      }
+    ],
+    "emittedEvents": [
+      "NODES_UPDATED"
+    ],
+    "listenedEvents": []
+  }
+]

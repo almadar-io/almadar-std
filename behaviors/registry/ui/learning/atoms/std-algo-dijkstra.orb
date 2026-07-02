@@ -1,0 +1,1138 @@
+{
+  "description": "Dijkstra engine — each tick settles the nearest unvisited node and relaxes its weighted edges on biology-canvas.",
+  "name": "std-algo-dijkstra",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "cell",
+                    "organelle",
+                    "molecule",
+                    "organism"
+                  ]
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "nodes",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "edges",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                },
+                "w": {
+                  "name": "w",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "wedges",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "d": {
+                  "name": "d",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "dists",
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "string"
+            },
+            "name": "visited",
+            "type": "array"
+          },
+          {
+            "default": "",
+            "name": "cur",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "minD",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "distU",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "done",
+            "type": "boolean"
+          },
+          {
+            "default": true,
+            "name": "running",
+            "type": "boolean"
+          }
+        ],
+        "name": "DijkstraScene",
+        "persistence": "runtime"
+      },
+      "name": "DijkstraEngineOrbital",
+      "pages": [
+        {
+          "name": "DijkstraEnginePage",
+          "path": "/algo-dijkstra",
+          "traits": [
+            {
+              "ref": "DijkstraSim"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "description": "Canvas background color.",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "dists": {
+              "default": [
+                {
+                  "d": 0.0,
+                  "id": "A"
+                },
+                {
+                  "d": 9999.0,
+                  "id": "B"
+                },
+                {
+                  "d": 9999.0,
+                  "id": "C"
+                },
+                {
+                  "d": 9999.0,
+                  "id": "D"
+                },
+                {
+                  "d": 9999.0,
+                  "id": "E"
+                },
+                {
+                  "d": 9999.0,
+                  "id": "F"
+                },
+                {
+                  "d": 9999.0,
+                  "id": "G"
+                }
+              ],
+              "description": "Best-known distance per node; start 0, others 9999 (infinity sentinel). Not rendered.",
+              "items": {
+                "properties": {
+                  "d": {
+                    "name": "d",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Distances",
+              "tier": "domain",
+              "type": "[Dist]"
+            },
+            "edges": {
+              "default": [
+                {
+                  "color": "#9ca3af",
+                  "from": "A",
+                  "label": "4",
+                  "to": "B"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "A",
+                  "label": "3",
+                  "to": "C"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "B",
+                  "label": "1",
+                  "to": "C"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "B",
+                  "label": "5",
+                  "to": "D"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "C",
+                  "label": "6",
+                  "to": "D"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "C",
+                  "label": "8",
+                  "to": "E"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "D",
+                  "label": "2",
+                  "to": "E"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "D",
+                  "label": "7",
+                  "to": "F"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "E",
+                  "label": "3",
+                  "to": "F"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "E",
+                  "label": "9",
+                  "to": "G"
+                },
+                {
+                  "color": "#9ca3af",
+                  "from": "F",
+                  "label": "4",
+                  "to": "G"
+                }
+              ],
+              "description": "Rendered undirected edges (weight in label); drawing only, algorithm reads wedges.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Edges",
+              "tier": "domain",
+              "type": "[GraphEdge]"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "nodes": {
+              "default": [
+                {
+                  "color": "#f59e0b",
+                  "id": "A",
+                  "kind": "cell",
+                  "label": "A",
+                  "radius": 20.0,
+                  "x": 300.0,
+                  "y": 60.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "B",
+                  "kind": "cell",
+                  "label": "B",
+                  "radius": 20.0,
+                  "x": 150.0,
+                  "y": 160.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "C",
+                  "kind": "cell",
+                  "label": "C",
+                  "radius": 20.0,
+                  "x": 450.0,
+                  "y": 160.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "D",
+                  "kind": "cell",
+                  "label": "D",
+                  "radius": 20.0,
+                  "x": 90.0,
+                  "y": 300.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "E",
+                  "kind": "cell",
+                  "label": "E",
+                  "radius": 20.0,
+                  "x": 240.0,
+                  "y": 300.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "F",
+                  "kind": "cell",
+                  "label": "F",
+                  "radius": 20.0,
+                  "x": 400.0,
+                  "y": 300.0
+                },
+                {
+                  "color": "#cbd5e1",
+                  "id": "G",
+                  "kind": "cell",
+                  "label": "G",
+                  "radius": 20.0,
+                  "x": 520.0,
+                  "y": 300.0
+                }
+              ],
+              "description": "Graph vertices; Dijkstra recolours them slate→amber(reached)→green(settled), blue=current.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "kind": {
+                    "name": "kind",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "cell",
+                      "organelle",
+                      "molecule",
+                      "organism"
+                    ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Nodes",
+              "tier": "domain",
+              "type": "[GraphNode]"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the tick settles one node per step; toggle to start/pause the search.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "start": {
+              "default": "A",
+              "description": "Id of the source node Dijkstra measures distances from.",
+              "label": "Start Node",
+              "tier": "domain",
+              "type": "string"
+            },
+            "wedges": {
+              "default": [
+                {
+                  "from": "A",
+                  "to": "B",
+                  "w": 4.0
+                },
+                {
+                  "from": "A",
+                  "to": "C",
+                  "w": 3.0
+                },
+                {
+                  "from": "B",
+                  "to": "C",
+                  "w": 1.0
+                },
+                {
+                  "from": "B",
+                  "to": "D",
+                  "w": 5.0
+                },
+                {
+                  "from": "C",
+                  "to": "D",
+                  "w": 6.0
+                },
+                {
+                  "from": "C",
+                  "to": "E",
+                  "w": 8.0
+                },
+                {
+                  "from": "D",
+                  "to": "E",
+                  "w": 2.0
+                },
+                {
+                  "from": "D",
+                  "to": "F",
+                  "w": 7.0
+                },
+                {
+                  "from": "E",
+                  "to": "F",
+                  "w": 3.0
+                },
+                {
+                  "from": "E",
+                  "to": "G",
+                  "w": 9.0
+                },
+                {
+                  "from": "F",
+                  "to": "G",
+                  "w": 4.0
+                }
+              ],
+              "description": "Undirected weighted adjacency the relaxation reads; one wedge per drawn edge.",
+              "items": {
+                "properties": {
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "w": {
+                    "name": "w",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Weighted Edges",
+              "tier": "domain",
+              "type": "[WEdge]"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "The graph each step — a composed listener can subscribe; a harmless no-op standalone.",
+              "event": "NODES_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "nodes",
+                  "type": "[GraphNode]"
+                },
+                {
+                  "name": "edges",
+                  "type": "[GraphEdge]"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "tick, frame, step, relax, settle, shortest, path",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "cur",
+              "distU",
+              "dists",
+              "done",
+              "edges",
+              "minD",
+              "nodes",
+              "running",
+              "visited",
+              "wedges"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DijkstraScene",
+          "name": "DijkstraSim",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "The graph each step — a composed listener can subscribe; a harmless no-op standalone.",
+                "key": "NODES_UPDATED",
+                "name": "Nodes Updated",
+                "payloadSchema": [
+                  {
+                    "name": "nodes",
+                    "type": "[GraphNode]"
+                  },
+                  {
+                    "name": "edges",
+                    "type": "[GraphEdge]"
+                  }
+                ],
+                "synonyms": "tick, frame, step, relax, settle, shortest, path",
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.nodes",
+                    "@config.nodes"
+                  ],
+                  [
+                    "set",
+                    "@entity.edges",
+                    "@config.edges"
+                  ],
+                  [
+                    "set",
+                    "@entity.wedges",
+                    "@config.wedges"
+                  ],
+                  [
+                    "set",
+                    "@entity.dists",
+                    "@config.dists"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
+                    "set",
+                    "@entity.visited",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.cur",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.minD",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.distU",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.done",
+                    false
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundColor": "@config.backgroundColor",
+                      "edges": "@entity.edges",
+                      "height": "@config.height",
+                      "nodes": "@entity.nodes",
+                      "type": "biology-canvas",
+                      "width": "@config.width"
+                    }
+                  ],
+                  [
+                    "emit",
+                    "NODES_UPDATED",
+                    {
+                      "edges": "@entity.edges",
+                      "nodes": "@entity.nodes"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.minD",
+                  [
+                    "array/min",
+                    [
+                      "array/map",
+                      [
+                        "array/filter",
+                        "@entity.dists",
+                        [
+                          "fn",
+                          "dd",
+                          [
+                            "not",
+                            [
+                              "array/includes",
+                              "@entity.visited",
+                              [
+                                "object/get",
+                                "@dd",
+                                "id"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "dd",
+                        [
+                          "object/get",
+                          "@dd",
+                          "d"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.cur",
+                  [
+                    "object/get",
+                    [
+                      "array/first",
+                      [
+                        "array/filter",
+                        "@entity.dists",
+                        [
+                          "fn",
+                          "dd",
+                          [
+                            "and",
+                            [
+                              "not",
+                              [
+                                "array/includes",
+                                "@entity.visited",
+                                [
+                                  "object/get",
+                                  "@dd",
+                                  "id"
+                                ]
+                              ]
+                            ],
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@dd",
+                                "d"
+                              ],
+                              "@entity.minD"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    "id"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.distU",
+                  "@entity.minD"
+                ],
+                [
+                  "set",
+                  "@entity.visited",
+                  [
+                    "array/append",
+                    "@entity.visited",
+                    "@entity.cur"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.dists",
+                  [
+                    "array/map",
+                    "@entity.dists",
+                    [
+                      "fn",
+                      "row",
+                      [
+                        "let",
+                        [
+                          [
+                            "nid",
+                            [
+                              "object/get",
+                              "@row",
+                              "id"
+                            ]
+                          ],
+                          [
+                            "dcur",
+                            [
+                              "object/get",
+                              "@row",
+                              "d"
+                            ]
+                          ]
+                        ],
+                        [
+                          "object/merge",
+                          "@row",
+                          {
+                            "d": [
+                              "let",
+                              [
+                                [
+                                  "matches",
+                                  [
+                                    "array/filter",
+                                    "@entity.wedges",
+                                    [
+                                      "fn",
+                                      "w",
+                                      [
+                                        "or",
+                                        [
+                                          "and",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@w",
+                                              "from"
+                                            ],
+                                            "@entity.cur"
+                                          ],
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@w",
+                                              "to"
+                                            ],
+                                            "@nid"
+                                          ]
+                                        ],
+                                        [
+                                          "and",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@w",
+                                              "from"
+                                            ],
+                                            "@nid"
+                                          ],
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@w",
+                                              "to"
+                                            ],
+                                            "@entity.cur"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "if",
+                                [
+                                  "==",
+                                  [
+                                    "array/len",
+                                    "@matches"
+                                  ],
+                                  0.0
+                                ],
+                                "@dcur",
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "ww",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@matches"
+                                        ],
+                                        "w"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "<",
+                                      [
+                                        "+",
+                                        "@entity.distU",
+                                        "@ww"
+                                      ],
+                                      "@dcur"
+                                    ],
+                                    [
+                                      "+",
+                                      "@entity.distU",
+                                      "@ww"
+                                    ],
+                                    "@dcur"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.nodes",
+                  [
+                    "array/map",
+                    "@entity.nodes",
+                    [
+                      "fn",
+                      "nd",
+                      [
+                        "let",
+                        [
+                          [
+                            "nid",
+                            [
+                              "object/get",
+                              "@nd",
+                              "id"
+                            ]
+                          ]
+                        ],
+                        [
+                          "object/merge",
+                          "@nd",
+                          {
+                            "color": [
+                              "if",
+                              [
+                                "==",
+                                "@nid",
+                                "@entity.cur"
+                              ],
+                              "#3b82f6",
+                              [
+                                "if",
+                                [
+                                  "array/includes",
+                                  "@entity.visited",
+                                  "@nid"
+                                ],
+                                "#22c55e",
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "drec",
+                                      [
+                                        "array/first",
+                                        [
+                                          "array/filter",
+                                          "@entity.dists",
+                                          [
+                                            "fn",
+                                            "dd",
+                                            [
+                                              "==",
+                                              [
+                                                "object/get",
+                                                "@dd",
+                                                "id"
+                                              ],
+                                              "@nid"
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "<",
+                                      [
+                                        "object/get",
+                                        "@drec",
+                                        "d"
+                                      ],
+                                      9999.0
+                                    ],
+                                    "#f59e0b",
+                                    "#64748b"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.done",
+                  [
+                    "==",
+                    [
+                      "array/len",
+                      [
+                        "array/filter",
+                        "@entity.dists",
+                        [
+                          "fn",
+                          "dd",
+                          [
+                            "and",
+                            [
+                              "not",
+                              [
+                                "array/includes",
+                                "@entity.visited",
+                                [
+                                  "object/get",
+                                  "@dd",
+                                  "id"
+                                ]
+                              ]
+                            ],
+                            [
+                              "<",
+                              [
+                                "object/get",
+                                "@dd",
+                                "d"
+                              ],
+                              9999.0
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    0.0
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "backgroundColor": "@config.backgroundColor",
+                    "edges": "@entity.edges",
+                    "height": "@config.height",
+                    "nodes": "@entity.nodes",
+                    "type": "biology-canvas",
+                    "width": "@config.width"
+                  }
+                ],
+                [
+                  "emit",
+                  "NODES_UPDATED",
+                  {
+                    "edges": "@entity.edges",
+                    "nodes": "@entity.nodes"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                "@entity.running",
+                [
+                  "not",
+                  "@entity.done"
+                ]
+              ],
+              "interval": 500.0,
+              "name": "dijkstraTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}
