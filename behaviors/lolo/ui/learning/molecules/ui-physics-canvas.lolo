@@ -90,6 +90,27 @@ orbital PhysicsCanvasOrbital {
           error: @config.error
           type: physics-canvas
         })
+      UPDATE -> idle
+        (render-ui main {
+          className: @config.className
+          width: @config.width
+          height: @config.height
+          title: @config.title
+          backgroundColor: @config.backgroundColor
+          bodies: @payload.bodies
+          constraints: @payload.constraints
+          showVelocity: @config.showVelocity
+          showForces: @config.showForces
+          velocityScale: @config.velocityScale
+          forceScale: @config.forceScale
+          shapes: @payload.shapes
+          interactive: @config.interactive
+          animate: @config.animate
+          onShapeClick: SHAPE_CLICK
+          isLoading: @config.isLoading
+          error: @config.error
+          type: physics-canvas
+        })
     }
 
     emits {
@@ -98,6 +119,17 @@ orbital PhysicsCanvasOrbital {
       }
         @description "onShapeClick prop"
         @tier "essential"
+    }
+
+    listens {
+      UPDATE {
+        bodies : [PhysicsCanvasBodiesItem]
+        constraints : [PhysicsCanvasConstraintsItem]
+        shapes : [PhysicsCanvasShapesItem]
+      }
+        @description "Live scene update; payload carries the current drawable state."
+        @synonyms "tick, redraw, animate, frame"
+        @tier "domain"
     }
 
     config {

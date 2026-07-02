@@ -572,6 +572,31 @@
                 "name": "Initialize"
               },
               {
+                "description": "Live scene update; payload carries the current drawable state.",
+                "key": "UPDATE",
+                "name": "Update",
+                "payloadSchema": [
+                  {
+                    "name": "atoms",
+                    "type": "[ChemistryCanvasAtomsItem]"
+                  },
+                  {
+                    "name": "bonds",
+                    "type": "[ChemistryCanvasBondsItem]"
+                  },
+                  {
+                    "name": "arrows",
+                    "type": "[ChemistryCanvasArrowsItem]"
+                  },
+                  {
+                    "name": "shapes",
+                    "type": "[ChemistryCanvasShapesItem]"
+                  }
+                ],
+                "synonyms": "tick, redraw, animate, frame",
+                "tier": "domain"
+              },
+              {
                 "description": "onShapeClick prop",
                 "key": "SHAPE_CLICK",
                 "name": "Shape Click",
@@ -631,6 +656,34 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "animate": "@config.animate",
+                      "arrows": "@payload.arrows",
+                      "atoms": "@payload.atoms",
+                      "backgroundColor": "@config.backgroundColor",
+                      "bonds": "@payload.bonds",
+                      "className": "@config.className",
+                      "error": "@config.error",
+                      "height": "@config.height",
+                      "interactive": "@config.interactive",
+                      "isLoading": "@config.isLoading",
+                      "onShapeClick": "SHAPE_CLICK",
+                      "shapes": "@payload.shapes",
+                      "title": "@config.title",
+                      "type": "chemistry-canvas",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "UPDATE",
                 "from": "idle",
                 "to": "idle"
               }

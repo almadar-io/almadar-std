@@ -100,6 +100,30 @@ orbital MathCanvasOrbital {
           error: @config.error
           type: math-canvas
         })
+      UPDATE -> idle
+        (render-ui main {
+          className: @config.className
+          width: @config.width
+          height: @config.height
+          title: @config.title
+          xMin: @config.xMin
+          xMax: @config.xMax
+          yMin: @config.yMin
+          yMax: @config.yMax
+          showAxes: @config.showAxes
+          showGrid: @config.showGrid
+          gridStep: @config.gridStep
+          curves: @payload.curves
+          points: @payload.points
+          vectors: @payload.vectors
+          shapes: @payload.shapes
+          interactive: @config.interactive
+          animate: @config.animate
+          onShapeClick: SHAPE_CLICK
+          isLoading: @config.isLoading
+          error: @config.error
+          type: math-canvas
+        })
     }
 
     emits {
@@ -108,6 +132,18 @@ orbital MathCanvasOrbital {
       }
         @description "onShapeClick prop"
         @tier "essential"
+    }
+
+    listens {
+      UPDATE {
+        curves : [MathCanvasCurvesItem]
+        points : [MathCanvasPointsItem]
+        vectors : [MathCanvasVectorsItem]
+        shapes : [MathCanvasShapesItem]
+      }
+        @description "Live scene update; payload carries the current drawable state."
+        @synonyms "tick, redraw, animate, frame"
+        @tier "domain"
     }
 
     config {

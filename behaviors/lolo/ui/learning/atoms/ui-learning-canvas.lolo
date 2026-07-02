@@ -72,6 +72,21 @@ orbital LearningCanvasOrbital {
           error: @config.error
           type: learning-canvas
         })
+      UPDATE -> idle
+        (render-ui main {
+          className: @config.className
+          width: @config.width
+          height: @config.height
+          backgroundColor: @config.backgroundColor
+          shapes: @payload.shapes
+          interactive: @config.interactive
+          animate: @config.animate
+          onShapeClick: SHAPE_CLICK
+          onShapeHover: SHAPE_HOVER
+          isLoading: @config.isLoading
+          error: @config.error
+          type: learning-canvas
+        })
     }
 
     emits {
@@ -85,6 +100,15 @@ orbital LearningCanvasOrbital {
       }
         @description "Hovered shape payload: { id?, type?, index }."
         @tier "essential"
+    }
+
+    listens {
+      UPDATE {
+        shapes : [LearningCanvasShapesItem]
+      }
+        @description "Live scene update; payload carries the current drawable state."
+        @synonyms "tick, redraw, animate, frame"
+        @tier "domain"
     }
 
     config {

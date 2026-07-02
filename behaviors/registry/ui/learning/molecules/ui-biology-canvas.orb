@@ -521,6 +521,27 @@
                 "name": "Initialize"
               },
               {
+                "description": "Live scene update; payload carries the current drawable state.",
+                "key": "UPDATE",
+                "name": "Update",
+                "payloadSchema": [
+                  {
+                    "name": "nodes",
+                    "type": "[BiologyCanvasNodesItem]"
+                  },
+                  {
+                    "name": "edges",
+                    "type": "[BiologyCanvasEdgesItem]"
+                  },
+                  {
+                    "name": "shapes",
+                    "type": "[BiologyCanvasShapesItem]"
+                  }
+                ],
+                "synonyms": "tick, redraw, animate, frame",
+                "tier": "domain"
+              },
+              {
                 "description": "onShapeClick prop",
                 "key": "SHAPE_CLICK",
                 "name": "Shape Click",
@@ -579,6 +600,33 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "animate": "@config.animate",
+                      "backgroundColor": "@config.backgroundColor",
+                      "className": "@config.className",
+                      "edges": "@payload.edges",
+                      "error": "@config.error",
+                      "height": "@config.height",
+                      "interactive": "@config.interactive",
+                      "isLoading": "@config.isLoading",
+                      "nodes": "@payload.nodes",
+                      "onShapeClick": "SHAPE_CLICK",
+                      "shapes": "@payload.shapes",
+                      "title": "@config.title",
+                      "type": "biology-canvas",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "UPDATE",
                 "from": "idle",
                 "to": "idle"
               }

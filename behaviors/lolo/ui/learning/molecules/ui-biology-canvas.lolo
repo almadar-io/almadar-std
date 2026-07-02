@@ -84,6 +84,23 @@ orbital BiologyCanvasOrbital {
           error: @config.error
           type: biology-canvas
         })
+      UPDATE -> idle
+        (render-ui main {
+          className: @config.className
+          width: @config.width
+          height: @config.height
+          title: @config.title
+          backgroundColor: @config.backgroundColor
+          nodes: @payload.nodes
+          edges: @payload.edges
+          shapes: @payload.shapes
+          interactive: @config.interactive
+          animate: @config.animate
+          onShapeClick: SHAPE_CLICK
+          isLoading: @config.isLoading
+          error: @config.error
+          type: biology-canvas
+        })
     }
 
     emits {
@@ -92,6 +109,17 @@ orbital BiologyCanvasOrbital {
       }
         @description "onShapeClick prop"
         @tier "essential"
+    }
+
+    listens {
+      UPDATE {
+        nodes : [BiologyCanvasNodesItem]
+        edges : [BiologyCanvasEdgesItem]
+        shapes : [BiologyCanvasShapesItem]
+      }
+        @description "Live scene update; payload carries the current drawable state."
+        @synonyms "tick, redraw, animate, frame"
+        @tier "domain"
     }
 
     config {

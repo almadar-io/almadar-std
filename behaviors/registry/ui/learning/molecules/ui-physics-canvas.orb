@@ -557,6 +557,27 @@
                 "name": "Initialize"
               },
               {
+                "description": "Live scene update; payload carries the current drawable state.",
+                "key": "UPDATE",
+                "name": "Update",
+                "payloadSchema": [
+                  {
+                    "name": "bodies",
+                    "type": "[PhysicsCanvasBodiesItem]"
+                  },
+                  {
+                    "name": "constraints",
+                    "type": "[PhysicsCanvasConstraintsItem]"
+                  },
+                  {
+                    "name": "shapes",
+                    "type": "[PhysicsCanvasShapesItem]"
+                  }
+                ],
+                "synonyms": "tick, redraw, animate, frame",
+                "tier": "domain"
+              },
+              {
                 "description": "onShapeClick prop",
                 "key": "SHAPE_CLICK",
                 "name": "Shape Click",
@@ -619,6 +640,37 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "animate": "@config.animate",
+                      "backgroundColor": "@config.backgroundColor",
+                      "bodies": "@payload.bodies",
+                      "className": "@config.className",
+                      "constraints": "@payload.constraints",
+                      "error": "@config.error",
+                      "forceScale": "@config.forceScale",
+                      "height": "@config.height",
+                      "interactive": "@config.interactive",
+                      "isLoading": "@config.isLoading",
+                      "onShapeClick": "SHAPE_CLICK",
+                      "shapes": "@payload.shapes",
+                      "showForces": "@config.showForces",
+                      "showVelocity": "@config.showVelocity",
+                      "title": "@config.title",
+                      "type": "physics-canvas",
+                      "velocityScale": "@config.velocityScale",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "UPDATE",
                 "from": "idle",
                 "to": "idle"
               }
