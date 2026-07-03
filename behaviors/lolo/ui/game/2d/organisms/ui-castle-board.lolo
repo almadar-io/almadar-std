@@ -96,17 +96,6 @@ orbital CastleBoardOrbital {
     features : Map string Asset
     effects : Map string Asset
   }
-  type CastleBoardFEATURECLICKFeature = {
-    id : string
-    x : number!
-    y : number!
-    z : number
-    type : string!
-    sprite : Asset
-    assetUrl : Asset
-    color : string
-    elevation : number
-  }
   type CastleBoardUNITCLICKUnit = {
     id : string!
     position : CastleBoardUNITCLICKUnitPosition
@@ -187,9 +176,9 @@ orbital CastleBoardOrbital {
           children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
 
-      FEATURE_CLICK -> idle when (>= @entity.gold 25)
-        (set @entity.gold (- @entity.gold 25))
-        (set @entity.buildings (array/append @entity.buildings { id: ?featureId, type: ?featureType, x: ?x, y: ?y, cost: 25, incomePerTick: 5 }))
+      UNIT_CLICK -> idle when (== @entity.selectedUnitId ?unitId)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
           fontFamily: "future"
@@ -199,13 +188,33 @@ orbital CastleBoardOrbital {
           children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
 
-      UNIT_CLICK -> idle
+      UNIT_CLICK -> idle when (and (!= @entity.selectedUnitId "") (and (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "enemy") (let ((ap (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))))
+        (emit ATTACK { damage: 3, attackerId: @entity.selectedUnitId, targetId: ?unitId })
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
-        (set @entity.wave (+ @entity.wave 1))
-        (set @entity.health (math/max 0 (- @entity.health 5)))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?unitId) (object/merge @u { animation: "hit" }) @u))))
-        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) y), ttl: 4 }))
+        (render-ui main {
+          type: game-shell
+          fontFamily: "future"
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+
+      UNIT_CLICK -> idle when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
+        (set @entity.selectedUnitId ?unitId)
+        (render-ui main {
+          type: game-shell
+          fontFamily: "future"
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+
+      TILE_CLICK -> idle when (and (> (array/len (array/filter @entity.features (fn ft (and (== @ft.x ?x) (== @ft.y ?y))))) 0) (>= @entity.gold 25))
+        (set @entity.gold (- @entity.gold 25))
+        (set @entity.buildings (array/append @entity.buildings { id: (object/get (array/first (array/filter @entity.features (fn ft (and (== @ft.x ?x) (== @ft.y ?y))))) id), type: (object/get (array/first (array/filter @entity.features (fn ft (and (== @ft.x ?x) (== @ft.y ?y))))) type), x: ?x, y: ?y, cost: 25, incomePerTick: 5 }))
         (render-ui main {
           type: game-shell
           fontFamily: "future"
@@ -246,11 +255,24 @@ orbital CastleBoardOrbital {
           backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
           hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
           hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
+          overlay: { type: game-menu, title: "VICTORY", subtitle: "The castle held — every wave was repelled.", options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] }
           children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
 
       CASTLE_HIT -> defeat when (<= @entity.health 0)
         (set @entity.result "defeat")
+        (render-ui main {
+          type: game-shell
+          fontFamily: "future"
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health, max: @entity.maxHealth, format: "bar", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_heart.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "icon-health", thumbnailUrl: "" } }, { label: "Gold", value: @entity.gold, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_cash.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "icon-coin", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "icon-star", thumbnailUrl: "" } } ] }
+          overlay: { type: game-menu, title: "DEFEAT", subtitle: "The castle has fallen to the raiders.", options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+
+      CASTLE_HIT -> idle when (> @entity.health 0)
+        (set @entity.effects (array/append @entity.effects { key: "slash", x: 4, y: 4, ttl: 4 }))
         (render-ui main {
           type: game-shell
           fontFamily: "future"
@@ -315,6 +337,7 @@ orbital CastleBoardOrbital {
 
     ticks {
       renderTick every 100ms
+        when (== @entity.result "none")
         (render-ui main {
           type: game-shell
           fontFamily: "future"
@@ -325,7 +348,7 @@ orbital CastleBoardOrbital {
         })
 
       incomeTick every 4s
-        when (> @entity.health 0)
+        when (and (> @entity.health 0) (== @entity.result "none"))
         (set @entity.gold (+ @entity.gold (+ 10 (* (array/len @entity.buildings) 5))))
         (set @entity.tickCount (+ @entity.tickCount 1))
         (render-ui main {
@@ -338,7 +361,7 @@ orbital CastleBoardOrbital {
         })
 
       waveTick every 8s
-        when (and (> @entity.health 0) (< @entity.wave 3))
+        when (and (== @entity.result "none") (and (> @entity.health 0) (< @entity.wave 3)))
         (set @entity.wave (+ @entity.wave 1))
         (set @entity.lastWaveDamage (math/max 0 (- @entity.wave (array/len @entity.buildings))))
         (set @entity.health (math/max 0 (- @entity.health @entity.lastWaveDamage)))
@@ -366,15 +389,6 @@ orbital CastleBoardOrbital {
         targetId : string!
       }
         @description "-- Callbacks --"
-        @tier "domain"
-      FEATURE_CLICK -> external {
-        feature : CastleBoardFEATURECLICKFeature
-        featureId : string!
-        featureType : string!
-        x : number!
-        y : number!
-      }
-        @description "-- Callback overrides --"
         @tier "domain"
       UNIT_CLICK -> external {
         unit : CastleBoardUNITCLICKUnit
