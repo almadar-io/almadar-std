@@ -124,7 +124,7 @@ export interface StdUiFishingBoardFishingBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'FishingBoardAnimTick' | 'FishingBoardRender',
+    'FishingBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -134,12 +134,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
   const canonicalName = params.entityName ?? 'FishingBoardItem';
   const built = makeOrbitalWithUses({
     name: 'FishingBoardOrbital',
-    uses: [
-      {
-        'as': 'AnimTick',
-        'from': 'std/behaviors/std-anim-tick',
-      },
-    ],
+    uses: [],
     entity: {
       name: canonicalName,
       persistence: 'runtime',
@@ -4949,17 +4944,6 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
           },
         ],
       } as never, 'FishingBoardItem', canonicalName) as never,
-      makeTraitRef({
-        'config': {
-          'frameCount': {
-            'default': 8,
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': canonicalName,
-        'name': 'FishingBoardAnimTick',
-        'ref': 'AnimTick.traits.AnimTick',
-      }),
     ],
     pages: [
       {
@@ -4968,9 +4952,6 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
         'traits': [
           {
             'ref': 'FishingBoardRender',
-          },
-          {
-            'ref': 'FishingBoardAnimTick',
           },
         ],
       } as never,
@@ -5025,7 +5006,6 @@ export const StdUiFishingBoardFishingBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
-    'FishingBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'FishingBoardRender',

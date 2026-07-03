@@ -30,7 +30,7 @@ const ALIAS = 'UiTanksBoard';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiTanksBoardEventKey = 'CANCEL' | 'END_TURN' | 'GAME_END' | 'INIT' | 'PLAY_AGAIN' | 'START' | 'TILE_CLICK' | 'UNIT_CLICK';
+export type StdUiTanksBoardEventKey = 'CANCEL' | 'END_TURN' | 'GAME_END' | 'INIT' | 'PLAY_AGAIN' | 'TILE_CLICK' | 'UNIT_CLICK';
 
 /**
  * Payload shape for the `GAME_END` event.
@@ -133,7 +133,7 @@ export interface StdUiTanksBoardTanksBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'TanksBoardAnimTick' | 'TanksBoardRender',
+    'TanksBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -143,12 +143,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
   const canonicalName = params.entityName ?? 'TanksBoardItem';
   const built = makeOrbitalWithUses({
     name: 'TanksBoardOrbital',
-    uses: [
-      {
-        'as': 'AnimTick',
-        'from': 'std/behaviors/std-anim-tick',
-      },
-    ],
+    uses: [],
     entity: {
       name: canonicalName,
       persistence: 'runtime',
@@ -3242,10 +3237,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
         'stateMachine': {
           'events': [
             {
-              'key': 'START',
-              'name': 'Start',
-            },
-            {
               'key': 'INIT',
               'name': 'Initialize',
             },
@@ -3335,210 +3326,10 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
               'name': 'playing',
             },
             {
-              'name': 'menu',
-            },
-            {
               'name': 'gameover',
             },
           ],
           'transitions': [
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.units',
-                  '@config.units',
-                ],
-                [
-                  'set',
-                  '@entity.selectedUnitId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.score',
-                  0,
-                ],
-                [
-                  'set',
-                  '@entity.lives',
-                  3,
-                ],
-                [
-                  'set',
-                  '@entity.turn',
-                  0,
-                ],
-                [
-                  'set',
-                  '@entity.result',
-                  'none',
-                ],
-                [
-                  'set',
-                  '@entity.phase',
-                  'observation',
-                ],
-                [
-                  'set',
-                  '@entity.enemyTurn',
-                  false,
-                ],
-                [
-                  'set',
-                  '@entity.effects',
-                  [],
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'addons': {
-                      'action': 'END_TURN',
-                      'iconAsset': {
-                        'animations': [],
-                        'aspect': '1:1',
-                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
-                        'category': 'ui',
-                        'dimension': '2d',
-                        'name': 'icon-end-turn',
-                        'role': 'ui',
-                        'sprite': 'tank_arrowEmpty.png',
-                        'style': 'sci-fi',
-                        'thumbnailUrl': '',
-                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
-                        'variant': '',
-                      },
-                      'label': 'End Turn',
-                      'type': 'button',
-                      'variant': 'primary',
-                    },
-                    'backgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'metalPanel_blue.png',
-                      'style': 'sci-fi',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png',
-                      'variant': '',
-                    },
-                    'children': [
-                      {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@config.features',
-                        'projection': 'flat',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedUnitId',
-                        'showMinimap': false,
-                        'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'unitClickEvent': 'UNIT_CLICK',
-                        'units': '@entity.units',
-                        'validMoves': '@entity.validMoves',
-                      },
-                    ],
-                    'fontFamily': 'future',
-                    'hud': {
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-simple-space/features/simpleSpace_sheet.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-score',
-                                'role': 'ui',
-                                'sprite': 'star_medium.png',
-                                'style': 'sci-fi',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-simple-space/features/simpleSpace_sheet.png',
-                                'variant': '',
-                              },
-                              'label': 'Score',
-                              'value': '@entity.score',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-space-shooter-redux/features/sheet.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-lives',
-                                'role': 'ui',
-                                'sprite': 'playerLife1_green.png',
-                                'style': 'sci-fi',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-space-shooter-redux/features/sheet.png',
-                                'variant': '',
-                              },
-                              'label': 'Lives',
-                              'value': '@entity.lives',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-turn',
-                                'role': 'ui',
-                                'sprite': 'tank_arrowFull.png',
-                                'style': 'sci-fi',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
-                                'variant': '',
-                              },
-                              'label': 'Turn',
-                              'value': '@entity.turn',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'md',
-                      'justify': 'between',
-                      'type': 'stack',
-                    },
-                    'hudBackgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'metalPanel_blue.png',
-                      'style': 'sci-fi',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png',
-                      'variant': '',
-                    },
-                    'type': 'game-shell',
-                  },
-                ],
-              ],
-              'event': 'START',
-              'from': 'menu',
-              'to': 'playing',
-            },
             {
               'effects': [
                 [
@@ -5876,7 +5667,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
               ],
               'event': 'PLAY_AGAIN',
               'from': 'gameover',
-              'to': 'menu',
+              'to': 'playing',
             },
           ],
         },
@@ -6702,17 +6493,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
           },
         ],
       } as never, 'TanksBoardItem', canonicalName) as never,
-      makeTraitRef({
-        'config': {
-          'frameCount': {
-            'default': 8,
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': canonicalName,
-        'name': 'TanksBoardAnimTick',
-        'ref': 'AnimTick.traits.AnimTick',
-      }),
     ],
     pages: [
       {
@@ -6721,9 +6501,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
         'traits': [
           {
             'ref': 'TanksBoardRender',
-          },
-          {
-            'ref': 'TanksBoardAnimTick',
           },
         ],
       } as never,
@@ -6778,7 +6555,6 @@ export const StdUiTanksBoardTanksBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
-    'TanksBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'TanksBoardRender',

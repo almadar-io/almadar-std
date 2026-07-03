@@ -72,6 +72,16 @@
             "name": "effects",
             "type": "array",
             "required": false
+          },
+          {
+            "name": "productionPoints",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "wave",
+            "type": "number",
+            "required": false
           }
         ],
         "persistence": "runtime"
@@ -81,7 +91,7 @@
       {
         "name": "TopdownRtsBoardRender",
         "emittedEvents": [
-          "FIRE",
+          "PRODUCE",
           "GAME_END",
           "TILE_CLICK",
           "UNIT_CLICK",
@@ -92,9 +102,9 @@
         "listenedEvents": [],
         "events": [
           {
-            "name": "FIRE",
+            "name": "PRODUCE",
             "direction": "emit",
-            "description": "Fired when a tank shoots at a target.",
+            "description": "Emits UI:{produceEvent} with {} on produce unit.",
             "tier": "domain"
           },
           {
@@ -134,10 +144,6 @@
             "tier": "domain"
           },
           {
-            "name": "START",
-            "direction": "listen"
-          },
-          {
             "name": "INIT",
             "direction": "listen"
           }
@@ -166,6 +172,22 @@
                 }
               },
               "features": {
+                "barracks": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                  "category": "barracks",
+                  "dimension": "2d",
+                  "name": "barracks",
+                  "role": "decoration",
+                  "sprite": "medievalStructure_01.png",
+                  "style": "vector-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                  "variant": ""
+                },
                 "obstacle": {
                   "animations": [
                     "static"
@@ -710,6 +732,28 @@
                 "type": "obstacle",
                 "x": 2,
                 "y": 4
+              },
+              {
+                "id": "barracks1",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                  "category": "barracks",
+                  "dimension": "2d",
+                  "name": "barracks",
+                  "role": "decoration",
+                  "sprite": "medievalStructure_01.png",
+                  "style": "vector-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                  "variant": ""
+                },
+                "type": "barracks",
+                "x": 0,
+                "y": 0
               }
             ],
             "label": "Features",
@@ -2658,28 +2702,16 @@
             "gridWidth",
             "lives",
             "phase",
+            "productionPoints",
             "result",
             "score",
             "selectedUnitId",
             "turn",
             "units",
-            "validMoves"
+            "validMoves",
+            "wave"
           ]
         }
-      },
-      {
-        "name": "TopdownRtsBoardAnimTick",
-        "emittedEvents": [],
-        "listenedEvents": [],
-        "overridableConfigKeys": [
-          {
-            "key": "frameCount",
-            "type": "unknown",
-            "default": 8
-          }
-        ],
-        "capabilities": [],
-        "ref": "AnimTick.traits.AnimTick"
       }
     ],
     "pages": [
@@ -2692,9 +2724,9 @@
     "emittedEvents": [
       "CANCEL",
       "END_TURN",
-      "FIRE",
       "GAME_END",
       "PLAY_AGAIN",
+      "PRODUCE",
       "TILE_CLICK",
       "UNIT_CLICK"
     ],

@@ -118,7 +118,7 @@ export interface StdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalParam
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'UncontrolledBattleBoardAnimTick' | 'UncontrolledBattleBoardRender',
+    'UncontrolledBattleBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -128,12 +128,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
   const canonicalName = params.entityName ?? 'UncontrolledBattleBoardItem';
   const built = makeOrbitalWithUses({
     name: 'UncontrolledBattleBoardOrbital',
-    uses: [
-      {
-        'as': 'AnimTick',
-        'from': 'std/behaviors/std-anim-tick',
-      },
-    ],
+    uses: [],
     entity: {
       name: canonicalName,
       persistence: 'runtime',
@@ -4208,17 +4203,6 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
           },
         ],
       } as never, 'UncontrolledBattleBoardItem', canonicalName) as never,
-      makeTraitRef({
-        'config': {
-          'frameCount': {
-            'default': 8,
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': canonicalName,
-        'name': 'UncontrolledBattleBoardAnimTick',
-        'ref': 'AnimTick.traits.AnimTick',
-      }),
     ],
     pages: [
       {
@@ -4227,9 +4211,6 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
         'traits': [
           {
             'ref': 'UncontrolledBattleBoardRender',
-          },
-          {
-            'ref': 'UncontrolledBattleBoardAnimTick',
           },
         ],
       } as never,
@@ -4284,7 +4265,6 @@ export const StdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalManifest 
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
-    'UncontrolledBattleBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'UncontrolledBattleBoardRender',

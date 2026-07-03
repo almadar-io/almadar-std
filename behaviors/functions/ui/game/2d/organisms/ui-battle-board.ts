@@ -30,7 +30,7 @@ const ALIAS = 'UiBattleBoard';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiBattleBoardEventKey = 'CANCEL' | 'END_TURN' | 'GAME_END' | 'INIT' | 'PLAY_AGAIN' | 'START' | 'TILE_CLICK' | 'UNIT_CLICK' | 'UNIT_MOVE';
+export type StdUiBattleBoardEventKey = 'CANCEL' | 'END_TURN' | 'GAME_END' | 'INIT' | 'PLAY_AGAIN' | 'TILE_CLICK' | 'UNIT_CLICK' | 'UNIT_MOVE';
 
 /**
  * Payload shape for the `GAME_END` event.
@@ -162,7 +162,7 @@ export interface StdUiBattleBoardBattleBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'BattleBoardAnimTick' | 'BattleBoardRender',
+    'BattleBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -172,12 +172,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
   const canonicalName = params.entityName ?? 'BattleBoardItem';
   const built = makeOrbitalWithUses({
     name: 'BattleBoardOrbital',
-    uses: [
-      {
-        'as': 'AnimTick',
-        'from': 'std/behaviors/std-anim-tick',
-      },
-    ],
+    uses: [],
     entity: {
       name: canonicalName,
       persistence: 'runtime',
@@ -7780,10 +7775,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
         'stateMachine': {
           'events': [
             {
-              'key': 'START',
-              'name': 'Start',
-            },
-            {
               'key': 'INIT',
               'name': 'Initialize',
             },
@@ -7901,247 +7892,10 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               'name': 'playing',
             },
             {
-              'name': 'menu',
-            },
-            {
               'name': 'gameover',
             },
           ],
           'transitions': [
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.units',
-                  '@config.units',
-                ],
-                [
-                  'set',
-                  '@entity.selectedUnitId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.turn',
-                  0,
-                ],
-                [
-                  'set',
-                  '@entity.result',
-                  'none',
-                ],
-                [
-                  'set',
-                  '@entity.phase',
-                  'observation',
-                ],
-                [
-                  'set',
-                  '@entity.enemyTurn',
-                  false,
-                ],
-                [
-                  'set',
-                  '@entity.effects',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.xp',
-                  0,
-                ],
-                [
-                  'set',
-                  '@entity.xpToNext',
-                  100,
-                ],
-                [
-                  'set',
-                  '@entity.inventory',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.selectedUnitEffects',
-                  [],
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'addons': {
-                      'action': 'END_TURN',
-                      'iconAsset': {
-                        'animations': [],
-                        'aspect': '1:1',
-                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                        'category': 'ui',
-                        'dimension': '2d',
-                        'name': 'icon-end-turn',
-                        'role': 'ui',
-                        'sprite': 'arrowStraight.png',
-                        'style': 'adventure',
-                        'thumbnailUrl': '',
-                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                        'variant': '',
-                      },
-                      'label': 'End Turn',
-                      'type': 'button',
-                      'variant': 'primary',
-                    },
-                    'backgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'children': [
-                      {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@config.features',
-                        'projection': 'isometric',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedUnitId',
-                        'showMinimap': true,
-                        'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'unitClickEvent': 'UNIT_CLICK',
-                        'units': '@entity.units',
-                        'validMoves': '@entity.validMoves',
-                      },
-                    ],
-                    'fontFamily': 'future',
-                    'hud': {
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'coin',
-                                'role': 'ui',
-                                'sprite': 'tile_coin.png',
-                                'style': '',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Turn',
-                              'value': '@entity.turn',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'star',
-                                'role': 'ui',
-                                'sprite': 'emote_star.png',
-                                'style': '',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png',
-                                'variant': '',
-                              },
-                              'label': 'Result',
-                              'value': '@entity.result',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                        {
-                          'label': 'Selected Unit',
-                          'src': [
-                            'object/get',
-                            [
-                              'array/find',
-                              '@entity.units',
-                              [
-                                'fn',
-                                'u',
-                                [
-                                  '==',
-                                  '@u.id',
-                                  '@entity.selectedUnitId',
-                                ],
-                              ],
-                            ],
-                            'sprite',
-                          ],
-                          'type': 'sprite',
-                        },
-                        {
-                          'resources': [
-                            {
-                              'assetUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'bar-fill-blue',
-                                'role': 'ui',
-                                'sprite': 'barBlue_horizontalBlue.png',
-                                'style': 'adventure',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                                'variant': '',
-                              },
-                              'label': 'XP',
-                              'max': '@entity.xpToNext',
-                              'value': '@entity.xp',
-                            },
-                          ],
-                          'type': 'resource-bar',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'md',
-                      'justify': 'between',
-                      'type': 'stack',
-                    },
-                    'hudBackgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'adventure',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'type': 'game-shell',
-                  },
-                ],
-              ],
-              'event': 'START',
-              'from': 'menu',
-              'to': 'playing',
-            },
             {
               'effects': [
                 [
@@ -10801,7 +10555,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               ],
               'event': 'PLAY_AGAIN',
               'from': 'gameover',
-              'to': 'menu',
+              'to': 'playing',
             },
           ],
         },
@@ -11674,17 +11428,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
           },
         ],
       } as never, 'BattleBoardItem', canonicalName) as never,
-      makeTraitRef({
-        'config': {
-          'frameCount': {
-            'default': 8,
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': canonicalName,
-        'name': 'BattleBoardAnimTick',
-        'ref': 'AnimTick.traits.AnimTick',
-      }),
     ],
     pages: [
       {
@@ -11693,9 +11436,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
         'traits': [
           {
             'ref': 'BattleBoardRender',
-          },
-          {
-            'ref': 'BattleBoardAnimTick',
           },
         ],
       } as never,
@@ -11750,7 +11490,6 @@ export const StdUiBattleBoardBattleBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
-    'BattleBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'BattleBoardRender',

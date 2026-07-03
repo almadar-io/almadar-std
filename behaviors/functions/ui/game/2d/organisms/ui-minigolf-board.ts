@@ -150,7 +150,7 @@ export interface StdUiMinigolfBoardMinigolfBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'MinigolfBoardAnimTick' | 'MinigolfBoardRender',
+    'MinigolfBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -160,12 +160,7 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
   const canonicalName = params.entityName ?? 'MinigolfBoardItem';
   const built = makeOrbitalWithUses({
     name: 'MinigolfBoardOrbital',
-    uses: [
-      {
-        'as': 'AnimTick',
-        'from': 'std/behaviors/std-anim-tick',
-      },
-    ],
+    uses: [],
     entity: {
       name: canonicalName,
       persistence: 'runtime',
@@ -9249,17 +9244,6 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
           },
         ],
       } as never, 'MinigolfBoardItem', canonicalName) as never,
-      makeTraitRef({
-        'config': {
-          'frameCount': {
-            'default': 8,
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': canonicalName,
-        'name': 'MinigolfBoardAnimTick',
-        'ref': 'AnimTick.traits.AnimTick',
-      }),
     ],
     pages: [
       {
@@ -9268,9 +9252,6 @@ export function stdUiMinigolfBoardMinigolfBoardOrbital(params: StdUiMinigolfBoar
         'traits': [
           {
             'ref': 'MinigolfBoardRender',
-          },
-          {
-            'ref': 'MinigolfBoardAnimTick',
           },
         ],
       } as never,
@@ -9325,7 +9306,6 @@ export const StdUiMinigolfBoardMinigolfBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
-    'MinigolfBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'MinigolfBoardRender',

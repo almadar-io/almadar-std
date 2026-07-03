@@ -34,6 +34,11 @@
             "required": false
           },
           {
+            "name": "speed",
+            "type": "number",
+            "required": false
+          },
+          {
             "name": "result",
             "type": "string",
             "required": false
@@ -58,14 +63,11 @@
         "emittedEvents": [
           "TILE_CLICK",
           "UNIT_CLICK",
-          "MOVE",
           "MOVE_LEFT",
           "MOVE_RIGHT",
           "MOVE_UP",
           "MOVE_DOWN",
-          "LAP_COMPLETE",
-          "POSITION_UPDATE",
-          "RACE_END",
+          "GAME_END",
           "PLAY_AGAIN"
         ],
         "listenedEvents": [],
@@ -73,72 +75,50 @@
           {
             "name": "TILE_CLICK",
             "direction": "emit",
-            "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
-            "tier": "domain"
+            "description": "Emits UI:{tileClickEvent} with { x, y } on tile click (inert, clears selection only)",
+            "tier": "interaction"
           },
           {
             "name": "UNIT_CLICK",
             "direction": "emit",
-            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
-            "tier": "domain"
-          },
-          {
-            "name": "MOVE",
-            "direction": "emit",
-            "description": "Emitted when a car moves to a new tile (click-to-move)",
-            "tier": "domain"
+            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click (inert, clears selection only)",
+            "tier": "interaction"
           },
           {
             "name": "MOVE_LEFT",
             "direction": "emit",
-            "description": "Steer-left intent (keyboard keyMap)",
+            "description": "Steer left one cell (keyboard keyMap or d-pad)",
             "tier": "domain"
           },
           {
             "name": "MOVE_RIGHT",
             "direction": "emit",
-            "description": "Steer-right intent (keyboard keyMap)",
+            "description": "Steer right one cell (keyboard keyMap or d-pad)",
             "tier": "domain"
           },
           {
             "name": "MOVE_UP",
             "direction": "emit",
-            "description": "Accelerate/up intent (keyboard keyMap)",
+            "description": "Steer up one cell and accelerate (speed+1, cap 3)",
             "tier": "domain"
           },
           {
             "name": "MOVE_DOWN",
             "direction": "emit",
-            "description": "Brake/down intent (keyboard keyMap)",
+            "description": "Steer down one cell and brake (speed-1, floor 0)",
             "tier": "domain"
           },
           {
-            "name": "LAP_COMPLETE",
+            "name": "GAME_END",
             "direction": "emit",
-            "description": "Emitted when a lap is completed",
-            "tier": "domain"
-          },
-          {
-            "name": "POSITION_UPDATE",
-            "direction": "emit",
-            "description": "Emitted when race position changes",
-            "tier": "domain"
-          },
-          {
-            "name": "RACE_END",
-            "direction": "emit",
-            "description": "Emitted when the race ends",
+            "description": "Emitted when a car finishes totalLaps (victory) or the rival does (defeat)",
             "tier": "domain"
           },
           {
             "name": "PLAY_AGAIN",
             "direction": "emit",
-            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "description": "Resets the race to the start line",
             "tier": "domain"
-          },
-          {
-            "name": "START",
-            "direction": "listen"
           },
           {
             "name": "INIT",
@@ -151,20 +131,51 @@
             "type": "RacingBoardAssetManifest",
             "default": {
               "effects": {},
-              "features": {},
+              "features": {
+                "checkpoint": {
+                  "animations": [],
+                  "aspect": "5:3",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_objects.json",
+                  "category": "checkpoint",
+                  "dimension": "2d",
+                  "name": "checkpoint-arrow",
+                  "role": "feature",
+                  "sprite": "arrow_yellow.png",
+                  "style": "flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_objects.png",
+                  "variant": ""
+                },
+                "finish": {
+                  "animations": [],
+                  "aspect": "5:2",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_objects.json",
+                  "category": "finish",
+                  "dimension": "2d",
+                  "name": "start-finish-lights",
+                  "role": "feature",
+                  "sprite": "lights.png",
+                  "style": "flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_objects.png",
+                  "variant": ""
+                }
+              },
               "terrains": {
                 "grass": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "road": {
@@ -172,13 +183,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 }
               },
@@ -192,13 +205,15 @@
                     "death"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_vehicles.json",
                   "category": "car_player",
                   "dimension": "2d",
                   "name": "car_player",
                   "role": "npc",
-                  "style": "sci-fi",
+                  "sprite": "car_blue_1.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_vehicles.png",
                   "variant": ""
                 },
                 "car_rival": {
@@ -210,13 +225,15 @@
                     "death"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_vehicles.json",
                   "category": "car_rival",
                   "dimension": "2d",
                   "name": "car_rival",
                   "role": "npc",
-                  "style": "sci-fi",
+                  "sprite": "car_red_1.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_vehicles.png",
                   "variant": ""
                 }
               }
@@ -244,6 +261,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -261,6 +283,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -307,6 +334,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -324,6 +356,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -370,6 +407,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -387,6 +429,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -433,6 +480,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -450,6 +502,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -477,6 +534,55 @@
                   "type": "object"
                 }
               }
+            }
+          },
+          {
+            "key": "checkpoints",
+            "type": "[RacingBoardCheckpointsItem]",
+            "default": [
+              {
+                "label": "N",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "label": "E",
+                "x": 7,
+                "y": 4
+              },
+              {
+                "label": "S",
+                "x": 3,
+                "y": 7
+              },
+              {
+                "label": "W",
+                "x": 0,
+                "y": 3
+              }
+            ],
+            "label": "Checkpoints",
+            "description": "Ordered N/E/S/W checkpoints a car must cross before the finish counts as a lap",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
             }
           },
           {
@@ -519,82 +625,113 @@
           {
             "key": "features",
             "type": "[RacingBoardFeaturesItem]",
-            "default": [],
+            "default": [
+              {
+                "id": "cp-n",
+                "sprite": {
+                  "animations": [],
+                  "aspect": "5:3",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_objects.json",
+                  "category": "checkpoint",
+                  "dimension": "2d",
+                  "name": "checkpoint-arrow",
+                  "role": "feature",
+                  "sprite": "arrow_yellow.png",
+                  "style": "flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_objects.png",
+                  "variant": ""
+                },
+                "type": "checkpoint",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "id": "cp-e",
+                "sprite": {
+                  "animations": [],
+                  "aspect": "5:3",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_objects.json",
+                  "category": "checkpoint",
+                  "dimension": "2d",
+                  "name": "checkpoint-arrow",
+                  "role": "feature",
+                  "sprite": "arrow_yellow.png",
+                  "style": "flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_objects.png",
+                  "variant": ""
+                },
+                "type": "checkpoint",
+                "x": 7,
+                "y": 4
+              },
+              {
+                "id": "cp-s",
+                "sprite": {
+                  "animations": [],
+                  "aspect": "5:3",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_objects.json",
+                  "category": "checkpoint",
+                  "dimension": "2d",
+                  "name": "checkpoint-arrow",
+                  "role": "feature",
+                  "sprite": "arrow_yellow.png",
+                  "style": "flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_objects.png",
+                  "variant": ""
+                },
+                "type": "checkpoint",
+                "x": 3,
+                "y": 7
+              },
+              {
+                "id": "cp-w",
+                "sprite": {
+                  "animations": [],
+                  "aspect": "5:3",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_objects.json",
+                  "category": "checkpoint",
+                  "dimension": "2d",
+                  "name": "checkpoint-arrow",
+                  "role": "feature",
+                  "sprite": "arrow_yellow.png",
+                  "style": "flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_objects.png",
+                  "variant": ""
+                },
+                "type": "checkpoint",
+                "x": 0,
+                "y": 3
+              },
+              {
+                "id": "finish",
+                "sprite": {
+                  "animations": [],
+                  "aspect": "5:2",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_objects.json",
+                  "category": "finish",
+                  "dimension": "2d",
+                  "name": "start-finish-lights",
+                  "role": "feature",
+                  "sprite": "lights.png",
+                  "style": "flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_objects.png",
+                  "variant": ""
+                },
+                "type": "finish",
+                "x": 0,
+                "y": 0
+              }
+            ],
             "label": "Features",
-            "description": "Track features (pit markers, start line, etc.)",
+            "description": "Checkpoint markers (N/E/S/W) and start/finish line",
             "tier": "presentation",
             "items": {
               "properties": {
-                "assetUrl": {
-                  "name": "assetUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
                 "id": {
                   "name": "id",
                   "required": false,
@@ -617,6 +754,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -634,6 +776,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -674,11 +821,6 @@
                   "name": "y",
                   "required": true,
                   "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
                 }
               },
               "type": "object"
@@ -701,6 +843,29 @@
             "tier": "presentation"
           },
           {
+            "key": "startLine",
+            "type": "RacingBoardStartLine",
+            "default": {
+              "x": 0,
+              "y": 0
+            },
+            "label": "Start Line",
+            "description": "Start/finish cell; crossing it with all checkpoints hit increments lap",
+            "tier": "presentation",
+            "properties": {
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            }
+          },
+          {
             "key": "tiles",
             "type": "[RacingBoardTilesItem]",
             "default": [
@@ -712,13 +877,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 0,
@@ -732,13 +899,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 1,
@@ -752,13 +921,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 2,
@@ -772,13 +943,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 3,
@@ -792,13 +965,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 4,
@@ -812,13 +987,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 5,
@@ -832,13 +1009,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 6,
@@ -852,13 +1031,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 7,
@@ -872,13 +1053,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 0,
@@ -892,13 +1075,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 1,
@@ -912,13 +1097,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 2,
@@ -932,13 +1119,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 3,
@@ -952,13 +1141,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 4,
@@ -972,13 +1163,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 5,
@@ -992,13 +1185,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 6,
@@ -1012,13 +1207,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 7,
@@ -1032,13 +1229,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 0,
@@ -1052,13 +1251,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 1,
@@ -1072,13 +1273,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 2,
@@ -1092,13 +1295,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 3,
@@ -1112,13 +1317,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 4,
@@ -1132,13 +1339,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 5,
@@ -1152,13 +1361,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 6,
@@ -1172,13 +1383,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 7,
@@ -1192,13 +1405,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 0,
@@ -1212,13 +1427,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 1,
@@ -1232,13 +1449,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 2,
@@ -1252,13 +1471,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 3,
@@ -1272,13 +1493,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 4,
@@ -1292,13 +1515,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 5,
@@ -1312,13 +1537,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 6,
@@ -1332,13 +1559,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 7,
@@ -1352,13 +1581,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 0,
@@ -1372,13 +1603,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 1,
@@ -1392,13 +1625,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 2,
@@ -1412,13 +1647,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 3,
@@ -1432,13 +1669,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 4,
@@ -1452,13 +1691,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 5,
@@ -1472,13 +1713,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 6,
@@ -1492,13 +1735,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 7,
@@ -1512,13 +1757,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 0,
@@ -1532,13 +1779,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 1,
@@ -1552,13 +1801,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 2,
@@ -1572,13 +1823,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 3,
@@ -1592,13 +1845,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 4,
@@ -1612,13 +1867,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 5,
@@ -1632,13 +1889,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 6,
@@ -1652,13 +1911,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 7,
@@ -1672,13 +1933,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 0,
@@ -1692,13 +1955,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 1,
@@ -1712,13 +1977,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 2,
@@ -1732,13 +1999,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 3,
@@ -1752,13 +2021,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 4,
@@ -1772,13 +2043,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 5,
@@ -1792,13 +2065,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "grass",
                   "dimension": "2d",
-                  "name": "grass",
+                  "name": "land_grass",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "land_grass04.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 6,
@@ -1812,13 +2087,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 7,
@@ -1832,13 +2109,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 0,
@@ -1852,13 +2131,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 1,
@@ -1872,13 +2153,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 2,
@@ -1892,13 +2175,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 3,
@@ -1912,13 +2197,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 4,
@@ -1932,13 +2219,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 5,
@@ -1952,13 +2241,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 6,
@@ -1972,13 +2263,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.json",
                   "category": "road",
                   "dimension": "2d",
-                  "name": "road",
+                  "name": "road_asphalt",
                   "role": "tile",
-                  "style": "sci-fi",
+                  "sprite": "road_asphalt01.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/terrain/spritesheet_tiles.png",
                   "variant": ""
                 },
                 "x": 7,
@@ -1986,85 +2279,10 @@
               }
             ],
             "label": "Tiles",
-            "description": "Road circuit + grass infield tiles (8x8 rectangular track)",
+            "description": "8x8 ring road with grass infield",
             "tier": "presentation",
             "items": {
               "properties": {
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "movementCost": {
-                  "name": "movementCost",
-                  "required": false,
-                  "type": "number"
-                },
                 "passable": {
                   "name": "passable",
                   "required": false,
@@ -2092,6 +2310,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -2109,6 +2332,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -2135,16 +2363,6 @@
                   },
                   "type": "object"
                 },
-                "tileType": {
-                  "name": "tileType",
-                  "required": false,
-                  "type": "string"
-                },
-                "type": {
-                  "name": "type",
-                  "required": false,
-                  "type": "string"
-                },
                 "x": {
                   "name": "x",
                   "required": true,
@@ -2153,11 +2371,6 @@
                 "y": {
                   "name": "y",
                   "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
                   "type": "number"
                 }
               },
@@ -2169,7 +2382,7 @@
             "type": "number",
             "default": 3,
             "label": "Total Laps",
-            "description": "Number of laps to complete",
+            "description": "Number of laps to complete to win",
             "tier": "presentation"
           },
           {
@@ -2178,13 +2391,21 @@
             "default": [
               {
                 "animation": "idle",
+                "facing": "right",
                 "frame": 0,
                 "id": "player",
+                "lap": 1,
                 "name": "Player",
+                "nextCheckpoint": 0,
                 "position": {
-                  "x": 3,
+                  "x": 1,
                   "y": 0
                 },
+                "previousPosition": {
+                  "x": 1,
+                  "y": 0
+                },
+                "speed": 1,
                 "sprite": {
                   "animations": [
                     "idle",
@@ -2194,13 +2415,15 @@
                     "death"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_vehicles.json",
                   "category": "car_player",
                   "dimension": "2d",
                   "name": "car_player",
                   "role": "npc",
-                  "style": "sci-fi",
+                  "sprite": "car_blue_1.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_vehicles.png",
                   "variant": ""
                 },
                 "team": "player",
@@ -2208,13 +2431,21 @@
               },
               {
                 "animation": "idle",
+                "facing": "right",
                 "frame": 0,
                 "id": "rival1",
+                "lap": 1,
                 "name": "Rival",
+                "nextCheckpoint": 0,
                 "position": {
-                  "x": 4,
+                  "x": 2,
                   "y": 0
                 },
+                "previousPosition": {
+                  "x": 2,
+                  "y": 0
+                },
+                "speed": 1,
                 "sprite": {
                   "animations": [
                     "idle",
@@ -2224,13 +2455,15 @@
                     "death"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_vehicles.json",
                   "category": "car_rival",
                   "dimension": "2d",
                   "name": "car_rival",
                   "role": "npc",
-                  "style": "sci-fi",
+                  "sprite": "car_red_1.png",
+                  "style": "flat",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/kenney-racing-pack/features/spritesheet_vehicles.png",
                   "variant": ""
                 },
                 "team": "rival",
@@ -2238,7 +2471,7 @@
               }
             ],
             "label": "Units",
-            "description": "Cars on the track (player + rival)",
+            "description": "Player and rival cars on the track",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -2247,18 +2480,19 @@
                   "required": false,
                   "type": "string"
                 },
-                "elevation": {
-                  "name": "elevation",
+                "facing": {
+                  "name": "facing",
                   "required": false,
-                  "type": "number"
+                  "type": "string",
+                  "values": [
+                    "up",
+                    "down",
+                    "left",
+                    "right"
+                  ]
                 },
                 "frame": {
                   "name": "frame",
-                  "required": false,
-                  "type": "number"
-                },
-                "health": {
-                  "name": "health",
                   "required": false,
                   "type": "number"
                 },
@@ -2267,75 +2501,20 @@
                   "required": true,
                   "type": "string"
                 },
-                "maxHealth": {
-                  "name": "maxHealth",
+                "lap": {
+                  "name": "lap",
                   "required": false,
                   "type": "number"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
                 },
                 "name": {
                   "name": "name",
                   "required": false,
                   "type": "string"
+                },
+                "nextCheckpoint": {
+                  "name": "nextCheckpoint",
+                  "required": false,
+                  "type": "number"
                 },
                 "position": {
                   "name": "position",
@@ -2371,6 +2550,11 @@
                   },
                   "type": "object"
                 },
+                "speed": {
+                  "name": "speed",
+                  "required": false,
+                  "type": "number"
+                },
                 "sprite": {
                   "name": "sprite",
                   "required": false,
@@ -2388,63 +2572,8 @@
                       "required": false,
                       "type": "string"
                     },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "spriteSheet": {
-                  "name": "spriteSheet",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
+                    "atlas": {
+                      "name": "atlas",
                       "required": false,
                       "type": "string"
                     },
@@ -2465,6 +2594,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -2497,29 +2631,13 @@
                   "type": "string",
                   "values": [
                     "player",
-                    "rival",
-                    "neutral"
+                    "rival"
                   ]
                 },
                 "unitType": {
                   "name": "unitType",
                   "required": false,
                   "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": false,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": false,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
                 }
               },
               "type": "object"
@@ -2537,24 +2655,11 @@
             "position",
             "result",
             "selectedUnitId",
+            "speed",
             "units",
             "validMoves"
           ]
         }
-      },
-      {
-        "name": "RacingBoardAnimTick",
-        "emittedEvents": [],
-        "listenedEvents": [],
-        "overridableConfigKeys": [
-          {
-            "key": "frameCount",
-            "type": "unknown",
-            "default": 8
-          }
-        ],
-        "capabilities": [],
-        "ref": "AnimTick.traits.AnimTick"
       }
     ],
     "pages": [
@@ -2565,15 +2670,12 @@
       }
     ],
     "emittedEvents": [
-      "LAP_COMPLETE",
-      "MOVE",
+      "GAME_END",
       "MOVE_DOWN",
       "MOVE_LEFT",
       "MOVE_RIGHT",
       "MOVE_UP",
       "PLAY_AGAIN",
-      "POSITION_UPDATE",
-      "RACE_END",
       "TILE_CLICK",
       "UNIT_CLICK"
     ],

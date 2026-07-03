@@ -121,7 +121,7 @@ export interface StdUiSportsBoardSportsBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'SportsBoardAnimTick' | 'SportsBoardRender',
+    'SportsBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -131,12 +131,7 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
   const canonicalName = params.entityName ?? 'SportsBoardItem';
   const built = makeOrbitalWithUses({
     name: 'SportsBoardOrbital',
-    uses: [
-      {
-        'as': 'AnimTick',
-        'from': 'std/behaviors/std-anim-tick',
-      },
-    ],
+    uses: [],
     entity: {
       name: canonicalName,
       persistence: 'runtime',
@@ -4146,17 +4141,6 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
           },
         ],
       } as never, 'SportsBoardItem', canonicalName) as never,
-      makeTraitRef({
-        'config': {
-          'frameCount': {
-            'default': 8,
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': canonicalName,
-        'name': 'SportsBoardAnimTick',
-        'ref': 'AnimTick.traits.AnimTick',
-      }),
     ],
     pages: [
       {
@@ -4165,9 +4149,6 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
         'traits': [
           {
             'ref': 'SportsBoardRender',
-          },
-          {
-            'ref': 'SportsBoardAnimTick',
           },
         ],
       } as never,
@@ -4222,7 +4203,6 @@ export const StdUiSportsBoardSportsBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
-    'SportsBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'SportsBoardRender',

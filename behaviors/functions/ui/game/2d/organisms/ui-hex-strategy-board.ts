@@ -173,7 +173,7 @@ export interface StdUiHexStrategyBoardHexStrategyBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'HexStrategyBoardAnimTick' | 'HexStrategyBoardRender',
+    'HexStrategyBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -183,12 +183,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
   const canonicalName = params.entityName ?? 'HexStrategyBoardItem';
   const built = makeOrbitalWithUses({
     name: 'HexStrategyBoardOrbital',
-    uses: [
-      {
-        'as': 'AnimTick',
-        'from': 'std/behaviors/std-anim-tick',
-      },
-    ],
+    uses: [],
     entity: {
       name: canonicalName,
       persistence: 'runtime',
@@ -3289,13 +3284,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
-                        'miniMap': {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@config.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -3507,13 +3495,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
-                        'miniMap': {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@config.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -3665,13 +3646,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
-                        'miniMap': {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@config.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -4004,13 +3978,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
-                        'miniMap': {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@config.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -4225,13 +4192,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
-                        'miniMap': {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@config.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -4703,13 +4663,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
-                        'miniMap': {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@config.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -4981,13 +4934,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
-                        'miniMap': {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@config.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -5154,13 +5100,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
-                        'miniMap': {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@config.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -5368,13 +5307,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
-                        'miniMap': {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@config.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -5638,13 +5570,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
-                        'miniMap': {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@config.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -5794,13 +5719,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                       'assetManifest': '@config.assetManifest',
                       'effects': '@entity.effects',
                       'features': '@config.features',
-                      'miniMap': {
-                        'height': '@entity.gridHeight',
-                        'tiles': '@config.tiles',
-                        'type': 'mini-map',
-                        'units': '@entity.units',
-                        'width': '@entity.gridWidth',
-                      },
                       'projection': 'hex',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
@@ -6435,13 +6353,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                       'assetManifest': '@config.assetManifest',
                       'effects': '@entity.effects',
                       'features': '@config.features',
-                      'miniMap': {
-                        'height': '@entity.gridHeight',
-                        'tiles': '@config.tiles',
-                        'type': 'mini-map',
-                        'units': '@entity.units',
-                        'width': '@entity.gridWidth',
-                      },
                       'projection': 'hex',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
@@ -6579,17 +6490,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
           },
         ],
       } as never, 'HexStrategyBoardItem', canonicalName) as never,
-      makeTraitRef({
-        'config': {
-          'frameCount': {
-            'default': 8,
-            'type': 'unknown',
-          },
-        },
-        'linkedEntity': canonicalName,
-        'name': 'HexStrategyBoardAnimTick',
-        'ref': 'AnimTick.traits.AnimTick',
-      }),
     ],
     pages: [
       {
@@ -6598,9 +6498,6 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
         'traits': [
           {
             'ref': 'HexStrategyBoardRender',
-          },
-          {
-            'ref': 'HexStrategyBoardAnimTick',
           },
         ],
       } as never,
@@ -6655,7 +6552,6 @@ export const StdUiHexStrategyBoardHexStrategyBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
-    'HexStrategyBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'HexStrategyBoardRender',
