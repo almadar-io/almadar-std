@@ -97,18 +97,20 @@ export interface StdUiGraveyardBoard3dConfig {
   bgColor?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"}` */
+  coverAsset?: EntityRow;
   error?: EntityRow;
-  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"crypt","dimension":"3d","name":"crypt","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/crypt.glb"},"id":"f1","type":"crypt","x":2,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"gravestone-cross","dimension":"3d","name":"gravestone-cross","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/gravestone-cross.glb"},"id":"f2","type":"gravestone","x":1,"y":1},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"gravestone-round","dimension":"3d","name":"gravestone-round","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/gravestone-round.glb"},"id":"f3","type":"gravestone","x":3,"y":1},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"pumpkin-carved","dimension":"3d","name":"pumpkin-carved","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/pumpkin-carved.glb"},"id":"f4","type":"pumpkin","x":1,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"pine","dimension":"3d","name":"pine","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/pine.glb"},"id":"f5","type":"tree","x":3,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"lantern-candle","dimension":"3d","name":"lantern-candle","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/lantern-candle.glb"},"id":"f6","type":"lantern","x":0,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"coffin","dimension":"3d","name":"coffin","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/coffin.glb"},"id":"f7","type":"coffin","x":4,"y":2}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"crypt","dimension":"3d","name":"crypt","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/crypt.glb"},"id":"f1","type":"crypt","x":10,"y":10},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"gravestone-cross","dimension":"3d","name":"gravestone-cross","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/gravestone-cross.glb"},"id":"f2","type":"gravestone","x":5,"y":8},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"gravestone-round","dimension":"3d","name":"gravestone-round","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/gravestone-round.glb"},"id":"f3","type":"gravestone","x":15,"y":8},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"gravestone-round","dimension":"3d","name":"gravestone-round","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/gravestone-round.glb"},"id":"f4","type":"gravestone","x":5,"y":12},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"gravestone-cross","dimension":"3d","name":"gravestone-cross","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/gravestone-cross.glb"},"id":"f5","type":"gravestone","x":15,"y":12},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"pine","dimension":"3d","name":"pine","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/pine.glb"},"id":"f6","type":"tree","x":8,"y":6},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"pine","dimension":"3d","name":"pine","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/pine.glb"},"id":"f7","type":"tree","x":12,"y":14},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"pumpkin-carved","dimension":"3d","name":"pumpkin-carved","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/pumpkin-carved.glb"},"id":"f8","type":"pumpkin","x":10,"y":5},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"lantern-candle","dimension":"3d","name":"lantern-candle","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/lantern-candle.glb"},"id":"f9","type":"lantern","x":7,"y":10},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"lantern-candle","dimension":"3d","name":"lantern-candle","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/lantern-candle.glb"},"id":"f10","type":"lantern","x":13,"y":10}]` */
   features?: EntityRow[];
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"grave-border","dimension":"3d","name":"grave-border","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb"}` */
+  groundAsset?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `0.45` */
   scale?: number;
-  /** Default: `[{"id":"t00","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":0,"y":0},{"id":"t10","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":1,"y":0},{"id":"t20","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":2,"y":0},{"id":"t30","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":3,"y":0},{"id":"t40","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":4,"y":0},{"id":"t01","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":0,"y":1},{"id":"t11","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grave-border","dimension":"3d","name":"grave-border","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb"},"passable":true,"terrain":"dirt","x":1,"y":1},{"id":"t21","modelUrl":{"animations":["static"],"aspect":"1:1","category":"road","dimension":"3d","name":"road","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/road.glb"},"passable":true,"terrain":"gravel","x":2,"y":1},{"id":"t31","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grave-border","dimension":"3d","name":"grave-border","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb"},"passable":true,"terrain":"dirt","x":3,"y":1},{"id":"t41","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":4,"y":1},{"id":"t02","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":0,"y":2},{"id":"t12","modelUrl":{"animations":["static"],"aspect":"1:1","category":"road","dimension":"3d","name":"road","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/road.glb"},"passable":true,"terrain":"gravel","x":1,"y":2},{"id":"t22","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grave-border","dimension":"3d","name":"grave-border","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb"},"passable":true,"terrain":"dirt","x":2,"y":2},{"id":"t32","modelUrl":{"animations":["static"],"aspect":"1:1","category":"road","dimension":"3d","name":"road","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/road.glb"},"passable":true,"terrain":"gravel","x":3,"y":2},{"id":"t42","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":4,"y":2},{"id":"t03","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":0,"y":3},{"id":"t13","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grave-border","dimension":"3d","name":"grave-border","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb"},"passable":true,"terrain":"dirt","x":1,"y":3},{"id":"t23","modelUrl":{"animations":["static"],"aspect":"1:1","category":"road","dimension":"3d","name":"road","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/road.glb"},"passable":true,"terrain":"gravel","x":2,"y":3},{"id":"t33","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grave-border","dimension":"3d","name":"grave-border","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb"},"passable":true,"terrain":"dirt","x":3,"y":3},{"id":"t43","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":4,"y":3},{"id":"t04","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":0,"y":4},{"id":"t14","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":1,"y":4},{"id":"t24","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":2,"y":4},{"id":"t34","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":3,"y":4},{"id":"t44","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-wall","dimension":"3d","name":"stone-wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb"},"passable":false,"terrain":"stone","x":4,"y":4}]` */
-  tiles?: EntityRow[];
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `[{"health":15,"id":"u1","maxHealth":15,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-keeper","dimension":"3d","name":"character-keeper","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-keeper.glb"},"name":"Keeper","position":{"x":2,"y":1},"team":"player","unitType":"keeper"},{"health":8,"id":"e1","maxHealth":8,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-skeleton","dimension":"3d","name":"character-skeleton","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-skeleton.glb"},"name":"Skeleton","position":{"x":1,"y":3},"team":"enemy","unitType":"skeleton"},{"health":10,"id":"e2","maxHealth":10,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-zombie","dimension":"3d","name":"character-zombie","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-zombie.glb"},"name":"Zombie","position":{"x":3,"y":3},"team":"enemy","unitType":"zombie"},{"health":6,"id":"e3","maxHealth":6,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-ghost","dimension":"3d","name":"character-ghost","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-ghost.glb"},"name":"Ghost","position":{"x":2,"y":3},"team":"enemy","unitType":"ghost"}]` */
+  /** Default: `[{"health":12,"id":"p1","maxHealth":12,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-keeper","dimension":"3d","name":"character-keeper","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-keeper.glb"},"name":"Keeper","position":{"x":4,"y":18},"team":"player","unitType":"keeper"},{"health":12,"id":"p2","maxHealth":12,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-keeper","dimension":"3d","name":"character-keeper","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-keeper.glb"},"name":"Warden","position":{"x":10,"y":18},"team":"player","unitType":"keeper"},{"health":12,"id":"p3","maxHealth":12,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-keeper","dimension":"3d","name":"character-keeper","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-keeper.glb"},"name":"Sentinel","position":{"x":16,"y":18},"team":"player","unitType":"keeper"},{"health":8,"id":"e1","maxHealth":8,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-skeleton","dimension":"3d","name":"character-skeleton","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-skeleton.glb"},"name":"Skeleton","position":{"x":4,"y":1},"team":"enemy","unitType":"skeleton"},{"health":10,"id":"e2","maxHealth":10,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-zombie","dimension":"3d","name":"character-zombie","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-zombie.glb"},"name":"Zombie","position":{"x":10,"y":1},"team":"enemy","unitType":"zombie"},{"health":6,"id":"e3","maxHealth":6,"modelUrl":{"animations":["idle","walk","die","attack-melee-right"],"aspect":"1:1","category":"character-ghost","dimension":"3d","name":"character-ghost","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-ghost.glb"},"name":"Ghost","position":{"x":16,"y":1},"team":"enemy","unitType":"ghost"}]` */
   units?: EntityRow[];
 }
 
@@ -548,17 +550,17 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
             ],
           },
           {
-            'default': 5,
+            'default': 20,
             'name': 'gridWidth',
             'type': 'number',
           },
           {
-            'default': 5,
+            'default': 20,
             'name': 'gridHeight',
             'type': 'number',
           },
           {
-            'default': 2,
+            'default': 4,
             'name': 'movementRange',
             'type': 'number',
           },
@@ -567,868 +569,8 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
             'name': 'enemyTurn',
             'type': 'boolean',
           },
-        ];
-        const extras = params.fields ?? [];
-        if (extras.length === 0) return canonical;
-        const extraNames = new Set(extras.map((f) => f.name));
-        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
-      })(),
-    } as Entity,
-    traits: [
-      rebindInlineTraitEntity({
-        'category': 'interaction',
-        'config': {
-          'bgColor': {
-            'default': '#14101f',
-            'description': 'Canvas background color — dark spooky-night tone',
-            'label': 'Bg Color',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'className': {
-            'default': '',
-            'description': 'className prop',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'error': {
-            'description': 'Error state (UiError)',
-            'label': 'Error',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'stack': {
-                'name': 'stack',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'GraveyardBoard3DError',
-          },
-          'features': {
-            'default': [
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'crypt',
-                  'dimension': '3d',
-                  'name': 'crypt',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/crypt.glb',
-                },
-                'id': 'f1',
-                'type': 'crypt',
-                'x': 2,
-                'y': 2,
-              },
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'gravestone-cross',
-                  'dimension': '3d',
-                  'name': 'gravestone-cross',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/gravestone-cross.glb',
-                },
-                'id': 'f2',
-                'type': 'gravestone',
-                'x': 1,
-                'y': 1,
-              },
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'gravestone-round',
-                  'dimension': '3d',
-                  'name': 'gravestone-round',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/gravestone-round.glb',
-                },
-                'id': 'f3',
-                'type': 'gravestone',
-                'x': 3,
-                'y': 1,
-              },
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'pumpkin-carved',
-                  'dimension': '3d',
-                  'name': 'pumpkin-carved',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/pumpkin-carved.glb',
-                },
-                'id': 'f4',
-                'type': 'pumpkin',
-                'x': 1,
-                'y': 2,
-              },
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'pine',
-                  'dimension': '3d',
-                  'name': 'pine',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/pine.glb',
-                },
-                'id': 'f5',
-                'type': 'tree',
-                'x': 3,
-                'y': 2,
-              },
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'lantern-candle',
-                  'dimension': '3d',
-                  'name': 'lantern-candle',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/lantern-candle.glb',
-                },
-                'id': 'f6',
-                'type': 'lantern',
-                'x': 0,
-                'y': 2,
-              },
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'coffin',
-                  'dimension': '3d',
-                  'name': 'coffin',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/coffin.glb',
-                },
-                'id': 'f7',
-                'type': 'coffin',
-                'x': 4,
-                'y': 2,
-              },
-            ],
-            'description': 'Decorative graveyard features — crypt, gravestones, pumpkin, pine, lantern, coffin.',
-            'items': {
-              'properties': {
-                'assetUrl': {
-                  'name': 'assetUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'required': false,
-                  'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'sprite': {
-                  'name': 'sprite',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Features',
-            'tier': 'presentation',
-            'type': '[GraveyardBoard3DFeaturesItem]',
-          },
-          'isLoading': {
-            'default': false,
-            'description': 'Loading state indicator',
-            'label': 'Is Loading',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'scale': {
-            'default': 0.45,
-            'description': 'Canvas render scale',
-            'label': 'Scale',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'tiles': {
-            'default': [
-              {
-                'id': 't00',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 0,
-                'y': 0,
-              },
-              {
-                'id': 't10',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 1,
-                'y': 0,
-              },
-              {
-                'id': 't20',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 2,
-                'y': 0,
-              },
-              {
-                'id': 't30',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 3,
-                'y': 0,
-              },
-              {
-                'id': 't40',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 4,
-                'y': 0,
-              },
-              {
-                'id': 't01',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 0,
-                'y': 1,
-              },
-              {
-                'id': 't11',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grave-border',
-                  'dimension': '3d',
-                  'name': 'grave-border',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb',
-                },
-                'passable': true,
-                'terrain': 'dirt',
-                'x': 1,
-                'y': 1,
-              },
-              {
-                'id': 't21',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'road',
-                  'dimension': '3d',
-                  'name': 'road',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/road.glb',
-                },
-                'passable': true,
-                'terrain': 'gravel',
-                'x': 2,
-                'y': 1,
-              },
-              {
-                'id': 't31',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grave-border',
-                  'dimension': '3d',
-                  'name': 'grave-border',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb',
-                },
-                'passable': true,
-                'terrain': 'dirt',
-                'x': 3,
-                'y': 1,
-              },
-              {
-                'id': 't41',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 4,
-                'y': 1,
-              },
-              {
-                'id': 't02',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 0,
-                'y': 2,
-              },
-              {
-                'id': 't12',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'road',
-                  'dimension': '3d',
-                  'name': 'road',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/road.glb',
-                },
-                'passable': true,
-                'terrain': 'gravel',
-                'x': 1,
-                'y': 2,
-              },
-              {
-                'id': 't22',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grave-border',
-                  'dimension': '3d',
-                  'name': 'grave-border',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb',
-                },
-                'passable': true,
-                'terrain': 'dirt',
-                'x': 2,
-                'y': 2,
-              },
-              {
-                'id': 't32',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'road',
-                  'dimension': '3d',
-                  'name': 'road',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/road.glb',
-                },
-                'passable': true,
-                'terrain': 'gravel',
-                'x': 3,
-                'y': 2,
-              },
-              {
-                'id': 't42',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 4,
-                'y': 2,
-              },
-              {
-                'id': 't03',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 0,
-                'y': 3,
-              },
-              {
-                'id': 't13',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grave-border',
-                  'dimension': '3d',
-                  'name': 'grave-border',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb',
-                },
-                'passable': true,
-                'terrain': 'dirt',
-                'x': 1,
-                'y': 3,
-              },
-              {
-                'id': 't23',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'road',
-                  'dimension': '3d',
-                  'name': 'road',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/road.glb',
-                },
-                'passable': true,
-                'terrain': 'gravel',
-                'x': 2,
-                'y': 3,
-              },
-              {
-                'id': 't33',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grave-border',
-                  'dimension': '3d',
-                  'name': 'grave-border',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb',
-                },
-                'passable': true,
-                'terrain': 'dirt',
-                'x': 3,
-                'y': 3,
-              },
-              {
-                'id': 't43',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 4,
-                'y': 3,
-              },
-              {
-                'id': 't04',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 0,
-                'y': 4,
-              },
-              {
-                'id': 't14',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 1,
-                'y': 4,
-              },
-              {
-                'id': 't24',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 2,
-                'y': 4,
-              },
-              {
-                'id': 't34',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 3,
-                'y': 4,
-              },
-              {
-                'id': 't44',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-wall',
-                  'dimension': '3d',
-                  'name': 'stone-wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 4,
-                'y': 4,
-              },
-            ],
-            'description': '5×5 grid tile data — takes priority over entity-derived tiles.',
+          {
+            'default': [],
             'items': {
               'properties': {
                 'elevation': {
@@ -1594,9 +736,561 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
               },
               'type': 'object',
             },
-            'label': 'Tiles',
+            'name': 'tiles',
+            'type': 'array',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      rebindInlineTraitEntity({
+        'category': 'interaction',
+        'config': {
+          'bgColor': {
+            'default': '#14101f',
+            'description': 'Canvas background color — dark spooky-night tone',
+            'label': 'Bg Color',
             'tier': 'presentation',
-            'type': '[GraveyardBoard3DTilesItem]',
+            'type': 'string',
+          },
+          'className': {
+            'default': '',
+            'description': 'className prop',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'coverAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'stone-wall',
+              'dimension': '3d',
+              'name': 'stone-wall',
+              'role': 'decoration',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/stone-wall.glb',
+            },
+            'description': 'Impassable cover tile, scattered for chokepoints.',
+            'label': 'Cover Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
+          'error': {
+            'description': 'Error state (UiError)',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'GraveyardBoard3DError',
+          },
+          'features': {
+            'default': [
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'crypt',
+                  'dimension': '3d',
+                  'name': 'crypt',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/crypt.glb',
+                },
+                'id': 'f1',
+                'type': 'crypt',
+                'x': 10,
+                'y': 10,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'gravestone-cross',
+                  'dimension': '3d',
+                  'name': 'gravestone-cross',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/gravestone-cross.glb',
+                },
+                'id': 'f2',
+                'type': 'gravestone',
+                'x': 5,
+                'y': 8,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'gravestone-round',
+                  'dimension': '3d',
+                  'name': 'gravestone-round',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/gravestone-round.glb',
+                },
+                'id': 'f3',
+                'type': 'gravestone',
+                'x': 15,
+                'y': 8,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'gravestone-round',
+                  'dimension': '3d',
+                  'name': 'gravestone-round',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/gravestone-round.glb',
+                },
+                'id': 'f4',
+                'type': 'gravestone',
+                'x': 5,
+                'y': 12,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'gravestone-cross',
+                  'dimension': '3d',
+                  'name': 'gravestone-cross',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/gravestone-cross.glb',
+                },
+                'id': 'f5',
+                'type': 'gravestone',
+                'x': 15,
+                'y': 12,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'pine',
+                  'dimension': '3d',
+                  'name': 'pine',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/pine.glb',
+                },
+                'id': 'f6',
+                'type': 'tree',
+                'x': 8,
+                'y': 6,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'pine',
+                  'dimension': '3d',
+                  'name': 'pine',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/pine.glb',
+                },
+                'id': 'f7',
+                'type': 'tree',
+                'x': 12,
+                'y': 14,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'pumpkin-carved',
+                  'dimension': '3d',
+                  'name': 'pumpkin-carved',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/pumpkin-carved.glb',
+                },
+                'id': 'f8',
+                'type': 'pumpkin',
+                'x': 10,
+                'y': 5,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'lantern-candle',
+                  'dimension': '3d',
+                  'name': 'lantern-candle',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/lantern-candle.glb',
+                },
+                'id': 'f9',
+                'type': 'lantern',
+                'x': 7,
+                'y': 10,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'lantern-candle',
+                  'dimension': '3d',
+                  'name': 'lantern-candle',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/features/lantern-candle.glb',
+                },
+                'id': 'f10',
+                'type': 'lantern',
+                'x': 13,
+                'y': 10,
+              },
+            ],
+            'description': 'Decorative graveyard features — crypt, gravestones, pumpkin, pine, lantern, coffin.',
+            'items': {
+              'properties': {
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': true,
+                  'type': 'string',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+                'z': {
+                  'name': 'z',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Features',
+            'tier': 'presentation',
+            'type': '[GraveyardBoard3DFeaturesItem]',
+          },
+          'groundAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'grave-border',
+              'dimension': '3d',
+              'name': 'grave-border',
+              'role': 'decoration',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/terrain/grave-border.glb',
+            },
+            'description': 'Passable ground tile, tiled across the battlefield.',
+            'label': 'Ground Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state indicator',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'scale': {
+            'default': 0.45,
+            'description': 'Canvas render scale',
+            'label': 'Scale',
+            'tier': 'presentation',
+            'type': 'number',
           },
           'unitScale': {
             'default': 1,
@@ -1608,9 +1302,9 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
           'units': {
             'default': [
               {
-                'health': 15,
-                'id': 'u1',
-                'maxHealth': 15,
+                'health': 12,
+                'id': 'p1',
+                'maxHealth': 12,
                 'modelUrl': {
                   'animations': [
                     'idle',
@@ -1629,8 +1323,64 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                 },
                 'name': 'Keeper',
                 'position': {
-                  'x': 2,
-                  'y': 1,
+                  'x': 4,
+                  'y': 18,
+                },
+                'team': 'player',
+                'unitType': 'keeper',
+              },
+              {
+                'health': 12,
+                'id': 'p2',
+                'maxHealth': 12,
+                'modelUrl': {
+                  'animations': [
+                    'idle',
+                    'walk',
+                    'die',
+                    'attack-melee-right',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'character-keeper',
+                  'dimension': '3d',
+                  'name': 'character-keeper',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-keeper.glb',
+                },
+                'name': 'Warden',
+                'position': {
+                  'x': 10,
+                  'y': 18,
+                },
+                'team': 'player',
+                'unitType': 'keeper',
+              },
+              {
+                'health': 12,
+                'id': 'p3',
+                'maxHealth': 12,
+                'modelUrl': {
+                  'animations': [
+                    'idle',
+                    'walk',
+                    'die',
+                    'attack-melee-right',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'character-keeper',
+                  'dimension': '3d',
+                  'name': 'character-keeper',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-graveyard-board-3d/kenney-graveyard-kit/units/character-keeper.glb',
+                },
+                'name': 'Sentinel',
+                'position': {
+                  'x': 16,
+                  'y': 18,
                 },
                 'team': 'player',
                 'unitType': 'keeper',
@@ -1657,8 +1407,8 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                 },
                 'name': 'Skeleton',
                 'position': {
-                  'x': 1,
-                  'y': 3,
+                  'x': 4,
+                  'y': 1,
                 },
                 'team': 'enemy',
                 'unitType': 'skeleton',
@@ -1685,8 +1435,8 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                 },
                 'name': 'Zombie',
                 'position': {
-                  'x': 3,
-                  'y': 3,
+                  'x': 10,
+                  'y': 1,
                 },
                 'team': 'enemy',
                 'unitType': 'zombie',
@@ -1713,8 +1463,8 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                 },
                 'name': 'Ghost',
                 'position': {
-                  'x': 2,
-                  'y': 3,
+                  'x': 16,
+                  'y': 1,
                 },
                 'team': 'enemy',
                 'unitType': 'ghost',
@@ -2111,6 +1861,7 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
             'phase',
             'result',
             'selectedUnitId',
+            'tiles',
             'turn',
             'units',
             'validMoves',
@@ -2312,17 +2063,122 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                 [
                   'set',
                   '@entity.gridWidth',
-                  5,
+                  20,
                 ],
                 [
                   'set',
                   '@entity.gridHeight',
-                  5,
+                  20,
                 ],
                 [
                   'set',
                   '@entity.movementRange',
-                  2,
+                  4,
+                ],
+                [
+                  'set',
+                  '@entity.tiles',
+                  [
+                    'array/flatten',
+                    [
+                      'array/map',
+                      [
+                        'array/range',
+                        0,
+                        20,
+                      ],
+                      [
+                        'fn',
+                        'gy',
+                        [
+                          'array/map',
+                          [
+                            'array/range',
+                            0,
+                            20,
+                          ],
+                          [
+                            'fn',
+                            'gx',
+                            [
+                              'let',
+                              [
+                                [
+                                  'cover',
+                                  [
+                                    'and',
+                                    [
+                                      '>=',
+                                      '@gy',
+                                      4,
+                                    ],
+                                    [
+                                      'and',
+                                      [
+                                        '<=',
+                                        '@gy',
+                                        15,
+                                      ],
+                                      [
+                                        '==',
+                                        [
+                                          'math/mod',
+                                          [
+                                            '+',
+                                            [
+                                              '*',
+                                              '@gx',
+                                              3,
+                                            ],
+                                            [
+                                              '*',
+                                              '@gy',
+                                              7,
+                                            ],
+                                          ],
+                                          8,
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              {
+                                'id': [
+                                  'str/concat',
+                                  't-',
+                                  '@gx',
+                                  '-',
+                                  '@gy',
+                                ],
+                                'modelUrl': [
+                                  'if',
+                                  '@cover',
+                                  '@config.coverAsset',
+                                  '@config.groundAsset',
+                                ],
+                                'passable': [
+                                  'if',
+                                  '@cover',
+                                  false,
+                                  true,
+                                ],
+                                'terrain': [
+                                  'if',
+                                  '@cover',
+                                  'stone',
+                                  'dirt',
+                                ],
+                                'x': '@gx',
+                                'y': '@gy',
+                              },
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
                 ],
                 [
                   'render-ui',
@@ -2357,13 +2213,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -2384,6 +2241,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -2604,13 +2469,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -2631,6 +2497,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -2861,13 +2735,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -2888,6 +2763,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -2948,7 +2831,7 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                     'array/map',
                     [
                       'array/filter',
-                      '@config.tiles',
+                      '@entity.tiles',
                       [
                         'fn',
                         't',
@@ -3110,13 +2993,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3137,6 +3021,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3256,13 +3148,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3283,6 +3176,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3464,13 +3365,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3491,6 +3393,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3563,13 +3473,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3590,6 +3501,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3719,13 +3638,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3746,6 +3666,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3945,13 +3873,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3972,6 +3901,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -4519,7 +4456,7 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                                         'object/get',
                                         [
                                           'array/find',
-                                          '@config.tiles',
+                                          '@entity.tiles',
                                           [
                                             'fn',
                                             't',
@@ -4776,13 +4713,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                     {
                       'attackTargets': '@entity.attackTargets',
                       'backgroundColor': '@config.bgColor',
+                      'cameraMode': 'isometric',
                       'events': '@entity.fx',
                       'features': '@config.features',
                       'interpolateUnits': true,
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@config.tiles',
+                      'tiles': '@entity.tiles',
                       'type': 'game-canvas-3d',
                       'unitClickEvent': 'UNIT_CLICK',
                       'unitScale': '@config.unitScale',
@@ -4803,6 +4741,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                       {
                         'label': 'Result',
                         'value': '@entity.result',
+                      },
+                      {
+                        'label': 'Goal',
+                        'value': 'Defeat all enemies',
+                      },
+                      {
+                        'label': 'How',
+                        'value': 'Click your unit → move → click it again → strike an adjacent foe',
                       },
                     ],
                     'type': 'game-hud',
@@ -4940,13 +4886,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                     {
                       'attackTargets': '@entity.attackTargets',
                       'backgroundColor': '@config.bgColor',
+                      'cameraMode': 'isometric',
                       'events': '@entity.fx',
                       'features': '@config.features',
                       'interpolateUnits': true,
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@config.tiles',
+                      'tiles': '@entity.tiles',
                       'type': 'game-canvas-3d',
                       'unitClickEvent': 'UNIT_CLICK',
                       'unitScale': '@config.unitScale',
@@ -4967,6 +4914,14 @@ export function stdUiGraveyardBoard3dGraveyardBoard3DOrbital(params: StdUiGravey
                       {
                         'label': 'Result',
                         'value': '@entity.result',
+                      },
+                      {
+                        'label': 'Goal',
+                        'value': 'Defeat all enemies',
+                      },
+                      {
+                        'label': 'How',
+                        'value': 'Click your unit → move → click it again → strike an adjacent foe',
                       },
                     ],
                     'type': 'game-hud',

@@ -74,19 +74,21 @@ export interface StdUiHolidayBoard3dConfig {
   /** Default: `""` */
   className?: string;
   error?: EntityRow;
-  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"present-a-round","dimension":"3d","name":"present-a-round","role":"item","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-a-round.glb","variant":""},"id":"gift1","type":"gift","x":2,"y":1},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"present-b-cube","dimension":"3d","name":"present-b-cube","role":"item","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-b-cube.glb","variant":""},"id":"gift2","type":"gift","x":3,"y":1},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"present-a-rectangle","dimension":"3d","name":"present-a-rectangle","role":"item","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-a-rectangle.glb","variant":""},"id":"gift3","type":"gift","x":1,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"present-b-round","dimension":"3d","name":"present-b-round","role":"item","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-b-round.glb","variant":""},"id":"gift4","type":"gift","x":3,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"wreath-decorated","dimension":"3d","name":"wreath-decorated","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/wreath-decorated.glb","variant":""},"id":"deco1","type":"wreath","x":2,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"tree-snow-a","dimension":"3d","name":"tree-snow-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/tree-snow-a.glb","variant":""},"id":"deco2","type":"tree","x":1,"y":3},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"candy-cane-red","dimension":"3d","name":"candy-cane-red","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/candy-cane-red.glb","variant":""},"id":"deco3","type":"candy-cane","x":2,"y":3}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"present-a-round","dimension":"3d","name":"present-a-round","role":"item","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-a-round.glb","variant":""},"id":"gift1","type":"gift","x":4,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"present-b-cube","dimension":"3d","name":"present-b-cube","role":"item","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-b-cube.glb","variant":""},"id":"gift2","type":"gift","x":9,"y":3},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"present-a-rectangle","dimension":"3d","name":"present-a-rectangle","role":"item","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-a-rectangle.glb","variant":""},"id":"gift3","type":"gift","x":3,"y":8},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"present-b-round","dimension":"3d","name":"present-b-round","role":"item","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-b-round.glb","variant":""},"id":"gift4","type":"gift","x":7,"y":9},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"wreath-decorated","dimension":"3d","name":"wreath-decorated","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/wreath-decorated.glb","variant":""},"id":"deco1","type":"wreath","x":6,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"tree-snow-a","dimension":"3d","name":"tree-snow-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/tree-snow-a.glb","variant":""},"id":"deco2","type":"tree","x":2,"y":9},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"candy-cane-red","dimension":"3d","name":"candy-cane-red","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/candy-cane-red.glb","variant":""},"id":"deco3","type":"candy-cane","x":9,"y":6}]` */
   features?: EntityRow[];
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"floor-wood-snow","dimension":"3d","name":"floor-wood-snow","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb","variant":""}` */
+  groundAsset?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `12` */
+  /** Default: `45` */
   moveBudget?: number;
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""}` */
+  obstacleAsset?: EntityRow;
   /** Default: `0.45` */
   scale?: number;
-  /** Default: `[{"id":"t00","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":0,"y":0},{"id":"t10","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":1,"y":0},{"id":"t20","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":2,"y":0},{"id":"t30","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":3,"y":0},{"id":"t40","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":4,"y":0},{"id":"t01","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":0,"y":1},{"id":"t11","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor-wood-snow","dimension":"3d","name":"floor-wood-snow","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb","variant":""},"passable":true,"terrain":"snow","x":1,"y":1},{"id":"t21","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor-wood-snow","dimension":"3d","name":"floor-wood-snow","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb","variant":""},"passable":true,"terrain":"snow","x":2,"y":1},{"id":"t31","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor-wood-snow","dimension":"3d","name":"floor-wood-snow","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb","variant":""},"passable":true,"terrain":"snow","x":3,"y":1},{"id":"t41","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":4,"y":1},{"id":"t02","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":0,"y":2},{"id":"t12","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor-wood","dimension":"3d","name":"floor-wood","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood.glb","variant":""},"passable":true,"terrain":"wood","x":1,"y":2},{"id":"t22","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor-wood-snow","dimension":"3d","name":"floor-wood-snow","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb","variant":""},"passable":true,"terrain":"snow","x":2,"y":2},{"id":"t32","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor-wood-snow","dimension":"3d","name":"floor-wood-snow","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb","variant":""},"passable":true,"terrain":"snow","x":3,"y":2},{"id":"t42","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":4,"y":2},{"id":"t03","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":0,"y":3},{"id":"t13","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor-wood","dimension":"3d","name":"floor-wood","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood.glb","variant":""},"passable":true,"terrain":"wood","x":1,"y":3},{"id":"t23","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor-wood-snow","dimension":"3d","name":"floor-wood-snow","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb","variant":""},"passable":true,"terrain":"snow","x":2,"y":3},{"id":"t33","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor-wood-snow","dimension":"3d","name":"floor-wood-snow","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb","variant":""},"passable":true,"terrain":"snow","x":3,"y":3},{"id":"t43","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":4,"y":3},{"id":"t04","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":0,"y":4},{"id":"t14","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":1,"y":4},{"id":"t24","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":2,"y":4},{"id":"t34","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":3,"y":4},{"id":"t44","modelUrl":{"animations":["static"],"aspect":"1:1","category":"cabin-wall","dimension":"3d","name":"cabin-wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb","variant":""},"passable":false,"terrain":"wall","x":4,"y":4}]` */
-  tiles?: EntityRow[];
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `[{"id":"player1","modelUrl":{"animations":["static"],"aspect":"1:1","category":"nutcracker","dimension":"3d","name":"nutcracker","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/nutcracker.glb","variant":""},"name":"Nutcracker","position":{"x":1,"y":1},"team":"player","unitType":"nutcracker"},{"id":"npc1","modelUrl":{"animations":["static"],"aspect":"1:1","category":"reindeer","dimension":"3d","name":"reindeer","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/reindeer.glb","variant":""},"name":"Reindeer","position":{"x":3,"y":3},"team":"neutral","unitType":"reindeer"}]` */
+  /** Default: `[{"id":"player1","modelUrl":{"animations":["static"],"aspect":"1:1","category":"nutcracker","dimension":"3d","name":"nutcracker","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/nutcracker.glb","variant":""},"name":"Nutcracker","position":{"x":1,"y":1},"team":"player","unitType":"nutcracker"},{"id":"npc1","modelUrl":{"animations":["static"],"aspect":"1:1","category":"reindeer","dimension":"3d","name":"reindeer","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/reindeer.glb","variant":""},"name":"Reindeer","position":{"x":8,"y":8},"team":"neutral","unitType":"reindeer"}]` */
   units?: EntityRow[];
 }
 
@@ -458,12 +460,12 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
             'type': 'number',
           },
           {
-            'default': 5,
+            'default': 12,
             'name': 'gridWidth',
             'type': 'number',
           },
           {
-            'default': 5,
+            'default': 12,
             'name': 'gridHeight',
             'type': 'number',
           },
@@ -472,835 +474,8 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
             'name': 'movementRange',
             'type': 'number',
           },
-        ];
-        const extras = params.fields ?? [];
-        if (extras.length === 0) return canonical;
-        const extraNames = new Set(extras.map((f) => f.name));
-        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
-      })(),
-    } as Entity,
-    traits: [
-      rebindInlineTraitEntity({
-        'category': 'interaction',
-        'config': {
-          'className': {
-            'default': '',
-            'description': 'className prop',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'error': {
-            'description': 'Error state (UiError)',
-            'label': 'Error',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'stack': {
-                'name': 'stack',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'HolidayBoard3DError',
-          },
-          'features': {
-            'default': [
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'present-a-round',
-                  'dimension': '3d',
-                  'name': 'present-a-round',
-                  'role': 'item',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-a-round.glb',
-                  'variant': '',
-                },
-                'id': 'gift1',
-                'type': 'gift',
-                'x': 2,
-                'y': 1,
-              },
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'present-b-cube',
-                  'dimension': '3d',
-                  'name': 'present-b-cube',
-                  'role': 'item',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-b-cube.glb',
-                  'variant': '',
-                },
-                'id': 'gift2',
-                'type': 'gift',
-                'x': 3,
-                'y': 1,
-              },
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'present-a-rectangle',
-                  'dimension': '3d',
-                  'name': 'present-a-rectangle',
-                  'role': 'item',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-a-rectangle.glb',
-                  'variant': '',
-                },
-                'id': 'gift3',
-                'type': 'gift',
-                'x': 1,
-                'y': 2,
-              },
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'present-b-round',
-                  'dimension': '3d',
-                  'name': 'present-b-round',
-                  'role': 'item',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-b-round.glb',
-                  'variant': '',
-                },
-                'id': 'gift4',
-                'type': 'gift',
-                'x': 3,
-                'y': 2,
-              },
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wreath-decorated',
-                  'dimension': '3d',
-                  'name': 'wreath-decorated',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/wreath-decorated.glb',
-                  'variant': '',
-                },
-                'id': 'deco1',
-                'type': 'wreath',
-                'x': 2,
-                'y': 2,
-              },
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'tree-snow-a',
-                  'dimension': '3d',
-                  'name': 'tree-snow-a',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/tree-snow-a.glb',
-                  'variant': '',
-                },
-                'id': 'deco2',
-                'type': 'tree',
-                'x': 1,
-                'y': 3,
-              },
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'candy-cane-red',
-                  'dimension': '3d',
-                  'name': 'candy-cane-red',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/candy-cane-red.glb',
-                  'variant': '',
-                },
-                'id': 'deco3',
-                'type': 'candy-cane',
-                'x': 2,
-                'y': 3,
-              },
-            ],
-            'description': 'Collectible gifts plus festive decorations on the board.',
-            'items': {
-              'properties': {
-                'assetUrl': {
-                  'name': 'assetUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Features',
-            'tier': 'presentation',
-            'type': '[HolidayBoard3DFeaturesItem]',
-          },
-          'isLoading': {
-            'default': false,
-            'description': 'Loading state indicator',
-            'label': 'Is Loading',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'moveBudget': {
-            'default': 12,
-            'description': 'Moves allowed before the round is lost if gifts remain',
-            'label': 'Move Budget',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'scale': {
-            'default': 0.45,
-            'description': 'Canvas render scale',
-            'label': 'Scale',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'tiles': {
-            'default': [
-              {
-                'id': 't00',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 0,
-                'y': 0,
-              },
-              {
-                'id': 't10',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 1,
-                'y': 0,
-              },
-              {
-                'id': 't20',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 2,
-                'y': 0,
-              },
-              {
-                'id': 't30',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 3,
-                'y': 0,
-              },
-              {
-                'id': 't40',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 4,
-                'y': 0,
-              },
-              {
-                'id': 't01',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 0,
-                'y': 1,
-              },
-              {
-                'id': 't11',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor-wood-snow',
-                  'dimension': '3d',
-                  'name': 'floor-wood-snow',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'snow',
-                'x': 1,
-                'y': 1,
-              },
-              {
-                'id': 't21',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor-wood-snow',
-                  'dimension': '3d',
-                  'name': 'floor-wood-snow',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'snow',
-                'x': 2,
-                'y': 1,
-              },
-              {
-                'id': 't31',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor-wood-snow',
-                  'dimension': '3d',
-                  'name': 'floor-wood-snow',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'snow',
-                'x': 3,
-                'y': 1,
-              },
-              {
-                'id': 't41',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 4,
-                'y': 1,
-              },
-              {
-                'id': 't02',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 0,
-                'y': 2,
-              },
-              {
-                'id': 't12',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor-wood',
-                  'dimension': '3d',
-                  'name': 'floor-wood',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood.glb',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'wood',
-                'x': 1,
-                'y': 2,
-              },
-              {
-                'id': 't22',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor-wood-snow',
-                  'dimension': '3d',
-                  'name': 'floor-wood-snow',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'snow',
-                'x': 2,
-                'y': 2,
-              },
-              {
-                'id': 't32',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor-wood-snow',
-                  'dimension': '3d',
-                  'name': 'floor-wood-snow',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'snow',
-                'x': 3,
-                'y': 2,
-              },
-              {
-                'id': 't42',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 4,
-                'y': 2,
-              },
-              {
-                'id': 't03',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 0,
-                'y': 3,
-              },
-              {
-                'id': 't13',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor-wood',
-                  'dimension': '3d',
-                  'name': 'floor-wood',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood.glb',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'wood',
-                'x': 1,
-                'y': 3,
-              },
-              {
-                'id': 't23',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor-wood-snow',
-                  'dimension': '3d',
-                  'name': 'floor-wood-snow',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'snow',
-                'x': 2,
-                'y': 3,
-              },
-              {
-                'id': 't33',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor-wood-snow',
-                  'dimension': '3d',
-                  'name': 'floor-wood-snow',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb',
-                  'variant': '',
-                },
-                'passable': true,
-                'terrain': 'snow',
-                'x': 3,
-                'y': 3,
-              },
-              {
-                'id': 't43',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 4,
-                'y': 3,
-              },
-              {
-                'id': 't04',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 0,
-                'y': 4,
-              },
-              {
-                'id': 't14',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 1,
-                'y': 4,
-              },
-              {
-                'id': 't24',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 2,
-                'y': 4,
-              },
-              {
-                'id': 't34',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 3,
-                'y': 4,
-              },
-              {
-                'id': 't44',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'cabin-wall',
-                  'dimension': '3d',
-                  'name': 'cabin-wall',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
-                  'variant': '',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 4,
-                'y': 4,
-              },
-            ],
-            'description': '5×5 snowy yard grid — cabin-wall border, floor-wood-snow/floor-wood interior.',
+          {
+            'default': [],
             'items': {
               'properties': {
                 'id': {
@@ -1391,9 +566,458 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
               },
               'type': 'object',
             },
-            'label': 'Tiles',
+            'name': 'tiles',
+            'type': 'array',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      rebindInlineTraitEntity({
+        'category': 'interaction',
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'className prop',
+            'label': 'Class Name',
             'tier': 'presentation',
-            'type': '[HolidayBoard3DTilesItem]',
+            'type': 'string',
+          },
+          'error': {
+            'description': 'Error state (UiError)',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'HolidayBoard3DError',
+          },
+          'features': {
+            'default': [
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'present-a-round',
+                  'dimension': '3d',
+                  'name': 'present-a-round',
+                  'role': 'item',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-a-round.glb',
+                  'variant': '',
+                },
+                'id': 'gift1',
+                'type': 'gift',
+                'x': 4,
+                'y': 2,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'present-b-cube',
+                  'dimension': '3d',
+                  'name': 'present-b-cube',
+                  'role': 'item',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-b-cube.glb',
+                  'variant': '',
+                },
+                'id': 'gift2',
+                'type': 'gift',
+                'x': 9,
+                'y': 3,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'present-a-rectangle',
+                  'dimension': '3d',
+                  'name': 'present-a-rectangle',
+                  'role': 'item',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-a-rectangle.glb',
+                  'variant': '',
+                },
+                'id': 'gift3',
+                'type': 'gift',
+                'x': 3,
+                'y': 8,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'present-b-round',
+                  'dimension': '3d',
+                  'name': 'present-b-round',
+                  'role': 'item',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-b-round.glb',
+                  'variant': '',
+                },
+                'id': 'gift4',
+                'type': 'gift',
+                'x': 7,
+                'y': 9,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'wreath-decorated',
+                  'dimension': '3d',
+                  'name': 'wreath-decorated',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/wreath-decorated.glb',
+                  'variant': '',
+                },
+                'id': 'deco1',
+                'type': 'wreath',
+                'x': 6,
+                'y': 2,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'tree-snow-a',
+                  'dimension': '3d',
+                  'name': 'tree-snow-a',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/tree-snow-a.glb',
+                  'variant': '',
+                },
+                'id': 'deco2',
+                'type': 'tree',
+                'x': 2,
+                'y': 9,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'candy-cane-red',
+                  'dimension': '3d',
+                  'name': 'candy-cane-red',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/candy-cane-red.glb',
+                  'variant': '',
+                },
+                'id': 'deco3',
+                'type': 'candy-cane',
+                'x': 9,
+                'y': 6,
+              },
+            ],
+            'description': 'Collectible gifts plus festive decorations scattered across the 12×12 yard.',
+            'items': {
+              'properties': {
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': true,
+                  'type': 'string',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Features',
+            'tier': 'presentation',
+            'type': '[HolidayBoard3DFeaturesItem]',
+          },
+          'groundAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'floor-wood-snow',
+              'dimension': '3d',
+              'name': 'floor-wood-snow',
+              'role': 'tile',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb',
+              'variant': '',
+            },
+            'description': 'Passable snowy ground tile, tiled across the yard.',
+            'label': 'Ground Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+              'variant': {
+                'name': 'variant',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state indicator',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'moveBudget': {
+            'default': 45,
+            'description': 'Moves allowed before the round is lost if gifts remain',
+            'label': 'Move Budget',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'obstacleAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'cabin-wall',
+              'dimension': '3d',
+              'name': 'cabin-wall',
+              'role': 'tile',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb',
+              'variant': '',
+            },
+            'description': 'Impassable obstacle tile, sparsely scattered through the interior.',
+            'label': 'Obstacle Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+              'variant': {
+                'name': 'variant',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
+          'scale': {
+            'default': 0.45,
+            'description': 'Canvas render scale',
+            'label': 'Scale',
+            'tier': 'presentation',
+            'type': 'number',
           },
           'unitScale': {
             'default': 1,
@@ -1446,8 +1070,8 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                 },
                 'name': 'Reindeer',
                 'position': {
-                  'x': 3,
-                  'y': 3,
+                  'x': 8,
+                  'y': 8,
                 },
                 'team': 'neutral',
                 'unitType': 'reindeer',
@@ -1657,6 +1281,7 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
             'result',
             'score',
             'selectedUnitId',
+            'tiles',
             'units',
             'validMoves',
           ],
@@ -1801,17 +1426,138 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                 [
                   'set',
                   '@entity.gridWidth',
-                  5,
+                  12,
                 ],
                 [
                   'set',
                   '@entity.gridHeight',
-                  5,
+                  12,
                 ],
                 [
                   'set',
                   '@entity.movementRange',
                   1,
+                ],
+                [
+                  'set',
+                  '@entity.tiles',
+                  [
+                    'array/flatten',
+                    [
+                      'array/map',
+                      [
+                        'array/range',
+                        0,
+                        12,
+                      ],
+                      [
+                        'fn',
+                        'gy',
+                        [
+                          'array/map',
+                          [
+                            'array/range',
+                            0,
+                            12,
+                          ],
+                          [
+                            'fn',
+                            'gx',
+                            [
+                              'let',
+                              [
+                                [
+                                  'obstacle',
+                                  [
+                                    'and',
+                                    [
+                                      '>=',
+                                      '@gx',
+                                      2,
+                                    ],
+                                    [
+                                      'and',
+                                      [
+                                        '<=',
+                                        '@gx',
+                                        9,
+                                      ],
+                                      [
+                                        'and',
+                                        [
+                                          '>=',
+                                          '@gy',
+                                          2,
+                                        ],
+                                        [
+                                          'and',
+                                          [
+                                            '<=',
+                                            '@gy',
+                                            9,
+                                          ],
+                                          [
+                                            '==',
+                                            [
+                                              'math/mod',
+                                              [
+                                                '+',
+                                                [
+                                                  '*',
+                                                  '@gx',
+                                                  5,
+                                                ],
+                                                [
+                                                  '*',
+                                                  '@gy',
+                                                  7,
+                                                ],
+                                              ],
+                                              9,
+                                            ],
+                                            0,
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              {
+                                'id': [
+                                  'str/concat',
+                                  't-',
+                                  '@gx',
+                                  '-',
+                                  '@gy',
+                                ],
+                                'modelUrl': [
+                                  'if',
+                                  '@obstacle',
+                                  '@config.obstacleAsset',
+                                  '@config.groundAsset',
+                                ],
+                                'passable': [
+                                  'if',
+                                  '@obstacle',
+                                  false,
+                                  true,
+                                ],
+                                'terrain': [
+                                  'if',
+                                  '@obstacle',
+                                  'wall',
+                                  'snow',
+                                ],
+                                'x': '@gx',
+                                'y': '@gy',
+                              },
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
                 ],
                 [
                   'render-ui',
@@ -1838,12 +1584,13 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                     },
                     'children': [
                       {
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@entity.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -1868,6 +1615,14 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Collect all the gifts',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the nutcracker → click a highlighted tile to step onto it and grab gifts',
                         },
                       ],
                       'type': 'game-hud',
@@ -1931,7 +1686,7 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                     'array/map',
                     [
                       'array/filter',
-                      '@config.tiles',
+                      '@entity.tiles',
                       [
                         'fn',
                         't',
@@ -2083,12 +1838,13 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                     },
                     'children': [
                       {
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@entity.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -2113,6 +1869,14 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Collect all the gifts',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the nutcracker → click a highlighted tile to step onto it and grab gifts',
                         },
                       ],
                       'type': 'game-hud',
@@ -2442,12 +2206,13 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                             },
                             'children': [
                               {
+                                'cameraMode': 'top-down',
                                 'events': '@entity.fx',
                                 'features': '@entity.features',
                                 'scale': '@config.scale',
                                 'selectedUnitId': '@entity.selectedUnitId',
                                 'tileClickEvent': 'TILE_CLICK',
-                                'tiles': '@config.tiles',
+                                'tiles': '@entity.tiles',
                                 'type': 'game-canvas-3d',
                                 'unitClickEvent': 'UNIT_CLICK',
                                 'unitScale': '@config.unitScale',
@@ -2472,6 +2237,14 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                                 {
                                   'label': 'Result',
                                   'value': '@entity.result',
+                                },
+                                {
+                                  'label': 'Goal',
+                                  'value': 'Collect all the gifts',
+                                },
+                                {
+                                  'label': 'How',
+                                  'value': 'Click the nutcracker → click a highlighted tile to step onto it and grab gifts',
                                 },
                               ],
                               'type': 'game-hud',
@@ -2665,12 +2438,13 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                     },
                     'children': [
                       {
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@entity.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -2695,6 +2469,14 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Collect all the gifts',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the nutcracker → click a highlighted tile to step onto it and grab gifts',
                         },
                       ],
                       'type': 'game-hud',
@@ -2821,12 +2603,13 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                     },
                     'children': [
                       {
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@entity.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -2851,6 +2634,14 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Collect all the gifts',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the nutcracker → click a highlighted tile to step onto it and grab gifts',
                         },
                       ],
                       'type': 'game-hud',
@@ -3065,7 +2856,7 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                                     'object/get',
                                     [
                                       'array/find',
-                                      '@config.tiles',
+                                      '@entity.tiles',
                                       [
                                         'fn',
                                         't',
@@ -3263,12 +3054,13 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                               },
                               'children': [
                                 {
+                                  'cameraMode': 'top-down',
                                   'events': '@entity.fx',
                                   'features': '@entity.features',
                                   'scale': '@config.scale',
                                   'selectedUnitId': '@entity.selectedUnitId',
                                   'tileClickEvent': 'TILE_CLICK',
-                                  'tiles': '@config.tiles',
+                                  'tiles': '@entity.tiles',
                                   'type': 'game-canvas-3d',
                                   'unitClickEvent': 'UNIT_CLICK',
                                   'unitScale': '@config.unitScale',
@@ -3293,6 +3085,14 @@ export function stdUiHolidayBoard3dHolidayBoard3DOrbital(params: StdUiHolidayBoa
                                   {
                                     'label': 'Result',
                                     'value': '@entity.result',
+                                  },
+                                  {
+                                    'label': 'Goal',
+                                    'value': 'Collect all the gifts',
+                                  },
+                                  {
+                                    'label': 'How',
+                                    'value': 'Click the nutcracker → click a highlighted tile to step onto it and grab gifts',
                                   },
                                 ],
                                 'type': 'game-hud',

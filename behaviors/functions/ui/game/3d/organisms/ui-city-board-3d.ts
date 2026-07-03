@@ -38,6 +38,7 @@ export type StdUiCityBoard3dEventKey = 'CANCEL' | 'GAME_END' | 'INIT' | 'PLAY_AG
 export interface StdUiCityBoard3dTileClickPayload {
   x: number;
   z: number;
+  tileId?: string;
 }
 
 /**
@@ -45,6 +46,8 @@ export interface StdUiCityBoard3dTileClickPayload {
  */
 export interface StdUiCityBoard3dUnitClickPayload {
   unitId: string;
+  x?: number;
+  z?: number;
 }
 
 /**
@@ -75,24 +78,28 @@ export interface StdUiCityBoard3dPlayAgainPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCityBoard3dConfig {
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"building-a","dimension":"3d","name":"building-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/commercial"}` */
+  buildingAsset?: EntityRow;
   /** Default: `""` */
   className?: string;
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"road-crossroad","dimension":"3d","name":"road-crossroad","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/roads"}` */
+  crossroadAsset?: EntityRow;
   error?: EntityRow;
-  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-awning","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/detail-awning.glb"},"id":"f-shop1","type":"delivery_target","x":1,"y":1},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-awning-wide","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/detail-awning-wide.glb"},"id":"f-shop2","type":"delivery_target","x":4,"y":1},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-parasol-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/detail-parasol-a.glb"},"id":"f-shop3","type":"delivery_target","x":1,"y":4},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"sign-highway","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/features/sign-highway.glb"},"id":"f-sign","type":"signage","x":5,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"chimney-small","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/chimney-small.glb"},"id":"f-chimney","type":"industrial_detail","x":4,"y":4}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-awning","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/detail-awning.glb"},"id":"f-shop1","type":"delivery_target","x":1,"y":1},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-awning-wide","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/detail-awning-wide.glb"},"id":"f-shop2","type":"delivery_target","x":5,"y":5},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-parasol-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/detail-parasol-a.glb"},"id":"f-shop3","type":"delivery_target","x":9,"y":3},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-awning","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/detail-awning.glb"},"id":"f-shop4","type":"delivery_target","x":13,"y":9},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-awning-wide","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/detail-awning-wide.glb"},"id":"f-shop5","type":"delivery_target","x":3,"y":13},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"sign-highway","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/features/sign-highway.glb"},"id":"f-sign","type":"signage","x":10,"y":10},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"chimney-small","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/chimney-small.glb"},"id":"f-chimney","type":"industrial_detail","x":8,"y":8}]` */
   features?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `16` */
+  /** Default: `60` */
   moveBudget?: number;
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"road-straight","dimension":"3d","name":"road-straight","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/roads"}` */
+  roadAsset?: EntityRow;
   /** Default: `0.4` */
   scale?: number;
-  /** Default: `[{"delivered":false,"id":"shop1","x":1,"y":1},{"delivered":false,"id":"shop2","x":4,"y":1},{"delivered":false,"id":"shop3","x":1,"y":4}]` */
+  /** Default: `[{"delivered":false,"id":"shop1","x":1,"y":1},{"delivered":false,"id":"shop2","x":5,"y":5},{"delivered":false,"id":"shop3","x":9,"y":3},{"delivered":false,"id":"shop4","x":13,"y":9},{"delivered":false,"id":"shop5","x":3,"y":13}]` */
   targets?: EntityRow[];
-  /** Default: `[{"id":"t00","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-a.glb"},"passable":false,"terrain":"building","x":0,"y":0},{"id":"t10","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-b","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-b.glb"},"passable":false,"terrain":"building","x":1,"y":0},{"id":"t20","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"road-straight","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb"},"passable":true,"terrain":"road","x":2,"y":0},{"id":"t30","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"low-detail-building-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-a.glb"},"passable":false,"terrain":"building","x":3,"y":0},{"id":"t40","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"low-detail-building-c","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-c.glb"},"passable":false,"terrain":"building","x":4,"y":0},{"id":"t50","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-a.glb"},"passable":false,"terrain":"building","x":5,"y":0},{"id":"t01","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-b","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-b.glb"},"passable":false,"terrain":"building","x":0,"y":1},{"id":"t11","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-c","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-c.glb"},"passable":false,"terrain":"shop","x":1,"y":1},{"id":"t21","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"road-straight","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb"},"passable":true,"terrain":"road","x":2,"y":1},{"id":"t31","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"low-detail-building-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-a.glb"},"passable":false,"terrain":"building","x":3,"y":1},{"id":"t41","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-f","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-f.glb"},"passable":false,"terrain":"shop","x":4,"y":1},{"id":"t51","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"low-detail-building-c","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-c.glb"},"passable":false,"terrain":"building","x":5,"y":1},{"id":"t02","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"road-straight","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb"},"passable":true,"terrain":"road","x":0,"y":2},{"id":"t12","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"road-straight","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb"},"passable":true,"terrain":"road","x":1,"y":2},{"id":"t22","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"road-crossroad","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-crossroad.glb"},"passable":true,"terrain":"intersection","x":2,"y":2},{"id":"t32","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"road-straight","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb"},"passable":true,"terrain":"road","x":3,"y":2},{"id":"t42","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"road-straight","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb"},"passable":true,"terrain":"road","x":4,"y":2},{"id":"t52","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"road-straight","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb"},"passable":true,"terrain":"road","x":5,"y":2},{"id":"t03","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-a.glb"},"passable":false,"terrain":"building","x":0,"y":3},{"id":"t13","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-b","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-b.glb"},"passable":false,"terrain":"building","x":1,"y":3},{"id":"t23","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"road-straight","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb"},"passable":true,"terrain":"road","x":2,"y":3},{"id":"t33","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-a.glb"},"passable":false,"terrain":"industrial","x":3,"y":3},{"id":"t43","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-c","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-c.glb"},"passable":false,"terrain":"industrial","x":4,"y":3},{"id":"t53","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-e","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-e.glb"},"passable":false,"terrain":"industrial","x":5,"y":3},{"id":"t04","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"low-detail-building-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-a.glb"},"passable":false,"terrain":"building","x":0,"y":4},{"id":"t14","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-h","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-h.glb"},"passable":false,"terrain":"shop","x":1,"y":4},{"id":"t24","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"road-straight","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb"},"passable":true,"terrain":"road","x":2,"y":4},{"id":"t34","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-a.glb"},"passable":false,"terrain":"industrial","x":3,"y":4},{"id":"t44","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-c","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-c.glb"},"passable":false,"terrain":"industrial","x":4,"y":4},{"id":"t54","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-e","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-e.glb"},"passable":false,"terrain":"industrial","x":5,"y":4},{"id":"t05","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"low-detail-building-c","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-c.glb"},"passable":false,"terrain":"building","x":0,"y":5},{"id":"t15","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-a.glb"},"passable":false,"terrain":"building","x":1,"y":5},{"id":"t25","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"road-straight","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb"},"passable":true,"terrain":"road","x":2,"y":5},{"id":"t35","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-a","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-a.glb"},"passable":false,"terrain":"industrial","x":3,"y":5},{"id":"t45","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-c","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-c.glb"},"passable":false,"terrain":"industrial","x":4,"y":5},{"id":"t55","modelUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"building-e","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-e.glb"},"passable":false,"terrain":"industrial","x":5,"y":5}]` */
-  tiles?: EntityRow[];
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `[{"headingToB":false,"health":1,"id":"car1","maxHealth":1,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"units","dimension":"3d","name":"delivery","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-car-kit/units/delivery.glb"},"name":"Courier Car","position":{"x":2,"y":2},"routeA":{"x":2,"y":2},"routeB":{"x":2,"y":2},"team":"player","unitType":"courier"},{"headingToB":false,"health":1,"id":"npc-taxi","maxHealth":1,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"units","dimension":"3d","name":"taxi","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-car-kit/units/taxi.glb"},"name":"Taxi","position":{"x":2,"y":0},"routeA":{"x":2,"y":0},"routeB":{"x":2,"y":5},"team":"neutral","unitType":"traffic"},{"headingToB":false,"health":1,"id":"npc-tram","maxHealth":1,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"units","dimension":"3d","name":"train-tram-classic","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-train-kit/units/train-tram-classic.glb"},"name":"Tram","position":{"x":0,"y":2},"routeA":{"x":0,"y":2},"routeB":{"x":5,"y":2},"team":"neutral","unitType":"traffic"}]` */
+  /** Default: `[{"headingToB":false,"health":1,"id":"car1","maxHealth":1,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"units","dimension":"3d","name":"delivery","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-car-kit/units/delivery.glb"},"name":"Courier Car","position":{"x":2,"y":2},"routeA":{"x":2,"y":2},"routeB":{"x":2,"y":2},"team":"player","unitType":"courier"},{"headingToB":false,"health":1,"id":"npc-taxi","maxHealth":1,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"units","dimension":"3d","name":"taxi","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-car-kit/units/taxi.glb"},"name":"Taxi","position":{"x":6,"y":2},"routeA":{"x":6,"y":2},"routeB":{"x":6,"y":14},"team":"neutral","unitType":"traffic"},{"headingToB":false,"health":1,"id":"npc-tram","maxHealth":1,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"units","dimension":"3d","name":"train-tram-classic","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-train-kit/units/train-tram-classic.glb"},"name":"Tram","position":{"x":2,"y":6},"routeA":{"x":2,"y":6},"routeB":{"x":14,"y":6},"team":"neutral","unitType":"traffic"}]` */
   units?: EntityRow[];
 }
 
@@ -428,7 +435,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
             'type': 'number',
           },
           {
-            'default': 3,
+            'default': 5,
             'name': 'totalTargets',
             'type': 'number',
           },
@@ -448,12 +455,12 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
             ],
           },
           {
-            'default': 6,
+            'default': 16,
             'name': 'gridWidth',
             'type': 'number',
           },
           {
-            'default': 6,
+            'default': 16,
             'name': 'gridHeight',
             'type': 'number',
           },
@@ -461,6 +468,96 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
             'default': 1,
             'name': 'movementRange',
             'type': 'number',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'modelUrl': {
+                  'name': 'modelUrl',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
+                'passable': {
+                  'name': 'passable',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'terrain': {
+                  'name': 'terrain',
+                  'required': false,
+                  'type': 'string',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'tiles',
+            'type': 'array',
           },
         ];
         const extras = params.fields ?? [];
@@ -473,12 +570,150 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
       rebindInlineTraitEntity({
         'category': 'interaction',
         'config': {
+          'buildingAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'building-a',
+              'dimension': '3d',
+              'name': 'building-a',
+              'role': 'decoration',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/commercial',
+            },
+            'description': 'Impassable city block filling the space between roads.',
+            'label': 'Building Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
           'className': {
             'default': '',
             'description': 'className prop',
             'label': 'Class Name',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'crossroadAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'road-crossroad',
+              'dimension': '3d',
+              'name': 'road-crossroad',
+              'role': 'tile',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/roads',
+            },
+            'description': 'Four-way intersection tile at road crossings.',
+            'label': 'Crossroad Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
           },
           'error': {
             'description': 'Error state (UiError)',
@@ -545,8 +780,8 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                 },
                 'id': 'f-shop2',
                 'type': 'delivery_target',
-                'x': 4,
-                'y': 1,
+                'x': 5,
+                'y': 5,
               },
               {
                 'assetUrl': {
@@ -564,8 +799,46 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                 },
                 'id': 'f-shop3',
                 'type': 'delivery_target',
-                'x': 1,
-                'y': 4,
+                'x': 9,
+                'y': 3,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'features',
+                  'dimension': '3d',
+                  'name': 'detail-awning',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/detail-awning.glb',
+                },
+                'id': 'f-shop4',
+                'type': 'delivery_target',
+                'x': 13,
+                'y': 9,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'features',
+                  'dimension': '3d',
+                  'name': 'detail-awning-wide',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/detail-awning-wide.glb',
+                },
+                'id': 'f-shop5',
+                'type': 'delivery_target',
+                'x': 3,
+                'y': 13,
               },
               {
                 'assetUrl': {
@@ -583,8 +856,8 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                 },
                 'id': 'f-sign',
                 'type': 'signage',
-                'x': 5,
-                'y': 2,
+                'x': 10,
+                'y': 10,
               },
               {
                 'assetUrl': {
@@ -602,8 +875,8 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                 },
                 'id': 'f-chimney',
                 'type': 'industrial_detail',
-                'x': 4,
-                'y': 4,
+                'x': 8,
+                'y': 8,
               },
             ],
             'description': 'Delivery markers, signage and industrial decoration.',
@@ -699,11 +972,80 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
             'type': 'boolean',
           },
           'moveBudget': {
-            'default': 16,
+            'default': 60,
             'description': 'Delivery moves allowed before the run is lost with shops unfilled',
             'label': 'Move Budget',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'roadAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'road-straight',
+              'dimension': '3d',
+              'name': 'road-straight',
+              'role': 'tile',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/roads',
+            },
+            'description': 'Straight road tile, tiled along the grid network.',
+            'label': 'Road Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
           },
           'scale': {
             'default': 0.4,
@@ -723,14 +1065,26 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
               {
                 'delivered': false,
                 'id': 'shop2',
-                'x': 4,
-                'y': 1,
+                'x': 5,
+                'y': 5,
               },
               {
                 'delivered': false,
                 'id': 'shop3',
-                'x': 1,
-                'y': 4,
+                'x': 9,
+                'y': 3,
+              },
+              {
+                'delivered': false,
+                'id': 'shop4',
+                'x': 13,
+                'y': 9,
+              },
+              {
+                'delivered': false,
+                'id': 'shop5',
+                'x': 3,
+                'y': 13,
               },
             ],
             'description': 'The 3 shop cells the courier must reach.',
@@ -762,819 +1116,6 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
             'label': 'Delivery Targets',
             'tier': 'presentation',
             'type': '[CityBoard3DTargetsItem]',
-          },
-          'tiles': {
-            'default': [
-              {
-                'id': 't00',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-a',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-a.glb',
-                },
-                'passable': false,
-                'terrain': 'building',
-                'x': 0,
-                'y': 0,
-              },
-              {
-                'id': 't10',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-b',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-b.glb',
-                },
-                'passable': false,
-                'terrain': 'building',
-                'x': 1,
-                'y': 0,
-              },
-              {
-                'id': 't20',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'road-straight',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb',
-                },
-                'passable': true,
-                'terrain': 'road',
-                'x': 2,
-                'y': 0,
-              },
-              {
-                'id': 't30',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'low-detail-building-a',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-a.glb',
-                },
-                'passable': false,
-                'terrain': 'building',
-                'x': 3,
-                'y': 0,
-              },
-              {
-                'id': 't40',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'low-detail-building-c',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-c.glb',
-                },
-                'passable': false,
-                'terrain': 'building',
-                'x': 4,
-                'y': 0,
-              },
-              {
-                'id': 't50',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-a',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-a.glb',
-                },
-                'passable': false,
-                'terrain': 'building',
-                'x': 5,
-                'y': 0,
-              },
-              {
-                'id': 't01',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-b',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-b.glb',
-                },
-                'passable': false,
-                'terrain': 'building',
-                'x': 0,
-                'y': 1,
-              },
-              {
-                'id': 't11',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-c',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-c.glb',
-                },
-                'passable': false,
-                'terrain': 'shop',
-                'x': 1,
-                'y': 1,
-              },
-              {
-                'id': 't21',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'road-straight',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb',
-                },
-                'passable': true,
-                'terrain': 'road',
-                'x': 2,
-                'y': 1,
-              },
-              {
-                'id': 't31',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'low-detail-building-a',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-a.glb',
-                },
-                'passable': false,
-                'terrain': 'building',
-                'x': 3,
-                'y': 1,
-              },
-              {
-                'id': 't41',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-f',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-f.glb',
-                },
-                'passable': false,
-                'terrain': 'shop',
-                'x': 4,
-                'y': 1,
-              },
-              {
-                'id': 't51',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'low-detail-building-c',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-c.glb',
-                },
-                'passable': false,
-                'terrain': 'building',
-                'x': 5,
-                'y': 1,
-              },
-              {
-                'id': 't02',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'road-straight',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb',
-                },
-                'passable': true,
-                'terrain': 'road',
-                'x': 0,
-                'y': 2,
-              },
-              {
-                'id': 't12',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'road-straight',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb',
-                },
-                'passable': true,
-                'terrain': 'road',
-                'x': 1,
-                'y': 2,
-              },
-              {
-                'id': 't22',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'road-crossroad',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-crossroad.glb',
-                },
-                'passable': true,
-                'terrain': 'intersection',
-                'x': 2,
-                'y': 2,
-              },
-              {
-                'id': 't32',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'road-straight',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb',
-                },
-                'passable': true,
-                'terrain': 'road',
-                'x': 3,
-                'y': 2,
-              },
-              {
-                'id': 't42',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'road-straight',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb',
-                },
-                'passable': true,
-                'terrain': 'road',
-                'x': 4,
-                'y': 2,
-              },
-              {
-                'id': 't52',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'road-straight',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb',
-                },
-                'passable': true,
-                'terrain': 'road',
-                'x': 5,
-                'y': 2,
-              },
-              {
-                'id': 't03',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-a',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-a.glb',
-                },
-                'passable': false,
-                'terrain': 'building',
-                'x': 0,
-                'y': 3,
-              },
-              {
-                'id': 't13',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-b',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-b.glb',
-                },
-                'passable': false,
-                'terrain': 'building',
-                'x': 1,
-                'y': 3,
-              },
-              {
-                'id': 't23',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'road-straight',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb',
-                },
-                'passable': true,
-                'terrain': 'road',
-                'x': 2,
-                'y': 3,
-              },
-              {
-                'id': 't33',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-a',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-a.glb',
-                },
-                'passable': false,
-                'terrain': 'industrial',
-                'x': 3,
-                'y': 3,
-              },
-              {
-                'id': 't43',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-c',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-c.glb',
-                },
-                'passable': false,
-                'terrain': 'industrial',
-                'x': 4,
-                'y': 3,
-              },
-              {
-                'id': 't53',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-e',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-e.glb',
-                },
-                'passable': false,
-                'terrain': 'industrial',
-                'x': 5,
-                'y': 3,
-              },
-              {
-                'id': 't04',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'low-detail-building-a',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-a.glb',
-                },
-                'passable': false,
-                'terrain': 'building',
-                'x': 0,
-                'y': 4,
-              },
-              {
-                'id': 't14',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-h',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-h.glb',
-                },
-                'passable': false,
-                'terrain': 'shop',
-                'x': 1,
-                'y': 4,
-              },
-              {
-                'id': 't24',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'road-straight',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb',
-                },
-                'passable': true,
-                'terrain': 'road',
-                'x': 2,
-                'y': 4,
-              },
-              {
-                'id': 't34',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-a',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-a.glb',
-                },
-                'passable': false,
-                'terrain': 'industrial',
-                'x': 3,
-                'y': 4,
-              },
-              {
-                'id': 't44',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-c',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-c.glb',
-                },
-                'passable': false,
-                'terrain': 'industrial',
-                'x': 4,
-                'y': 4,
-              },
-              {
-                'id': 't54',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-e',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-e.glb',
-                },
-                'passable': false,
-                'terrain': 'industrial',
-                'x': 5,
-                'y': 4,
-              },
-              {
-                'id': 't05',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'low-detail-building-c',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/low-detail-building-c.glb',
-                },
-                'passable': false,
-                'terrain': 'building',
-                'x': 0,
-                'y': 5,
-              },
-              {
-                'id': 't15',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-a',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-commercial/features/building-a.glb',
-                },
-                'passable': false,
-                'terrain': 'building',
-                'x': 1,
-                'y': 5,
-              },
-              {
-                'id': 't25',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'road-straight',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-roads/terrain/road-straight.glb',
-                },
-                'passable': true,
-                'terrain': 'road',
-                'x': 2,
-                'y': 5,
-              },
-              {
-                'id': 't35',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-a',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-a.glb',
-                },
-                'passable': false,
-                'terrain': 'industrial',
-                'x': 3,
-                'y': 5,
-              },
-              {
-                'id': 't45',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-c',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-c.glb',
-                },
-                'passable': false,
-                'terrain': 'industrial',
-                'x': 4,
-                'y': 5,
-              },
-              {
-                'id': 't55',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'features',
-                  'dimension': '3d',
-                  'name': 'building-e',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-city-board-3d/kenney-city-kit-industrial/features/building-e.glb',
-                },
-                'passable': false,
-                'terrain': 'industrial',
-                'x': 5,
-                'y': 5,
-              },
-            ],
-            'description': '6x6 city grid — roads passable, building lots impassable.',
-            'items': {
-              'properties': {
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'passable': {
-                  'name': 'passable',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'terrain': {
-                  'name': 'terrain',
-                  'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Tiles',
-            'tier': 'presentation',
-            'type': '[CityBoard3DTilesItem]',
           },
           'unitScale': {
             'default': 1,
@@ -1639,16 +1180,16 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                 },
                 'name': 'Taxi',
                 'position': {
-                  'x': 2,
-                  'y': 0,
+                  'x': 6,
+                  'y': 2,
                 },
                 'routeA': {
-                  'x': 2,
-                  'y': 0,
+                  'x': 6,
+                  'y': 2,
                 },
                 'routeB': {
-                  'x': 2,
-                  'y': 5,
+                  'x': 6,
+                  'y': 14,
                 },
                 'team': 'neutral',
                 'unitType': 'traffic',
@@ -1673,16 +1214,16 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                 },
                 'name': 'Tram',
                 'position': {
-                  'x': 0,
-                  'y': 2,
+                  'x': 2,
+                  'y': 6,
                 },
                 'routeA': {
-                  'x': 0,
-                  'y': 2,
+                  'x': 2,
+                  'y': 6,
                 },
                 'routeB': {
-                  'x': 5,
-                  'y': 2,
+                  'x': 14,
+                  'y': 6,
                 },
                 'team': 'neutral',
                 'unitType': 'traffic',
@@ -1859,6 +1400,10 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                 'required': true,
                 'type': 'number',
               },
+              {
+                'name': 'tileId',
+                'type': 'string',
+              },
             ],
             'scope': 'external',
             'tier': 'domain',
@@ -1871,6 +1416,14 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                 'name': 'unitId',
                 'required': true,
                 'type': 'string',
+              },
+              {
+                'name': 'x',
+                'type': 'number',
+              },
+              {
+                'name': 'z',
+                'type': 'number',
               },
             ],
             'scope': 'external',
@@ -1925,6 +1478,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
             'result',
             'selectedUnitId',
             'targets',
+            'tiles',
             'totalTargets',
             'units',
             'validMoves',
@@ -1951,6 +1505,14 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                   'required': true,
                   'type': 'string',
                 },
+                {
+                  'name': 'x',
+                  'type': 'number',
+                },
+                {
+                  'name': 'z',
+                  'type': 'number',
+                },
               ],
               'tier': 'domain',
             },
@@ -1968,6 +1530,10 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                   'name': 'z',
                   'required': true,
                   'type': 'number',
+                },
+                {
+                  'name': 'tileId',
+                  'type': 'string',
                 },
               ],
               'tier': 'domain',
@@ -2059,7 +1625,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                 [
                   'set',
                   '@entity.totalTargets',
-                  3,
+                  5,
                 ],
                 [
                   'set',
@@ -2074,17 +1640,132 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                 [
                   'set',
                   '@entity.gridWidth',
-                  6,
+                  16,
                 ],
                 [
                   'set',
                   '@entity.gridHeight',
-                  6,
+                  16,
                 ],
                 [
                   'set',
                   '@entity.movementRange',
                   1,
+                ],
+                [
+                  'set',
+                  '@entity.tiles',
+                  [
+                    'array/flatten',
+                    [
+                      'array/map',
+                      [
+                        'array/range',
+                        0,
+                        16,
+                      ],
+                      [
+                        'fn',
+                        'gy',
+                        [
+                          'array/map',
+                          [
+                            'array/range',
+                            0,
+                            16,
+                          ],
+                          [
+                            'fn',
+                            'gx',
+                            [
+                              'let',
+                              [
+                                [
+                                  'rc',
+                                  [
+                                    '==',
+                                    [
+                                      'math/mod',
+                                      '@gx',
+                                      4,
+                                    ],
+                                    2,
+                                  ],
+                                ],
+                                [
+                                  'rr',
+                                  [
+                                    '==',
+                                    [
+                                      'math/mod',
+                                      '@gy',
+                                      4,
+                                    ],
+                                    2,
+                                  ],
+                                ],
+                              ],
+                              [
+                                'let',
+                                [
+                                  [
+                                    'road',
+                                    [
+                                      'or',
+                                      '@rc',
+                                      '@rr',
+                                    ],
+                                  ],
+                                  [
+                                    'cross',
+                                    [
+                                      'and',
+                                      '@rc',
+                                      '@rr',
+                                    ],
+                                  ],
+                                ],
+                                {
+                                  'id': [
+                                    'str/concat',
+                                    't-',
+                                    '@gx',
+                                    '-',
+                                    '@gy',
+                                  ],
+                                  'modelUrl': [
+                                    'if',
+                                    '@cross',
+                                    '@config.crossroadAsset',
+                                    [
+                                      'if',
+                                      '@road',
+                                      '@config.roadAsset',
+                                      '@config.buildingAsset',
+                                    ],
+                                  ],
+                                  'passable': '@road',
+                                  'terrain': [
+                                    'if',
+                                    '@road',
+                                    [
+                                      'if',
+                                      '@cross',
+                                      'intersection',
+                                      'road',
+                                    ],
+                                    'building',
+                                  ],
+                                  'x': '@gx',
+                                  'y': '@gy',
+                                },
+                              ],
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
                 ],
                 [
                   'render-ui',
@@ -2112,13 +1793,16 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
-                        'tiles': '@config.tiles',
+                        'tileClickEvent': 'TILE_CLICK',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
                         'units': '@entity.units',
                         'validMoves': '@entity.validMoves',
@@ -2137,6 +1821,14 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Deliver to all 5 shops before moves run out',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the courier → click an adjacent road to drive; deliver when next to a shop',
                         },
                       ],
                       'type': 'game-hud',
@@ -2187,13 +1879,16 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
-                        'tiles': '@config.tiles',
+                        'tileClickEvent': 'TILE_CLICK',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
                         'units': '@entity.units',
                         'validMoves': '@entity.validMoves',
@@ -2212,6 +1907,14 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Deliver to all 5 shops before moves run out',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the courier → click an adjacent road to drive; deliver when next to a shop',
                         },
                       ],
                       'type': 'game-hud',
@@ -2243,7 +1946,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                     'array/map',
                     [
                       'array/filter',
-                      '@config.tiles',
+                      '@entity.tiles',
                       [
                         'fn',
                         't',
@@ -2396,13 +2099,16 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
-                        'tiles': '@config.tiles',
+                        'tileClickEvent': 'TILE_CLICK',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
                         'units': '@entity.units',
                         'validMoves': '@entity.validMoves',
@@ -2421,6 +2127,14 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Deliver to all 5 shops before moves run out',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the courier → click an adjacent road to drive; deliver when next to a shop',
                         },
                       ],
                       'type': 'game-hud',
@@ -2784,13 +2498,16 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
-                        'tiles': '@config.tiles',
+                        'tileClickEvent': 'TILE_CLICK',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
                         'units': '@entity.units',
                         'validMoves': '@entity.validMoves',
@@ -2809,6 +2526,14 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Deliver to all 5 shops before moves run out',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the courier → click an adjacent road to drive; deliver when next to a shop',
                         },
                       ],
                       'type': 'game-hud',
@@ -2875,7 +2600,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                           'object/get',
                           [
                             'array/find',
-                            '@config.tiles',
+                            '@entity.tiles',
                             [
                               'fn',
                               't',
@@ -2994,13 +2719,16 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
-                        'tiles': '@config.tiles',
+                        'tileClickEvent': 'TILE_CLICK',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
                         'units': '@entity.units',
                         'validMoves': '@entity.validMoves',
@@ -3019,6 +2747,14 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Deliver to all 5 shops before moves run out',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the courier → click an adjacent road to drive; deliver when next to a shop',
                         },
                       ],
                       'type': 'game-hud',
@@ -3074,13 +2810,16 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
-                        'tiles': '@config.tiles',
+                        'tileClickEvent': 'TILE_CLICK',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
                         'units': '@entity.units',
                         'validMoves': '@entity.validMoves',
@@ -3099,6 +2838,14 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Deliver to all 5 shops before moves run out',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the courier → click an adjacent road to drive; deliver when next to a shop',
                         },
                       ],
                       'type': 'game-hud',
@@ -3212,13 +2959,16 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
-                        'tiles': '@config.tiles',
+                        'tileClickEvent': 'TILE_CLICK',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
                         'units': '@entity.units',
                         'validMoves': '@entity.validMoves',
@@ -3237,6 +2987,14 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Deliver to all 5 shops before moves run out',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the courier → click an adjacent road to drive; deliver when next to a shop',
                         },
                       ],
                       'type': 'game-hud',
@@ -3494,7 +3252,7 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                                       'ntile',
                                       [
                                         'array/find',
-                                        '@config.tiles',
+                                        '@entity.tiles',
                                         [
                                           'fn',
                                           't',
@@ -3667,13 +3425,16 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                   'children': [
                     {
                       'attackTargets': '@entity.attackTargets',
+                      'cameraMode': 'top-down',
                       'events': '@entity.fx',
                       'features': '@config.features',
                       'interpolateUnits': true,
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
-                      'tiles': '@config.tiles',
+                      'tileClickEvent': 'TILE_CLICK',
+                      'tiles': '@entity.tiles',
                       'type': 'game-canvas-3d',
+                      'unitClickEvent': 'UNIT_CLICK',
                       'unitScale': '@config.unitScale',
                       'units': '@entity.units',
                       'validMoves': '@entity.validMoves',
@@ -3692,6 +3453,14 @@ export function stdUiCityBoard3dCityBoard3DOrbital(params: StdUiCityBoard3dCityB
                       {
                         'label': 'Result',
                         'value': '@entity.result',
+                      },
+                      {
+                        'label': 'Goal',
+                        'value': 'Deliver to all 5 shops before moves run out',
+                      },
+                      {
+                        'label': 'How',
+                        'value': 'Click the courier → click an adjacent road to drive; deliver when next to a shop',
                       },
                     ],
                     'type': 'game-hud',

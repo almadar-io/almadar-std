@@ -132,8 +132,8 @@ export interface StdUiGameCanvas3dConfig {
   attackTargets?: EntityRow[];
   /** Default: `"#1a1a2e"` */
   backgroundColor?: string;
-  /** Default: `"pan-zoom"` */
-  cameraMode?: 'pan-zoom' | 'follow' | 'fixed';
+  /** Default: `"isometric"` */
+  cameraMode?: 'isometric' | 'perspective' | 'top-down' | 'follow' | 'chase';
   /** Default: `""` */
   className?: string;
   /** Default: `""` */

@@ -14,28 +14,18 @@
             "required": false
           },
           {
-            "name": "features",
-            "type": "array",
-            "required": false
-          },
-          {
             "name": "selectedUnitId",
             "type": "string",
             "required": false
           },
           {
-            "name": "playerProgress",
-            "type": "number",
+            "name": "phase",
+            "type": "string",
             "required": false
           },
           {
-            "name": "rivalProgress",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "trackLength",
-            "type": "number",
+            "name": "result",
+            "type": "string",
             "required": false
           },
           {
@@ -44,18 +34,63 @@
             "required": false
           },
           {
-            "name": "score",
+            "name": "checkpoint",
             "type": "number",
             "required": false
           },
           {
-            "name": "canAdvance",
+            "name": "carX",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "carY",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "heading",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "speed",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "steer",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "accelerating",
             "type": "boolean",
             "required": false
           },
           {
-            "name": "result",
-            "type": "string",
+            "name": "braking",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "rivalCarX",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "rivalCarY",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "rivalCheckpoint",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "rivalLap",
+            "type": "number",
             "required": false
           },
           {
@@ -66,6 +101,11 @@
           {
             "name": "gridHeight",
             "type": "number",
+            "required": false
+          },
+          {
+            "name": "tiles",
+            "type": "array",
             "required": false
           },
           {
@@ -81,16 +121,58 @@
       {
         "name": "ToyTrackBoard3DRender",
         "emittedEvents": [
-          "ACCELERATE",
+          "THROTTLE_ON",
+          "THROTTLE_OFF",
+          "BRAKE_ON",
+          "BRAKE_OFF",
+          "STEER_LEFT",
+          "STEER_RIGHT",
+          "STEER_STOP",
           "GAME_END",
           "PLAY_AGAIN"
         ],
         "listenedEvents": [],
         "events": [
           {
-            "name": "ACCELERATE",
+            "name": "THROTTLE_ON",
             "direction": "emit",
-            "description": "Accelerate intent (keyboard keyMap or d-pad directionEvents) — advances one track cell when paced, collecting a coin if present",
+            "description": "Throttle held down (keyboard keyUp/Down or d-pad press/release)",
+            "tier": "domain"
+          },
+          {
+            "name": "THROTTLE_OFF",
+            "direction": "emit",
+            "description": "Throttle released — car coasts",
+            "tier": "domain"
+          },
+          {
+            "name": "BRAKE_ON",
+            "direction": "emit",
+            "description": "Brake held down",
+            "tier": "domain"
+          },
+          {
+            "name": "BRAKE_OFF",
+            "direction": "emit",
+            "description": "Brake released",
+            "tier": "domain"
+          },
+          {
+            "name": "STEER_LEFT",
+            "direction": "emit",
+            "description": "Steer left held",
+            "tier": "domain"
+          },
+          {
+            "name": "STEER_RIGHT",
+            "direction": "emit",
+            "description": "Steer right held",
+            "tier": "domain"
+          },
+          {
+            "name": "STEER_STOP",
+            "direction": "emit",
+            "description": "Steering released — wheels straighten",
             "tier": "domain"
           },
           {
@@ -112,11 +194,104 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "accel",
+            "type": "number",
+            "default": 0.05,
+            "label": "Acceleration",
+            "description": "Speed gained per tick while the throttle is held",
+            "tier": "presentation"
+          },
+          {
+            "key": "brakeDecel",
+            "type": "number",
+            "default": 0.08,
+            "label": "Brake Deceleration",
+            "description": "Speed lost per tick while braking",
+            "tier": "presentation"
+          },
+          {
+            "key": "checkpoints",
+            "type": "[ToyTrackBoard3DCheckpointItem]",
+            "default": [
+              {
+                "order": 0,
+                "x": 17,
+                "y": 10
+              },
+              {
+                "order": 1,
+                "x": 15,
+                "y": 14
+              },
+              {
+                "order": 2,
+                "x": 10,
+                "y": 15
+              },
+              {
+                "order": 3,
+                "x": 5,
+                "y": 14
+              },
+              {
+                "order": 4,
+                "x": 3,
+                "y": 10
+              },
+              {
+                "order": 5,
+                "x": 5,
+                "y": 6
+              },
+              {
+                "order": 6,
+                "x": 10,
+                "y": 5
+              },
+              {
+                "order": 7,
+                "x": 15,
+                "y": 6
+              }
+            ],
+            "label": "Checkpoints",
+            "description": "8 gates around the oval, passed in order; a full lap = passing all 8.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "order": {
+                  "name": "order",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "className",
             "type": "string",
             "default": "",
             "label": "Class Name",
             "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "cpRadiusSq",
+            "type": "number",
+            "default": 6.25,
+            "label": "Checkpoint Radius Squared",
+            "description": "Squared grid distance within which a checkpoint counts as passed",
             "tier": "presentation"
           },
           {
@@ -168,8 +343,8 @@
                 },
                 "id": "f-finish",
                 "type": "finish_gate",
-                "x": 2,
-                "y": 0
+                "x": 17,
+                "y": 10
               },
               {
                 "assetUrl": {
@@ -188,7 +363,7 @@
                 "id": "f-halfway",
                 "type": "gate",
                 "x": 3,
-                "y": 5
+                "y": 10
               },
               {
                 "assetUrl": {
@@ -206,8 +381,8 @@
                 },
                 "id": "f-tree1",
                 "type": "tree",
-                "x": 1,
-                "y": 1
+                "x": 10,
+                "y": 17
               },
               {
                 "assetUrl": {
@@ -225,8 +400,8 @@
                 },
                 "id": "f-tree2",
                 "type": "tree",
-                "x": 4,
-                "y": 1
+                "x": 10,
+                "y": 3
               },
               {
                 "assetUrl": {
@@ -244,8 +419,8 @@
                 },
                 "id": "f-tree3",
                 "type": "tree",
-                "x": 2,
-                "y": 2
+                "x": 15,
+                "y": 17
               },
               {
                 "assetUrl": {
@@ -263,8 +438,8 @@
                 },
                 "id": "f-bench",
                 "type": "bench",
-                "x": 3,
-                "y": 2
+                "x": 9,
+                "y": 10
               },
               {
                 "assetUrl": {
@@ -282,27 +457,8 @@
                 },
                 "id": "f-support1",
                 "type": "support",
-                "x": 1,
-                "y": 3
-              },
-              {
-                "assetUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "features",
-                  "dimension": "3d",
-                  "name": "item-coin-gold",
-                  "role": "item",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/item-coin-gold.glb"
-                },
-                "id": "f-coin1",
-                "type": "coin",
-                "x": 5,
-                "y": 2
+                "x": 12,
+                "y": 10
               },
               {
                 "assetUrl": {
@@ -320,8 +476,27 @@
                 },
                 "id": "f-support2",
                 "type": "support",
-                "x": 3,
-                "y": 3
+                "x": 10,
+                "y": 8
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "features",
+                  "dimension": "3d",
+                  "name": "item-coin-gold",
+                  "role": "item",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/item-coin-gold.glb"
+                },
+                "id": "f-coin1",
+                "type": "coin",
+                "x": 10,
+                "y": 12
               },
               {
                 "assetUrl": {
@@ -339,8 +514,8 @@
                 },
                 "id": "f-box",
                 "type": "item",
-                "x": 4,
-                "y": 3
+                "x": 8,
+                "y": 9
               },
               {
                 "assetUrl": {
@@ -358,8 +533,8 @@
                 },
                 "id": "f-cone",
                 "type": "cone",
-                "x": 1,
-                "y": 4
+                "x": 12,
+                "y": 12
               },
               {
                 "assetUrl": {
@@ -377,12 +552,12 @@
                 },
                 "id": "f-coin2",
                 "type": "coin",
-                "x": 0,
-                "y": 3
+                "x": 5,
+                "y": 17
               }
             ],
             "label": "Features",
-            "description": "Finish gate, halfway gate, on-track coins (collectible), and infield scenery.",
+            "description": "Finish gate on the line, halfway gate across the oval, scenery trees/bench/supports outside and inside the loop, and decorative coins/items in the infield.",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -400,11 +575,6 @@
                     },
                     "aspect": {
                       "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
                       "required": false,
                       "type": "string"
                     },
@@ -428,11 +598,6 @@
                       "required": false,
                       "type": "string"
                     },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
                     "style": {
                       "name": "style",
                       "required": false,
@@ -445,11 +610,6 @@
                     },
                     "url": {
                       "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -481,12 +641,176 @@
             }
           },
           {
+            "key": "friction",
+            "type": "number",
+            "default": 0.94,
+            "label": "Friction",
+            "description": "Speed multiplier per tick while coasting",
+            "tier": "presentation"
+          },
+          {
+            "key": "grassAsset",
+            "type": "Asset",
+            "default": {
+              "animations": [
+                "static"
+              ],
+              "aspect": "1:1",
+              "category": "grass",
+              "dimension": "3d",
+              "name": "grass",
+              "role": "decoration",
+              "style": "lowpoly-flat",
+              "thumbnailUrl": "",
+              "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-coaster-kit/features/grass.glb"
+            },
+            "label": "Grass Asset",
+            "description": "Off-track infield/verge tile model",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
             "key": "isLoading",
             "type": "boolean",
             "default": false,
             "label": "Is Loading",
             "description": "Loading state indicator",
             "tier": "presentation"
+          },
+          {
+            "key": "maxSpeed",
+            "type": "number",
+            "default": 0.4,
+            "label": "Max Speed",
+            "description": "Top speed in grid cells per physics tick",
+            "tier": "presentation"
+          },
+          {
+            "key": "rivalSpeed",
+            "type": "number",
+            "default": 0.22,
+            "label": "Rival Speed",
+            "description": "Rival car speed in grid cells per rival tick",
+            "tier": "presentation"
+          },
+          {
+            "key": "roadAsset",
+            "type": "Asset",
+            "default": {
+              "animations": [
+                "static"
+              ],
+              "aspect": "1:1",
+              "category": "terrain",
+              "dimension": "3d",
+              "name": "track-striped-narrow-straight",
+              "role": "tile",
+              "style": "lowpoly-flat",
+              "thumbnailUrl": "",
+              "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
+            },
+            "label": "Road Asset",
+            "description": "Track tile model, tiled along the oval band",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
           },
           {
             "key": "scale",
@@ -497,673 +821,19 @@
             "tier": "presentation"
           },
           {
-            "key": "tiles",
-            "type": "[ToyTrackBoard3DTilesItem]",
-            "default": [
-              {
-                "id": "t20",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 0,
-                "passable": true,
-                "terrain": "track",
-                "x": 2,
-                "y": 0
-              },
-              {
-                "id": "t30",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 1,
-                "passable": true,
-                "terrain": "track",
-                "x": 3,
-                "y": 0
-              },
-              {
-                "id": "t40",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 2,
-                "passable": true,
-                "terrain": "track",
-                "x": 4,
-                "y": 0
-              },
-              {
-                "id": "t50",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-corner-small",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-corner-small.glb"
-                },
-                "order": 3,
-                "passable": true,
-                "terrain": "track",
-                "x": 5,
-                "y": 0
-              },
-              {
-                "id": "t51",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 4,
-                "passable": true,
-                "terrain": "track",
-                "x": 5,
-                "y": 1
-              },
-              {
-                "id": "t52",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 5,
-                "passable": true,
-                "terrain": "track",
-                "x": 5,
-                "y": 2
-              },
-              {
-                "id": "t53",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 6,
-                "passable": true,
-                "terrain": "track",
-                "x": 5,
-                "y": 3
-              },
-              {
-                "id": "t54",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 7,
-                "passable": true,
-                "terrain": "track",
-                "x": 5,
-                "y": 4
-              },
-              {
-                "id": "t55",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-corner-small",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-corner-small.glb"
-                },
-                "order": 8,
-                "passable": true,
-                "terrain": "track",
-                "x": 5,
-                "y": 5
-              },
-              {
-                "id": "t45",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 9,
-                "passable": true,
-                "terrain": "track",
-                "x": 4,
-                "y": 5
-              },
-              {
-                "id": "t35",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 10,
-                "passable": true,
-                "terrain": "track",
-                "x": 3,
-                "y": 5
-              },
-              {
-                "id": "t25",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 11,
-                "passable": true,
-                "terrain": "track",
-                "x": 2,
-                "y": 5
-              },
-              {
-                "id": "t15",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 12,
-                "passable": true,
-                "terrain": "track",
-                "x": 1,
-                "y": 5
-              },
-              {
-                "id": "t05",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-corner-small",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-corner-small.glb"
-                },
-                "order": 13,
-                "passable": true,
-                "terrain": "track",
-                "x": 0,
-                "y": 5
-              },
-              {
-                "id": "t04",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 14,
-                "passable": true,
-                "terrain": "track",
-                "x": 0,
-                "y": 4
-              },
-              {
-                "id": "t03",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 15,
-                "passable": true,
-                "terrain": "track",
-                "x": 0,
-                "y": 3
-              },
-              {
-                "id": "t02",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 16,
-                "passable": true,
-                "terrain": "track",
-                "x": 0,
-                "y": 2
-              },
-              {
-                "id": "t01",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 17,
-                "passable": true,
-                "terrain": "track",
-                "x": 0,
-                "y": 1
-              },
-              {
-                "id": "t00",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-corner-small",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-corner-small.glb"
-                },
-                "order": 18,
-                "passable": true,
-                "terrain": "track",
-                "x": 0,
-                "y": 0
-              },
-              {
-                "id": "t10",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "terrain",
-                  "dimension": "3d",
-                  "name": "track-striped-narrow-straight",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb"
-                },
-                "order": 19,
-                "passable": true,
-                "terrain": "track",
-                "x": 1,
-                "y": 0
-              },
-              {
-                "id": "t11",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 1,
-                "y": 1
-              },
-              {
-                "id": "t21",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 2,
-                "y": 1
-              },
-              {
-                "id": "t31",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 3,
-                "y": 1
-              },
-              {
-                "id": "t41",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 4,
-                "y": 1
-              },
-              {
-                "id": "t12",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 1,
-                "y": 2
-              },
-              {
-                "id": "t22",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 2,
-                "y": 2
-              },
-              {
-                "id": "t32",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 3,
-                "y": 2
-              },
-              {
-                "id": "t42",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 4,
-                "y": 2
-              },
-              {
-                "id": "t13",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 1,
-                "y": 3
-              },
-              {
-                "id": "t23",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 2,
-                "y": 3
-              },
-              {
-                "id": "t33",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 3,
-                "y": 3
-              },
-              {
-                "id": "t43",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 4,
-                "y": 3
-              },
-              {
-                "id": "t14",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 1,
-                "y": 4
-              },
-              {
-                "id": "t24",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 2,
-                "y": 4
-              },
-              {
-                "id": "t34",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 3,
-                "y": 4
-              },
-              {
-                "id": "t44",
-                "order": -1,
-                "passable": false,
-                "terrain": "infield",
-                "x": 4,
-                "y": 4
-              }
-            ],
-            "label": "Tiles",
-            "description": "6x6 track loop — 20 outer track cells (order 0-19) plus 16 impassable infield cells.",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "order": {
-                  "name": "order",
-                  "required": false,
-                  "type": "number"
-                },
-                "passable": {
-                  "name": "passable",
-                  "required": false,
-                  "type": "boolean"
-                },
-                "terrain": {
-                  "name": "terrain",
-                  "required": false,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
-          },
-          {
             "key": "totalLaps",
             "type": "number",
             "default": 2,
             "label": "Total Laps",
-            "description": "Laps around the loop required to win",
+            "description": "Laps around the circuit required to win",
+            "tier": "presentation"
+          },
+          {
+            "key": "turnRate",
+            "type": "number",
+            "default": 0.14,
+            "label": "Turn Rate",
+            "description": "Radians the heading turns per tick while steering and moving",
             "tier": "presentation"
           },
           {
@@ -1179,6 +849,7 @@
             "type": "[ToyTrackBoard3DUnitsItem]",
             "default": [
               {
+                "heading": 0,
                 "health": 1,
                 "id": "player-car",
                 "maxHealth": 1,
@@ -1197,13 +868,14 @@
                 },
                 "name": "Player Car",
                 "position": {
-                  "x": 2,
-                  "y": 0
+                  "x": 17,
+                  "y": 10
                 },
                 "team": "player",
                 "unitType": "racer"
               },
               {
+                "heading": 0,
                 "health": 1,
                 "id": "rival-car",
                 "maxHealth": 1,
@@ -1222,18 +894,23 @@
                 },
                 "name": "Rival Car",
                 "position": {
-                  "x": 0,
-                  "y": 0
+                  "x": 17,
+                  "y": 13
                 },
                 "team": "enemy",
                 "unitType": "monster-truck"
               }
             ],
             "label": "Units",
-            "description": "Player car (start/finish) and rival car, one cell behind.",
+            "description": "Player toy car + 1 rival toy car at the start line.",
             "tier": "presentation",
             "items": {
               "properties": {
+                "heading": {
+                  "name": "heading",
+                  "required": false,
+                  "type": "number"
+                },
                 "health": {
                   "name": "health",
                   "required": false,
@@ -1266,11 +943,6 @@
                       "required": false,
                       "type": "string"
                     },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -1291,11 +963,6 @@
                       "required": false,
                       "type": "string"
                     },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
                     "style": {
                       "name": "style",
                       "required": false,
@@ -1308,11 +975,6 @@
                     },
                     "url": {
                       "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -1366,18 +1028,26 @@
         "entityContract": {
           "requires": [],
           "provides": [
-            "canAdvance",
-            "features",
+            "accelerating",
+            "braking",
+            "carX",
+            "carY",
+            "checkpoint",
             "fx",
             "gridHeight",
             "gridWidth",
+            "heading",
             "lap",
-            "playerProgress",
+            "phase",
             "result",
-            "rivalProgress",
-            "score",
+            "rivalCarX",
+            "rivalCarY",
+            "rivalCheckpoint",
+            "rivalLap",
             "selectedUnitId",
-            "trackLength",
+            "speed",
+            "steer",
+            "tiles",
             "units"
           ]
         }
@@ -1391,9 +1061,15 @@
       }
     ],
     "emittedEvents": [
-      "ACCELERATE",
+      "BRAKE_OFF",
+      "BRAKE_ON",
       "GAME_END",
-      "PLAY_AGAIN"
+      "PLAY_AGAIN",
+      "STEER_LEFT",
+      "STEER_RIGHT",
+      "STEER_STOP",
+      "THROTTLE_OFF",
+      "THROTTLE_ON"
     ],
     "listenedEvents": []
   }

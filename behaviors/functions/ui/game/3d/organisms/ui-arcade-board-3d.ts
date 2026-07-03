@@ -102,6 +102,8 @@ export interface StdUiArcadeBoard3dConfig {
   scale?: number;
   /** Default: `14` */
   startingTokens?: number;
+  /** Default: `0.42` */
+  ticketChance?: number;
   /** Default: `5` */
   ticketsToWin?: number;
   /** Default: `[{"id":"t00","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-corner","dimension":"3d","name":"wall-corner","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb","variant":""},"passable":false,"terrain":"wall","x":0,"y":0},{"id":"t10","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb","variant":""},"passable":false,"terrain":"wall","x":1,"y":0},{"id":"t20","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-window","dimension":"3d","name":"wall-window","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-window.glb","variant":""},"passable":false,"terrain":"wall","x":2,"y":0},{"id":"t30","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb","variant":""},"passable":false,"terrain":"wall","x":3,"y":0},{"id":"t40","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-corner","dimension":"3d","name":"wall-corner","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb","variant":""},"passable":false,"terrain":"wall","x":4,"y":0},{"id":"t01","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb","variant":""},"passable":false,"terrain":"wall","x":0,"y":1},{"id":"t11","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb","variant":""},"passable":true,"terrain":"floor","x":1,"y":1},{"id":"t21","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb","variant":""},"passable":true,"terrain":"floor","x":2,"y":1},{"id":"t31","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb","variant":""},"passable":true,"terrain":"floor","x":3,"y":1},{"id":"t41","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb","variant":""},"passable":false,"terrain":"wall","x":4,"y":1},{"id":"t02","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb","variant":""},"passable":false,"terrain":"wall","x":0,"y":2},{"id":"t12","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb","variant":""},"passable":true,"terrain":"floor","x":1,"y":2},{"id":"t22","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb","variant":""},"passable":true,"terrain":"floor","x":2,"y":2},{"id":"t32","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb","variant":""},"passable":true,"terrain":"floor","x":3,"y":2},{"id":"t42","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb","variant":""},"passable":false,"terrain":"wall","x":4,"y":2},{"id":"t03","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb","variant":""},"passable":false,"terrain":"wall","x":0,"y":3},{"id":"t13","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb","variant":""},"passable":true,"terrain":"floor","x":1,"y":3},{"id":"t23","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb","variant":""},"passable":true,"terrain":"floor","x":2,"y":3},{"id":"t33","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb","variant":""},"passable":true,"terrain":"floor","x":3,"y":3},{"id":"t43","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb","variant":""},"passable":false,"terrain":"wall","x":4,"y":3},{"id":"t04","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb","variant":""},"passable":false,"terrain":"wall","x":0,"y":4},{"id":"t14","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb","variant":""},"passable":true,"terrain":"floor","x":1,"y":4},{"id":"t24","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb","variant":""},"passable":true,"terrain":"floor","x":2,"y":4},{"id":"t34","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb","variant":""},"passable":true,"terrain":"floor","x":3,"y":4},{"id":"t44","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb","variant":""},"passable":false,"terrain":"wall","x":4,"y":4},{"id":"t05","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-corner","dimension":"3d","name":"wall-corner","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb","variant":""},"passable":false,"terrain":"wall","x":0,"y":5},{"id":"t15","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb","variant":""},"passable":false,"terrain":"wall","x":1,"y":5},{"id":"t25","modelUrl":{"animations":["open","close","open-and-close"],"aspect":"1:1","category":"wall-door-rotate","dimension":"3d","name":"wall-door-rotate","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-door-rotate.glb","variant":""},"passable":false,"terrain":"wall","x":2,"y":5},{"id":"t35","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb","variant":""},"passable":false,"terrain":"wall","x":3,"y":5},{"id":"t45","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-corner","dimension":"3d","name":"wall-corner","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb","variant":""},"passable":false,"terrain":"wall","x":4,"y":5}]` */
@@ -389,6 +391,11 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
           {
             'default': 6,
             'name': 'gridHeight',
+            'type': 'number',
+          },
+          {
+            'default': 1,
+            'name': 'lastRoll',
             'type': 'number',
           },
           {
@@ -782,6 +789,13 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
             'default': 14,
             'description': 'Tokens the player starts with',
             'label': 'Starting Tokens',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'ticketChance': {
+            'default': 0.42,
+            'description': 'Probability each play awards a ticket — luck-based so tokens can run out before winning',
+            'label': 'Ticket Chance',
             'tier': 'presentation',
             'type': 'number',
           },
@@ -1825,6 +1839,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
             'fx',
             'gridHeight',
             'gridWidth',
+            'lastRoll',
             'npcTick',
             'playCount',
             'result',
@@ -2038,6 +2053,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'featureClickEvent': 'FEATURE_CLICK',
                         'features': '@config.features',
@@ -2067,6 +2083,14 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                             {
                               'label': 'Result',
                               'value': '@entity.result',
+                            },
+                            {
+                              'label': 'Goal',
+                              'value': 'Win 5 tickets then reach the prize counter',
+                            },
+                            {
+                              'label': 'How',
+                              'value': 'Click your kid → click an adjacent tile to walk; click a game cabinet to play a token',
                             },
                           ],
                           'type': 'game-hud',
@@ -2244,6 +2268,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'featureClickEvent': 'FEATURE_CLICK',
                         'features': '@config.features',
@@ -2273,6 +2298,14 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                             {
                               'label': 'Result',
                               'value': '@entity.result',
+                            },
+                            {
+                              'label': 'Goal',
+                              'value': 'Win 5 tickets then reach the prize counter',
+                            },
+                            {
+                              'label': 'How',
+                              'value': 'Click your kid → click an adjacent tile to walk; click a game cabinet to play a token',
                             },
                           ],
                           'type': 'game-hud',
@@ -2381,6 +2414,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'featureClickEvent': 'FEATURE_CLICK',
                         'features': '@config.features',
@@ -2410,6 +2444,14 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                             {
                               'label': 'Result',
                               'value': '@entity.result',
+                            },
+                            {
+                              'label': 'Goal',
+                              'value': 'Win 5 tickets then reach the prize counter',
+                            },
+                            {
+                              'label': 'How',
+                              'value': 'Click your kid → click an adjacent tile to walk; click a game cabinet to play a token',
                             },
                           ],
                           'type': 'game-hud',
@@ -2561,6 +2603,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'featureClickEvent': 'FEATURE_CLICK',
                         'features': '@config.features',
@@ -2590,6 +2633,14 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                             {
                               'label': 'Result',
                               'value': '@entity.result',
+                            },
+                            {
+                              'label': 'Goal',
+                              'value': 'Win 5 tickets then reach the prize counter',
+                            },
+                            {
+                              'label': 'How',
+                              'value': 'Click your kid → click an adjacent tile to walk; click a game cabinet to play a token',
                             },
                           ],
                           'type': 'game-hud',
@@ -2674,6 +2725,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'featureClickEvent': 'FEATURE_CLICK',
                         'features': '@config.features',
@@ -2703,6 +2755,14 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                             {
                               'label': 'Result',
                               'value': '@entity.result',
+                            },
+                            {
+                              'label': 'Goal',
+                              'value': 'Win 5 tickets then reach the prize counter',
+                            },
+                            {
+                              'label': 'How',
+                              'value': 'Click your kid → click an adjacent tile to walk; click a game cabinet to play a token',
                             },
                           ],
                           'type': 'game-hud',
@@ -2801,17 +2861,20 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                 ],
                 [
                   'set',
+                  '@entity.lastRoll',
+                  [
+                    'math/random',
+                  ],
+                ],
+                [
+                  'set',
                   '@entity.tickets',
                   [
                     'if',
                     [
-                      '==',
-                      [
-                        '%',
-                        '@entity.playCount',
-                        2,
-                      ],
-                      0,
+                      '<',
+                      '@entity.lastRoll',
+                      '@config.ticketChance',
                     ],
                     [
                       '+',
@@ -2830,13 +2893,9 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                     [
                       'if',
                       [
-                        '==',
-                        [
-                          '%',
-                          '@entity.playCount',
-                          2,
-                        ],
-                        0,
+                        '<',
+                        '@entity.lastRoll',
+                        '@config.ticketChance',
                       ],
                       {
                         'id': [
@@ -2915,6 +2974,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'featureClickEvent': 'FEATURE_CLICK',
                         'features': '@config.features',
@@ -2944,6 +3004,14 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                             {
                               'label': 'Result',
                               'value': '@entity.result',
+                            },
+                            {
+                              'label': 'Goal',
+                              'value': 'Win 5 tickets then reach the prize counter',
+                            },
+                            {
+                              'label': 'How',
+                              'value': 'Click your kid → click an adjacent tile to walk; click a game cabinet to play a token',
                             },
                           ],
                           'type': 'game-hud',
@@ -3034,6 +3102,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'featureClickEvent': 'FEATURE_CLICK',
                         'features': '@config.features',
@@ -3063,6 +3132,14 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                             {
                               'label': 'Result',
                               'value': '@entity.result',
+                            },
+                            {
+                              'label': 'Goal',
+                              'value': 'Win 5 tickets then reach the prize counter',
+                            },
+                            {
+                              'label': 'How',
+                              'value': 'Click your kid → click an adjacent tile to walk; click a game cabinet to play a token',
                             },
                           ],
                           'type': 'game-hud',
@@ -3123,6 +3200,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'featureClickEvent': 'FEATURE_CLICK',
                         'features': '@config.features',
@@ -3152,6 +3230,14 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                             {
                               'label': 'Result',
                               'value': '@entity.result',
+                            },
+                            {
+                              'label': 'Goal',
+                              'value': 'Win 5 tickets then reach the prize counter',
+                            },
+                            {
+                              'label': 'How',
+                              'value': 'Click your kid → click an adjacent tile to walk; click a game cabinet to play a token',
                             },
                           ],
                           'type': 'game-hud',
@@ -3253,6 +3339,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'featureClickEvent': 'FEATURE_CLICK',
                         'features': '@config.features',
@@ -3282,6 +3369,14 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                             {
                               'label': 'Result',
                               'value': '@entity.result',
+                            },
+                            {
+                              'label': 'Goal',
+                              'value': 'Win 5 tickets then reach the prize counter',
+                            },
+                            {
+                              'label': 'How',
+                              'value': 'Click your kid → click an adjacent tile to walk; click a game cabinet to play a token',
                             },
                           ],
                           'type': 'game-hud',
@@ -3365,6 +3460,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'featureClickEvent': 'FEATURE_CLICK',
                         'features': '@config.features',
@@ -3394,6 +3490,14 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                             {
                               'label': 'Result',
                               'value': '@entity.result',
+                            },
+                            {
+                              'label': 'Goal',
+                              'value': 'Win 5 tickets then reach the prize counter',
+                            },
+                            {
+                              'label': 'How',
+                              'value': 'Click your kid → click an adjacent tile to walk; click a game cabinet to play a token',
                             },
                           ],
                           'type': 'game-hud',
@@ -3533,6 +3637,7 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                   },
                   'children': [
                     {
+                      'cameraMode': 'isometric',
                       'events': '@entity.fx',
                       'featureClickEvent': 'FEATURE_CLICK',
                       'features': '@config.features',
@@ -3562,6 +3667,14 @@ export function stdUiArcadeBoard3dArcadeBoard3DOrbital(params: StdUiArcadeBoard3
                           {
                             'label': 'Result',
                             'value': '@entity.result',
+                          },
+                          {
+                            'label': 'Goal',
+                            'value': 'Win 5 tickets then reach the prize counter',
+                          },
+                          {
+                            'label': 'How',
+                            'value': 'Click your kid → click an adjacent tile to walk; click a game cabinet to play a token',
                           },
                         ],
                         'type': 'game-hud',

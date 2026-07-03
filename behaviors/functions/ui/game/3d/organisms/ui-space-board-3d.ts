@@ -101,18 +101,20 @@ export interface StdUiSpaceBoard3dConfig {
   bgColor?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"boulder","dimension":"3d","name":"rock_largeA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"}` */
+  coverAsset?: EntityRow;
   error?: EntityRow;
-  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"dome","dimension":"3d","name":"hangar_roundA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/hangar_roundA.glb"},"id":"f1","type":"dome","x":2,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"rocket","dimension":"3d","name":"rocket_baseA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rocket_baseA.glb"},"id":"f2","type":"rocket","x":2,"y":0},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"hangar","dimension":"3d","name":"hangar_smallA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/hangar_smallA.glb"},"id":"f3","type":"hangar","x":0,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"comms_dish","dimension":"3d","name":"satelliteDish","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/satelliteDish.glb"},"id":"f4","type":"comms_dish","x":4,"y":2}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"dome","dimension":"3d","name":"hangar_roundA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/hangar_roundA.glb"},"id":"f1","type":"dome","x":9,"y":9},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"rocket","dimension":"3d","name":"rocket_baseA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rocket_baseA.glb"},"id":"f2","type":"rocket","x":5,"y":7},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"hangar","dimension":"3d","name":"hangar_smallA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/hangar_smallA.glb"},"id":"f3","type":"hangar","x":13,"y":7},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"comms_dish","dimension":"3d","name":"satelliteDish","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/satelliteDish.glb"},"id":"f4","type":"comms_dish","x":9,"y":12}]` */
   features?: EntityRow[];
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"regolith","dimension":"3d","name":"terrain","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb"}` */
+  groundAsset?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `0.45` */
   scale?: number;
-  /** Default: `[{"id":"t00","modelUrl":{"animations":["static"],"aspect":"1:1","category":"boulder","dimension":"3d","name":"rock_largeA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"},"passable":false,"terrain":"boulder","x":0,"y":0},{"id":"t10","modelUrl":{"animations":["static"],"aspect":"1:1","category":"crater","dimension":"3d","name":"crater","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/crater.glb"},"passable":false,"terrain":"crater","x":1,"y":0},{"id":"t20","modelUrl":{"animations":["static"],"aspect":"1:1","category":"boulder","dimension":"3d","name":"rock_largeA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"},"passable":false,"terrain":"boulder","x":2,"y":0},{"id":"t30","modelUrl":{"animations":["static"],"aspect":"1:1","category":"crater","dimension":"3d","name":"crater","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/crater.glb"},"passable":false,"terrain":"crater","x":3,"y":0},{"id":"t40","modelUrl":{"animations":["static"],"aspect":"1:1","category":"boulder","dimension":"3d","name":"rock_largeA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"},"passable":false,"terrain":"boulder","x":4,"y":0},{"id":"t01","modelUrl":{"animations":["static"],"aspect":"1:1","category":"boulder","dimension":"3d","name":"rock_largeA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"},"passable":false,"terrain":"boulder","x":0,"y":1},{"id":"t11","modelUrl":{"animations":["static"],"aspect":"1:1","category":"regolith","dimension":"3d","name":"terrain","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb"},"passable":true,"terrain":"regolith","x":1,"y":1},{"id":"t21","modelUrl":{"animations":["static"],"aspect":"1:1","category":"regolith","dimension":"3d","name":"terrain","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb"},"passable":true,"terrain":"regolith","x":2,"y":1},{"id":"t31","modelUrl":{"animations":["static"],"aspect":"1:1","category":"regolith","dimension":"3d","name":"terrain","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb"},"passable":true,"terrain":"regolith","x":3,"y":1},{"id":"t41","modelUrl":{"animations":["static"],"aspect":"1:1","category":"boulder","dimension":"3d","name":"rock_largeA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"},"passable":false,"terrain":"boulder","x":4,"y":1},{"id":"t02","modelUrl":{"animations":["static"],"aspect":"1:1","category":"boulder","dimension":"3d","name":"rock_largeA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"},"passable":false,"terrain":"boulder","x":0,"y":2},{"id":"t12","modelUrl":{"animations":["static"],"aspect":"1:1","category":"regolith","dimension":"3d","name":"terrain","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb"},"passable":true,"terrain":"regolith","x":1,"y":2},{"id":"t22","modelUrl":{"animations":["static"],"aspect":"1:1","category":"regolith","dimension":"3d","name":"terrain","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb"},"passable":true,"terrain":"regolith","x":2,"y":2},{"id":"t32","modelUrl":{"animations":["static"],"aspect":"1:1","category":"regolith","dimension":"3d","name":"terrain","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb"},"passable":true,"terrain":"regolith","x":3,"y":2},{"id":"t42","modelUrl":{"animations":["static"],"aspect":"1:1","category":"boulder","dimension":"3d","name":"rock_largeA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"},"passable":false,"terrain":"boulder","x":4,"y":2},{"id":"t03","modelUrl":{"animations":["static"],"aspect":"1:1","category":"boulder","dimension":"3d","name":"rock_largeA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"},"passable":false,"terrain":"boulder","x":0,"y":3},{"id":"t13","modelUrl":{"animations":["static"],"aspect":"1:1","category":"regolith","dimension":"3d","name":"terrain","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb"},"passable":true,"terrain":"regolith","x":1,"y":3},{"id":"t23","modelUrl":{"animations":["static"],"aspect":"1:1","category":"regolith","dimension":"3d","name":"terrain","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb"},"passable":true,"terrain":"regolith","x":2,"y":3},{"id":"t33","modelUrl":{"animations":["static"],"aspect":"1:1","category":"regolith","dimension":"3d","name":"terrain","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb"},"passable":true,"terrain":"regolith","x":3,"y":3},{"id":"t43","modelUrl":{"animations":["static"],"aspect":"1:1","category":"boulder","dimension":"3d","name":"rock_largeA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"},"passable":false,"terrain":"boulder","x":4,"y":3},{"id":"t04","modelUrl":{"animations":["static"],"aspect":"1:1","category":"boulder","dimension":"3d","name":"rock_largeA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"},"passable":false,"terrain":"boulder","x":0,"y":4},{"id":"t14","modelUrl":{"animations":["static"],"aspect":"1:1","category":"crater","dimension":"3d","name":"crater","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/crater.glb"},"passable":false,"terrain":"crater","x":1,"y":4},{"id":"t24","modelUrl":{"animations":["static"],"aspect":"1:1","category":"boulder","dimension":"3d","name":"rock_largeA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"},"passable":false,"terrain":"boulder","x":2,"y":4},{"id":"t34","modelUrl":{"animations":["static"],"aspect":"1:1","category":"crater","dimension":"3d","name":"crater","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/crater.glb"},"passable":false,"terrain":"crater","x":3,"y":4},{"id":"t44","modelUrl":{"animations":["static"],"aspect":"1:1","category":"boulder","dimension":"3d","name":"rock_largeA","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"},"passable":false,"terrain":"boulder","x":4,"y":4}]` */
-  tiles?: EntityRow[];
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"astronaut","dimension":"3d","name":"astronautA","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb"},"name":"Astronaut","position":{"x":1,"y":1},"team":"player","unitType":"astronaut"},{"health":12,"id":"u2","maxHealth":12,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"rover","dimension":"3d","name":"rover","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rover.glb"},"name":"Rover","position":{"x":1,"y":3},"team":"player","unitType":"rover"},{"health":8,"id":"e1","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"alien","dimension":"3d","name":"alien","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb"},"name":"Alien","position":{"x":3,"y":3},"team":"enemy","unitType":"alien"},{"health":6,"id":"e2","maxHealth":8,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"raider","dimension":"3d","name":"craft_speederA","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/craft_speederA.glb"},"name":"Raider Craft","position":{"x":3,"y":1},"team":"enemy","unitType":"raider"}]` */
+  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"astronaut","dimension":"3d","name":"astronautA","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb"},"name":"Astronaut","position":{"x":4,"y":16},"team":"player","unitType":"astronaut"},{"health":12,"id":"u2","maxHealth":12,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"rover","dimension":"3d","name":"rover","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rover.glb"},"name":"Rover","position":{"x":9,"y":16},"team":"player","unitType":"rover"},{"health":10,"id":"u3","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"astronaut","dimension":"3d","name":"astronautA","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb"},"name":"Engineer","position":{"x":14,"y":16},"team":"player","unitType":"astronaut"},{"health":8,"id":"e1","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"alien","dimension":"3d","name":"alien","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb"},"name":"Alien","position":{"x":4,"y":1},"team":"enemy","unitType":"alien"},{"health":6,"id":"e2","maxHealth":8,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"raider","dimension":"3d","name":"craft_speederA","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/craft_speederA.glb"},"name":"Raider Craft","position":{"x":9,"y":1},"team":"enemy","unitType":"raider"},{"health":8,"id":"e3","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"alien","dimension":"3d","name":"alien","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb"},"name":"Alien Scout","position":{"x":14,"y":1},"team":"enemy","unitType":"alien"}]` */
   units?: EntityRow[];
 }
 
@@ -552,17 +554,17 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
             ],
           },
           {
-            'default': 5,
+            'default': 18,
             'name': 'gridWidth',
             'type': 'number',
           },
           {
-            'default': 5,
+            'default': 18,
             'name': 'gridHeight',
             'type': 'number',
           },
           {
-            'default': 2,
+            'default': 4,
             'name': 'movementRange',
             'type': 'number',
           },
@@ -570,6 +572,176 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
             'default': false,
             'name': 'enemyTurn',
             'type': 'boolean',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'elevation': {
+                  'name': 'elevation',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'modelUrl': {
+                  'name': 'modelUrl',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
+                'movementCost': {
+                  'name': 'movementCost',
+                  'required': false,
+                  'type': 'number',
+                },
+                'passable': {
+                  'name': 'passable',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'terrain': {
+                  'name': 'terrain',
+                  'required': false,
+                  'type': 'string',
+                },
+                'terrainSprite': {
+                  'name': 'terrainSprite',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
+                'tileType': {
+                  'name': 'tileType',
+                  'required': false,
+                  'type': 'string',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': false,
+                  'type': 'string',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+                'z': {
+                  'name': 'z',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'tiles',
+            'type': 'array',
           },
         ];
         const extras = params.fields ?? [];
@@ -1074,6 +1246,75 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
             'tier': 'presentation',
             'type': 'string',
           },
+          'coverAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'boulder',
+              'dimension': '3d',
+              'name': 'rock_largeA',
+              'role': 'decoration',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb',
+            },
+            'description': 'Impassable boulder cover tile, scattered for chokepoints.',
+            'label': 'Cover Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
           'error': {
             'description': 'Error state (UiError)',
             'label': 'Error',
@@ -1120,8 +1361,8 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                 },
                 'id': 'f1',
                 'type': 'dome',
-                'x': 2,
-                'y': 2,
+                'x': 9,
+                'y': 9,
               },
               {
                 'assetUrl': {
@@ -1139,8 +1380,8 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                 },
                 'id': 'f2',
                 'type': 'rocket',
-                'x': 2,
-                'y': 0,
+                'x': 5,
+                'y': 7,
               },
               {
                 'assetUrl': {
@@ -1158,8 +1399,8 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                 },
                 'id': 'f3',
                 'type': 'hangar',
-                'x': 0,
-                'y': 2,
+                'x': 13,
+                'y': 7,
               },
               {
                 'assetUrl': {
@@ -1177,11 +1418,11 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                 },
                 'id': 'f4',
                 'type': 'comms_dish',
-                'x': 4,
-                'y': 2,
+                'x': 9,
+                'y': 12,
               },
             ],
-            'description': 'Base features on the board: central dome, north rocket pad, west hangar, east comms dish.',
+            'description': 'Base features spread across the mid-battlefield: central dome, rocket pad, hangar, and comms dish.',
             'items': {
               'properties': {
                 'assetUrl': {
@@ -1336,6 +1577,75 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
             'tier': 'presentation',
             'type': '[SpaceBoard3DFeaturesItem]',
           },
+          'groundAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'regolith',
+              'dimension': '3d',
+              'name': 'terrain',
+              'role': 'tile',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb',
+            },
+            'description': 'Passable regolith ground tile, tiled across the battlefield.',
+            'label': 'Ground Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
           'isLoading': {
             'default': false,
             'description': 'Loading state indicator',
@@ -1349,679 +1659,6 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
             'label': 'Scale',
             'tier': 'presentation',
             'type': 'number',
-          },
-          'tiles': {
-            'default': [
-              {
-                'id': 't00',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'boulder',
-                  'dimension': '3d',
-                  'name': 'rock_largeA',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb',
-                },
-                'passable': false,
-                'terrain': 'boulder',
-                'x': 0,
-                'y': 0,
-              },
-              {
-                'id': 't10',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'crater',
-                  'dimension': '3d',
-                  'name': 'crater',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/crater.glb',
-                },
-                'passable': false,
-                'terrain': 'crater',
-                'x': 1,
-                'y': 0,
-              },
-              {
-                'id': 't20',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'boulder',
-                  'dimension': '3d',
-                  'name': 'rock_largeA',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb',
-                },
-                'passable': false,
-                'terrain': 'boulder',
-                'x': 2,
-                'y': 0,
-              },
-              {
-                'id': 't30',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'crater',
-                  'dimension': '3d',
-                  'name': 'crater',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/crater.glb',
-                },
-                'passable': false,
-                'terrain': 'crater',
-                'x': 3,
-                'y': 0,
-              },
-              {
-                'id': 't40',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'boulder',
-                  'dimension': '3d',
-                  'name': 'rock_largeA',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb',
-                },
-                'passable': false,
-                'terrain': 'boulder',
-                'x': 4,
-                'y': 0,
-              },
-              {
-                'id': 't01',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'boulder',
-                  'dimension': '3d',
-                  'name': 'rock_largeA',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb',
-                },
-                'passable': false,
-                'terrain': 'boulder',
-                'x': 0,
-                'y': 1,
-              },
-              {
-                'id': 't11',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'regolith',
-                  'dimension': '3d',
-                  'name': 'terrain',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb',
-                },
-                'passable': true,
-                'terrain': 'regolith',
-                'x': 1,
-                'y': 1,
-              },
-              {
-                'id': 't21',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'regolith',
-                  'dimension': '3d',
-                  'name': 'terrain',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb',
-                },
-                'passable': true,
-                'terrain': 'regolith',
-                'x': 2,
-                'y': 1,
-              },
-              {
-                'id': 't31',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'regolith',
-                  'dimension': '3d',
-                  'name': 'terrain',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb',
-                },
-                'passable': true,
-                'terrain': 'regolith',
-                'x': 3,
-                'y': 1,
-              },
-              {
-                'id': 't41',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'boulder',
-                  'dimension': '3d',
-                  'name': 'rock_largeA',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb',
-                },
-                'passable': false,
-                'terrain': 'boulder',
-                'x': 4,
-                'y': 1,
-              },
-              {
-                'id': 't02',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'boulder',
-                  'dimension': '3d',
-                  'name': 'rock_largeA',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb',
-                },
-                'passable': false,
-                'terrain': 'boulder',
-                'x': 0,
-                'y': 2,
-              },
-              {
-                'id': 't12',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'regolith',
-                  'dimension': '3d',
-                  'name': 'terrain',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb',
-                },
-                'passable': true,
-                'terrain': 'regolith',
-                'x': 1,
-                'y': 2,
-              },
-              {
-                'id': 't22',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'regolith',
-                  'dimension': '3d',
-                  'name': 'terrain',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb',
-                },
-                'passable': true,
-                'terrain': 'regolith',
-                'x': 2,
-                'y': 2,
-              },
-              {
-                'id': 't32',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'regolith',
-                  'dimension': '3d',
-                  'name': 'terrain',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb',
-                },
-                'passable': true,
-                'terrain': 'regolith',
-                'x': 3,
-                'y': 2,
-              },
-              {
-                'id': 't42',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'boulder',
-                  'dimension': '3d',
-                  'name': 'rock_largeA',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb',
-                },
-                'passable': false,
-                'terrain': 'boulder',
-                'x': 4,
-                'y': 2,
-              },
-              {
-                'id': 't03',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'boulder',
-                  'dimension': '3d',
-                  'name': 'rock_largeA',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb',
-                },
-                'passable': false,
-                'terrain': 'boulder',
-                'x': 0,
-                'y': 3,
-              },
-              {
-                'id': 't13',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'regolith',
-                  'dimension': '3d',
-                  'name': 'terrain',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb',
-                },
-                'passable': true,
-                'terrain': 'regolith',
-                'x': 1,
-                'y': 3,
-              },
-              {
-                'id': 't23',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'regolith',
-                  'dimension': '3d',
-                  'name': 'terrain',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb',
-                },
-                'passable': true,
-                'terrain': 'regolith',
-                'x': 2,
-                'y': 3,
-              },
-              {
-                'id': 't33',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'regolith',
-                  'dimension': '3d',
-                  'name': 'terrain',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb',
-                },
-                'passable': true,
-                'terrain': 'regolith',
-                'x': 3,
-                'y': 3,
-              },
-              {
-                'id': 't43',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'boulder',
-                  'dimension': '3d',
-                  'name': 'rock_largeA',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb',
-                },
-                'passable': false,
-                'terrain': 'boulder',
-                'x': 4,
-                'y': 3,
-              },
-              {
-                'id': 't04',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'boulder',
-                  'dimension': '3d',
-                  'name': 'rock_largeA',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb',
-                },
-                'passable': false,
-                'terrain': 'boulder',
-                'x': 0,
-                'y': 4,
-              },
-              {
-                'id': 't14',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'crater',
-                  'dimension': '3d',
-                  'name': 'crater',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/crater.glb',
-                },
-                'passable': false,
-                'terrain': 'crater',
-                'x': 1,
-                'y': 4,
-              },
-              {
-                'id': 't24',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'boulder',
-                  'dimension': '3d',
-                  'name': 'rock_largeA',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb',
-                },
-                'passable': false,
-                'terrain': 'boulder',
-                'x': 2,
-                'y': 4,
-              },
-              {
-                'id': 't34',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'crater',
-                  'dimension': '3d',
-                  'name': 'crater',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/crater.glb',
-                },
-                'passable': false,
-                'terrain': 'crater',
-                'x': 3,
-                'y': 4,
-              },
-              {
-                'id': 't44',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'boulder',
-                  'dimension': '3d',
-                  'name': 'rock_largeA',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb',
-                },
-                'passable': false,
-                'terrain': 'boulder',
-                'x': 4,
-                'y': 4,
-              },
-            ],
-            'description': '5×5 Mars-canyon grid — a rock/crater rim ringing an open regolith floor. Takes priority over entity-derived tiles.',
-            'items': {
-              'properties': {
-                'elevation': {
-                  'name': 'elevation',
-                  'required': false,
-                  'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'movementCost': {
-                  'name': 'movementCost',
-                  'required': false,
-                  'type': 'number',
-                },
-                'passable': {
-                  'name': 'passable',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'terrain': {
-                  'name': 'terrain',
-                  'required': false,
-                  'type': 'string',
-                },
-                'terrainSprite': {
-                  'name': 'terrainSprite',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'tileType': {
-                  'name': 'tileType',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Tiles',
-            'tier': 'presentation',
-            'type': '[SpaceBoard3DTilesItem]',
           },
           'unitScale': {
             'default': 1,
@@ -2051,8 +1688,8 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                 },
                 'name': 'Astronaut',
                 'position': {
-                  'x': 1,
-                  'y': 1,
+                  'x': 4,
+                  'y': 16,
                 },
                 'team': 'player',
                 'unitType': 'astronaut',
@@ -2076,11 +1713,36 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                 },
                 'name': 'Rover',
                 'position': {
-                  'x': 1,
-                  'y': 3,
+                  'x': 9,
+                  'y': 16,
                 },
                 'team': 'player',
                 'unitType': 'rover',
+              },
+              {
+                'health': 10,
+                'id': 'u3',
+                'maxHealth': 10,
+                'modelUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'astronaut',
+                  'dimension': '3d',
+                  'name': 'astronautA',
+                  'role': 'player',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb',
+                },
+                'name': 'Engineer',
+                'position': {
+                  'x': 14,
+                  'y': 16,
+                },
+                'team': 'player',
+                'unitType': 'astronaut',
               },
               {
                 'health': 8,
@@ -2101,8 +1763,8 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                 },
                 'name': 'Alien',
                 'position': {
-                  'x': 3,
-                  'y': 3,
+                  'x': 4,
+                  'y': 1,
                 },
                 'team': 'enemy',
                 'unitType': 'alien',
@@ -2126,14 +1788,39 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                 },
                 'name': 'Raider Craft',
                 'position': {
-                  'x': 3,
+                  'x': 9,
                   'y': 1,
                 },
                 'team': 'enemy',
                 'unitType': 'raider',
               },
+              {
+                'health': 8,
+                'id': 'e3',
+                'maxHealth': 10,
+                'modelUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'alien',
+                  'dimension': '3d',
+                  'name': 'alien',
+                  'role': 'enemy',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb',
+                },
+                'name': 'Alien Scout',
+                'position': {
+                  'x': 14,
+                  'y': 1,
+                },
+                'team': 'enemy',
+                'unitType': 'alien',
+              },
             ],
-            'description': 'Initial unit roster (astronaut + rover vs alien + raider craft) — takes priority over entity-derived units.',
+            'description': 'Initial unit roster (3 player: astronaut, rover, engineer vs 3 enemy: alien, raider craft, alien scout), opposite ends of the battlefield — takes priority over entity-derived units.',
             'items': {
               'properties': {
                 'elevation': {
@@ -2524,6 +2211,7 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
             'phase',
             'result',
             'selectedUnitId',
+            'tiles',
             'turn',
             'units',
             'validMoves',
@@ -2725,17 +2413,122 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                 [
                   'set',
                   '@entity.gridWidth',
-                  5,
+                  18,
                 ],
                 [
                   'set',
                   '@entity.gridHeight',
-                  5,
+                  18,
                 ],
                 [
                   'set',
                   '@entity.movementRange',
-                  2,
+                  4,
+                ],
+                [
+                  'set',
+                  '@entity.tiles',
+                  [
+                    'array/flatten',
+                    [
+                      'array/map',
+                      [
+                        'array/range',
+                        0,
+                        18,
+                      ],
+                      [
+                        'fn',
+                        'gy',
+                        [
+                          'array/map',
+                          [
+                            'array/range',
+                            0,
+                            18,
+                          ],
+                          [
+                            'fn',
+                            'gx',
+                            [
+                              'let',
+                              [
+                                [
+                                  'cover',
+                                  [
+                                    'and',
+                                    [
+                                      '>=',
+                                      '@gy',
+                                      4,
+                                    ],
+                                    [
+                                      'and',
+                                      [
+                                        '<=',
+                                        '@gy',
+                                        13,
+                                      ],
+                                      [
+                                        '==',
+                                        [
+                                          'math/mod',
+                                          [
+                                            '+',
+                                            [
+                                              '*',
+                                              '@gx',
+                                              3,
+                                            ],
+                                            [
+                                              '*',
+                                              '@gy',
+                                              7,
+                                            ],
+                                          ],
+                                          8,
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              {
+                                'id': [
+                                  'str/concat',
+                                  't-',
+                                  '@gx',
+                                  '-',
+                                  '@gy',
+                                ],
+                                'modelUrl': [
+                                  'if',
+                                  '@cover',
+                                  '@config.coverAsset',
+                                  '@config.groundAsset',
+                                ],
+                                'passable': [
+                                  'if',
+                                  '@cover',
+                                  false,
+                                  true,
+                                ],
+                                'terrain': [
+                                  'if',
+                                  '@cover',
+                                  'boulder',
+                                  'regolith',
+                                ],
+                                'x': '@gx',
+                                'y': '@gy',
+                              },
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
                 ],
                 [
                   'render-ui',
@@ -2770,13 +2563,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -2797,6 +2591,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3017,13 +2819,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3044,6 +2847,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3274,13 +3085,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3301,6 +3113,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3361,7 +3181,7 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                     'array/map',
                     [
                       'array/filter',
-                      '@config.tiles',
+                      '@entity.tiles',
                       [
                         'fn',
                         't',
@@ -3523,13 +3343,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3550,6 +3371,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3669,13 +3498,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3696,6 +3526,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3877,13 +3715,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3904,6 +3743,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3976,13 +3823,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -4003,6 +3851,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -4132,13 +3988,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -4159,6 +4016,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -4358,13 +4223,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                       {
                         'attackTargets': '@entity.attackTargets',
                         'backgroundColor': '@config.bgColor',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -4385,6 +4251,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -4932,7 +4806,7 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                                         'object/get',
                                         [
                                           'array/find',
-                                          '@config.tiles',
+                                          '@entity.tiles',
                                           [
                                             'fn',
                                             't',
@@ -5189,13 +5063,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                     {
                       'attackTargets': '@entity.attackTargets',
                       'backgroundColor': '@config.bgColor',
+                      'cameraMode': 'isometric',
                       'events': '@entity.fx',
                       'features': '@config.features',
                       'interpolateUnits': true,
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@config.tiles',
+                      'tiles': '@entity.tiles',
                       'type': 'game-canvas-3d',
                       'unitClickEvent': 'UNIT_CLICK',
                       'unitScale': '@config.unitScale',
@@ -5216,6 +5091,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                       {
                         'label': 'Result',
                         'value': '@entity.result',
+                      },
+                      {
+                        'label': 'Goal',
+                        'value': 'Defeat all enemies',
+                      },
+                      {
+                        'label': 'How',
+                        'value': 'Click your unit → move → click it again → strike an adjacent foe',
                       },
                     ],
                     'type': 'game-hud',
@@ -5353,13 +5236,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                     {
                       'attackTargets': '@entity.attackTargets',
                       'backgroundColor': '@config.bgColor',
+                      'cameraMode': 'isometric',
                       'events': '@entity.fx',
                       'features': '@config.features',
                       'interpolateUnits': true,
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@config.tiles',
+                      'tiles': '@entity.tiles',
                       'type': 'game-canvas-3d',
                       'unitClickEvent': 'UNIT_CLICK',
                       'unitScale': '@config.unitScale',
@@ -5380,6 +5264,14 @@ export function stdUiSpaceBoard3dSpaceBoard3DOrbital(params: StdUiSpaceBoard3dSp
                       {
                         'label': 'Result',
                         'value': '@entity.result',
+                      },
+                      {
+                        'label': 'Goal',
+                        'value': 'Defeat all enemies',
+                      },
+                      {
+                        'label': 'How',
+                        'value': 'Click your unit → move → click it again → strike an adjacent foe',
                       },
                     ],
                     'type': 'game-hud',

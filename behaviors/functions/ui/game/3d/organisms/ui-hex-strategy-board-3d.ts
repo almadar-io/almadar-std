@@ -90,18 +90,28 @@ export interface StdUiHexStrategyBoard3dConfig {
   error?: EntityRow;
   /** Default: `[]` */
   features?: EntityRow[];
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"}` */
+  grassAsset?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"building-market","dimension":"3d","name":"building-market","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-market.glb"}` */
+  marketAsset?: EntityRow;
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"stone-mountain","dimension":"3d","name":"stone-mountain","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/stone-mountain.glb"}` */
+  mountainAsset?: EntityRow;
   /** Default: `0.45` */
   scale?: number;
-  /** Default: `20` */
+  /** Default: `50` */
   startingTurns?: number;
-  /** Default: `[{"claimable":false,"id":"t00","modelUrl":{"animations":["static"],"aspect":"1:1","category":"building-castle","dimension":"3d","name":"building-castle","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-castle.glb"},"passable":true,"terrain":"castle","x":0,"y":0},{"claimable":false,"id":"t10","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":1,"y":0},{"claimable":false,"id":"t20","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":2,"y":0},{"claimable":false,"id":"t30","modelUrl":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"3d","name":"sand","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb"},"passable":true,"terrain":"sand","x":3,"y":0},{"claimable":false,"id":"t40","modelUrl":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"3d","name":"water","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/water.glb"},"passable":false,"terrain":"water","x":4,"y":0},{"claimable":false,"id":"t50","modelUrl":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"3d","name":"water","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/water.glb"},"passable":false,"terrain":"water","x":5,"y":0},{"claimable":false,"id":"t01","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":0,"y":1},{"claimable":false,"id":"t11","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":1,"y":1},{"claimable":true,"id":"t21","modelUrl":{"animations":["static"],"aspect":"1:1","category":"building-village","dimension":"3d","name":"building-village","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-village.glb"},"passable":true,"terrain":"village","x":2,"y":1},{"claimable":false,"id":"t31","modelUrl":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"3d","name":"sand","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb"},"passable":true,"terrain":"sand","x":3,"y":1},{"claimable":false,"id":"t41","modelUrl":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"3d","name":"sand","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb"},"passable":true,"terrain":"sand","x":4,"y":1},{"claimable":false,"id":"t51","modelUrl":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"3d","name":"water","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/water.glb"},"passable":false,"terrain":"water","x":5,"y":1},{"claimable":false,"id":"t02","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":0,"y":2},{"claimable":false,"id":"t12","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-mountain","dimension":"3d","name":"stone-mountain","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/stone-mountain.glb"},"passable":false,"terrain":"mountain","x":1,"y":2},{"claimable":false,"id":"t22","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":2,"y":2},{"claimable":false,"id":"t32","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":3,"y":2},{"claimable":true,"id":"t42","modelUrl":{"animations":["static"],"aspect":"1:1","category":"building-market","dimension":"3d","name":"building-market","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-market.glb"},"passable":true,"terrain":"market","x":4,"y":2},{"claimable":false,"id":"t52","modelUrl":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"3d","name":"sand","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb"},"passable":true,"terrain":"sand","x":5,"y":2},{"claimable":false,"id":"t03","modelUrl":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"3d","name":"dirt","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/dirt.glb"},"passable":true,"terrain":"dirt","x":0,"y":3},{"claimable":false,"id":"t13","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":1,"y":3},{"claimable":false,"id":"t23","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":2,"y":3},{"claimable":false,"id":"t33","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-mountain","dimension":"3d","name":"stone-mountain","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/stone-mountain.glb"},"passable":false,"terrain":"mountain","x":3,"y":3},{"claimable":false,"id":"t43","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":4,"y":3},{"claimable":false,"id":"t53","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":5,"y":3},{"claimable":false,"id":"t04","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass-forest","dimension":"3d","name":"grass-forest","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass-forest.glb"},"passable":true,"terrain":"forest","x":0,"y":4},{"claimable":false,"id":"t14","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":1,"y":4},{"claimable":true,"id":"t24","modelUrl":{"animations":["animation"],"aspect":"1:1","category":"building-mill","dimension":"3d","name":"building-mill","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-mill.glb"},"passable":true,"terrain":"windmill","x":2,"y":4},{"claimable":false,"id":"t34","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":3,"y":4},{"claimable":false,"id":"t44","modelUrl":{"animations":["static"],"aspect":"1:1","category":"stone-mountain","dimension":"3d","name":"stone-mountain","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/stone-mountain.glb"},"passable":false,"terrain":"mountain","x":4,"y":4},{"claimable":false,"id":"t54","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":5,"y":4},{"claimable":false,"id":"t05","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":0,"y":5},{"claimable":false,"id":"t15","modelUrl":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"3d","name":"sand","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb"},"passable":true,"terrain":"sand","x":1,"y":5},{"claimable":false,"id":"t25","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":2,"y":5},{"claimable":false,"id":"t35","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":3,"y":5},{"claimable":false,"id":"t45","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb"},"passable":true,"terrain":"grass","x":4,"y":5},{"claimable":false,"id":"t55","modelUrl":{"animations":["static"],"aspect":"1:1","category":"grass-hill","dimension":"3d","name":"grass-hill","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass-hill.glb"},"passable":true,"terrain":"hill","x":5,"y":5}]` */
-  tiles?: EntityRow[];
   /** Default: `1` */
   unitScale?: number;
   /** Default: `[{"id":"settler","modelUrl":{"animations":["static"],"aspect":"1:1","category":"unit-tower","dimension":"3d","name":"unit-tower","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/unit-tower.glb"},"name":"Settler","position":{"x":0,"y":0},"team":"player","unitType":"settler"}]` */
   units?: EntityRow[];
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"building-village","dimension":"3d","name":"building-village","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-village.glb"}` */
+  villageAsset?: EntityRow;
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"water","dimension":"3d","name":"water","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/water.glb"}` */
+  waterAsset?: EntityRow;
+  /** Default: `{"animations":["animation"],"aspect":"1:1","category":"building-mill","dimension":"3d","name":"building-mill","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-mill.glb"}` */
+  windmillAsset?: EntityRow;
 }
 
 /**
@@ -352,7 +362,7 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
             'type': 'number',
           },
           {
-            'default': 20,
+            'default': 50,
             'name': 'turnsLeft',
             'type': 'number',
           },
@@ -367,12 +377,12 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
             ],
           },
           {
-            'default': 6,
+            'default': 14,
             'name': 'gridWidth',
             'type': 'number',
           },
           {
-            'default': 6,
+            'default': 14,
             'name': 'gridHeight',
             'type': 'number',
           },
@@ -380,6 +390,101 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
             'default': 2,
             'name': 'movementRange',
             'type': 'number',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'claimable': {
+                  'name': 'claimable',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'modelUrl': {
+                  'name': 'modelUrl',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
+                'passable': {
+                  'name': 'passable',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'terrain': {
+                  'name': 'terrain',
+                  'required': false,
+                  'type': 'string',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'tiles',
+            'type': 'array',
           },
         ];
         const extras = params.fields ?? [];
@@ -514,12 +619,219 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
             'tier': 'presentation',
             'type': '[HexStrategyBoard3DFeaturesItem]',
           },
+          'grassAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'grass',
+              'dimension': '3d',
+              'name': 'grass',
+              'role': 'decoration',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
+            },
+            'description': 'Open passable ground hex, tiled across the realm.',
+            'label': 'Grass Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
           'isLoading': {
             'default': false,
             'description': 'Loading state indicator',
             'label': 'Is Loading',
             'tier': 'presentation',
             'type': 'boolean',
+          },
+          'marketAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'building-market',
+              'dimension': '3d',
+              'name': 'building-market',
+              'role': 'decoration',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-market.glb',
+            },
+            'description': 'Claimable market hex — one of 3 win-condition buildings.',
+            'label': 'Market Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
+          'mountainAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'stone-mountain',
+              'dimension': '3d',
+              'name': 'stone-mountain',
+              'role': 'decoration',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/stone-mountain.glb',
+            },
+            'description': 'Impassable mountain hex, scattered across the mid-band.',
+            'label': 'Mountain Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
           },
           'scale': {
             'default': 0.45,
@@ -529,865 +841,11 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
             'type': 'number',
           },
           'startingTurns': {
-            'default': 20,
-            'description': 'Turn-clock ticks before an unfinished realm counts as lost',
+            'default': 50,
+            'description': 'Turn-clock ticks (2s each) before an unfinished realm counts as lost — scaled for the 14x14 grid',
             'label': 'Starting Turns',
             'tier': 'presentation',
             'type': 'number',
-          },
-          'tiles': {
-            'default': [
-              {
-                'claimable': false,
-                'id': 't00',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'building-castle',
-                  'dimension': '3d',
-                  'name': 'building-castle',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-castle.glb',
-                },
-                'passable': true,
-                'terrain': 'castle',
-                'x': 0,
-                'y': 0,
-              },
-              {
-                'claimable': false,
-                'id': 't10',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 0,
-              },
-              {
-                'claimable': false,
-                'id': 't20',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 0,
-              },
-              {
-                'claimable': false,
-                'id': 't30',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'sand',
-                  'dimension': '3d',
-                  'name': 'sand',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb',
-                },
-                'passable': true,
-                'terrain': 'sand',
-                'x': 3,
-                'y': 0,
-              },
-              {
-                'claimable': false,
-                'id': 't40',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'water',
-                  'dimension': '3d',
-                  'name': 'water',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/water.glb',
-                },
-                'passable': false,
-                'terrain': 'water',
-                'x': 4,
-                'y': 0,
-              },
-              {
-                'claimable': false,
-                'id': 't50',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'water',
-                  'dimension': '3d',
-                  'name': 'water',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/water.glb',
-                },
-                'passable': false,
-                'terrain': 'water',
-                'x': 5,
-                'y': 0,
-              },
-              {
-                'claimable': false,
-                'id': 't01',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 1,
-              },
-              {
-                'claimable': false,
-                'id': 't11',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 1,
-              },
-              {
-                'claimable': true,
-                'id': 't21',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'building-village',
-                  'dimension': '3d',
-                  'name': 'building-village',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-village.glb',
-                },
-                'passable': true,
-                'terrain': 'village',
-                'x': 2,
-                'y': 1,
-              },
-              {
-                'claimable': false,
-                'id': 't31',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'sand',
-                  'dimension': '3d',
-                  'name': 'sand',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb',
-                },
-                'passable': true,
-                'terrain': 'sand',
-                'x': 3,
-                'y': 1,
-              },
-              {
-                'claimable': false,
-                'id': 't41',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'sand',
-                  'dimension': '3d',
-                  'name': 'sand',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb',
-                },
-                'passable': true,
-                'terrain': 'sand',
-                'x': 4,
-                'y': 1,
-              },
-              {
-                'claimable': false,
-                'id': 't51',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'water',
-                  'dimension': '3d',
-                  'name': 'water',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/water.glb',
-                },
-                'passable': false,
-                'terrain': 'water',
-                'x': 5,
-                'y': 1,
-              },
-              {
-                'claimable': false,
-                'id': 't02',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 2,
-              },
-              {
-                'claimable': false,
-                'id': 't12',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-mountain',
-                  'dimension': '3d',
-                  'name': 'stone-mountain',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/stone-mountain.glb',
-                },
-                'passable': false,
-                'terrain': 'mountain',
-                'x': 1,
-                'y': 2,
-              },
-              {
-                'claimable': false,
-                'id': 't22',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 2,
-              },
-              {
-                'claimable': false,
-                'id': 't32',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 3,
-                'y': 2,
-              },
-              {
-                'claimable': true,
-                'id': 't42',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'building-market',
-                  'dimension': '3d',
-                  'name': 'building-market',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-market.glb',
-                },
-                'passable': true,
-                'terrain': 'market',
-                'x': 4,
-                'y': 2,
-              },
-              {
-                'claimable': false,
-                'id': 't52',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'sand',
-                  'dimension': '3d',
-                  'name': 'sand',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb',
-                },
-                'passable': true,
-                'terrain': 'sand',
-                'x': 5,
-                'y': 2,
-              },
-              {
-                'claimable': false,
-                'id': 't03',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'dirt',
-                  'dimension': '3d',
-                  'name': 'dirt',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/dirt.glb',
-                },
-                'passable': true,
-                'terrain': 'dirt',
-                'x': 0,
-                'y': 3,
-              },
-              {
-                'claimable': false,
-                'id': 't13',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 3,
-              },
-              {
-                'claimable': false,
-                'id': 't23',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 3,
-              },
-              {
-                'claimable': false,
-                'id': 't33',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-mountain',
-                  'dimension': '3d',
-                  'name': 'stone-mountain',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/stone-mountain.glb',
-                },
-                'passable': false,
-                'terrain': 'mountain',
-                'x': 3,
-                'y': 3,
-              },
-              {
-                'claimable': false,
-                'id': 't43',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 4,
-                'y': 3,
-              },
-              {
-                'claimable': false,
-                'id': 't53',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 5,
-                'y': 3,
-              },
-              {
-                'claimable': false,
-                'id': 't04',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass-forest',
-                  'dimension': '3d',
-                  'name': 'grass-forest',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass-forest.glb',
-                },
-                'passable': true,
-                'terrain': 'forest',
-                'x': 0,
-                'y': 4,
-              },
-              {
-                'claimable': false,
-                'id': 't14',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 4,
-              },
-              {
-                'claimable': true,
-                'id': 't24',
-                'modelUrl': {
-                  'animations': [
-                    'animation',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'building-mill',
-                  'dimension': '3d',
-                  'name': 'building-mill',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-mill.glb',
-                },
-                'passable': true,
-                'terrain': 'windmill',
-                'x': 2,
-                'y': 4,
-              },
-              {
-                'claimable': false,
-                'id': 't34',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 3,
-                'y': 4,
-              },
-              {
-                'claimable': false,
-                'id': 't44',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone-mountain',
-                  'dimension': '3d',
-                  'name': 'stone-mountain',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/stone-mountain.glb',
-                },
-                'passable': false,
-                'terrain': 'mountain',
-                'x': 4,
-                'y': 4,
-              },
-              {
-                'claimable': false,
-                'id': 't54',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 5,
-                'y': 4,
-              },
-              {
-                'claimable': false,
-                'id': 't05',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 5,
-              },
-              {
-                'claimable': false,
-                'id': 't15',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'sand',
-                  'dimension': '3d',
-                  'name': 'sand',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/sand.glb',
-                },
-                'passable': true,
-                'terrain': 'sand',
-                'x': 1,
-                'y': 5,
-              },
-              {
-                'claimable': false,
-                'id': 't25',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 5,
-              },
-              {
-                'claimable': false,
-                'id': 't35',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 3,
-                'y': 5,
-              },
-              {
-                'claimable': false,
-                'id': 't45',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 4,
-                'y': 5,
-              },
-              {
-                'claimable': false,
-                'id': 't55',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass-hill',
-                  'dimension': '3d',
-                  'name': 'grass-hill',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/grass-hill.glb',
-                },
-                'passable': true,
-                'terrain': 'hill',
-                'x': 5,
-                'y': 5,
-              },
-            ],
-            'description': '6x6 hex realm grid — biomes + neutral building hexes on square-lattice positions.',
-            'items': {
-              'properties': {
-                'claimable': {
-                  'name': 'claimable',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'passable': {
-                  'name': 'passable',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'terrain': {
-                  'name': 'terrain',
-                  'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Tiles',
-            'tier': 'presentation',
-            'type': '[HexStrategyBoard3DTilesItem]',
           },
           'unitScale': {
             'default': 1,
@@ -1422,7 +880,7 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                 'unitType': 'settler',
               },
             ],
-            'description': 'The player\'s single settler token — starts on the castle hex.',
+            'description': 'The player\'s single settler token — starts at the grid corner (0,0).',
             'items': {
               'properties': {
                 'id': {
@@ -1529,6 +987,213 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
             'tier': 'presentation',
             'type': '[HexStrategyBoard3DUnitsItem]',
           },
+          'villageAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'building-village',
+              'dimension': '3d',
+              'name': 'building-village',
+              'role': 'decoration',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-village.glb',
+            },
+            'description': 'Claimable village hex — one of 3 win-condition buildings.',
+            'label': 'Village Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
+          'waterAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'water',
+              'dimension': '3d',
+              'name': 'water',
+              'role': 'decoration',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/water.glb',
+            },
+            'description': 'Impassable water hex, scattered across the mid-band.',
+            'label': 'Water Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
+          'windmillAsset': {
+            'default': {
+              'animations': [
+                'animation',
+              ],
+              'aspect': '1:1',
+              'category': 'building-mill',
+              'dimension': '3d',
+              'name': 'building-mill',
+              'role': 'decoration',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board-3d/kenney-hexagon-kit/features/building-mill.glb',
+            },
+            'description': 'Claimable windmill hex — one of 3 win-condition buildings.',
+            'label': 'Windmill Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
         },
         'emits': [
           {
@@ -1632,6 +1297,7 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
             'movementRange',
             'result',
             'selectedUnitId',
+            'tiles',
             'totalBuildings',
             'turnsLeft',
             'units',
@@ -1812,17 +1478,271 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                 [
                   'set',
                   '@entity.gridWidth',
-                  6,
+                  14,
                 ],
                 [
                   'set',
                   '@entity.gridHeight',
-                  6,
+                  14,
                 ],
                 [
                   'set',
                   '@entity.movementRange',
                   2,
+                ],
+                [
+                  'set',
+                  '@entity.tiles',
+                  [
+                    'array/flatten',
+                    [
+                      'array/map',
+                      [
+                        'array/range',
+                        0,
+                        14,
+                      ],
+                      [
+                        'fn',
+                        'gy',
+                        [
+                          'array/map',
+                          [
+                            'array/range',
+                            0,
+                            14,
+                          ],
+                          [
+                            'fn',
+                            'gx',
+                            [
+                              'let',
+                              [
+                                [
+                                  'obstacle',
+                                  [
+                                    'and',
+                                    [
+                                      '>=',
+                                      '@gy',
+                                      3,
+                                    ],
+                                    [
+                                      'and',
+                                      [
+                                        '<=',
+                                        '@gy',
+                                        10,
+                                      ],
+                                      [
+                                        '==',
+                                        [
+                                          'math/mod',
+                                          [
+                                            '+',
+                                            [
+                                              '*',
+                                              '@gx',
+                                              5,
+                                            ],
+                                            [
+                                              '*',
+                                              '@gy',
+                                              3,
+                                            ],
+                                          ],
+                                          7,
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              [
+                                'let',
+                                [
+                                  [
+                                    'isWater',
+                                    [
+                                      '==',
+                                      [
+                                        'math/mod',
+                                        '@gx',
+                                        2,
+                                      ],
+                                      0,
+                                    ],
+                                  ],
+                                ],
+                                [
+                                  'let',
+                                  [
+                                    [
+                                      'isVillage',
+                                      [
+                                        'and',
+                                        [
+                                          '==',
+                                          '@gx',
+                                          4,
+                                        ],
+                                        [
+                                          '==',
+                                          '@gy',
+                                          3,
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                  [
+                                    'let',
+                                    [
+                                      [
+                                        'isMarket',
+                                        [
+                                          'and',
+                                          [
+                                            '==',
+                                            '@gx',
+                                            9,
+                                          ],
+                                          [
+                                            '==',
+                                            '@gy',
+                                            7,
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    [
+                                      'let',
+                                      [
+                                        [
+                                          'isWindmill',
+                                          [
+                                            'and',
+                                            [
+                                              '==',
+                                              '@gx',
+                                              5,
+                                            ],
+                                            [
+                                              '==',
+                                              '@gy',
+                                              10,
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                      {
+                                        'claimable': [
+                                          'if',
+                                          '@isVillage',
+                                          true,
+                                          [
+                                            'if',
+                                            '@isMarket',
+                                            true,
+                                            [
+                                              'if',
+                                              '@isWindmill',
+                                              true,
+                                              false,
+                                            ],
+                                          ],
+                                        ],
+                                        'id': [
+                                          'str/concat',
+                                          't-',
+                                          '@gx',
+                                          '-',
+                                          '@gy',
+                                        ],
+                                        'modelUrl': [
+                                          'if',
+                                          '@isVillage',
+                                          '@config.villageAsset',
+                                          [
+                                            'if',
+                                            '@isMarket',
+                                            '@config.marketAsset',
+                                            [
+                                              'if',
+                                              '@isWindmill',
+                                              '@config.windmillAsset',
+                                              [
+                                                'if',
+                                                '@obstacle',
+                                                [
+                                                  'if',
+                                                  '@isWater',
+                                                  '@config.waterAsset',
+                                                  '@config.mountainAsset',
+                                                ],
+                                                '@config.grassAsset',
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                        'passable': [
+                                          'if',
+                                          [
+                                            'or',
+                                            '@isVillage',
+                                            [
+                                              'or',
+                                              '@isMarket',
+                                              '@isWindmill',
+                                            ],
+                                          ],
+                                          true,
+                                          [
+                                            'if',
+                                            '@obstacle',
+                                            false,
+                                            true,
+                                          ],
+                                        ],
+                                        'terrain': [
+                                          'if',
+                                          '@isVillage',
+                                          'village',
+                                          [
+                                            'if',
+                                            '@isMarket',
+                                            'market',
+                                            [
+                                              'if',
+                                              '@isWindmill',
+                                              'windmill',
+                                              [
+                                                'if',
+                                                '@obstacle',
+                                                [
+                                                  'if',
+                                                  '@isWater',
+                                                  'water',
+                                                  'mountain',
+                                                ],
+                                                'grass',
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                        'x': '@gx',
+                                        'y': '@gy',
+                                      },
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
                 ],
                 [
                   'render-ui',
@@ -1849,12 +1769,13 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                     },
                     'children': [
                       {
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -1875,6 +1796,14 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Claim the village, market & windmill',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your settler, then click a highlighted hex to move',
                         },
                       ],
                       'type': 'game-hud',
@@ -1901,7 +1830,7 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                     'array/map',
                     [
                       'array/filter',
-                      '@config.tiles',
+                      '@entity.tiles',
                       [
                         'fn',
                         't',
@@ -2053,12 +1982,13 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                     },
                     'children': [
                       {
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -2079,6 +2009,14 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Claim the village, market & windmill',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your settler, then click a highlighted hex to move',
                         },
                       ],
                       'type': 'game-hud',
@@ -2170,7 +2108,7 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                       'tile',
                       [
                         'array/find',
-                        '@config.tiles',
+                        '@entity.tiles',
                         [
                           'fn',
                           't',
@@ -2345,12 +2283,13 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                     },
                     'children': [
                       {
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -2371,6 +2310,14 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Claim the village, market & windmill',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your settler, then click a highlighted hex to move',
                         },
                       ],
                       'type': 'game-hud',
@@ -2414,7 +2361,7 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                           'object/get',
                           [
                             'array/find',
-                            '@config.tiles',
+                            '@entity.tiles',
                             [
                               'fn',
                               't',
@@ -2563,12 +2510,13 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                     },
                     'children': [
                       {
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -2589,6 +2537,14 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Claim the village, market & windmill',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your settler, then click a highlighted hex to move',
                         },
                       ],
                       'type': 'game-hud',
@@ -2643,12 +2599,13 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                     },
                     'children': [
                       {
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -2669,6 +2626,14 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Claim the village, market & windmill',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your settler, then click a highlighted hex to move',
                         },
                       ],
                       'type': 'game-hud',
@@ -2781,12 +2746,13 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                     },
                     'children': [
                       {
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -2807,6 +2773,14 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Claim the village, market & windmill',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your settler, then click a highlighted hex to move',
                         },
                       ],
                       'type': 'game-hud',
@@ -2935,12 +2909,13 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                   },
                   'children': [
                     {
+                      'cameraMode': 'top-down',
                       'events': '@entity.fx',
                       'features': '@config.features',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@config.tiles',
+                      'tiles': '@entity.tiles',
                       'type': 'game-canvas-3d',
                       'unitClickEvent': 'UNIT_CLICK',
                       'unitScale': '@config.unitScale',
@@ -2961,6 +2936,14 @@ export function stdUiHexStrategyBoard3dHexStrategyBoard3DOrbital(params: StdUiHe
                       {
                         'label': 'Result',
                         'value': '@entity.result',
+                      },
+                      {
+                        'label': 'Goal',
+                        'value': 'Claim the village, market & windmill',
+                      },
+                      {
+                        'label': 'How',
+                        'value': 'Click your settler, then click a highlighted hex to move',
                       },
                     ],
                     'type': 'game-hud',

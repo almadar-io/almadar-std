@@ -93,24 +93,24 @@ export interface StdUiGameBoard3dPlayAgainPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameBoard3dConfig {
-  /** Default: `{"effects":{"death":{"animations":["static"],"aspect":"8:1","category":"death","dimension":"3d","name":"death","role":"effect","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/stones.glb"},"heal":{"animations":["static"],"aspect":"8:1","category":"heal","dimension":"3d","name":"heal","role":"effect","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/coin.glb"},"hit":{"animations":["static"],"aspect":"8:1","category":"hit","dimension":"3d","name":"hit","role":"effect","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/trap.glb"},"magic":{"animations":["static"],"aspect":"8:1","category":"magic","dimension":"3d","name":"magic","role":"effect","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/banner.glb"},"melee":{"animations":["static"],"aspect":"8:1","category":"melee","dimension":"3d","name":"melee","role":"effect","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/weapon-sword.glb"},"ranged":{"animations":["static"],"aspect":"8:1","category":"ranged","dimension":"3d","name":"ranged","role":"effect","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/weapon-spear.glb"}},"features":{"gold_mine":{"animations":["static"],"aspect":"1:1","category":"gold_mine","dimension":"3d","name":"gold_mine","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/chest.glb"},"portal":{"animations":["static"],"aspect":"1:1","category":"portal","dimension":"3d","name":"portal","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/gate-metal-bars.glb"}},"terrains":{"castle":{"animations":["static"],"aspect":"1:1","category":"castle","dimension":"3d","name":"castle","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"dirt":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"3d","name":"dirt","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb"},"forest":{"animations":["static"],"aspect":"1:1","category":"forest","dimension":"3d","name":"forest","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb"},"grass":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"3d","name":"grass","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb"},"stone":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"3d","name":"stone","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"}},"units":{"guardian":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"guardian","dimension":"3d","name":"guardian","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-orc.glb"},"scout":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"scout","dimension":"3d","name":"scout","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-graveyard-kit/units/character-skeleton.glb"},"warrior":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"warrior","dimension":"3d","name":"warrior","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-arena/units/character-soldier.glb"},"worker":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"worker","dimension":"3d","name":"worker","role":"npc","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-human.glb"}}}` */
-  assetManifest?: EntityRow;
   /** Default: `3` */
   attackDamage?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"}` */
+  coverAsset?: EntityRow;
   error?: EntityRow;
-  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"chest","dimension":"3d","name":"chest","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/chest.glb"},"id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"gate-metal-bars","dimension":"3d","name":"gate-metal-bars","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/gate-metal-bars.glb"},"id":"f2","type":"portal","x":3,"y":0}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"chest","dimension":"3d","name":"chest","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/chest.glb"},"id":"f1","type":"gold_mine","x":6,"y":7},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"gate-metal-bars","dimension":"3d","name":"gate-metal-bars","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/gate-metal-bars.glb"},"id":"f2","type":"portal","x":10,"y":8}]` */
   features?: EntityRow[];
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"template-floor","dimension":"3d","name":"template-floor","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb"}` */
+  groundAsset?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `0.45` */
   scale?: number;
-  /** Default: `[{"id":"t00","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":0,"y":0},{"id":"t10","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":1,"y":0},{"id":"t20","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":2,"y":0},{"id":"t30","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":3,"y":0},{"id":"t40","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":4,"y":0},{"id":"t01","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":0,"y":1},{"id":"t11","modelUrl":{"animations":["static"],"aspect":"1:1","category":"template-floor-detail","dimension":"3d","name":"template-floor-detail","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb"},"passable":true,"terrain":"dirt","x":1,"y":1},{"id":"t21","modelUrl":{"animations":["static"],"aspect":"1:1","category":"template-floor","dimension":"3d","name":"template-floor","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb"},"passable":true,"terrain":"grass","x":2,"y":1},{"id":"t31","modelUrl":{"animations":["static"],"aspect":"1:1","category":"template-floor","dimension":"3d","name":"template-floor","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb"},"passable":true,"terrain":"grass","x":3,"y":1},{"id":"t41","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":4,"y":1},{"id":"t02","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":0,"y":2},{"id":"t12","modelUrl":{"animations":["static"],"aspect":"1:1","category":"template-floor","dimension":"3d","name":"template-floor","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb"},"passable":true,"terrain":"grass","x":1,"y":2},{"id":"t22","modelUrl":{"animations":["static"],"aspect":"1:1","category":"template-floor-detail","dimension":"3d","name":"template-floor-detail","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb"},"passable":true,"terrain":"dirt","x":2,"y":2},{"id":"t32","modelUrl":{"animations":["static"],"aspect":"1:1","category":"template-floor","dimension":"3d","name":"template-floor","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb"},"passable":true,"terrain":"grass","x":3,"y":2},{"id":"t42","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":4,"y":2},{"id":"t03","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":0,"y":3},{"id":"t13","modelUrl":{"animations":["static"],"aspect":"1:1","category":"template-floor","dimension":"3d","name":"template-floor","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb"},"passable":true,"terrain":"grass","x":1,"y":3},{"id":"t23","modelUrl":{"animations":["static"],"aspect":"1:1","category":"template-floor","dimension":"3d","name":"template-floor","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb"},"passable":true,"terrain":"grass","x":2,"y":3},{"id":"t33","modelUrl":{"animations":["static"],"aspect":"1:1","category":"template-floor-detail","dimension":"3d","name":"template-floor-detail","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb"},"passable":true,"terrain":"dirt","x":3,"y":3},{"id":"t43","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":4,"y":3},{"id":"t04","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":0,"y":4},{"id":"t14","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":1,"y":4},{"id":"t24","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":2,"y":4},{"id":"t34","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":3,"y":4},{"id":"t44","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall","dimension":"3d","name":"wall","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb"},"passable":false,"terrain":"stone","x":4,"y":4}]` */
-  tiles?: EntityRow[];
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"character-human","dimension":"3d","name":"character-human","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-human.glb"},"name":"Worker","position":{"x":1,"y":1},"team":"player","unitType":"worker"},{"health":10,"id":"u2","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"character-soldier","dimension":"3d","name":"character-soldier","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-arena/units/character-soldier.glb"},"name":"Warrior","position":{"x":1,"y":3},"team":"player","unitType":"warrior"},{"health":8,"id":"e1","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"character-orc","dimension":"3d","name":"character-orc","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-orc.glb"},"name":"Guardian","position":{"x":3,"y":3},"team":"enemy","unitType":"guardian"},{"health":6,"id":"e2","maxHealth":8,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"character-skeleton","dimension":"3d","name":"character-skeleton","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-graveyard-kit/units/character-skeleton.glb"},"name":"Scout","position":{"x":3,"y":1},"team":"enemy","unitType":"scout"}]` */
+  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"character-human","dimension":"3d","name":"character-human","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-human.glb"},"name":"Worker","position":{"x":4,"y":14},"team":"player","unitType":"worker"},{"health":10,"id":"u2","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"character-soldier","dimension":"3d","name":"character-soldier","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-arena/units/character-soldier.glb"},"name":"Warrior","position":{"x":8,"y":14},"team":"player","unitType":"warrior"},{"health":10,"id":"u3","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"character-human","dimension":"3d","name":"character-human","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-human.glb"},"name":"Ranger","position":{"x":12,"y":14},"team":"player","unitType":"worker"},{"health":8,"id":"e1","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"character-orc","dimension":"3d","name":"character-orc","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-orc.glb"},"name":"Guardian","position":{"x":4,"y":1},"team":"enemy","unitType":"guardian"},{"health":6,"id":"e2","maxHealth":8,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"character-skeleton","dimension":"3d","name":"character-skeleton","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-graveyard-kit/units/character-skeleton.glb"},"name":"Scout","position":{"x":8,"y":1},"team":"enemy","unitType":"scout"},{"health":8,"id":"e3","maxHealth":10,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"character-orc","dimension":"3d","name":"character-orc","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-orc.glb"},"name":"Brute","position":{"x":12,"y":1},"team":"enemy","unitType":"guardian"}]` */
   units?: EntityRow[];
 }
 
@@ -550,17 +550,17 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
             ],
           },
           {
-            'default': 5,
+            'default': 16,
             'name': 'gridWidth',
             'type': 'number',
           },
           {
-            'default': 5,
+            'default': 16,
             'name': 'gridHeight',
             'type': 'number',
           },
           {
-            'default': 2,
+            'default': 4,
             'name': 'movementRange',
             'type': 'number',
           },
@@ -569,1260 +569,8 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
             'name': 'enemyTurn',
             'type': 'boolean',
           },
-        ];
-        const extras = params.fields ?? [];
-        if (extras.length === 0) return canonical;
-        const extraNames = new Set(extras.map((f) => f.name));
-        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
-      })(),
-    } as Entity,
-    traits: [
-      rebindInlineTraitEntity({
-        'category': 'interaction',
-        'config': {
-          'assetManifest': {
-            'default': {
-              'effects': {
-                'death': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '8:1',
-                  'category': 'death',
-                  'dimension': '3d',
-                  'name': 'death',
-                  'role': 'effect',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/stones.glb',
-                },
-                'heal': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '8:1',
-                  'category': 'heal',
-                  'dimension': '3d',
-                  'name': 'heal',
-                  'role': 'effect',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/coin.glb',
-                },
-                'hit': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '8:1',
-                  'category': 'hit',
-                  'dimension': '3d',
-                  'name': 'hit',
-                  'role': 'effect',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/trap.glb',
-                },
-                'magic': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '8:1',
-                  'category': 'magic',
-                  'dimension': '3d',
-                  'name': 'magic',
-                  'role': 'effect',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/banner.glb',
-                },
-                'melee': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '8:1',
-                  'category': 'melee',
-                  'dimension': '3d',
-                  'name': 'melee',
-                  'role': 'effect',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/weapon-sword.glb',
-                },
-                'ranged': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '8:1',
-                  'category': 'ranged',
-                  'dimension': '3d',
-                  'name': 'ranged',
-                  'role': 'effect',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/weapon-spear.glb',
-                },
-              },
-              'features': {
-                'gold_mine': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'gold_mine',
-                  'dimension': '3d',
-                  'name': 'gold_mine',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/chest.glb',
-                },
-                'portal': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'portal',
-                  'dimension': '3d',
-                  'name': 'portal',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/gate-metal-bars.glb',
-                },
-              },
-              'terrains': {
-                'castle': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'castle',
-                  'dimension': '3d',
-                  'name': 'castle',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'dirt': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'dirt',
-                  'dimension': '3d',
-                  'name': 'dirt',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb',
-                },
-                'forest': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'forest',
-                  'dimension': '3d',
-                  'name': 'forest',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb',
-                },
-                'grass': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'grass',
-                  'dimension': '3d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb',
-                },
-                'stone': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'stone',
-                  'dimension': '3d',
-                  'name': 'stone',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-              },
-              'units': {
-                'guardian': {
-                  'animations': [
-                    'idle',
-                    'walk',
-                    'attack',
-                    'hit',
-                    'death',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'guardian',
-                  'dimension': '3d',
-                  'name': 'guardian',
-                  'role': 'npc',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-orc.glb',
-                },
-                'scout': {
-                  'animations': [
-                    'idle',
-                    'walk',
-                    'attack',
-                    'hit',
-                    'death',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'scout',
-                  'dimension': '3d',
-                  'name': 'scout',
-                  'role': 'npc',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-graveyard-kit/units/character-skeleton.glb',
-                },
-                'warrior': {
-                  'animations': [
-                    'idle',
-                    'walk',
-                    'attack',
-                    'hit',
-                    'death',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'warrior',
-                  'dimension': '3d',
-                  'name': 'warrior',
-                  'role': 'npc',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-arena/units/character-soldier.glb',
-                },
-                'worker': {
-                  'animations': [
-                    'idle',
-                    'walk',
-                    'attack',
-                    'hit',
-                    'death',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'worker',
-                  'dimension': '3d',
-                  'name': 'worker',
-                  'role': 'npc',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-human.glb',
-                },
-              },
-            },
-            'description': 'Asset manifest for terrain/unit/feature/effect sprites.',
-            'label': 'Asset Manifest',
-            'properties': {
-              'effects': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'effects',
-                'required': false,
-                'type': 'object',
-              },
-              'features': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'features',
-                'required': false,
-                'type': 'object',
-              },
-              'terrains': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'terrains',
-                'required': false,
-                'type': 'object',
-              },
-              'units': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'units',
-                'required': false,
-                'type': 'object',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'GameBoard3DAssetManifest',
-          },
-          'attackDamage': {
-            'default': 3,
-            'description': 'Damage dealt when a selected unit attacks an adjacent enemy',
-            'label': 'Attack Damage',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'className': {
-            'default': '',
-            'description': 'className prop',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
-          },
-          'error': {
-            'description': 'Error state (UiError)',
-            'label': 'Error',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'stack': {
-                'name': 'stack',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'GameBoard3DError',
-          },
-          'features': {
-            'default': [
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'chest',
-                  'dimension': '3d',
-                  'name': 'chest',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/chest.glb',
-                },
-                'id': 'f1',
-                'type': 'gold_mine',
-                'x': 2,
-                'y': 2,
-              },
-              {
-                'assetUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'gate-metal-bars',
-                  'dimension': '3d',
-                  'name': 'gate-metal-bars',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/gate-metal-bars.glb',
-                },
-                'id': 'f2',
-                'type': 'portal',
-                'x': 3,
-                'y': 0,
-              },
-            ],
-            'description': 'Decorative features on the board.',
-            'items': {
-              'properties': {
-                'assetUrl': {
-                  'name': 'assetUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'required': false,
-                  'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'sprite': {
-                  'name': 'sprite',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Features',
-            'tier': 'presentation',
-            'type': '[GameBoard3DFeaturesItem]',
-          },
-          'isLoading': {
-            'default': false,
-            'description': 'Loading state indicator',
-            'label': 'Is Loading',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'scale': {
-            'default': 0.45,
-            'description': 'Canvas render scale',
-            'label': 'Scale',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'tiles': {
-            'default': [
-              {
-                'id': 't00',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 0,
-                'y': 0,
-              },
-              {
-                'id': 't10',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 1,
-                'y': 0,
-              },
-              {
-                'id': 't20',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 2,
-                'y': 0,
-              },
-              {
-                'id': 't30',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 3,
-                'y': 0,
-              },
-              {
-                'id': 't40',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 4,
-                'y': 0,
-              },
-              {
-                'id': 't01',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 0,
-                'y': 1,
-              },
-              {
-                'id': 't11',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'template-floor-detail',
-                  'dimension': '3d',
-                  'name': 'template-floor-detail',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb',
-                },
-                'passable': true,
-                'terrain': 'dirt',
-                'x': 1,
-                'y': 1,
-              },
-              {
-                'id': 't21',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'template-floor',
-                  'dimension': '3d',
-                  'name': 'template-floor',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 1,
-              },
-              {
-                'id': 't31',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'template-floor',
-                  'dimension': '3d',
-                  'name': 'template-floor',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 3,
-                'y': 1,
-              },
-              {
-                'id': 't41',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 4,
-                'y': 1,
-              },
-              {
-                'id': 't02',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 0,
-                'y': 2,
-              },
-              {
-                'id': 't12',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'template-floor',
-                  'dimension': '3d',
-                  'name': 'template-floor',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 2,
-              },
-              {
-                'id': 't22',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'template-floor-detail',
-                  'dimension': '3d',
-                  'name': 'template-floor-detail',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb',
-                },
-                'passable': true,
-                'terrain': 'dirt',
-                'x': 2,
-                'y': 2,
-              },
-              {
-                'id': 't32',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'template-floor',
-                  'dimension': '3d',
-                  'name': 'template-floor',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 3,
-                'y': 2,
-              },
-              {
-                'id': 't42',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 4,
-                'y': 2,
-              },
-              {
-                'id': 't03',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 0,
-                'y': 3,
-              },
-              {
-                'id': 't13',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'template-floor',
-                  'dimension': '3d',
-                  'name': 'template-floor',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 3,
-              },
-              {
-                'id': 't23',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'template-floor',
-                  'dimension': '3d',
-                  'name': 'template-floor',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 3,
-              },
-              {
-                'id': 't33',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'template-floor-detail',
-                  'dimension': '3d',
-                  'name': 'template-floor-detail',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor-detail.glb',
-                },
-                'passable': true,
-                'terrain': 'dirt',
-                'x': 3,
-                'y': 3,
-              },
-              {
-                'id': 't43',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 4,
-                'y': 3,
-              },
-              {
-                'id': 't04',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 0,
-                'y': 4,
-              },
-              {
-                'id': 't14',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 1,
-                'y': 4,
-              },
-              {
-                'id': 't24',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 2,
-                'y': 4,
-              },
-              {
-                'id': 't34',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 3,
-                'y': 4,
-              },
-              {
-                'id': 't44',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall',
-                  'dimension': '3d',
-                  'name': 'wall',
-                  'role': 'decoration',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
-                },
-                'passable': false,
-                'terrain': 'stone',
-                'x': 4,
-                'y': 4,
-              },
-            ],
-            'description': '5×5 grid tile data — takes priority over entity-derived tiles.',
+          {
+            'default': [],
             'items': {
               'properties': {
                 'elevation': {
@@ -1988,9 +736,409 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               'type': 'object',
             },
-            'label': 'Tiles',
+            'name': 'tiles',
+            'type': 'array',
+          },
+        ];
+        const extras = params.fields ?? [];
+        if (extras.length === 0) return canonical;
+        const extraNames = new Set(extras.map((f) => f.name));
+        return [...canonical.filter((f) => !extraNames.has(f.name)), ...extras];
+      })(),
+    } as Entity,
+    traits: [
+      rebindInlineTraitEntity({
+        'category': 'interaction',
+        'config': {
+          'attackDamage': {
+            'default': 3,
+            'description': 'Damage dealt when a selected unit attacks an adjacent enemy',
+            'label': 'Attack Damage',
             'tier': 'presentation',
-            'type': '[GameBoard3DTilesItem]',
+            'type': 'number',
+          },
+          'className': {
+            'default': '',
+            'description': 'className prop',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'coverAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'wall',
+              'dimension': '3d',
+              'name': 'wall',
+              'role': 'decoration',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/terrain/wall.glb',
+            },
+            'description': 'Impassable dungeon wall tile, scattered for chokepoints.',
+            'label': 'Cover Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
+          'error': {
+            'description': 'Error state (UiError)',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'GameBoard3DError',
+          },
+          'features': {
+            'default': [
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'chest',
+                  'dimension': '3d',
+                  'name': 'chest',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/features/chest.glb',
+                },
+                'id': 'f1',
+                'type': 'gold_mine',
+                'x': 6,
+                'y': 7,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'gate-metal-bars',
+                  'dimension': '3d',
+                  'name': 'gate-metal-bars',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/gate-metal-bars.glb',
+                },
+                'id': 'f2',
+                'type': 'portal',
+                'x': 10,
+                'y': 8,
+              },
+            ],
+            'description': 'Decorative features on the board — both repositioned to the mid-band on passable floor tiles.',
+            'items': {
+              'properties': {
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': true,
+                  'type': 'string',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+                'z': {
+                  'name': 'z',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Features',
+            'tier': 'presentation',
+            'type': '[GameBoard3DFeaturesItem]',
+          },
+          'groundAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'template-floor',
+              'dimension': '3d',
+              'name': 'template-floor',
+              'role': 'decoration',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-modular-dungeon-kit/terrain/template-floor.glb',
+            },
+            'description': 'Passable dungeon floor tile, tiled across the battlefield.',
+            'label': 'Ground Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state indicator',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'scale': {
+            'default': 0.45,
+            'description': 'Canvas render scale',
+            'label': 'Scale',
+            'tier': 'presentation',
+            'type': 'number',
           },
           'unitScale': {
             'default': 1,
@@ -2020,8 +1168,8 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                 },
                 'name': 'Worker',
                 'position': {
-                  'x': 1,
-                  'y': 1,
+                  'x': 4,
+                  'y': 14,
                 },
                 'team': 'player',
                 'unitType': 'worker',
@@ -2045,11 +1193,36 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                 },
                 'name': 'Warrior',
                 'position': {
-                  'x': 1,
-                  'y': 3,
+                  'x': 8,
+                  'y': 14,
                 },
                 'team': 'player',
                 'unitType': 'warrior',
+              },
+              {
+                'health': 10,
+                'id': 'u3',
+                'maxHealth': 10,
+                'modelUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'character-human',
+                  'dimension': '3d',
+                  'name': 'character-human',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-human.glb',
+                },
+                'name': 'Ranger',
+                'position': {
+                  'x': 12,
+                  'y': 14,
+                },
+                'team': 'player',
+                'unitType': 'worker',
               },
               {
                 'health': 8,
@@ -2070,8 +1243,8 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                 },
                 'name': 'Guardian',
                 'position': {
-                  'x': 3,
-                  'y': 3,
+                  'x': 4,
+                  'y': 1,
                 },
                 'team': 'enemy',
                 'unitType': 'guardian',
@@ -2095,14 +1268,39 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                 },
                 'name': 'Scout',
                 'position': {
-                  'x': 3,
+                  'x': 8,
                   'y': 1,
                 },
                 'team': 'enemy',
                 'unitType': 'scout',
               },
+              {
+                'health': 8,
+                'id': 'e3',
+                'maxHealth': 10,
+                'modelUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'character-orc',
+                  'dimension': '3d',
+                  'name': 'character-orc',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-game-board-3d/kenney-mini-dungeon/units/character-orc.glb',
+                },
+                'name': 'Brute',
+                'position': {
+                  'x': 12,
+                  'y': 1,
+                },
+                'team': 'enemy',
+                'unitType': 'guardian',
+              },
             ],
-            'description': 'Initial unit roster (2 player + 2 enemy) — takes priority over entity-derived units.',
+            'description': 'Initial unit roster (3 player + 3 enemy at opposite ends) — takes priority over entity-derived units.',
             'items': {
               'properties': {
                 'elevation': {
@@ -2493,6 +1691,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
             'phase',
             'result',
             'selectedUnitId',
+            'tiles',
             'turn',
             'units',
             'validMoves',
@@ -2694,17 +1893,122 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                 [
                   'set',
                   '@entity.gridWidth',
-                  5,
+                  16,
                 ],
                 [
                   'set',
                   '@entity.gridHeight',
-                  5,
+                  16,
                 ],
                 [
                   'set',
                   '@entity.movementRange',
-                  2,
+                  4,
+                ],
+                [
+                  'set',
+                  '@entity.tiles',
+                  [
+                    'array/flatten',
+                    [
+                      'array/map',
+                      [
+                        'array/range',
+                        0,
+                        16,
+                      ],
+                      [
+                        'fn',
+                        'gy',
+                        [
+                          'array/map',
+                          [
+                            'array/range',
+                            0,
+                            16,
+                          ],
+                          [
+                            'fn',
+                            'gx',
+                            [
+                              'let',
+                              [
+                                [
+                                  'cover',
+                                  [
+                                    'and',
+                                    [
+                                      '>=',
+                                      '@gy',
+                                      3,
+                                    ],
+                                    [
+                                      'and',
+                                      [
+                                        '<=',
+                                        '@gy',
+                                        12,
+                                      ],
+                                      [
+                                        '==',
+                                        [
+                                          'math/mod',
+                                          [
+                                            '+',
+                                            [
+                                              '*',
+                                              '@gx',
+                                              3,
+                                            ],
+                                            [
+                                              '*',
+                                              '@gy',
+                                              7,
+                                            ],
+                                          ],
+                                          8,
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              {
+                                'id': [
+                                  'str/concat',
+                                  't-',
+                                  '@gx',
+                                  '-',
+                                  '@gy',
+                                ],
+                                'modelUrl': [
+                                  'if',
+                                  '@cover',
+                                  '@config.coverAsset',
+                                  '@config.groundAsset',
+                                ],
+                                'passable': [
+                                  'if',
+                                  '@cover',
+                                  false,
+                                  true,
+                                ],
+                                'terrain': [
+                                  'if',
+                                  '@cover',
+                                  'wall',
+                                  'floor',
+                                ],
+                                'x': '@gx',
+                                'y': '@gy',
+                              },
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
                 ],
                 [
                   'render-ui',
@@ -2738,12 +2042,13 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -2764,6 +2069,14 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -2983,12 +2296,13 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3009,6 +2323,14 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3238,12 +2560,13 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3264,6 +2587,14 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3324,7 +2655,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                     'array/map',
                     [
                       'array/filter',
-                      '@config.tiles',
+                      '@entity.tiles',
                       [
                         'fn',
                         't',
@@ -3485,12 +2816,13 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3511,6 +2843,14 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3629,12 +2969,13 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3655,6 +2996,14 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3835,12 +3184,13 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3861,6 +3211,14 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3932,12 +3290,13 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3958,6 +3317,14 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -4086,12 +3453,13 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -4112,6 +3480,14 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -4310,12 +3686,13 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -4336,6 +3713,14 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all enemies',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -4883,7 +4268,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                                         'object/get',
                                         [
                                           'array/find',
-                                          '@config.tiles',
+                                          '@entity.tiles',
                                           [
                                             'fn',
                                             't',
@@ -5139,12 +4524,13 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                   'children': [
                     {
                       'attackTargets': '@entity.attackTargets',
+                      'cameraMode': 'isometric',
                       'events': '@entity.fx',
                       'features': '@config.features',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@config.tiles',
+                      'tiles': '@entity.tiles',
                       'type': 'game-canvas-3d',
                       'unitClickEvent': 'UNIT_CLICK',
                       'unitScale': '@config.unitScale',
@@ -5165,6 +4551,14 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                       {
                         'label': 'Result',
                         'value': '@entity.result',
+                      },
+                      {
+                        'label': 'Goal',
+                        'value': 'Defeat all enemies',
+                      },
+                      {
+                        'label': 'How',
+                        'value': 'Click your unit → move → click it again → strike an adjacent foe',
                       },
                     ],
                     'type': 'game-hud',
@@ -5301,12 +4695,13 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                   'children': [
                     {
                       'attackTargets': '@entity.attackTargets',
+                      'cameraMode': 'isometric',
                       'events': '@entity.fx',
                       'features': '@config.features',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@config.tiles',
+                      'tiles': '@entity.tiles',
                       'type': 'game-canvas-3d',
                       'unitClickEvent': 'UNIT_CLICK',
                       'unitScale': '@config.unitScale',
@@ -5327,6 +4722,14 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                       {
                         'label': 'Result',
                         'value': '@entity.result',
+                      },
+                      {
+                        'label': 'Goal',
+                        'value': 'Defeat all enemies',
+                      },
+                      {
+                        'label': 'How',
+                        'value': 'Click your unit → move → click it again → strike an adjacent foe',
                       },
                     ],
                     'type': 'game-hud',

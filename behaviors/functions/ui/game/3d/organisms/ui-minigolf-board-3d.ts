@@ -78,7 +78,7 @@ export interface StdUiMinigolfBoard3dConfig {
   features?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `8` */
+  /** Default: `22` */
   par?: number;
   /** Default: `0.45` */
   scale?: number;
@@ -596,7 +596,7 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
             'type': 'boolean',
           },
           'par': {
-            'default': 8,
+            'default': 22,
             'description': 'Stroke target — holing out at or under this value wins',
             'label': 'Par',
             'tier': 'presentation',
@@ -1889,6 +1889,7 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
@@ -1915,6 +1916,14 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Sink the ball in par or fewer strokes',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the ball → click an adjacent fairway cell to putt; reach the hole',
                         },
                       ],
                       'type': 'game-hud',
@@ -2074,6 +2083,7 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
@@ -2100,6 +2110,14 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Sink the ball in par or fewer strokes',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the ball → click an adjacent fairway cell to putt; reach the hole',
                         },
                       ],
                       'type': 'game-hud',
@@ -2249,6 +2267,7 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
@@ -2275,6 +2294,14 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Sink the ball in par or fewer strokes',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the ball → click an adjacent fairway cell to putt; reach the hole',
                         },
                       ],
                       'type': 'game-hud',
@@ -2555,6 +2582,7 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
@@ -2581,6 +2609,14 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Sink the ball in par or fewer strokes',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the ball → click an adjacent fairway cell to putt; reach the hole',
                         },
                       ],
                       'type': 'game-hud',
@@ -2778,6 +2814,7 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
@@ -2804,6 +2841,14 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Sink the ball in par or fewer strokes',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the ball → click an adjacent fairway cell to putt; reach the hole',
                         },
                       ],
                       'type': 'game-hud',
@@ -2924,6 +2969,7 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                     },
                     'children': [
                       {
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
@@ -2950,6 +2996,14 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Sink the ball in par or fewer strokes',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click the ball → click an adjacent fairway cell to putt; reach the hole',
                         },
                       ],
                       'type': 'game-hud',

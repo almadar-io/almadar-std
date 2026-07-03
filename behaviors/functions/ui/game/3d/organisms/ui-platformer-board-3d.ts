@@ -107,7 +107,7 @@ export interface StdUiPlatformerBoard3dConfig {
   className?: string;
   /** Default: `{"animations":["static"],"aspect":"1:1","category":"coin","dimension":"3d","name":"coin","role":"feature","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board-3d/kenney-platformer-kit/features/coin-gold.glb","variant":""}` */
   coinSprite?: EntityRow;
-  /** Default: `700` */
+  /** Default: `2300` */
   goalX?: number;
   /** Default: `0.6` */
   gravity?: number;
@@ -117,7 +117,7 @@ export interface StdUiPlatformerBoard3dConfig {
   maxFallSpeed?: number;
   /** Default: `4` */
   moveSpeed?: number;
-  /** Default: `[{"height":32,"type":"ground","width":340,"x":0,"y":368},{"height":32,"type":"ground","width":360,"x":440,"y":368},{"height":16,"type":"platform","width":160,"x":150,"y":280},{"height":16,"type":"platform","width":160,"x":420,"y":220},{"height":16,"type":"platform","width":120,"x":680,"y":280},{"height":32,"type":"hazard","width":64,"x":560,"y":336},{"height":28,"type":"goal","width":64,"x":700,"y":252}]` */
+  /** Default: `[{"height":32,"type":"ground","width":340,"x":0,"y":368},{"height":16,"type":"platform","width":160,"x":150,"y":280},{"height":16,"type":"platform","width":160,"x":420,"y":220},{"height":32,"type":"ground","width":300,"x":440,"y":368},{"height":32,"type":"hazard","width":64,"x":560,"y":336},{"height":32,"type":"ground","width":300,"x":840,"y":368},{"height":16,"type":"platform","width":160,"x":900,"y":280},{"height":32,"type":"hazard","width":64,"x":960,"y":336},{"height":32,"type":"ground","width":300,"x":1240,"y":368},{"height":16,"type":"platform","width":160,"x":1320,"y":220},{"height":32,"type":"hazard","width":64,"x":1360,"y":336},{"height":32,"type":"ground","width":300,"x":1640,"y":368},{"height":16,"type":"platform","width":160,"x":1700,"y":280},{"height":32,"type":"ground","width":360,"x":2040,"y":368},{"height":16,"type":"platform","width":120,"x":2280,"y":280},{"height":28,"type":"goal","width":64,"x":2300,"y":252}]` */
   platforms?: EntityRow[];
   /** Default: `{"animations":["idle","walk","sprint","jump","fall"],"aspect":"1:1","category":"player","dimension":"3d","name":"player","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board-3d/kenney-platformer-kit/units/character-oobi.glb","variant":""}` */
   playerSprite?: EntityRow;
@@ -125,7 +125,7 @@ export interface StdUiPlatformerBoard3dConfig {
   tileSprites?: Record<string, TraitConfig>;
   /** Default: `400` */
   worldHeight?: number;
-  /** Default: `800` */
+  /** Default: `2400` */
   worldWidth?: number;
 }
 
@@ -278,12 +278,12 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
             'type': 'object',
           },
           {
-            'default': 700,
+            'default': 2300,
             'name': 'goalX',
             'type': 'number',
           },
           {
-            'default': 800,
+            'default': 2400,
             'name': 'worldWidth',
             'type': 'number',
           },
@@ -357,6 +357,54 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                 'taken': false,
                 'x': 470,
                 'y': 190,
+              },
+              {
+                'id': 'coin-5',
+                'taken': false,
+                'x': 750,
+                'y': 300,
+              },
+              {
+                'id': 'coin-6',
+                'taken': false,
+                'x': 790,
+                'y': 280,
+              },
+              {
+                'id': 'coin-7',
+                'taken': false,
+                'x': 950,
+                'y': 250,
+              },
+              {
+                'id': 'coin-8',
+                'taken': false,
+                'x': 1150,
+                'y': 300,
+              },
+              {
+                'id': 'coin-9',
+                'taken': false,
+                'x': 1190,
+                'y': 280,
+              },
+              {
+                'id': 'coin-10',
+                'taken': false,
+                'x': 1370,
+                'y': 190,
+              },
+              {
+                'id': 'coin-11',
+                'taken': false,
+                'x': 1550,
+                'y': 300,
+              },
+              {
+                'id': 'coin-12',
+                'taken': false,
+                'x': 1750,
+                'y': 250,
               },
             ],
             'items': {
@@ -570,7 +618,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
             'type': 'Asset',
           },
           'goalX': {
-            'default': 700,
+            'default': 2300,
             'description': 'X pixel of the goal tile (used for display)',
             'label': 'Goal X',
             'tier': 'presentation',
@@ -614,13 +662,6 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                 'y': 368,
               },
               {
-                'height': 32,
-                'type': 'ground',
-                'width': 360,
-                'x': 440,
-                'y': 368,
-              },
-              {
                 'height': 16,
                 'type': 'platform',
                 'width': 160,
@@ -635,11 +676,11 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                 'y': 220,
               },
               {
-                'height': 16,
-                'type': 'platform',
-                'width': 120,
-                'x': 680,
-                'y': 280,
+                'height': 32,
+                'type': 'ground',
+                'width': 300,
+                'x': 440,
+                'y': 368,
               },
               {
                 'height': 32,
@@ -649,14 +690,84 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                 'y': 336,
               },
               {
+                'height': 32,
+                'type': 'ground',
+                'width': 300,
+                'x': 840,
+                'y': 368,
+              },
+              {
+                'height': 16,
+                'type': 'platform',
+                'width': 160,
+                'x': 900,
+                'y': 280,
+              },
+              {
+                'height': 32,
+                'type': 'hazard',
+                'width': 64,
+                'x': 960,
+                'y': 336,
+              },
+              {
+                'height': 32,
+                'type': 'ground',
+                'width': 300,
+                'x': 1240,
+                'y': 368,
+              },
+              {
+                'height': 16,
+                'type': 'platform',
+                'width': 160,
+                'x': 1320,
+                'y': 220,
+              },
+              {
+                'height': 32,
+                'type': 'hazard',
+                'width': 64,
+                'x': 1360,
+                'y': 336,
+              },
+              {
+                'height': 32,
+                'type': 'ground',
+                'width': 300,
+                'x': 1640,
+                'y': 368,
+              },
+              {
+                'height': 16,
+                'type': 'platform',
+                'width': 160,
+                'x': 1700,
+                'y': 280,
+              },
+              {
+                'height': 32,
+                'type': 'ground',
+                'width': 360,
+                'x': 2040,
+                'y': 368,
+              },
+              {
+                'height': 16,
+                'type': 'platform',
+                'width': 120,
+                'x': 2280,
+                'y': 280,
+              },
+              {
                 'height': 28,
                 'type': 'goal',
                 'width': 64,
-                'x': 700,
+                'x': 2300,
                 'y': 252,
               },
             ],
-            'description': 'Level geometry: a pit between two ground segments, floating platforms, a hazard on the walking path, and a raised goal',
+            'description': 'Level geometry: 5 pits across 6 ground segments, 6 bonus platforms, 3 hazards on the walking path, and a raised goal at the far end',
             'items': {
               'properties': {
                 'height': {
@@ -926,7 +1037,7 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
             'type': 'number',
           },
           'worldWidth': {
-            'default': 800,
+            'default': 2400,
             'description': 'World pixel width',
             'label': 'World Width',
             'tier': 'presentation',
@@ -1260,6 +1371,54 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                       'taken': false,
                       'x': 470,
                       'y': 190,
+                    },
+                    {
+                      'id': 'coin-5',
+                      'taken': false,
+                      'x': 750,
+                      'y': 300,
+                    },
+                    {
+                      'id': 'coin-6',
+                      'taken': false,
+                      'x': 790,
+                      'y': 280,
+                    },
+                    {
+                      'id': 'coin-7',
+                      'taken': false,
+                      'x': 950,
+                      'y': 250,
+                    },
+                    {
+                      'id': 'coin-8',
+                      'taken': false,
+                      'x': 1150,
+                      'y': 300,
+                    },
+                    {
+                      'id': 'coin-9',
+                      'taken': false,
+                      'x': 1190,
+                      'y': 280,
+                    },
+                    {
+                      'id': 'coin-10',
+                      'taken': false,
+                      'x': 1370,
+                      'y': 190,
+                    },
+                    {
+                      'id': 'coin-11',
+                      'taken': false,
+                      'x': 1550,
+                      'y': 300,
+                    },
+                    {
+                      'id': 'coin-12',
+                      'taken': false,
+                      'x': 1750,
+                      'y': 250,
                     },
                   ],
                 ],
@@ -2137,6 +2296,54 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                       'x': 470,
                       'y': 190,
                     },
+                    {
+                      'id': 'coin-5',
+                      'taken': false,
+                      'x': 750,
+                      'y': 300,
+                    },
+                    {
+                      'id': 'coin-6',
+                      'taken': false,
+                      'x': 790,
+                      'y': 280,
+                    },
+                    {
+                      'id': 'coin-7',
+                      'taken': false,
+                      'x': 950,
+                      'y': 250,
+                    },
+                    {
+                      'id': 'coin-8',
+                      'taken': false,
+                      'x': 1150,
+                      'y': 300,
+                    },
+                    {
+                      'id': 'coin-9',
+                      'taken': false,
+                      'x': 1190,
+                      'y': 280,
+                    },
+                    {
+                      'id': 'coin-10',
+                      'taken': false,
+                      'x': 1370,
+                      'y': 190,
+                    },
+                    {
+                      'id': 'coin-11',
+                      'taken': false,
+                      'x': 1550,
+                      'y': 300,
+                    },
+                    {
+                      'id': 'coin-12',
+                      'taken': false,
+                      'x': 1750,
+                      'y': 250,
+                    },
                   ],
                 ],
                 [
@@ -2214,6 +2421,54 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                       'taken': false,
                       'x': 470,
                       'y': 190,
+                    },
+                    {
+                      'id': 'coin-5',
+                      'taken': false,
+                      'x': 750,
+                      'y': 300,
+                    },
+                    {
+                      'id': 'coin-6',
+                      'taken': false,
+                      'x': 790,
+                      'y': 280,
+                    },
+                    {
+                      'id': 'coin-7',
+                      'taken': false,
+                      'x': 950,
+                      'y': 250,
+                    },
+                    {
+                      'id': 'coin-8',
+                      'taken': false,
+                      'x': 1150,
+                      'y': 300,
+                    },
+                    {
+                      'id': 'coin-9',
+                      'taken': false,
+                      'x': 1190,
+                      'y': 280,
+                    },
+                    {
+                      'id': 'coin-10',
+                      'taken': false,
+                      'x': 1370,
+                      'y': 190,
+                    },
+                    {
+                      'id': 'coin-11',
+                      'taken': false,
+                      'x': 1550,
+                      'y': 300,
+                    },
+                    {
+                      'id': 'coin-12',
+                      'taken': false,
+                      'x': 1750,
+                      'y': 250,
                     },
                   ],
                 ],

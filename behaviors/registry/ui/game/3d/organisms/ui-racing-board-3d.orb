@@ -1,5 +1,5 @@
 {
-  "description": "RacingBoard3D — throttled keyboard/d-pad racing on a multi-lap 6x6 ring track with a follow camera and a ticking rival.",
+  "description": "RacingBoard3D — steer a car (heading + throttle) around a long oval circuit with a chase camera, hitting checkpoints to complete laps before the rival.",
   "name": "ui-racing-board-3d",
   "orbitals": [
     {
@@ -13,6 +13,11 @@
           {
             "items": {
               "properties": {
+                "heading": {
+                  "name": "heading",
+                  "required": false,
+                  "type": "number"
+                },
                 "health": {
                   "name": "health",
                   "required": false,
@@ -141,21 +146,6 @@
             ]
           },
           {
-            "default": 0.0,
-            "name": "playerProgress",
-            "type": "number"
-          },
-          {
-            "default": 0.0,
-            "name": "rivalProgress",
-            "type": "number"
-          },
-          {
-            "default": 1.0,
-            "name": "lap",
-            "type": "number"
-          },
-          {
             "default": "none",
             "name": "result",
             "type": "string",
@@ -166,19 +156,169 @@
             ]
           },
           {
-            "default": true,
-            "name": "canAdvance",
+            "default": 1.0,
+            "name": "lap",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "checkpoint",
+            "type": "number"
+          },
+          {
+            "default": 17.0,
+            "name": "carX",
+            "type": "number"
+          },
+          {
+            "default": 10.0,
+            "name": "carY",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "heading",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "speed",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "steer",
+            "type": "number"
+          },
+          {
+            "default": false,
+            "name": "accelerating",
             "type": "boolean"
           },
           {
-            "default": 6.0,
+            "default": false,
+            "name": "braking",
+            "type": "boolean"
+          },
+          {
+            "default": 17.0,
+            "name": "rivalCarX",
+            "type": "number"
+          },
+          {
+            "default": 13.0,
+            "name": "rivalCarY",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "rivalCheckpoint",
+            "type": "number"
+          },
+          {
+            "default": 1.0,
+            "name": "rivalLap",
+            "type": "number"
+          },
+          {
+            "default": 20.0,
             "name": "gridWidth",
             "type": "number"
           },
           {
-            "default": 6.0,
+            "default": 20.0,
             "name": "gridHeight",
             "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "properties": {
+                    "animations": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "name": "animations",
+                      "required": false,
+                      "type": "array"
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "terrain": {
+                  "name": "terrain",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "tiles",
+            "type": "array"
           },
           {
             "default": [],
@@ -245,12 +385,101 @@
         {
           "category": "interaction",
           "config": {
+            "accel": {
+              "default": 0.05,
+              "description": "Speed gained per tick while the throttle is held",
+              "label": "Acceleration",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "brakeDecel": {
+              "default": 0.08,
+              "description": "Speed lost per tick while braking",
+              "label": "Brake Deceleration",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "checkpoints": {
+              "default": [
+                {
+                  "order": 0.0,
+                  "x": 17.0,
+                  "y": 10.0
+                },
+                {
+                  "order": 1.0,
+                  "x": 15.0,
+                  "y": 14.0
+                },
+                {
+                  "order": 2.0,
+                  "x": 10.0,
+                  "y": 15.0
+                },
+                {
+                  "order": 3.0,
+                  "x": 5.0,
+                  "y": 14.0
+                },
+                {
+                  "order": 4.0,
+                  "x": 3.0,
+                  "y": 10.0
+                },
+                {
+                  "order": 5.0,
+                  "x": 5.0,
+                  "y": 6.0
+                },
+                {
+                  "order": 6.0,
+                  "x": 10.0,
+                  "y": 5.0
+                },
+                {
+                  "order": 7.0,
+                  "x": 15.0,
+                  "y": 6.0
+                }
+              ],
+              "description": "8 gates around the oval, passed in order; a full lap = passing all 8.",
+              "items": {
+                "properties": {
+                  "order": {
+                    "name": "order",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Checkpoints",
+              "tier": "presentation",
+              "type": "[RacingBoard3DCheckpointItem]"
+            },
             "className": {
               "default": "",
               "description": "className prop",
               "label": "Class Name",
               "tier": "presentation",
               "type": "string"
+            },
+            "cpRadiusSq": {
+              "default": 6.25,
+              "description": "Squared grid distance within which a checkpoint counts as passed",
+              "label": "Checkpoint Radius Squared",
+              "tier": "presentation",
+              "type": "number"
             },
             "error": {
               "description": "Error state (UiError)",
@@ -298,8 +527,8 @@
                   },
                   "id": "startArch",
                   "type": "start_arch",
-                  "x": 0.0,
-                  "y": 0.0
+                  "x": 17.0,
+                  "y": 10.0
                 },
                 {
                   "assetUrl": {
@@ -317,8 +546,8 @@
                   },
                   "id": "grandstandNorth",
                   "type": "grandstand",
-                  "x": 2.0,
-                  "y": 1.0
+                  "x": 10.0,
+                  "y": 17.0
                 },
                 {
                   "assetUrl": {
@@ -336,8 +565,8 @@
                   },
                   "id": "grandstandSouth",
                   "type": "grandstand",
-                  "x": 3.0,
-                  "y": 4.0
+                  "x": 10.0,
+                  "y": 3.0
                 },
                 {
                   "assetUrl": {
@@ -355,8 +584,8 @@
                   },
                   "id": "pitGarage",
                   "type": "pit",
-                  "x": 1.0,
-                  "y": 1.0
+                  "x": 9.0,
+                  "y": 10.0
                 },
                 {
                   "assetUrl": {
@@ -374,11 +603,11 @@
                   },
                   "id": "pitOffice",
                   "type": "pit",
-                  "x": 4.0,
-                  "y": 4.0
+                  "x": 12.0,
+                  "y": 10.0
                 }
               ],
-              "description": "Start arch, 2 grandstands and 2 pit buildings placed around the infield.",
+              "description": "Start arch on the line, 2 grandstands outside the oval and 2 pit buildings in the infield.",
               "items": {
                 "properties": {
                   "assetUrl": {
@@ -463,6 +692,82 @@
               "tier": "presentation",
               "type": "[RacingBoard3DFeaturesItem]"
             },
+            "friction": {
+              "default": 0.94,
+              "description": "Speed multiplier per tick while coasting",
+              "label": "Friction",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "grassAsset": {
+              "default": {
+                "animations": [
+                  "static"
+                ],
+                "aspect": "1:1",
+                "category": "grass",
+                "dimension": "3d",
+                "name": "grass",
+                "role": "decoration",
+                "style": "lowpoly-flat",
+                "thumbnailUrl": "",
+                "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+              },
+              "description": "Off-track infield/verge tile model",
+              "label": "Grass Asset",
+              "properties": {
+                "animations": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "animations",
+                  "required": false,
+                  "type": "array"
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string"
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string"
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string"
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "Asset"
+            },
             "isLoading": {
               "default": false,
               "description": "Loading state indicator",
@@ -470,988 +775,112 @@
               "tier": "presentation",
               "type": "boolean"
             },
+            "maxSpeed": {
+              "default": 0.4,
+              "description": "Top speed in grid cells per physics tick",
+              "label": "Max Speed",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "rivalSpeed": {
+              "default": 0.22,
+              "description": "Rival car speed in grid cells per rival tick",
+              "label": "Rival Speed",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "roadAsset": {
+              "default": {
+                "animations": [
+                  "static"
+                ],
+                "aspect": "1:1",
+                "category": "roadStraight",
+                "dimension": "3d",
+                "name": "roadStraight",
+                "role": "tile",
+                "style": "lowpoly-flat",
+                "thumbnailUrl": "",
+                "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+              },
+              "description": "Track tile model, tiled along the oval band",
+              "label": "Road Asset",
+              "properties": {
+                "animations": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "animations",
+                  "required": false,
+                  "type": "array"
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string"
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string"
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string"
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "Asset"
+            },
             "scale": {
-              "default": 0.45,
+              "default": 0.5,
               "description": "Canvas render scale",
               "label": "Scale",
               "tier": "presentation",
               "type": "number"
             },
-            "tiles": {
-              "default": [
-                {
-                  "id": "t00",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStart",
-                    "dimension": "3d",
-                    "name": "roadStart",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStart.glb"
-                  },
-                  "passable": true,
-                  "terrain": "start",
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                {
-                  "id": "t10",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 1.0,
-                  "y": 0.0
-                },
-                {
-                  "id": "t20",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 2.0,
-                  "y": 0.0
-                },
-                {
-                  "id": "t30",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 3.0,
-                  "y": 0.0
-                },
-                {
-                  "id": "t40",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 4.0,
-                  "y": 0.0
-                },
-                {
-                  "id": "t50",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 5.0,
-                  "y": 0.0
-                },
-                {
-                  "id": "t01",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 0.0,
-                  "y": 1.0
-                },
-                {
-                  "id": "t11",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                {
-                  "id": "t21",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 2.0,
-                  "y": 1.0
-                },
-                {
-                  "id": "t31",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 3.0,
-                  "y": 1.0
-                },
-                {
-                  "id": "t41",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 4.0,
-                  "y": 1.0
-                },
-                {
-                  "id": "t51",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 5.0,
-                  "y": 1.0
-                },
-                {
-                  "id": "t02",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 0.0,
-                  "y": 2.0
-                },
-                {
-                  "id": "t12",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 1.0,
-                  "y": 2.0
-                },
-                {
-                  "id": "t22",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 2.0,
-                  "y": 2.0
-                },
-                {
-                  "id": "t32",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 3.0,
-                  "y": 2.0
-                },
-                {
-                  "id": "t42",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 4.0,
-                  "y": 2.0
-                },
-                {
-                  "id": "t52",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 5.0,
-                  "y": 2.0
-                },
-                {
-                  "id": "t03",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 0.0,
-                  "y": 3.0
-                },
-                {
-                  "id": "t13",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 1.0,
-                  "y": 3.0
-                },
-                {
-                  "id": "t23",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 2.0,
-                  "y": 3.0
-                },
-                {
-                  "id": "t33",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 3.0,
-                  "y": 3.0
-                },
-                {
-                  "id": "t43",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 4.0,
-                  "y": 3.0
-                },
-                {
-                  "id": "t53",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 5.0,
-                  "y": 3.0
-                },
-                {
-                  "id": "t04",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 0.0,
-                  "y": 4.0
-                },
-                {
-                  "id": "t14",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 1.0,
-                  "y": 4.0
-                },
-                {
-                  "id": "t24",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 2.0,
-                  "y": 4.0
-                },
-                {
-                  "id": "t34",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 3.0,
-                  "y": 4.0
-                },
-                {
-                  "id": "t44",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grass",
-                    "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
-                  },
-                  "passable": false,
-                  "terrain": "grass",
-                  "x": 4.0,
-                  "y": 4.0
-                },
-                {
-                  "id": "t54",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 5.0,
-                  "y": 4.0
-                },
-                {
-                  "id": "t05",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 0.0,
-                  "y": 5.0
-                },
-                {
-                  "id": "t15",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 1.0,
-                  "y": 5.0
-                },
-                {
-                  "id": "t25",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 2.0,
-                  "y": 5.0
-                },
-                {
-                  "id": "t35",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 3.0,
-                  "y": 5.0
-                },
-                {
-                  "id": "t45",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 4.0,
-                  "y": 5.0
-                },
-                {
-                  "id": "t55",
-                  "modelUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "roadStraight",
-                    "dimension": "3d",
-                    "name": "roadStraight",
-                    "role": "tile",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
-                  },
-                  "passable": true,
-                  "terrain": "track",
-                  "x": 5.0,
-                  "y": 5.0
-                }
-              ],
-              "description": "6x6 ring-track tile data — perimeter is track, interior is impassable grass.",
-              "items": {
-                "properties": {
-                  "id": {
-                    "name": "id",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "modelUrl": {
-                    "name": "modelUrl",
-                    "properties": {
-                      "animations": {
-                        "items": {
-                          "type": "string"
-                        },
-                        "name": "animations",
-                        "required": false,
-                        "type": "array"
-                      },
-                      "aspect": {
-                        "name": "aspect",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "category": {
-                        "name": "category",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "dimension": {
-                        "name": "dimension",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "name": {
-                        "name": "name",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "role": {
-                        "name": "role",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "style": {
-                        "name": "style",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "thumbnailUrl": {
-                        "name": "thumbnailUrl",
-                        "required": false,
-                        "type": "string"
-                      },
-                      "url": {
-                        "name": "url",
-                        "required": false,
-                        "type": "string"
-                      }
-                    },
-                    "required": false,
-                    "type": "object"
-                  },
-                  "passable": {
-                    "name": "passable",
-                    "required": false,
-                    "type": "boolean"
-                  },
-                  "terrain": {
-                    "name": "terrain",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "x": {
-                    "name": "x",
-                    "required": true,
-                    "type": "number"
-                  },
-                  "y": {
-                    "name": "y",
-                    "required": true,
-                    "type": "number"
-                  }
-                },
-                "type": "object"
-              },
-              "label": "Tiles",
-              "tier": "presentation",
-              "type": "[RacingBoard3DTilesItem]"
-            },
             "totalLaps": {
               "default": 2.0,
-              "description": "Laps around the loop required to win",
+              "description": "Laps around the circuit required to win",
               "label": "Total Laps",
               "tier": "presentation",
               "type": "number"
             },
-            "trackOrder": {
-              "default": [
-                {
-                  "nextX": 1.0,
-                  "nextY": 0.0,
-                  "x": 0.0,
-                  "y": 0.0
-                },
-                {
-                  "nextX": 2.0,
-                  "nextY": 0.0,
-                  "x": 1.0,
-                  "y": 0.0
-                },
-                {
-                  "nextX": 3.0,
-                  "nextY": 0.0,
-                  "x": 2.0,
-                  "y": 0.0
-                },
-                {
-                  "nextX": 4.0,
-                  "nextY": 0.0,
-                  "x": 3.0,
-                  "y": 0.0
-                },
-                {
-                  "nextX": 5.0,
-                  "nextY": 0.0,
-                  "x": 4.0,
-                  "y": 0.0
-                },
-                {
-                  "nextX": 5.0,
-                  "nextY": 1.0,
-                  "x": 5.0,
-                  "y": 0.0
-                },
-                {
-                  "nextX": 5.0,
-                  "nextY": 2.0,
-                  "x": 5.0,
-                  "y": 1.0
-                },
-                {
-                  "nextX": 5.0,
-                  "nextY": 3.0,
-                  "x": 5.0,
-                  "y": 2.0
-                },
-                {
-                  "nextX": 5.0,
-                  "nextY": 4.0,
-                  "x": 5.0,
-                  "y": 3.0
-                },
-                {
-                  "nextX": 5.0,
-                  "nextY": 5.0,
-                  "x": 5.0,
-                  "y": 4.0
-                },
-                {
-                  "nextX": 4.0,
-                  "nextY": 5.0,
-                  "x": 5.0,
-                  "y": 5.0
-                },
-                {
-                  "nextX": 3.0,
-                  "nextY": 5.0,
-                  "x": 4.0,
-                  "y": 5.0
-                },
-                {
-                  "nextX": 2.0,
-                  "nextY": 5.0,
-                  "x": 3.0,
-                  "y": 5.0
-                },
-                {
-                  "nextX": 1.0,
-                  "nextY": 5.0,
-                  "x": 2.0,
-                  "y": 5.0
-                },
-                {
-                  "nextX": 0.0,
-                  "nextY": 5.0,
-                  "x": 1.0,
-                  "y": 5.0
-                },
-                {
-                  "nextX": 0.0,
-                  "nextY": 4.0,
-                  "x": 0.0,
-                  "y": 5.0
-                },
-                {
-                  "nextX": 0.0,
-                  "nextY": 3.0,
-                  "x": 0.0,
-                  "y": 4.0
-                },
-                {
-                  "nextX": 0.0,
-                  "nextY": 2.0,
-                  "x": 0.0,
-                  "y": 3.0
-                },
-                {
-                  "nextX": 0.0,
-                  "nextY": 1.0,
-                  "x": 0.0,
-                  "y": 2.0
-                },
-                {
-                  "nextX": 0.0,
-                  "nextY": 0.0,
-                  "x": 0.0,
-                  "y": 1.0
-                }
-              ],
-              "description": "The 20-cell closed loop in clockwise order, each entry pointing at its next cell.",
-              "items": {
-                "properties": {
-                  "nextX": {
-                    "name": "nextX",
-                    "required": true,
-                    "type": "number"
-                  },
-                  "nextY": {
-                    "name": "nextY",
-                    "required": true,
-                    "type": "number"
-                  },
-                  "x": {
-                    "name": "x",
-                    "required": true,
-                    "type": "number"
-                  },
-                  "y": {
-                    "name": "y",
-                    "required": true,
-                    "type": "number"
-                  }
-                },
-                "type": "object"
-              },
-              "label": "Track Order",
+            "turnRate": {
+              "default": 0.14,
+              "description": "Radians the heading turns per tick while steering and moving",
+              "label": "Turn Rate",
               "tier": "presentation",
-              "type": "[RacingBoard3DTrackOrderItem]"
+              "type": "number"
             },
             "unitScale": {
-              "default": 1.0,
+              "default": 1.4,
               "description": "Unit draw-size multiplier",
               "label": "Unit Scale",
               "tier": "presentation",
@@ -1460,6 +889,7 @@
             "units": {
               "default": [
                 {
+                  "heading": 0.0,
                   "health": 100.0,
                   "id": "player",
                   "maxHealth": 100.0,
@@ -1478,13 +908,14 @@
                   },
                   "name": "Player Car",
                   "position": {
-                    "x": 0.0,
-                    "y": 0.0
+                    "x": 17.0,
+                    "y": 10.0
                   },
                   "team": "player",
                   "unitType": "racecar"
                 },
                 {
+                  "heading": 0.0,
                   "health": 100.0,
                   "id": "rival",
                   "maxHealth": 100.0,
@@ -1503,16 +934,21 @@
                   },
                   "name": "Rival Car",
                   "position": {
-                    "x": 1.0,
-                    "y": 0.0
+                    "x": 17.0,
+                    "y": 13.0
                   },
                   "team": "enemy",
                   "unitType": "racecar"
                 }
               ],
-              "description": "Player race car + 1 rival race car, staggered at the start line.",
+              "description": "Player race car + 1 rival race car at the start line.",
               "items": {
                 "properties": {
+                  "heading": {
+                    "name": "heading",
+                    "required": false,
+                    "type": "number"
+                  },
                   "health": {
                     "name": "health",
                     "required": false,
@@ -1630,8 +1066,80 @@
           },
           "emits": [
             {
-              "description": "Accelerate intent (keyboard keyMap or d-pad directionEvents) — advances one track cell when paced",
-              "event": "ACCELERATE",
+              "description": "Throttle held down (keyboard keyUp/Down or d-pad press/release)",
+              "event": "THROTTLE_ON",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Throttle released — car coasts",
+              "event": "THROTTLE_OFF",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Brake held down",
+              "event": "BRAKE_ON",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Brake released",
+              "event": "BRAKE_OFF",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Steer left held",
+              "event": "STEER_LEFT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Steer right held",
+              "event": "STEER_RIGHT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Steering released — wheels straighten",
+              "event": "STEER_STOP",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -1668,16 +1176,26 @@
           ],
           "entityContract": {
             "provides": [
-              "canAdvance",
+              "accelerating",
+              "braking",
+              "carX",
+              "carY",
+              "checkpoint",
               "fx",
               "gridHeight",
               "gridWidth",
+              "heading",
               "lap",
               "phase",
-              "playerProgress",
               "result",
-              "rivalProgress",
+              "rivalCarX",
+              "rivalCarY",
+              "rivalCheckpoint",
+              "rivalLap",
               "selectedUnitId",
+              "speed",
+              "steer",
+              "tiles",
               "units"
             ],
             "requires": []
@@ -1693,9 +1211,81 @@
                 "name": "Initialize"
               },
               {
-                "description": "Accelerate intent (keyboard keyMap or d-pad directionEvents) — advances one track cell when paced",
-                "key": "ACCELERATE",
-                "name": "Accelerate",
+                "description": "Throttle held down (keyboard keyUp/Down or d-pad press/release)",
+                "key": "THROTTLE_ON",
+                "name": "Throttle On",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Throttle released — car coasts",
+                "key": "THROTTLE_OFF",
+                "name": "Throttle Off",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Brake held down",
+                "key": "BRAKE_ON",
+                "name": "Brake On",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Brake released",
+                "key": "BRAKE_OFF",
+                "name": "Brake Off",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Steer left held",
+                "key": "STEER_LEFT",
+                "name": "Steer Left",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Steer right held",
+                "key": "STEER_RIGHT",
+                "name": "Steer Right",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Steering released — wheels straighten",
+                "key": "STEER_STOP",
+                "name": "Steer Stop",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -1753,26 +1343,6 @@
                   ],
                   [
                     "set",
-                    "@entity.playerProgress",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.rivalProgress",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.lap",
-                    1.0
-                  ],
-                  [
-                    "set",
-                    "@entity.canAdvance",
-                    true
-                  ],
-                  [
-                    "set",
                     "@entity.phase",
                     "racing"
                   ],
@@ -1783,18 +1353,212 @@
                   ],
                   [
                     "set",
+                    "@entity.lap",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.checkpoint",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.carX",
+                    17.0
+                  ],
+                  [
+                    "set",
+                    "@entity.carY",
+                    10.0
+                  ],
+                  [
+                    "set",
+                    "@entity.heading",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.speed",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.steer",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.accelerating",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.braking",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.rivalCarX",
+                    17.0
+                  ],
+                  [
+                    "set",
+                    "@entity.rivalCarY",
+                    13.0
+                  ],
+                  [
+                    "set",
+                    "@entity.rivalCheckpoint",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.rivalLap",
+                    1.0
+                  ],
+                  [
+                    "set",
                     "@entity.gridWidth",
-                    6.0
+                    20.0
                   ],
                   [
                     "set",
                     "@entity.gridHeight",
-                    6.0
+                    20.0
                   ],
                   [
                     "set",
                     "@entity.fx",
                     []
+                  ],
+                  [
+                    "set",
+                    "@entity.tiles",
+                    [
+                      "array/flatten",
+                      [
+                        "array/map",
+                        [
+                          "array/range",
+                          0.0,
+                          20.0
+                        ],
+                        [
+                          "fn",
+                          "gy",
+                          [
+                            "array/map",
+                            [
+                              "array/range",
+                              0.0,
+                              20.0
+                            ],
+                            [
+                              "fn",
+                              "gx",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "road",
+                                    [
+                                      "let",
+                                      [
+                                        [
+                                          "ex",
+                                          [
+                                            "/",
+                                            [
+                                              "-",
+                                              "@gx",
+                                              10.0
+                                            ],
+                                            7.0
+                                          ]
+                                        ],
+                                        [
+                                          "ey",
+                                          [
+                                            "/",
+                                            [
+                                              "-",
+                                              "@gy",
+                                              10.0
+                                            ],
+                                            5.0
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "let",
+                                        [
+                                          [
+                                            "d",
+                                            [
+                                              "math/sqrt",
+                                              [
+                                                "+",
+                                                [
+                                                  "*",
+                                                  "@ex",
+                                                  "@ex"
+                                                ],
+                                                [
+                                                  "*",
+                                                  "@ey",
+                                                  "@ey"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ],
+                                        [
+                                          "and",
+                                          [
+                                            ">=",
+                                            "@d",
+                                            0.72
+                                          ],
+                                          [
+                                            "<=",
+                                            "@d",
+                                            1.3
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                {
+                                  "id": [
+                                    "str/concat",
+                                    "t-",
+                                    "@gx",
+                                    "-",
+                                    "@gy"
+                                  ],
+                                  "modelUrl": [
+                                    "if",
+                                    "@road",
+                                    "@config.roadAsset",
+                                    "@config.grassAsset"
+                                  ],
+                                  "passable": true,
+                                  "terrain": [
+                                    "if",
+                                    "@road",
+                                    "track",
+                                    "grass"
+                                  ],
+                                  "x": "@gx",
+                                  "y": "@gy"
+                                }
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
                   ],
                   [
                     "render-ui",
@@ -1815,18 +1579,33 @@
                       },
                       "children": [
                         {
-                          "cameraMode": "follow",
+                          "cameraMode": "chase",
                           "events": "@entity.fx",
                           "features": "@config.features",
                           "interpolateUnits": true,
                           "keyMap": {
-                            "ArrowUp": "ACCELERATE",
-                            "KeyW": "ACCELERATE",
-                            "Space": "ACCELERATE"
+                            "ArrowDown": "BRAKE_ON",
+                            "ArrowLeft": "STEER_LEFT",
+                            "ArrowRight": "STEER_RIGHT",
+                            "ArrowUp": "THROTTLE_ON",
+                            "KeyA": "STEER_LEFT",
+                            "KeyD": "STEER_RIGHT",
+                            "KeyS": "BRAKE_ON",
+                            "KeyW": "THROTTLE_ON"
+                          },
+                          "keyUpMap": {
+                            "ArrowDown": "BRAKE_OFF",
+                            "ArrowLeft": "STEER_STOP",
+                            "ArrowRight": "STEER_STOP",
+                            "ArrowUp": "THROTTLE_OFF",
+                            "KeyA": "STEER_STOP",
+                            "KeyD": "STEER_STOP",
+                            "KeyS": "BRAKE_OFF",
+                            "KeyW": "THROTTLE_OFF"
                           },
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
-                          "tiles": "@config.tiles",
+                          "tiles": "@entity.tiles",
                           "type": "game-canvas-3d",
                           "unitScale": "@config.unitScale",
                           "units": "@entity.units"
@@ -1846,15 +1625,40 @@
                                 ]
                               },
                               {
+                                "label": "CP",
+                                "value": [
+                                  "str/concat",
+                                  "@entity.checkpoint",
+                                  "/8"
+                                ]
+                              },
+                              {
                                 "label": "Result",
                                 "value": "@entity.result"
+                              },
+                              {
+                                "label": "Goal",
+                                "value": "Finish 2 laps before the rival"
+                              },
+                              {
+                                "label": "How",
+                                "value": "Hold Up to accelerate, Left/Right to steer, Down to brake — pass the checkpoints in order"
                               }
                             ],
                             "type": "game-hud"
                           },
                           {
                             "directionEvents": {
-                              "up": "ACCELERATE"
+                              "down": "BRAKE_ON",
+                              "left": "STEER_LEFT",
+                              "right": "STEER_RIGHT",
+                              "up": "THROTTLE_ON"
+                            },
+                            "directionReleaseEvents": {
+                              "down": "BRAKE_OFF",
+                              "left": "STEER_STOP",
+                              "right": "STEER_STOP",
+                              "up": "THROTTLE_OFF"
                             },
                             "kind": "dpad",
                             "type": "control-grid"
@@ -1877,282 +1681,104 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.units",
-                    [
-                      "array/map",
-                      "@entity.units",
-                      [
-                        "fn",
-                        "u",
-                        [
-                          "if",
-                          [
-                            "==",
-                            "@u.id",
-                            "player"
-                          ],
-                          [
-                            "let",
-                            [
-                              [
-                                "cur",
-                                [
-                                  "array/find",
-                                  "@config.trackOrder",
-                                  [
-                                    "fn",
-                                    "t",
-                                    [
-                                      "and",
-                                      [
-                                        "==",
-                                        [
-                                          "object/get",
-                                          "@t",
-                                          "x"
-                                        ],
-                                        [
-                                          "object/get",
-                                          "@u.position",
-                                          "x"
-                                        ]
-                                      ],
-                                      [
-                                        "==",
-                                        [
-                                          "object/get",
-                                          "@t",
-                                          "y"
-                                        ],
-                                        [
-                                          "object/get",
-                                          "@u.position",
-                                          "y"
-                                        ]
-                                      ]
-                                    ]
-                                  ]
-                                ]
-                              ]
-                            ],
-                            [
-                              "object/merge",
-                              "@u",
-                              {
-                                "position": {
-                                  "x": [
-                                    "object/get",
-                                    "@cur",
-                                    "nextX"
-                                  ],
-                                  "y": [
-                                    "object/get",
-                                    "@cur",
-                                    "nextY"
-                                  ]
-                                }
-                              }
-                            ]
-                          ],
-                          "@u"
-                        ]
-                      ]
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.playerProgress",
-                    [
-                      "+",
-                      "@entity.playerProgress",
-                      1.0
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.canAdvance",
-                    false
-                  ],
-                  [
-                    "set",
-                    "@entity.lap",
-                    [
-                      "+",
-                      [
-                        "math/floor",
-                        [
-                          "/",
-                          "@entity.playerProgress",
-                          [
-                            "array/len",
-                            "@config.trackOrder"
-                          ]
-                        ]
-                      ],
-                      1.0
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.fx",
-                    [
-                      "if",
-                      [
-                        "==",
-                        [
-                          "%",
-                          "@entity.playerProgress",
-                          [
-                            "array/len",
-                            "@config.trackOrder"
-                          ]
-                        ],
-                        0.0
-                      ],
-                      [
-                        "array/append",
-                        "@entity.fx",
-                        {
-                          "id": [
-                            "str/concat",
-                            "lap-",
-                            "@entity.playerProgress"
-                          ],
-                          "message": "Lap!",
-                          "ttl": 5.0,
-                          "type": "score",
-                          "x": 0.0,
-                          "z": 0.0
-                        }
-                      ],
-                      "@entity.fx"
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.result",
-                    [
-                      "if",
-                      [
-                        ">=",
-                        "@entity.playerProgress",
-                        [
-                          "*",
-                          "@config.totalLaps",
-                          [
-                            "array/len",
-                            "@config.trackOrder"
-                          ]
-                        ]
-                      ],
-                      "won",
-                      "@entity.result"
-                    ]
-                  ],
-                  [
-                    "if",
-                    [
-                      "!=",
-                      "@entity.result",
-                      "none"
-                    ],
-                    [
-                      "emit",
-                      "GAME_END",
-                      {
-                        "result": "@entity.result"
-                      }
-                    ],
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "addons": {
-                        "children": [
-                          {
-                            "action": "PLAY_AGAIN",
-                            "label": "Restart",
-                            "type": "button",
-                            "variant": "secondary"
-                          }
-                        ],
-                        "direction": "vertical",
-                        "gap": "sm",
-                        "type": "stack"
-                      },
-                      "children": [
-                        {
-                          "cameraMode": "follow",
-                          "events": "@entity.fx",
-                          "features": "@config.features",
-                          "interpolateUnits": true,
-                          "keyMap": {
-                            "ArrowUp": "ACCELERATE",
-                            "KeyW": "ACCELERATE",
-                            "Space": "ACCELERATE"
-                          },
-                          "scale": "@config.scale",
-                          "selectedUnitId": "@entity.selectedUnitId",
-                          "tiles": "@config.tiles",
-                          "type": "game-canvas-3d",
-                          "unitScale": "@config.unitScale",
-                          "units": "@entity.units"
-                        }
-                      ],
-                      "hud": {
-                        "children": [
-                          {
-                            "stats": [
-                              {
-                                "label": "Lap",
-                                "value": [
-                                  "str/concat",
-                                  "@entity.lap",
-                                  "/",
-                                  "@config.totalLaps"
-                                ]
-                              },
-                              {
-                                "label": "Result",
-                                "value": "@entity.result"
-                              }
-                            ],
-                            "type": "game-hud"
-                          },
-                          {
-                            "directionEvents": {
-                              "up": "ACCELERATE"
-                            },
-                            "kind": "dpad",
-                            "type": "control-grid"
-                          }
-                        ],
-                        "direction": "horizontal",
-                        "gap": "md",
-                        "justify": "between",
-                        "type": "stack"
-                      },
-                      "type": "game-shell"
-                    }
+                    "@entity.accelerating",
+                    true
                   ]
                 ],
-                "event": "ACCELERATE",
+                "event": "THROTTLE_ON",
                 "from": "racing",
                 "guard": [
-                  "and",
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "racing"
+              },
+              {
+                "effects": [
                   [
-                    "==",
-                    "@entity.canAdvance",
-                    true
-                  ],
-                  [
-                    "==",
-                    "@entity.result",
-                    "none"
+                    "set",
+                    "@entity.accelerating",
+                    false
                   ]
                 ],
+                "event": "THROTTLE_OFF",
+                "from": "racing",
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.braking",
+                    true
+                  ]
+                ],
+                "event": "BRAKE_ON",
+                "from": "racing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.braking",
+                    false
+                  ]
+                ],
+                "event": "BRAKE_OFF",
+                "from": "racing",
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.steer",
+                    -1.0
+                  ]
+                ],
+                "event": "STEER_LEFT",
+                "from": "racing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.steer",
+                    1.0
+                  ]
+                ],
+                "event": "STEER_RIGHT",
+                "from": "racing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.steer",
+                    0.0
+                  ]
+                ],
+                "event": "STEER_STOP",
+                "from": "racing",
                 "to": "racing"
               },
               {
@@ -2161,6 +1787,21 @@
                     "set",
                     "@entity.phase",
                     "finished"
+                  ],
+                  [
+                    "set",
+                    "@entity.speed",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.accelerating",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.braking",
+                    false
                   ],
                   [
                     "set",
@@ -2191,8 +1832,8 @@
                           "win",
                           "lose"
                         ],
-                        "x": 0.0,
-                        "z": 0.0
+                        "x": "@entity.carX",
+                        "z": "@entity.carY"
                       }
                     ]
                   ],
@@ -2215,18 +1856,13 @@
                       },
                       "children": [
                         {
-                          "cameraMode": "follow",
+                          "cameraMode": "chase",
                           "events": "@entity.fx",
                           "features": "@config.features",
                           "interpolateUnits": true,
-                          "keyMap": {
-                            "ArrowUp": "ACCELERATE",
-                            "KeyW": "ACCELERATE",
-                            "Space": "ACCELERATE"
-                          },
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
-                          "tiles": "@config.tiles",
+                          "tiles": "@entity.tiles",
                           "type": "game-canvas-3d",
                           "unitScale": "@config.unitScale",
                           "units": "@entity.units"
@@ -2246,18 +1882,27 @@
                                 ]
                               },
                               {
+                                "label": "CP",
+                                "value": [
+                                  "str/concat",
+                                  "@entity.checkpoint",
+                                  "/8"
+                                ]
+                              },
+                              {
                                 "label": "Result",
                                 "value": "@entity.result"
+                              },
+                              {
+                                "label": "Goal",
+                                "value": "Finish 2 laps before the rival"
+                              },
+                              {
+                                "label": "How",
+                                "value": "Hold Up to accelerate, Left/Right to steer, Down to brake — pass the checkpoints in order"
                               }
                             ],
                             "type": "game-hud"
-                          },
-                          {
-                            "directionEvents": {
-                              "up": "ACCELERATE"
-                            },
-                            "kind": "dpad",
-                            "type": "control-grid"
                           }
                         ],
                         "direction": "horizontal",
@@ -2323,13 +1968,13 @@
                   ],
                   [
                     "set",
-                    "@entity.playerProgress",
-                    0.0
+                    "@entity.phase",
+                    "racing"
                   ],
                   [
                     "set",
-                    "@entity.rivalProgress",
-                    0.0
+                    "@entity.result",
+                    "none"
                   ],
                   [
                     "set",
@@ -2338,18 +1983,63 @@
                   ],
                   [
                     "set",
-                    "@entity.canAdvance",
-                    true
+                    "@entity.checkpoint",
+                    0.0
                   ],
                   [
                     "set",
-                    "@entity.phase",
-                    "racing"
+                    "@entity.carX",
+                    17.0
                   ],
                   [
                     "set",
-                    "@entity.result",
-                    "none"
+                    "@entity.carY",
+                    10.0
+                  ],
+                  [
+                    "set",
+                    "@entity.heading",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.speed",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.steer",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.accelerating",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.braking",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.rivalCarX",
+                    17.0
+                  ],
+                  [
+                    "set",
+                    "@entity.rivalCarY",
+                    13.0
+                  ],
+                  [
+                    "set",
+                    "@entity.rivalCheckpoint",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.rivalLap",
+                    1.0
                   ],
                   [
                     "set",
@@ -2375,18 +2065,33 @@
                       },
                       "children": [
                         {
-                          "cameraMode": "follow",
+                          "cameraMode": "chase",
                           "events": "@entity.fx",
                           "features": "@config.features",
                           "interpolateUnits": true,
                           "keyMap": {
-                            "ArrowUp": "ACCELERATE",
-                            "KeyW": "ACCELERATE",
-                            "Space": "ACCELERATE"
+                            "ArrowDown": "BRAKE_ON",
+                            "ArrowLeft": "STEER_LEFT",
+                            "ArrowRight": "STEER_RIGHT",
+                            "ArrowUp": "THROTTLE_ON",
+                            "KeyA": "STEER_LEFT",
+                            "KeyD": "STEER_RIGHT",
+                            "KeyS": "BRAKE_ON",
+                            "KeyW": "THROTTLE_ON"
+                          },
+                          "keyUpMap": {
+                            "ArrowDown": "BRAKE_OFF",
+                            "ArrowLeft": "STEER_STOP",
+                            "ArrowRight": "STEER_STOP",
+                            "ArrowUp": "THROTTLE_OFF",
+                            "KeyA": "STEER_STOP",
+                            "KeyD": "STEER_STOP",
+                            "KeyS": "BRAKE_OFF",
+                            "KeyW": "THROTTLE_OFF"
                           },
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
-                          "tiles": "@config.tiles",
+                          "tiles": "@entity.tiles",
                           "type": "game-canvas-3d",
                           "unitScale": "@config.unitScale",
                           "units": "@entity.units"
@@ -2406,15 +2111,40 @@
                                 ]
                               },
                               {
+                                "label": "CP",
+                                "value": [
+                                  "str/concat",
+                                  "@entity.checkpoint",
+                                  "/8"
+                                ]
+                              },
+                              {
                                 "label": "Result",
                                 "value": "@entity.result"
+                              },
+                              {
+                                "label": "Goal",
+                                "value": "Finish 2 laps before the rival"
+                              },
+                              {
+                                "label": "How",
+                                "value": "Hold Up to accelerate, Left/Right to steer, Down to brake — pass the checkpoints in order"
                               }
                             ],
                             "type": "game-hud"
                           },
                           {
                             "directionEvents": {
-                              "up": "ACCELERATE"
+                              "down": "BRAKE_ON",
+                              "left": "STEER_LEFT",
+                              "right": "STEER_RIGHT",
+                              "up": "THROTTLE_ON"
+                            },
+                            "directionReleaseEvents": {
+                              "down": "BRAKE_OFF",
+                              "left": "STEER_STOP",
+                              "right": "STEER_STOP",
+                              "up": "THROTTLE_OFF"
                             },
                             "kind": "dpad",
                             "type": "control-grid"
@@ -2440,8 +2170,340 @@
               "effects": [
                 [
                   "set",
-                  "@entity.canAdvance",
-                  true
+                  "@entity.speed",
+                  [
+                    "if",
+                    "@entity.braking",
+                    [
+                      "math/max",
+                      0.0,
+                      [
+                        "-",
+                        "@entity.speed",
+                        "@config.brakeDecel"
+                      ]
+                    ],
+                    [
+                      "if",
+                      "@entity.accelerating",
+                      [
+                        "math/min",
+                        "@config.maxSpeed",
+                        [
+                          "+",
+                          "@entity.speed",
+                          "@config.accel"
+                        ]
+                      ],
+                      [
+                        "*",
+                        "@entity.speed",
+                        "@config.friction"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.heading",
+                  [
+                    "+",
+                    "@entity.heading",
+                    [
+                      "if",
+                      [
+                        ">",
+                        "@entity.speed",
+                        0.02
+                      ],
+                      [
+                        "*",
+                        "@entity.steer",
+                        "@config.turnRate"
+                      ],
+                      0.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.carX",
+                  [
+                    "math/clamp",
+                    [
+                      "+",
+                      "@entity.carX",
+                      [
+                        "*",
+                        [
+                          "math/sin",
+                          "@entity.heading"
+                        ],
+                        "@entity.speed"
+                      ]
+                    ],
+                    0.0,
+                    [
+                      "-",
+                      "@entity.gridWidth",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.carY",
+                  [
+                    "math/clamp",
+                    [
+                      "+",
+                      "@entity.carY",
+                      [
+                        "*",
+                        [
+                          "math/cos",
+                          "@entity.heading"
+                        ],
+                        "@entity.speed"
+                      ]
+                    ],
+                    0.0,
+                    [
+                      "-",
+                      "@entity.gridHeight",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.lap",
+                  [
+                    "+",
+                    "@entity.lap",
+                    [
+                      "let",
+                      [
+                        [
+                          "tgt",
+                          [
+                            "array/find",
+                            "@config.checkpoints",
+                            [
+                              "fn",
+                              "c",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@c",
+                                  "order"
+                                ],
+                                "@entity.checkpoint"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "if",
+                        [
+                          "and",
+                          [
+                            "<",
+                            [
+                              "+",
+                              [
+                                "*",
+                                [
+                                  "-",
+                                  "@entity.carX",
+                                  [
+                                    "object/get",
+                                    "@tgt",
+                                    "x"
+                                  ]
+                                ],
+                                [
+                                  "-",
+                                  "@entity.carX",
+                                  [
+                                    "object/get",
+                                    "@tgt",
+                                    "x"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "*",
+                                [
+                                  "-",
+                                  "@entity.carY",
+                                  [
+                                    "object/get",
+                                    "@tgt",
+                                    "y"
+                                  ]
+                                ],
+                                [
+                                  "-",
+                                  "@entity.carY",
+                                  [
+                                    "object/get",
+                                    "@tgt",
+                                    "y"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "@config.cpRadiusSq"
+                          ],
+                          [
+                            "==",
+                            [
+                              "math/mod",
+                              [
+                                "+",
+                                "@entity.checkpoint",
+                                1.0
+                              ],
+                              [
+                                "array/len",
+                                "@config.checkpoints"
+                              ]
+                            ],
+                            0.0
+                          ]
+                        ],
+                        1.0,
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.checkpoint",
+                  [
+                    "let",
+                    [
+                      [
+                        "tgt",
+                        [
+                          "array/find",
+                          "@config.checkpoints",
+                          [
+                            "fn",
+                            "c",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@c",
+                                "order"
+                              ],
+                              "@entity.checkpoint"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "if",
+                      [
+                        "<",
+                        [
+                          "+",
+                          [
+                            "*",
+                            [
+                              "-",
+                              "@entity.carX",
+                              [
+                                "object/get",
+                                "@tgt",
+                                "x"
+                              ]
+                            ],
+                            [
+                              "-",
+                              "@entity.carX",
+                              [
+                                "object/get",
+                                "@tgt",
+                                "x"
+                              ]
+                            ]
+                          ],
+                          [
+                            "*",
+                            [
+                              "-",
+                              "@entity.carY",
+                              [
+                                "object/get",
+                                "@tgt",
+                                "y"
+                              ]
+                            ],
+                            [
+                              "-",
+                              "@entity.carY",
+                              [
+                                "object/get",
+                                "@tgt",
+                                "y"
+                              ]
+                            ]
+                          ]
+                        ],
+                        "@config.cpRadiusSq"
+                      ],
+                      [
+                        "math/mod",
+                        [
+                          "+",
+                          "@entity.checkpoint",
+                          1.0
+                        ],
+                        [
+                          "array/len",
+                          "@config.checkpoints"
+                        ]
+                      ],
+                      "@entity.checkpoint"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.result",
+                  [
+                    "if",
+                    [
+                      ">",
+                      "@entity.lap",
+                      "@config.totalLaps"
+                    ],
+                    "won",
+                    "@entity.result"
+                  ]
+                ],
+                [
+                  "if",
+                  [
+                    "!=",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "emit",
+                    "GAME_END",
+                    {
+                      "result": "@entity.result"
+                    }
+                  ],
+                  null
                 ],
                 [
                   "set",
@@ -2485,18 +2547,7 @@
                       ]
                     ]
                   ]
-                ]
-              ],
-              "guard": [
-                "==",
-                "@entity.result",
-                "none"
-              ],
-              "interval": 400.0,
-              "name": "paceTick"
-            },
-            {
-              "effects": [
+                ],
                 [
                   "set",
                   "@entity.units",
@@ -2511,70 +2562,18 @@
                         [
                           "==",
                           "@u.id",
-                          "rival"
+                          "player"
                         ],
                         [
-                          "let",
-                          [
-                            [
-                              "cur",
-                              [
-                                "array/find",
-                                "@config.trackOrder",
-                                [
-                                  "fn",
-                                  "t",
-                                  [
-                                    "and",
-                                    [
-                                      "==",
-                                      [
-                                        "object/get",
-                                        "@t",
-                                        "x"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@u.position",
-                                        "x"
-                                      ]
-                                    ],
-                                    [
-                                      "==",
-                                      [
-                                        "object/get",
-                                        "@t",
-                                        "y"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@u.position",
-                                        "y"
-                                      ]
-                                    ]
-                                  ]
-                                ]
-                              ]
-                            ]
-                          ],
-                          [
-                            "object/merge",
-                            "@u",
-                            {
-                              "position": {
-                                "x": [
-                                  "object/get",
-                                  "@cur",
-                                  "nextX"
-                                ],
-                                "y": [
-                                  "object/get",
-                                  "@cur",
-                                  "nextY"
-                                ]
-                              }
+                          "object/merge",
+                          "@u",
+                          {
+                            "heading": "@entity.heading",
+                            "position": {
+                              "x": "@entity.carX",
+                              "y": "@entity.carY"
                             }
-                          ]
+                          }
                         ],
                         "@u"
                       ]
@@ -2582,12 +2581,532 @@
                   ]
                 ],
                 [
+                  "render-ui",
+                  "main",
+                  {
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "PLAY_AGAIN",
+                          "label": "Restart",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    "children": [
+                      {
+                        "cameraMode": "chase",
+                        "events": "@entity.fx",
+                        "features": "@config.features",
+                        "interpolateUnits": true,
+                        "keyMap": {
+                          "ArrowDown": "BRAKE_ON",
+                          "ArrowLeft": "STEER_LEFT",
+                          "ArrowRight": "STEER_RIGHT",
+                          "ArrowUp": "THROTTLE_ON",
+                          "KeyA": "STEER_LEFT",
+                          "KeyD": "STEER_RIGHT",
+                          "KeyS": "BRAKE_ON",
+                          "KeyW": "THROTTLE_ON"
+                        },
+                        "keyUpMap": {
+                          "ArrowDown": "BRAKE_OFF",
+                          "ArrowLeft": "STEER_STOP",
+                          "ArrowRight": "STEER_STOP",
+                          "ArrowUp": "THROTTLE_OFF",
+                          "KeyA": "STEER_STOP",
+                          "KeyD": "STEER_STOP",
+                          "KeyS": "BRAKE_OFF",
+                          "KeyW": "THROTTLE_OFF"
+                        },
+                        "scale": "@config.scale",
+                        "selectedUnitId": "@entity.selectedUnitId",
+                        "tiles": "@entity.tiles",
+                        "type": "game-canvas-3d",
+                        "unitScale": "@config.unitScale",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "hud": {
+                      "children": [
+                        {
+                          "stats": [
+                            {
+                              "label": "Lap",
+                              "value": [
+                                "str/concat",
+                                "@entity.lap",
+                                "/",
+                                "@config.totalLaps"
+                              ]
+                            },
+                            {
+                              "label": "CP",
+                              "value": [
+                                "str/concat",
+                                "@entity.checkpoint",
+                                "/8"
+                              ]
+                            },
+                            {
+                              "label": "Result",
+                              "value": "@entity.result"
+                            },
+                            {
+                              "label": "Goal",
+                              "value": "Finish 2 laps before the rival"
+                            },
+                            {
+                              "label": "How",
+                              "value": "Hold Up to accelerate, Left/Right to steer, Down to brake — pass the checkpoints in order"
+                            }
+                          ],
+                          "type": "game-hud"
+                        },
+                        {
+                          "directionEvents": {
+                            "down": "BRAKE_ON",
+                            "left": "STEER_LEFT",
+                            "right": "STEER_RIGHT",
+                            "up": "THROTTLE_ON"
+                          },
+                          "directionReleaseEvents": {
+                            "down": "BRAKE_OFF",
+                            "left": "STEER_STOP",
+                            "right": "STEER_STOP",
+                            "up": "THROTTLE_OFF"
+                          },
+                          "kind": "dpad",
+                          "type": "control-grid"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                [
+                  "==",
+                  "@entity.phase",
+                  "racing"
+                ],
+                [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ]
+              ],
+              "interval": 90.0,
+              "name": "physicsTick"
+            },
+            {
+              "effects": [
+                [
                   "set",
-                  "@entity.rivalProgress",
+                  "@entity.rivalLap",
                   [
                     "+",
-                    "@entity.rivalProgress",
-                    1.0
+                    "@entity.rivalLap",
+                    [
+                      "let",
+                      [
+                        [
+                          "tgt",
+                          [
+                            "array/find",
+                            "@config.checkpoints",
+                            [
+                              "fn",
+                              "c",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@c",
+                                  "order"
+                                ],
+                                "@entity.rivalCheckpoint"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "if",
+                        [
+                          "and",
+                          [
+                            "<",
+                            [
+                              "+",
+                              [
+                                "*",
+                                [
+                                  "-",
+                                  "@entity.rivalCarX",
+                                  [
+                                    "object/get",
+                                    "@tgt",
+                                    "x"
+                                  ]
+                                ],
+                                [
+                                  "-",
+                                  "@entity.rivalCarX",
+                                  [
+                                    "object/get",
+                                    "@tgt",
+                                    "x"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "*",
+                                [
+                                  "-",
+                                  "@entity.rivalCarY",
+                                  [
+                                    "object/get",
+                                    "@tgt",
+                                    "y"
+                                  ]
+                                ],
+                                [
+                                  "-",
+                                  "@entity.rivalCarY",
+                                  [
+                                    "object/get",
+                                    "@tgt",
+                                    "y"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            1.6
+                          ],
+                          [
+                            "==",
+                            [
+                              "math/mod",
+                              [
+                                "+",
+                                "@entity.rivalCheckpoint",
+                                1.0
+                              ],
+                              [
+                                "array/len",
+                                "@config.checkpoints"
+                              ]
+                            ],
+                            0.0
+                          ]
+                        ],
+                        1.0,
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.rivalCheckpoint",
+                  [
+                    "let",
+                    [
+                      [
+                        "tgt",
+                        [
+                          "array/find",
+                          "@config.checkpoints",
+                          [
+                            "fn",
+                            "c",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@c",
+                                "order"
+                              ],
+                              "@entity.rivalCheckpoint"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "if",
+                      [
+                        "<",
+                        [
+                          "+",
+                          [
+                            "*",
+                            [
+                              "-",
+                              "@entity.rivalCarX",
+                              [
+                                "object/get",
+                                "@tgt",
+                                "x"
+                              ]
+                            ],
+                            [
+                              "-",
+                              "@entity.rivalCarX",
+                              [
+                                "object/get",
+                                "@tgt",
+                                "x"
+                              ]
+                            ]
+                          ],
+                          [
+                            "*",
+                            [
+                              "-",
+                              "@entity.rivalCarY",
+                              [
+                                "object/get",
+                                "@tgt",
+                                "y"
+                              ]
+                            ],
+                            [
+                              "-",
+                              "@entity.rivalCarY",
+                              [
+                                "object/get",
+                                "@tgt",
+                                "y"
+                              ]
+                            ]
+                          ]
+                        ],
+                        1.6
+                      ],
+                      [
+                        "math/mod",
+                        [
+                          "+",
+                          "@entity.rivalCheckpoint",
+                          1.0
+                        ],
+                        [
+                          "array/len",
+                          "@config.checkpoints"
+                        ]
+                      ],
+                      "@entity.rivalCheckpoint"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.rivalCarX",
+                  [
+                    "let",
+                    [
+                      [
+                        "tgt",
+                        [
+                          "array/find",
+                          "@config.checkpoints",
+                          [
+                            "fn",
+                            "c",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@c",
+                                "order"
+                              ],
+                              "@entity.rivalCheckpoint"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "dx",
+                          [
+                            "-",
+                            [
+                              "object/get",
+                              "@tgt",
+                              "x"
+                            ],
+                            "@entity.rivalCarX"
+                          ]
+                        ],
+                        [
+                          "dy",
+                          [
+                            "-",
+                            [
+                              "object/get",
+                              "@tgt",
+                              "y"
+                            ],
+                            "@entity.rivalCarY"
+                          ]
+                        ]
+                      ],
+                      [
+                        "let",
+                        [
+                          [
+                            "d",
+                            [
+                              "math/max",
+                              0.001,
+                              [
+                                "math/sqrt",
+                                [
+                                  "+",
+                                  [
+                                    "*",
+                                    "@dx",
+                                    "@dx"
+                                  ],
+                                  [
+                                    "*",
+                                    "@dy",
+                                    "@dy"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "+",
+                          "@entity.rivalCarX",
+                          [
+                            "*",
+                            [
+                              "/",
+                              "@dx",
+                              "@d"
+                            ],
+                            "@config.rivalSpeed"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.rivalCarY",
+                  [
+                    "let",
+                    [
+                      [
+                        "tgt",
+                        [
+                          "array/find",
+                          "@config.checkpoints",
+                          [
+                            "fn",
+                            "c",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@c",
+                                "order"
+                              ],
+                              "@entity.rivalCheckpoint"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "dx",
+                          [
+                            "-",
+                            [
+                              "object/get",
+                              "@tgt",
+                              "x"
+                            ],
+                            "@entity.rivalCarX"
+                          ]
+                        ],
+                        [
+                          "dy",
+                          [
+                            "-",
+                            [
+                              "object/get",
+                              "@tgt",
+                              "y"
+                            ],
+                            "@entity.rivalCarY"
+                          ]
+                        ]
+                      ],
+                      [
+                        "let",
+                        [
+                          [
+                            "d",
+                            [
+                              "math/max",
+                              0.001,
+                              [
+                                "math/sqrt",
+                                [
+                                  "+",
+                                  [
+                                    "*",
+                                    "@dx",
+                                    "@dx"
+                                  ],
+                                  [
+                                    "*",
+                                    "@dy",
+                                    "@dy"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "+",
+                          "@entity.rivalCarY",
+                          [
+                            "*",
+                            [
+                              "/",
+                              "@dy",
+                              "@d"
+                            ],
+                            "@config.rivalSpeed"
+                          ]
+                        ]
+                      ]
+                    ]
                   ]
                 ],
                 [
@@ -2596,16 +3115,9 @@
                   [
                     "if",
                     [
-                      ">=",
-                      "@entity.rivalProgress",
-                      [
-                        "*",
-                        "@config.totalLaps",
-                        [
-                          "array/len",
-                          "@config.trackOrder"
-                        ]
-                      ]
+                      ">",
+                      "@entity.rivalLap",
+                      "@config.totalLaps"
                     ],
                     "lost",
                     "@entity.result"
@@ -2628,84 +3140,51 @@
                   null
                 ],
                 [
-                  "render-ui",
-                  "main",
-                  {
-                    "addons": {
-                      "children": [
-                        {
-                          "action": "PLAY_AGAIN",
-                          "label": "Restart",
-                          "type": "button",
-                          "variant": "secondary"
-                        }
-                      ],
-                      "direction": "vertical",
-                      "gap": "sm",
-                      "type": "stack"
-                    },
-                    "children": [
-                      {
-                        "cameraMode": "follow",
-                        "events": "@entity.fx",
-                        "features": "@config.features",
-                        "interpolateUnits": true,
-                        "keyMap": {
-                          "ArrowUp": "ACCELERATE",
-                          "KeyW": "ACCELERATE",
-                          "Space": "ACCELERATE"
-                        },
-                        "scale": "@config.scale",
-                        "selectedUnitId": "@entity.selectedUnitId",
-                        "tiles": "@config.tiles",
-                        "type": "game-canvas-3d",
-                        "unitScale": "@config.unitScale",
-                        "units": "@entity.units"
-                      }
-                    ],
-                    "hud": {
-                      "children": [
-                        {
-                          "stats": [
-                            {
-                              "label": "Lap",
-                              "value": [
-                                "str/concat",
-                                "@entity.lap",
-                                "/",
-                                "@config.totalLaps"
-                              ]
-                            },
-                            {
-                              "label": "Result",
-                              "value": "@entity.result"
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "if",
+                        [
+                          "==",
+                          "@u.id",
+                          "rival"
+                        ],
+                        [
+                          "object/merge",
+                          "@u",
+                          {
+                            "position": {
+                              "x": "@entity.rivalCarX",
+                              "y": "@entity.rivalCarY"
                             }
-                          ],
-                          "type": "game-hud"
-                        },
-                        {
-                          "directionEvents": {
-                            "up": "ACCELERATE"
-                          },
-                          "kind": "dpad",
-                          "type": "control-grid"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "gap": "md",
-                      "justify": "between",
-                      "type": "stack"
-                    },
-                    "type": "game-shell"
-                  }
+                          }
+                        ],
+                        "@u"
+                      ]
+                    ]
+                  ]
                 ]
               ],
               "guard": [
-                "==",
-                "@entity.result",
-                "none"
+                "and",
+                [
+                  "==",
+                  "@entity.phase",
+                  "racing"
+                ],
+                [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ]
               ],
-              "interval": 1000.0,
+              "interval": 130.0,
               "name": "rivalTick"
             }
           ]

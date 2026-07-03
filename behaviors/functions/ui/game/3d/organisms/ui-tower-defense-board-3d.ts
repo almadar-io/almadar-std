@@ -69,30 +69,34 @@ export interface StdUiTowerDefenseBoard3dConfig {
   /** Default: `6` */
   enemyHealth?: number;
   error?: EntityRow;
-  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"spawn-round","role":"portal","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/spawn-round.glb"},"id":"f-spawn","type":"spawn_portal","x":0,"y":0},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"tower-round-build-f","role":"base","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/tower-round-build-f.glb"},"id":"f-base","type":"base","x":5,"y":5},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-tree","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/detail-tree.glb"},"id":"f-tree1","type":"decoration","x":3,"y":1},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-rocks","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/detail-rocks.glb"},"id":"f-rocks1","type":"decoration","x":2,"y":3},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-crystal","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/detail-crystal.glb"},"id":"f-crystal1","type":"decoration","x":1,"y":4}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"spawn-round","role":"portal","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/spawn-round.glb"},"id":"f-spawn","type":"spawn_portal","x":0,"y":1},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"tower-round-build-f","role":"base","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/tower-round-build-f.glb"},"id":"f-base","type":"base","x":6,"y":13},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-tree","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/detail-tree.glb"},"id":"f-tree1","type":"decoration","x":7,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-rocks","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/detail-rocks.glb"},"id":"f-rocks1","type":"decoration","x":10,"y":3},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-crystal","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/detail-crystal.glb"},"id":"f-crystal1","type":"decoration","x":4,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-tree","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/detail-tree.glb"},"id":"f-tree2","type":"decoration","x":9,"y":9},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"detail-rocks","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/detail-rocks.glb"},"id":"f-rocks2","type":"decoration","x":10,"y":12}]` */
   features?: EntityRow[];
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"}` */
+  grassAsset?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `15` */
   killReward?: number;
-  /** Default: `12` */
+  /** Default: `14` */
   maxWaves?: number;
-  /** Default: `[{"index":0,"x":0,"y":0},{"index":1,"x":0,"y":1},{"index":2,"x":0,"y":2},{"index":3,"x":1,"y":2},{"index":4,"x":2,"y":2},{"index":5,"x":3,"y":2},{"index":6,"x":3,"y":3},{"index":7,"x":3,"y":4},{"index":8,"x":4,"y":4},{"index":9,"x":5,"y":4},{"index":10,"x":5,"y":5}]` */
+  /** Default: `[{"index":0,"x":0,"y":1},{"index":1,"x":1,"y":1},{"index":2,"x":2,"y":1},{"index":3,"x":3,"y":1},{"index":4,"x":4,"y":1},{"index":5,"x":5,"y":1},{"index":6,"x":6,"y":1},{"index":7,"x":7,"y":1},{"index":8,"x":8,"y":1},{"index":9,"x":9,"y":1},{"index":10,"x":10,"y":1},{"index":11,"x":11,"y":1},{"index":12,"x":12,"y":1},{"index":13,"x":13,"y":1},{"index":14,"x":13,"y":2},{"index":15,"x":13,"y":3},{"index":16,"x":13,"y":4},{"index":17,"x":12,"y":4},{"index":18,"x":11,"y":4},{"index":19,"x":10,"y":4},{"index":20,"x":9,"y":4},{"index":21,"x":8,"y":4},{"index":22,"x":7,"y":4},{"index":23,"x":6,"y":4},{"index":24,"x":5,"y":4},{"index":25,"x":4,"y":4},{"index":26,"x":3,"y":4},{"index":27,"x":2,"y":4},{"index":28,"x":1,"y":4},{"index":29,"x":0,"y":4},{"index":30,"x":0,"y":5},{"index":31,"x":0,"y":6},{"index":32,"x":0,"y":7},{"index":33,"x":1,"y":7},{"index":34,"x":2,"y":7},{"index":35,"x":3,"y":7},{"index":36,"x":4,"y":7},{"index":37,"x":5,"y":7},{"index":38,"x":6,"y":7},{"index":39,"x":7,"y":7},{"index":40,"x":8,"y":7},{"index":41,"x":9,"y":7},{"index":42,"x":10,"y":7},{"index":43,"x":11,"y":7},{"index":44,"x":12,"y":7},{"index":45,"x":13,"y":7},{"index":46,"x":13,"y":8},{"index":47,"x":13,"y":9},{"index":48,"x":13,"y":10},{"index":49,"x":12,"y":10},{"index":50,"x":11,"y":10},{"index":51,"x":10,"y":10},{"index":52,"x":9,"y":10},{"index":53,"x":8,"y":10},{"index":54,"x":7,"y":10},{"index":55,"x":6,"y":10},{"index":56,"x":5,"y":10},{"index":57,"x":4,"y":10},{"index":58,"x":3,"y":10},{"index":59,"x":2,"y":10},{"index":60,"x":1,"y":10},{"index":61,"x":0,"y":10},{"index":62,"x":0,"y":11},{"index":63,"x":0,"y":12},{"index":64,"x":0,"y":13},{"index":65,"x":1,"y":13},{"index":66,"x":2,"y":13},{"index":67,"x":3,"y":13},{"index":68,"x":4,"y":13},{"index":69,"x":5,"y":13},{"index":70,"x":6,"y":13}]` */
   path?: EntityRow[];
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-dirt","role":"path","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb"}` */
+  pathAsset?: EntityRow;
   /** Default: `0.45` */
   scale?: number;
-  /** Default: `120` */
+  /** Default: `160` */
   startingGold?: number;
   /** Default: `3` */
   startingLives?: number;
-  /** Default: `[{"id":"t00","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-dirt","role":"path","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb"},"passable":false,"terrain":"path","x":0,"y":0},{"id":"t10","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":1,"y":0},{"id":"t20","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-tree","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-tree.glb"},"passable":false,"terrain":"tree","x":2,"y":0},{"id":"t30","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":3,"y":0},{"id":"t40","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":4,"y":0},{"id":"t50","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-rock","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-rock.glb"},"passable":false,"terrain":"rock","x":5,"y":0},{"id":"t01","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-dirt","role":"path","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb"},"passable":false,"terrain":"path","x":0,"y":1},{"id":"t11","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-crystal","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-crystal.glb"},"passable":false,"terrain":"crystal","x":1,"y":1},{"id":"t21","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":2,"y":1},{"id":"t31","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":false,"terrain":"grass","x":3,"y":1},{"id":"t41","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":4,"y":1},{"id":"t51","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-tree-double","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-tree-double.glb"},"passable":false,"terrain":"tree","x":5,"y":1},{"id":"t02","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-dirt","role":"path","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb"},"passable":false,"terrain":"path","x":0,"y":2},{"id":"t12","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-dirt","role":"path","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb"},"passable":false,"terrain":"path","x":1,"y":2},{"id":"t22","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-dirt","role":"path","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb"},"passable":false,"terrain":"path","x":2,"y":2},{"id":"t32","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-dirt","role":"path","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb"},"passable":false,"terrain":"path","x":3,"y":2},{"id":"t42","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":4,"y":2},{"id":"t52","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":5,"y":2},{"id":"t03","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-rock","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-rock.glb"},"passable":false,"terrain":"rock","x":0,"y":3},{"id":"t13","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":1,"y":3},{"id":"t23","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":false,"terrain":"grass","x":2,"y":3},{"id":"t33","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-dirt","role":"path","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb"},"passable":false,"terrain":"path","x":3,"y":3},{"id":"t43","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":4,"y":3},{"id":"t53","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":5,"y":3},{"id":"t04","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":0,"y":4},{"id":"t14","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":false,"terrain":"grass","x":1,"y":4},{"id":"t24","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":2,"y":4},{"id":"t34","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-dirt","role":"path","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb"},"passable":false,"terrain":"path","x":3,"y":4},{"id":"t44","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-dirt","role":"path","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb"},"passable":false,"terrain":"path","x":4,"y":4},{"id":"t54","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-dirt","role":"path","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb"},"passable":false,"terrain":"path","x":5,"y":4},{"id":"t05","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":0,"y":5},{"id":"t15","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":1,"y":5},{"id":"t25","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":2,"y":5},{"id":"t35","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb"},"passable":true,"terrain":"grass","x":3,"y":5},{"id":"t45","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-tree-quad","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-tree-quad.glb"},"passable":false,"terrain":"tree","x":4,"y":5},{"id":"t55","modelUrl":{"animations":["static"],"aspect":"1:1","category":"terrain","dimension":"3d","name":"tile-dirt","role":"path","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb"},"passable":false,"terrain":"path","x":5,"y":5}]` */
-  tiles?: EntityRow[];
   /** Default: `{"animations":["static"],"aspect":"1:1","category":"features","dimension":"3d","name":"weapon-turret","role":"tower","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/weapon-turret.glb"}` */
   towerAsset?: EntityRow;
   /** Default: `40` */
   towerCost?: number;
   /** Default: `2` */
   towerDamage?: number;
+  /** Default: `1` */
+  towerRange?: number;
   /** Default: `1` */
   unitScale?: number;
 }
@@ -369,6 +373,126 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
               'defeat',
             ],
           },
+          {
+            'default': 14,
+            'name': 'gridWidth',
+            'type': 'number',
+          },
+          {
+            'default': 14,
+            'name': 'gridHeight',
+            'type': 'number',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'modelUrl': {
+                  'name': 'modelUrl',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
+                'passable': {
+                  'name': 'passable',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'terrain': {
+                  'name': 'terrain',
+                  'required': false,
+                  'type': 'string',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'tiles',
+            'type': 'array',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'z': {
+                  'name': 'z',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'towerCoverage',
+            'type': 'array',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -510,7 +634,7 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                 'id': 'f-spawn',
                 'type': 'spawn_portal',
                 'x': 0,
-                'y': 0,
+                'y': 1,
               },
               {
                 'assetUrl': {
@@ -528,8 +652,8 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                 },
                 'id': 'f-base',
                 'type': 'base',
-                'x': 5,
-                'y': 5,
+                'x': 6,
+                'y': 13,
               },
               {
                 'assetUrl': {
@@ -547,8 +671,8 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                 },
                 'id': 'f-tree1',
                 'type': 'decoration',
-                'x': 3,
-                'y': 1,
+                'x': 7,
+                'y': 2,
               },
               {
                 'assetUrl': {
@@ -566,7 +690,7 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                 },
                 'id': 'f-rocks1',
                 'type': 'decoration',
-                'x': 2,
+                'x': 10,
                 'y': 3,
               },
               {
@@ -585,11 +709,49 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                 },
                 'id': 'f-crystal1',
                 'type': 'decoration',
-                'x': 1,
-                'y': 4,
+                'x': 4,
+                'y': 2,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'features',
+                  'dimension': '3d',
+                  'name': 'detail-tree',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/detail-tree.glb',
+                },
+                'id': 'f-tree2',
+                'type': 'decoration',
+                'x': 9,
+                'y': 9,
+              },
+              {
+                'assetUrl': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'features',
+                  'dimension': '3d',
+                  'name': 'detail-rocks',
+                  'role': 'decoration',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/features/detail-rocks.glb',
+                },
+                'id': 'f-rocks2',
+                'type': 'decoration',
+                'x': 10,
+                'y': 12,
               },
             ],
-            'description': 'Static spawn portal, base structure and tree/rock/crystal decoration.',
+            'description': 'Spawn portal, base structure and tree/rock/crystal decoration scattered off the lane.',
             'items': {
               'properties': {
                 'assetUrl': {
@@ -674,6 +836,75 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
             'tier': 'presentation',
             'type': '[TowerDefenseBoard3DFeaturesItem]',
           },
+          'grassAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'terrain',
+              'dimension': '3d',
+              'name': 'tile',
+              'role': 'tile',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
+            },
+            'description': 'Buildable grass tile Asset used for every non-lane cell',
+            'label': 'Grass Tile',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
           'isLoading': {
             'default': false,
             'description': 'Loading state indicator',
@@ -689,7 +920,7 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
             'type': 'number',
           },
           'maxWaves': {
-            'default': 12,
+            'default': 14,
             'description': 'Total enemies to survive for victory',
             'label': 'Max Waves',
             'tier': 'presentation',
@@ -700,60 +931,360 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
               {
                 'index': 0,
                 'x': 0,
-                'y': 0,
+                'y': 1,
               },
               {
                 'index': 1,
-                'x': 0,
+                'x': 1,
                 'y': 1,
               },
               {
                 'index': 2,
-                'x': 0,
-                'y': 2,
+                'x': 2,
+                'y': 1,
               },
               {
                 'index': 3,
-                'x': 1,
-                'y': 2,
+                'x': 3,
+                'y': 1,
               },
               {
                 'index': 4,
-                'x': 2,
-                'y': 2,
+                'x': 4,
+                'y': 1,
               },
               {
                 'index': 5,
-                'x': 3,
-                'y': 2,
+                'x': 5,
+                'y': 1,
               },
               {
                 'index': 6,
-                'x': 3,
-                'y': 3,
+                'x': 6,
+                'y': 1,
               },
               {
                 'index': 7,
-                'x': 3,
-                'y': 4,
+                'x': 7,
+                'y': 1,
               },
               {
                 'index': 8,
+                'x': 8,
+                'y': 1,
+              },
+              {
+                'index': 9,
+                'x': 9,
+                'y': 1,
+              },
+              {
+                'index': 10,
+                'x': 10,
+                'y': 1,
+              },
+              {
+                'index': 11,
+                'x': 11,
+                'y': 1,
+              },
+              {
+                'index': 12,
+                'x': 12,
+                'y': 1,
+              },
+              {
+                'index': 13,
+                'x': 13,
+                'y': 1,
+              },
+              {
+                'index': 14,
+                'x': 13,
+                'y': 2,
+              },
+              {
+                'index': 15,
+                'x': 13,
+                'y': 3,
+              },
+              {
+                'index': 16,
+                'x': 13,
+                'y': 4,
+              },
+              {
+                'index': 17,
+                'x': 12,
+                'y': 4,
+              },
+              {
+                'index': 18,
+                'x': 11,
+                'y': 4,
+              },
+              {
+                'index': 19,
+                'x': 10,
+                'y': 4,
+              },
+              {
+                'index': 20,
+                'x': 9,
+                'y': 4,
+              },
+              {
+                'index': 21,
+                'x': 8,
+                'y': 4,
+              },
+              {
+                'index': 22,
+                'x': 7,
+                'y': 4,
+              },
+              {
+                'index': 23,
+                'x': 6,
+                'y': 4,
+              },
+              {
+                'index': 24,
+                'x': 5,
+                'y': 4,
+              },
+              {
+                'index': 25,
                 'x': 4,
                 'y': 4,
               },
               {
-                'index': 9,
-                'x': 5,
+                'index': 26,
+                'x': 3,
                 'y': 4,
               },
               {
-                'index': 10,
-                'x': 5,
+                'index': 27,
+                'x': 2,
+                'y': 4,
+              },
+              {
+                'index': 28,
+                'x': 1,
+                'y': 4,
+              },
+              {
+                'index': 29,
+                'x': 0,
+                'y': 4,
+              },
+              {
+                'index': 30,
+                'x': 0,
                 'y': 5,
               },
+              {
+                'index': 31,
+                'x': 0,
+                'y': 6,
+              },
+              {
+                'index': 32,
+                'x': 0,
+                'y': 7,
+              },
+              {
+                'index': 33,
+                'x': 1,
+                'y': 7,
+              },
+              {
+                'index': 34,
+                'x': 2,
+                'y': 7,
+              },
+              {
+                'index': 35,
+                'x': 3,
+                'y': 7,
+              },
+              {
+                'index': 36,
+                'x': 4,
+                'y': 7,
+              },
+              {
+                'index': 37,
+                'x': 5,
+                'y': 7,
+              },
+              {
+                'index': 38,
+                'x': 6,
+                'y': 7,
+              },
+              {
+                'index': 39,
+                'x': 7,
+                'y': 7,
+              },
+              {
+                'index': 40,
+                'x': 8,
+                'y': 7,
+              },
+              {
+                'index': 41,
+                'x': 9,
+                'y': 7,
+              },
+              {
+                'index': 42,
+                'x': 10,
+                'y': 7,
+              },
+              {
+                'index': 43,
+                'x': 11,
+                'y': 7,
+              },
+              {
+                'index': 44,
+                'x': 12,
+                'y': 7,
+              },
+              {
+                'index': 45,
+                'x': 13,
+                'y': 7,
+              },
+              {
+                'index': 46,
+                'x': 13,
+                'y': 8,
+              },
+              {
+                'index': 47,
+                'x': 13,
+                'y': 9,
+              },
+              {
+                'index': 48,
+                'x': 13,
+                'y': 10,
+              },
+              {
+                'index': 49,
+                'x': 12,
+                'y': 10,
+              },
+              {
+                'index': 50,
+                'x': 11,
+                'y': 10,
+              },
+              {
+                'index': 51,
+                'x': 10,
+                'y': 10,
+              },
+              {
+                'index': 52,
+                'x': 9,
+                'y': 10,
+              },
+              {
+                'index': 53,
+                'x': 8,
+                'y': 10,
+              },
+              {
+                'index': 54,
+                'x': 7,
+                'y': 10,
+              },
+              {
+                'index': 55,
+                'x': 6,
+                'y': 10,
+              },
+              {
+                'index': 56,
+                'x': 5,
+                'y': 10,
+              },
+              {
+                'index': 57,
+                'x': 4,
+                'y': 10,
+              },
+              {
+                'index': 58,
+                'x': 3,
+                'y': 10,
+              },
+              {
+                'index': 59,
+                'x': 2,
+                'y': 10,
+              },
+              {
+                'index': 60,
+                'x': 1,
+                'y': 10,
+              },
+              {
+                'index': 61,
+                'x': 0,
+                'y': 10,
+              },
+              {
+                'index': 62,
+                'x': 0,
+                'y': 11,
+              },
+              {
+                'index': 63,
+                'x': 0,
+                'y': 12,
+              },
+              {
+                'index': 64,
+                'x': 0,
+                'y': 13,
+              },
+              {
+                'index': 65,
+                'x': 1,
+                'y': 13,
+              },
+              {
+                'index': 66,
+                'x': 2,
+                'y': 13,
+              },
+              {
+                'index': 67,
+                'x': 3,
+                'y': 13,
+              },
+              {
+                'index': 68,
+                'x': 4,
+                'y': 13,
+              },
+              {
+                'index': 69,
+                'x': 5,
+                'y': 13,
+              },
+              {
+                'index': 70,
+                'x': 6,
+                'y': 13,
+              },
             ],
-            'description': 'Ordered waypoints enemies follow — index 0 is the spawn portal, the last index is the base.',
+            'description': 'Ordered waypoints enemies follow — index 0 is the spawn portal, the last index is the base. Also drives procedural tile generation.',
             'items': {
               'properties': {
                 'index': {
@@ -778,6 +1309,75 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
             'tier': 'presentation',
             'type': '[TowerDefenseBoard3DPathItem]',
           },
+          'pathAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'terrain',
+              'dimension': '3d',
+              'name': 'tile-dirt',
+              'role': 'path',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb',
+            },
+            'description': 'Dirt tile Asset used for every lane cell',
+            'label': 'Path Tile',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
           'scale': {
             'default': 0.45,
             'description': 'Canvas render scale',
@@ -786,7 +1386,7 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
             'type': 'number',
           },
           'startingGold': {
-            'default': 120,
+            'default': 160,
             'description': 'Gold available at match start',
             'label': 'Starting Gold',
             'tier': 'presentation',
@@ -798,819 +1398,6 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
             'label': 'Starting Lives',
             'tier': 'presentation',
             'type': 'number',
-          },
-          'tiles': {
-            'default': [
-              {
-                'id': 't00',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-dirt',
-                  'role': 'path',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb',
-                },
-                'passable': false,
-                'terrain': 'path',
-                'x': 0,
-                'y': 0,
-              },
-              {
-                'id': 't10',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 0,
-              },
-              {
-                'id': 't20',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-tree',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-tree.glb',
-                },
-                'passable': false,
-                'terrain': 'tree',
-                'x': 2,
-                'y': 0,
-              },
-              {
-                'id': 't30',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 3,
-                'y': 0,
-              },
-              {
-                'id': 't40',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 4,
-                'y': 0,
-              },
-              {
-                'id': 't50',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-rock',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-rock.glb',
-                },
-                'passable': false,
-                'terrain': 'rock',
-                'x': 5,
-                'y': 0,
-              },
-              {
-                'id': 't01',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-dirt',
-                  'role': 'path',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb',
-                },
-                'passable': false,
-                'terrain': 'path',
-                'x': 0,
-                'y': 1,
-              },
-              {
-                'id': 't11',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-crystal',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-crystal.glb',
-                },
-                'passable': false,
-                'terrain': 'crystal',
-                'x': 1,
-                'y': 1,
-              },
-              {
-                'id': 't21',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 1,
-              },
-              {
-                'id': 't31',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': false,
-                'terrain': 'grass',
-                'x': 3,
-                'y': 1,
-              },
-              {
-                'id': 't41',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 4,
-                'y': 1,
-              },
-              {
-                'id': 't51',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-tree-double',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-tree-double.glb',
-                },
-                'passable': false,
-                'terrain': 'tree',
-                'x': 5,
-                'y': 1,
-              },
-              {
-                'id': 't02',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-dirt',
-                  'role': 'path',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb',
-                },
-                'passable': false,
-                'terrain': 'path',
-                'x': 0,
-                'y': 2,
-              },
-              {
-                'id': 't12',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-dirt',
-                  'role': 'path',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb',
-                },
-                'passable': false,
-                'terrain': 'path',
-                'x': 1,
-                'y': 2,
-              },
-              {
-                'id': 't22',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-dirt',
-                  'role': 'path',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb',
-                },
-                'passable': false,
-                'terrain': 'path',
-                'x': 2,
-                'y': 2,
-              },
-              {
-                'id': 't32',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-dirt',
-                  'role': 'path',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb',
-                },
-                'passable': false,
-                'terrain': 'path',
-                'x': 3,
-                'y': 2,
-              },
-              {
-                'id': 't42',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 4,
-                'y': 2,
-              },
-              {
-                'id': 't52',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 5,
-                'y': 2,
-              },
-              {
-                'id': 't03',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-rock',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-rock.glb',
-                },
-                'passable': false,
-                'terrain': 'rock',
-                'x': 0,
-                'y': 3,
-              },
-              {
-                'id': 't13',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 3,
-              },
-              {
-                'id': 't23',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': false,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 3,
-              },
-              {
-                'id': 't33',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-dirt',
-                  'role': 'path',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb',
-                },
-                'passable': false,
-                'terrain': 'path',
-                'x': 3,
-                'y': 3,
-              },
-              {
-                'id': 't43',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 4,
-                'y': 3,
-              },
-              {
-                'id': 't53',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 5,
-                'y': 3,
-              },
-              {
-                'id': 't04',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 4,
-              },
-              {
-                'id': 't14',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': false,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 4,
-              },
-              {
-                'id': 't24',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 4,
-              },
-              {
-                'id': 't34',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-dirt',
-                  'role': 'path',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb',
-                },
-                'passable': false,
-                'terrain': 'path',
-                'x': 3,
-                'y': 4,
-              },
-              {
-                'id': 't44',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-dirt',
-                  'role': 'path',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb',
-                },
-                'passable': false,
-                'terrain': 'path',
-                'x': 4,
-                'y': 4,
-              },
-              {
-                'id': 't54',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-dirt',
-                  'role': 'path',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb',
-                },
-                'passable': false,
-                'terrain': 'path',
-                'x': 5,
-                'y': 4,
-              },
-              {
-                'id': 't05',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 0,
-                'y': 5,
-              },
-              {
-                'id': 't15',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 1,
-                'y': 5,
-              },
-              {
-                'id': 't25',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-                'y': 5,
-              },
-              {
-                'id': 't35',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile.glb',
-                },
-                'passable': true,
-                'terrain': 'grass',
-                'x': 3,
-                'y': 5,
-              },
-              {
-                'id': 't45',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-tree-quad',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-tree-quad.glb',
-                },
-                'passable': false,
-                'terrain': 'tree',
-                'x': 4,
-                'y': 5,
-              },
-              {
-                'id': 't55',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'terrain',
-                  'dimension': '3d',
-                  'name': 'tile-dirt',
-                  'role': 'path',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board-3d/kenney-tower-defense-kit/terrain/tile-dirt.glb',
-                },
-                'passable': false,
-                'terrain': 'path',
-                'x': 5,
-                'y': 5,
-              },
-            ],
-            'description': '6x6 grid — dirt path from spawn to base, grass cells buildable, rock/tree/crystal cells blocked.',
-            'items': {
-              'properties': {
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'passable': {
-                  'name': 'passable',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'terrain': {
-                  'name': 'terrain',
-                  'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Tiles',
-            'tier': 'presentation',
-            'type': '[TowerDefenseBoard3DTilesItem]',
           },
           'towerAsset': {
             'default': {
@@ -1695,6 +1482,13 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
             'tier': 'presentation',
             'type': 'number',
           },
+          'towerRange': {
+            'default': 1,
+            'description': 'Manhattan-distance radius within which a tower damages enemies each tick; also drives the build-preview coverage highlight',
+            'label': 'Tower Range',
+            'tier': 'presentation',
+            'type': 'number',
+          },
           'unitScale': {
             'default': 1,
             'description': 'Unit draw-size multiplier',
@@ -1754,8 +1548,12 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
           'provides': [
             'fx',
             'gold',
+            'gridHeight',
+            'gridWidth',
             'lives',
             'result',
+            'tiles',
+            'towerCoverage',
             'towers',
             'units',
             'wave',
@@ -1866,11 +1664,123 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                   'none',
                 ],
                 [
+                  'set',
+                  '@entity.gridWidth',
+                  14,
+                ],
+                [
+                  'set',
+                  '@entity.gridHeight',
+                  14,
+                ],
+                [
+                  'set',
+                  '@entity.tiles',
+                  [
+                    'array/flatten',
+                    [
+                      'array/map',
+                      [
+                        'array/range',
+                        0,
+                        14,
+                      ],
+                      [
+                        'fn',
+                        'gy',
+                        [
+                          'array/map',
+                          [
+                            'array/range',
+                            0,
+                            14,
+                          ],
+                          [
+                            'fn',
+                            'gx',
+                            [
+                              'let',
+                              [
+                                [
+                                  'onPath',
+                                  [
+                                    '>',
+                                    [
+                                      'array/len',
+                                      [
+                                        'array/filter',
+                                        '@config.path',
+                                        [
+                                          'fn',
+                                          'p',
+                                          [
+                                            'and',
+                                            [
+                                              '==',
+                                              '@p.x',
+                                              '@gx',
+                                            ],
+                                            [
+                                              '==',
+                                              '@p.y',
+                                              '@gy',
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
+                              {
+                                'id': [
+                                  'str/concat',
+                                  't-',
+                                  '@gx',
+                                  '-',
+                                  '@gy',
+                                ],
+                                'modelUrl': [
+                                  'if',
+                                  '@onPath',
+                                  '@config.pathAsset',
+                                  '@config.grassAsset',
+                                ],
+                                'passable': [
+                                  'if',
+                                  '@onPath',
+                                  false,
+                                  true,
+                                ],
+                                'terrain': [
+                                  'if',
+                                  '@onPath',
+                                  'path',
+                                  'grass',
+                                ],
+                                'x': '@gx',
+                                'y': '@gy',
+                              },
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.towerCoverage',
+                  [],
+                ],
+                [
                   'render-ui',
                   'main',
                   {
                     'children': [
                       {
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': [
                           'array/concat',
@@ -1894,10 +1804,11 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitScale': '@config.unitScale',
                         'units': '@entity.units',
+                        'validMoves': '@entity.towerCoverage',
                       },
                     ],
                     'hud': {
@@ -1919,6 +1830,26 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                             {
                               'label': 'Result',
                               'value': '@entity.result',
+                            },
+                            {
+                              'label': 'Range',
+                              'value': '@config.towerRange',
+                            },
+                            {
+                              'label': 'Goal',
+                              'value': [
+                                'str/concat',
+                                'Survive ',
+                                [
+                                  'str/concat',
+                                  '@config.maxWaves',
+                                  ' waves',
+                                ],
+                              ],
+                            },
+                            {
+                              'label': 'How',
+                              'value': 'Click grass beside the lane to build a turret (40g) — turrets auto-fire enemies within range',
                             },
                           ],
                           'type': 'game-hud',
@@ -1998,11 +1929,66 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                   ],
                 ],
                 [
+                  'set',
+                  '@entity.towerCoverage',
+                  [
+                    'array/map',
+                    [
+                      'array/filter',
+                      '@entity.tiles',
+                      [
+                        'fn',
+                        't',
+                        [
+                          'and',
+                          [
+                            '==',
+                            '@t.passable',
+                            true,
+                          ],
+                          [
+                            'array/some',
+                            '@entity.towers',
+                            [
+                              'fn',
+                              'tw',
+                              [
+                                '<=',
+                                [
+                                  'grid/manhattan-distance',
+                                  {
+                                    'x': '@t.x',
+                                    'y': '@t.y',
+                                  },
+                                  {
+                                    'x': '@tw.x',
+                                    'y': '@tw.y',
+                                  },
+                                ],
+                                '@config.towerRange',
+                              ],
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                    [
+                      'fn',
+                      't',
+                      {
+                        'x': '@t.x',
+                        'z': '@t.y',
+                      },
+                    ],
+                  ],
+                ],
+                [
                   'render-ui',
                   'main',
                   {
                     'children': [
                       {
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': [
                           'array/concat',
@@ -2026,10 +2012,11 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitScale': '@config.unitScale',
                         'units': '@entity.units',
+                        'validMoves': '@entity.towerCoverage',
                       },
                     ],
                     'hud': {
@@ -2051,6 +2038,26 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                             {
                               'label': 'Result',
                               'value': '@entity.result',
+                            },
+                            {
+                              'label': 'Range',
+                              'value': '@config.towerRange',
+                            },
+                            {
+                              'label': 'Goal',
+                              'value': [
+                                'str/concat',
+                                'Survive ',
+                                [
+                                  'str/concat',
+                                  '@config.maxWaves',
+                                  ' waves',
+                                ],
+                              ],
+                            },
+                            {
+                              'label': 'How',
+                              'value': 'Click grass beside the lane to build a turret (40g) — turrets auto-fire enemies within range',
                             },
                           ],
                           'type': 'game-hud',
@@ -2092,7 +2099,7 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                       'tile',
                       [
                         'array/find',
-                        '@config.tiles',
+                        '@entity.tiles',
                         [
                           'fn',
                           't',
@@ -2170,6 +2177,7 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                   {
                     'children': [
                       {
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': [
                           'array/concat',
@@ -2193,10 +2201,11 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitScale': '@config.unitScale',
                         'units': '@entity.units',
+                        'validMoves': '@entity.towerCoverage',
                       },
                     ],
                     'hud': {
@@ -2218,6 +2227,26 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                             {
                               'label': 'Result',
                               'value': '@entity.result',
+                            },
+                            {
+                              'label': 'Range',
+                              'value': '@config.towerRange',
+                            },
+                            {
+                              'label': 'Goal',
+                              'value': [
+                                'str/concat',
+                                'Survive ',
+                                [
+                                  'str/concat',
+                                  '@config.maxWaves',
+                                  ' waves',
+                                ],
+                              ],
+                            },
+                            {
+                              'label': 'How',
+                              'value': 'Click grass beside the lane to build a turret (40g) — turrets auto-fire enemies within range',
                             },
                           ],
                           'type': 'game-hud',
@@ -2327,11 +2356,123 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                   'none',
                 ],
                 [
+                  'set',
+                  '@entity.gridWidth',
+                  14,
+                ],
+                [
+                  'set',
+                  '@entity.gridHeight',
+                  14,
+                ],
+                [
+                  'set',
+                  '@entity.tiles',
+                  [
+                    'array/flatten',
+                    [
+                      'array/map',
+                      [
+                        'array/range',
+                        0,
+                        14,
+                      ],
+                      [
+                        'fn',
+                        'gy',
+                        [
+                          'array/map',
+                          [
+                            'array/range',
+                            0,
+                            14,
+                          ],
+                          [
+                            'fn',
+                            'gx',
+                            [
+                              'let',
+                              [
+                                [
+                                  'onPath',
+                                  [
+                                    '>',
+                                    [
+                                      'array/len',
+                                      [
+                                        'array/filter',
+                                        '@config.path',
+                                        [
+                                          'fn',
+                                          'p',
+                                          [
+                                            'and',
+                                            [
+                                              '==',
+                                              '@p.x',
+                                              '@gx',
+                                            ],
+                                            [
+                                              '==',
+                                              '@p.y',
+                                              '@gy',
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                    0,
+                                  ],
+                                ],
+                              ],
+                              {
+                                'id': [
+                                  'str/concat',
+                                  't-',
+                                  '@gx',
+                                  '-',
+                                  '@gy',
+                                ],
+                                'modelUrl': [
+                                  'if',
+                                  '@onPath',
+                                  '@config.pathAsset',
+                                  '@config.grassAsset',
+                                ],
+                                'passable': [
+                                  'if',
+                                  '@onPath',
+                                  false,
+                                  true,
+                                ],
+                                'terrain': [
+                                  'if',
+                                  '@onPath',
+                                  'path',
+                                  'grass',
+                                ],
+                                'x': '@gx',
+                                'y': '@gy',
+                              },
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.towerCoverage',
+                  [],
+                ],
+                [
                   'render-ui',
                   'main',
                   {
                     'children': [
                       {
+                        'cameraMode': 'top-down',
                         'events': '@entity.fx',
                         'features': [
                           'array/concat',
@@ -2355,10 +2496,11 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                         'interpolateUnits': true,
                         'scale': '@config.scale',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitScale': '@config.unitScale',
                         'units': '@entity.units',
+                        'validMoves': '@entity.towerCoverage',
                       },
                     ],
                     'hud': {
@@ -2380,6 +2522,26 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                             {
                               'label': 'Result',
                               'value': '@entity.result',
+                            },
+                            {
+                              'label': 'Range',
+                              'value': '@config.towerRange',
+                            },
+                            {
+                              'label': 'Goal',
+                              'value': [
+                                'str/concat',
+                                'Survive ',
+                                [
+                                  'str/concat',
+                                  '@config.maxWaves',
+                                  ' waves',
+                                ],
+                              ],
+                            },
+                            {
+                              'label': 'How',
+                              'value': 'Click grass beside the lane to build a turret (40g) — turrets auto-fire enemies within range',
                             },
                           ],
                           'type': 'game-hud',
@@ -2480,6 +2642,7 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                 {
                   'children': [
                     {
+                      'cameraMode': 'top-down',
                       'events': '@entity.fx',
                       'features': [
                         'array/concat',
@@ -2503,10 +2666,11 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                       'interpolateUnits': true,
                       'scale': '@config.scale',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@config.tiles',
+                      'tiles': '@entity.tiles',
                       'type': 'game-canvas-3d',
                       'unitScale': '@config.unitScale',
                       'units': '@entity.units',
+                      'validMoves': '@entity.towerCoverage',
                     },
                   ],
                   'hud': {
@@ -2528,6 +2692,26 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                           {
                             'label': 'Result',
                             'value': '@entity.result',
+                          },
+                          {
+                            'label': 'Range',
+                            'value': '@config.towerRange',
+                          },
+                          {
+                            'label': 'Goal',
+                            'value': [
+                              'str/concat',
+                              'Survive ',
+                              [
+                                'str/concat',
+                                '@config.maxWaves',
+                                ' waves',
+                              ],
+                            ],
+                          },
+                          {
+                            'label': 'How',
+                            'value': 'Click grass beside the lane to build a turret (40g) — turrets auto-fire enemies within range',
                           },
                         ],
                         'type': 'game-hud',
@@ -2851,6 +3035,7 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                 {
                   'children': [
                     {
+                      'cameraMode': 'top-down',
                       'events': '@entity.fx',
                       'features': [
                         'array/concat',
@@ -2874,10 +3059,11 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                       'interpolateUnits': true,
                       'scale': '@config.scale',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@config.tiles',
+                      'tiles': '@entity.tiles',
                       'type': 'game-canvas-3d',
                       'unitScale': '@config.unitScale',
                       'units': '@entity.units',
+                      'validMoves': '@entity.towerCoverage',
                     },
                   ],
                   'hud': {
@@ -2899,6 +3085,26 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                           {
                             'label': 'Result',
                             'value': '@entity.result',
+                          },
+                          {
+                            'label': 'Range',
+                            'value': '@config.towerRange',
+                          },
+                          {
+                            'label': 'Goal',
+                            'value': [
+                              'str/concat',
+                              'Survive ',
+                              [
+                                'str/concat',
+                                '@config.maxWaves',
+                                ' waves',
+                              ],
+                            ],
+                          },
+                          {
+                            'label': 'How',
+                            'value': 'Click grass beside the lane to build a turret (40g) — turrets auto-fire enemies within range',
                           },
                         ],
                         'type': 'game-hud',
@@ -2978,7 +3184,7 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                                   'y': '@tw.y',
                                 },
                               ],
-                              1,
+                              '@config.towerRange',
                             ],
                           ],
                         ],
@@ -3194,6 +3400,7 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                 {
                   'children': [
                     {
+                      'cameraMode': 'top-down',
                       'events': '@entity.fx',
                       'features': [
                         'array/concat',
@@ -3217,10 +3424,11 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                       'interpolateUnits': true,
                       'scale': '@config.scale',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@config.tiles',
+                      'tiles': '@entity.tiles',
                       'type': 'game-canvas-3d',
                       'unitScale': '@config.unitScale',
                       'units': '@entity.units',
+                      'validMoves': '@entity.towerCoverage',
                     },
                   ],
                   'hud': {
@@ -3242,6 +3450,26 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                           {
                             'label': 'Result',
                             'value': '@entity.result',
+                          },
+                          {
+                            'label': 'Range',
+                            'value': '@config.towerRange',
+                          },
+                          {
+                            'label': 'Goal',
+                            'value': [
+                              'str/concat',
+                              'Survive ',
+                              [
+                                'str/concat',
+                                '@config.maxWaves',
+                                ' waves',
+                              ],
+                            ],
+                          },
+                          {
+                            'label': 'How',
+                            'value': 'Click grass beside the lane to build a turret (40g) — turrets auto-fire enemies within range',
                           },
                         ],
                         'type': 'game-hud',

@@ -58,7 +58,7 @@ export interface StdUiDetailPanelConfig {
   error?: EntityRow;
   /** Default: `[]` */
   fieldNames?: string[];
-  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name"},{"header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2"}]` */
+  /** Default: `[{"header":"Header","key":"Key"},{"header":"Header 2","key":"Key 2"}]` */
   fields?: EntityRow[];
   footer?: unknown;
   /** Default: `false` */
@@ -291,14 +291,10 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
               {
                 'header': 'Header',
                 'key': 'Key',
-                'label': 'Label',
-                'name': 'Name',
               },
               {
                 'header': 'Header 2',
                 'key': 'Key 2',
-                'label': 'Label 2',
-                'name': 'Name 2',
               },
             ],
             'description': 'Fields to display - accepts string[], {key, header}[], or DetailField[]',
@@ -311,17 +307,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                 },
                 'key': {
                   'name': 'key',
-                  'required': false,
-                  'type': 'string',
-                },
-                'label': {
-                  'name': 'label',
-                  'required': false,
-                  'type': 'string',
-                },
-                'name': {
-                  'name': 'name',
-                  'required': false,
+                  'required': true,
                   'type': 'string',
                 },
               },

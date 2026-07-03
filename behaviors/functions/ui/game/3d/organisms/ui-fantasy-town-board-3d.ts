@@ -99,18 +99,20 @@ export interface StdUiFantasyTownBoard3dConfig {
   attackDamage?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"}` */
+  coverAsset?: EntityRow;
   error?: EntityRow;
-  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"fountain","dimension":"3d","name":"fountain-center","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/fountain-center.glb"},"id":"fountain","type":"fountain","x":3,"y":3},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"tower","dimension":"3d","name":"tower-square","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/tower-square.glb"},"id":"tower","type":"tower","x":0,"y":0},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"catapult","dimension":"3d","name":"siege-catapult","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-catapult.glb"},"id":"catapult","type":"catapult","x":5,"y":0},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"trebuchet","dimension":"3d","name":"siege-trebuchet","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-trebuchet.glb"},"id":"trebuchet","type":"trebuchet","x":0,"y":5},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"windmill","dimension":"3d","name":"windmill","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/windmill.glb"},"id":"windmill","type":"windmill","x":5,"y":5},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"cart","dimension":"3d","name":"cart","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/cart.glb"},"id":"cart","type":"cart","x":2,"y":4}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"fountain","dimension":"3d","name":"fountain-center","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/fountain-center.glb"},"id":"fountain","type":"fountain","x":8,"y":7},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"tower","dimension":"3d","name":"tower-square","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/tower-square.glb"},"id":"tower","type":"tower","x":2,"y":5},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"catapult","dimension":"3d","name":"siege-catapult","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-catapult.glb"},"id":"catapult","type":"catapult","x":13,"y":5},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"trebuchet","dimension":"3d","name":"siege-trebuchet","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-trebuchet.glb"},"id":"trebuchet","type":"trebuchet","x":2,"y":10},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"windmill","dimension":"3d","name":"windmill","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/windmill.glb"},"id":"windmill","type":"windmill","x":13,"y":10},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"cart","dimension":"3d","name":"cart","role":"decoration","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/cart.glb"},"id":"cart","type":"cart","x":8,"y":4}]` */
   features?: EntityRow[];
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"}` */
+  groundAsset?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `0.45` */
   scale?: number;
-  /** Default: `[{"id":"t00","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":0,"y":0},{"id":"t10","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":1,"y":0},{"id":"t20","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":2,"y":0},{"id":"t30","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":3,"y":0},{"id":"t40","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":4,"y":0},{"id":"t50","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":5,"y":0},{"id":"t01","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":0,"y":1},{"id":"t11","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"},"passable":true,"terrain":"stone","x":1,"y":1},{"id":"t21","modelUrl":{"animations":["static"],"aspect":"1:1","category":"road","dimension":"3d","name":"road","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"},"passable":true,"terrain":"cobble","x":2,"y":1},{"id":"t31","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"},"passable":true,"terrain":"stone","x":3,"y":1},{"id":"t41","modelUrl":{"animations":["static"],"aspect":"1:1","category":"road","dimension":"3d","name":"road","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"},"passable":true,"terrain":"cobble","x":4,"y":1},{"id":"t51","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":5,"y":1},{"id":"t02","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":0,"y":2},{"id":"t12","modelUrl":{"animations":["static"],"aspect":"1:1","category":"road","dimension":"3d","name":"road","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"},"passable":true,"terrain":"cobble","x":1,"y":2},{"id":"t22","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"},"passable":true,"terrain":"stone","x":2,"y":2},{"id":"t32","modelUrl":{"animations":["static"],"aspect":"1:1","category":"road","dimension":"3d","name":"road","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"},"passable":true,"terrain":"cobble","x":3,"y":2},{"id":"t42","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"},"passable":true,"terrain":"stone","x":4,"y":2},{"id":"t52","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":5,"y":2},{"id":"t03","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":0,"y":3},{"id":"t13","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"},"passable":true,"terrain":"stone","x":1,"y":3},{"id":"t23","modelUrl":{"animations":["static"],"aspect":"1:1","category":"road","dimension":"3d","name":"road","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"},"passable":true,"terrain":"cobble","x":2,"y":3},{"id":"t33","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"},"passable":true,"terrain":"stone","x":3,"y":3},{"id":"t43","modelUrl":{"animations":["static"],"aspect":"1:1","category":"road","dimension":"3d","name":"road","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"},"passable":true,"terrain":"cobble","x":4,"y":3},{"id":"t53","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":5,"y":3},{"id":"t04","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":0,"y":4},{"id":"t14","modelUrl":{"animations":["static"],"aspect":"1:1","category":"road","dimension":"3d","name":"road","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"},"passable":true,"terrain":"cobble","x":1,"y":4},{"id":"t24","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"},"passable":true,"terrain":"stone","x":2,"y":4},{"id":"t34","modelUrl":{"animations":["static"],"aspect":"1:1","category":"road","dimension":"3d","name":"road","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"},"passable":true,"terrain":"cobble","x":3,"y":4},{"id":"t44","modelUrl":{"animations":["static"],"aspect":"1:1","category":"floor","dimension":"3d","name":"floor","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"},"passable":true,"terrain":"stone","x":4,"y":4},{"id":"t54","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":5,"y":4},{"id":"t05","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":0,"y":5},{"id":"t15","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":1,"y":5},{"id":"t25","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":2,"y":5},{"id":"t35","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":3,"y":5},{"id":"t45","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":4,"y":5},{"id":"t55","modelUrl":{"animations":["static"],"aspect":"1:1","category":"wall-block","dimension":"3d","name":"wall-block","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"},"passable":false,"terrain":"wall","x":5,"y":5}]` */
-  tiles?: EntityRow[];
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `[{"health":12,"id":"soldier","maxHealth":12,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"soldier","dimension":"3d","name":"character-soldier","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/units/character-soldier.glb"},"name":"Soldier","position":{"x":1,"y":1},"team":"player","unitType":"soldier"},{"health":12,"id":"guard","maxHealth":12,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"guard","dimension":"3d","name":"character-j","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb"},"name":"Guard","position":{"x":1,"y":4},"team":"player","unitType":"guard"},{"health":10,"id":"goblin","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"goblin","dimension":"3d","name":"character-l","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb"},"name":"Goblin","position":{"x":4,"y":4},"team":"enemy","unitType":"goblin"},{"health":14,"id":"troll","maxHealth":14,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"troll","dimension":"3d","name":"character-o","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-o.glb"},"name":"Troll","position":{"x":4,"y":1},"team":"enemy","unitType":"troll"}]` */
+  /** Default: `[{"health":12,"id":"soldier","maxHealth":12,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"soldier","dimension":"3d","name":"character-soldier","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/units/character-soldier.glb"},"name":"Soldier","position":{"x":4,"y":14},"team":"player","unitType":"soldier"},{"health":12,"id":"guard","maxHealth":12,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"guard","dimension":"3d","name":"character-j","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb"},"name":"Guard","position":{"x":8,"y":14},"team":"player","unitType":"guard"},{"health":12,"id":"sentinel","maxHealth":12,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"guard","dimension":"3d","name":"character-j","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb"},"name":"Sentinel","position":{"x":12,"y":14},"team":"player","unitType":"guard"},{"health":10,"id":"goblin","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"goblin","dimension":"3d","name":"character-l","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb"},"name":"Goblin","position":{"x":4,"y":1},"team":"enemy","unitType":"goblin"},{"health":14,"id":"troll","maxHealth":14,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"troll","dimension":"3d","name":"character-o","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-o.glb"},"name":"Troll","position":{"x":8,"y":1},"team":"enemy","unitType":"troll"},{"health":10,"id":"raider","maxHealth":10,"modelUrl":{"animations":["idle","walk","attack-melee-right","die"],"aspect":"1:1","category":"goblin","dimension":"3d","name":"character-l","role":"enemy","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb"},"name":"Raider","position":{"x":12,"y":1},"team":"enemy","unitType":"goblin"}]` */
   units?: EntityRow[];
 }
 
@@ -580,17 +582,17 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
             ],
           },
           {
-            'default': 6,
+            'default': 16,
             'name': 'gridWidth',
             'type': 'number',
           },
           {
-            'default': 6,
+            'default': 16,
             'name': 'gridHeight',
             'type': 'number',
           },
           {
-            'default': 2,
+            'default': 4,
             'name': 'movementRange',
             'type': 'number',
           },
@@ -598,6 +600,206 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
             'default': false,
             'name': 'enemyTurn',
             'type': 'boolean',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'elevation': {
+                  'name': 'elevation',
+                  'required': false,
+                  'type': 'number',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'modelUrl': {
+                  'name': 'modelUrl',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
+                'movementCost': {
+                  'name': 'movementCost',
+                  'required': false,
+                  'type': 'number',
+                },
+                'passable': {
+                  'name': 'passable',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'terrain': {
+                  'name': 'terrain',
+                  'required': false,
+                  'type': 'string',
+                },
+                'terrainSprite': {
+                  'name': 'terrainSprite',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'atlas': {
+                      'name': 'atlas',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'sprite': {
+                      'name': 'sprite',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
+                'tileType': {
+                  'name': 'tileType',
+                  'required': false,
+                  'type': 'string',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': false,
+                  'type': 'string',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+                'z': {
+                  'name': 'z',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'tiles',
+            'type': 'array',
           },
         ];
         const extras = params.fields ?? [];
@@ -1250,6 +1452,90 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
             'tier': 'presentation',
             'type': 'string',
           },
+          'coverAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'wall-block',
+              'dimension': '3d',
+              'name': 'wall-block',
+              'role': 'tile',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
+            },
+            'description': 'Impassable cover tile, scattered for chokepoints.',
+            'label': 'Cover Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'atlas': {
+                'name': 'atlas',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'sprite': {
+                'name': 'sprite',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+              'variant': {
+                'name': 'variant',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
           'error': {
             'description': 'Error state (UiError)',
             'label': 'Error',
@@ -1296,8 +1582,8 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                 },
                 'id': 'fountain',
                 'type': 'fountain',
-                'x': 3,
-                'y': 3,
+                'x': 8,
+                'y': 7,
               },
               {
                 'assetUrl': {
@@ -1315,8 +1601,8 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                 },
                 'id': 'tower',
                 'type': 'tower',
-                'x': 0,
-                'y': 0,
+                'x': 2,
+                'y': 5,
               },
               {
                 'assetUrl': {
@@ -1334,8 +1620,8 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                 },
                 'id': 'catapult',
                 'type': 'catapult',
-                'x': 5,
-                'y': 0,
+                'x': 13,
+                'y': 5,
               },
               {
                 'assetUrl': {
@@ -1353,8 +1639,8 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                 },
                 'id': 'trebuchet',
                 'type': 'trebuchet',
-                'x': 0,
-                'y': 5,
+                'x': 2,
+                'y': 10,
               },
               {
                 'assetUrl': {
@@ -1372,8 +1658,8 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                 },
                 'id': 'windmill',
                 'type': 'windmill',
-                'x': 5,
-                'y': 5,
+                'x': 13,
+                'y': 10,
               },
               {
                 'assetUrl': {
@@ -1391,7 +1677,7 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                 },
                 'id': 'cart',
                 'type': 'cart',
-                'x': 2,
+                'x': 8,
                 'y': 4,
               },
             ],
@@ -1580,6 +1866,90 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
             'tier': 'presentation',
             'type': '[FantasyTownBoard3DFeaturesItem]',
           },
+          'groundAsset': {
+            'default': {
+              'animations': [
+                'static',
+              ],
+              'aspect': '1:1',
+              'category': 'floor',
+              'dimension': '3d',
+              'name': 'floor',
+              'role': 'tile',
+              'style': 'lowpoly-flat',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb',
+            },
+            'description': 'Passable ground tile, tiled across the battlefield.',
+            'label': 'Ground Asset',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'atlas': {
+                'name': 'atlas',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'sprite': {
+                'name': 'sprite',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+              'variant': {
+                'name': 'variant',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
           'isLoading': {
             'default': false,
             'description': 'Loading state indicator',
@@ -1593,929 +1963,6 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
             'label': 'Scale',
             'tier': 'presentation',
             'type': 'number',
-          },
-          'tiles': {
-            'default': [
-              {
-                'id': 't00',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 0,
-                'y': 0,
-              },
-              {
-                'id': 't10',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 1,
-                'y': 0,
-              },
-              {
-                'id': 't20',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 2,
-                'y': 0,
-              },
-              {
-                'id': 't30',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 3,
-                'y': 0,
-              },
-              {
-                'id': 't40',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 4,
-                'y': 0,
-              },
-              {
-                'id': 't50',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 5,
-                'y': 0,
-              },
-              {
-                'id': 't01',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 0,
-                'y': 1,
-              },
-              {
-                'id': 't11',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor',
-                  'dimension': '3d',
-                  'name': 'floor',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb',
-                },
-                'passable': true,
-                'terrain': 'stone',
-                'x': 1,
-                'y': 1,
-              },
-              {
-                'id': 't21',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'road',
-                  'dimension': '3d',
-                  'name': 'road',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb',
-                },
-                'passable': true,
-                'terrain': 'cobble',
-                'x': 2,
-                'y': 1,
-              },
-              {
-                'id': 't31',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor',
-                  'dimension': '3d',
-                  'name': 'floor',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb',
-                },
-                'passable': true,
-                'terrain': 'stone',
-                'x': 3,
-                'y': 1,
-              },
-              {
-                'id': 't41',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'road',
-                  'dimension': '3d',
-                  'name': 'road',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb',
-                },
-                'passable': true,
-                'terrain': 'cobble',
-                'x': 4,
-                'y': 1,
-              },
-              {
-                'id': 't51',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 5,
-                'y': 1,
-              },
-              {
-                'id': 't02',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 0,
-                'y': 2,
-              },
-              {
-                'id': 't12',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'road',
-                  'dimension': '3d',
-                  'name': 'road',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb',
-                },
-                'passable': true,
-                'terrain': 'cobble',
-                'x': 1,
-                'y': 2,
-              },
-              {
-                'id': 't22',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor',
-                  'dimension': '3d',
-                  'name': 'floor',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb',
-                },
-                'passable': true,
-                'terrain': 'stone',
-                'x': 2,
-                'y': 2,
-              },
-              {
-                'id': 't32',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'road',
-                  'dimension': '3d',
-                  'name': 'road',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb',
-                },
-                'passable': true,
-                'terrain': 'cobble',
-                'x': 3,
-                'y': 2,
-              },
-              {
-                'id': 't42',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor',
-                  'dimension': '3d',
-                  'name': 'floor',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb',
-                },
-                'passable': true,
-                'terrain': 'stone',
-                'x': 4,
-                'y': 2,
-              },
-              {
-                'id': 't52',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 5,
-                'y': 2,
-              },
-              {
-                'id': 't03',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 0,
-                'y': 3,
-              },
-              {
-                'id': 't13',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor',
-                  'dimension': '3d',
-                  'name': 'floor',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb',
-                },
-                'passable': true,
-                'terrain': 'stone',
-                'x': 1,
-                'y': 3,
-              },
-              {
-                'id': 't23',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'road',
-                  'dimension': '3d',
-                  'name': 'road',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb',
-                },
-                'passable': true,
-                'terrain': 'cobble',
-                'x': 2,
-                'y': 3,
-              },
-              {
-                'id': 't33',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor',
-                  'dimension': '3d',
-                  'name': 'floor',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb',
-                },
-                'passable': true,
-                'terrain': 'stone',
-                'x': 3,
-                'y': 3,
-              },
-              {
-                'id': 't43',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'road',
-                  'dimension': '3d',
-                  'name': 'road',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb',
-                },
-                'passable': true,
-                'terrain': 'cobble',
-                'x': 4,
-                'y': 3,
-              },
-              {
-                'id': 't53',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 5,
-                'y': 3,
-              },
-              {
-                'id': 't04',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 0,
-                'y': 4,
-              },
-              {
-                'id': 't14',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'road',
-                  'dimension': '3d',
-                  'name': 'road',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb',
-                },
-                'passable': true,
-                'terrain': 'cobble',
-                'x': 1,
-                'y': 4,
-              },
-              {
-                'id': 't24',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor',
-                  'dimension': '3d',
-                  'name': 'floor',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb',
-                },
-                'passable': true,
-                'terrain': 'stone',
-                'x': 2,
-                'y': 4,
-              },
-              {
-                'id': 't34',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'road',
-                  'dimension': '3d',
-                  'name': 'road',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb',
-                },
-                'passable': true,
-                'terrain': 'cobble',
-                'x': 3,
-                'y': 4,
-              },
-              {
-                'id': 't44',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'floor',
-                  'dimension': '3d',
-                  'name': 'floor',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb',
-                },
-                'passable': true,
-                'terrain': 'stone',
-                'x': 4,
-                'y': 4,
-              },
-              {
-                'id': 't54',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 5,
-                'y': 4,
-              },
-              {
-                'id': 't05',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 0,
-                'y': 5,
-              },
-              {
-                'id': 't15',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 1,
-                'y': 5,
-              },
-              {
-                'id': 't25',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 2,
-                'y': 5,
-              },
-              {
-                'id': 't35',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 3,
-                'y': 5,
-              },
-              {
-                'id': 't45',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 4,
-                'y': 5,
-              },
-              {
-                'id': 't55',
-                'modelUrl': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'category': 'wall-block',
-                  'dimension': '3d',
-                  'name': 'wall-block',
-                  'role': 'tile',
-                  'style': 'lowpoly-flat',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb',
-                },
-                'passable': false,
-                'terrain': 'wall',
-                'x': 5,
-                'y': 5,
-              },
-            ],
-            'description': '6x6 town-square grid — wall-block border, alternating stone-floor and cobbled-road interior.',
-            'items': {
-              'properties': {
-                'elevation': {
-                  'name': 'elevation',
-                  'required': false,
-                  'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'movementCost': {
-                  'name': 'movementCost',
-                  'required': false,
-                  'type': 'number',
-                },
-                'passable': {
-                  'name': 'passable',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'terrain': {
-                  'name': 'terrain',
-                  'required': false,
-                  'type': 'string',
-                },
-                'terrainSprite': {
-                  'name': 'terrainSprite',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'tileType': {
-                  'name': 'tileType',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Tiles',
-            'tier': 'presentation',
-            'type': '[FantasyTownBoard3DTilesItem]',
           },
           'unitScale': {
             'default': 1,
@@ -2548,8 +1995,8 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                 },
                 'name': 'Soldier',
                 'position': {
-                  'x': 1,
-                  'y': 1,
+                  'x': 4,
+                  'y': 14,
                 },
                 'team': 'player',
                 'unitType': 'soldier',
@@ -2576,8 +2023,36 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                 },
                 'name': 'Guard',
                 'position': {
-                  'x': 1,
-                  'y': 4,
+                  'x': 8,
+                  'y': 14,
+                },
+                'team': 'player',
+                'unitType': 'guard',
+              },
+              {
+                'health': 12,
+                'id': 'sentinel',
+                'maxHealth': 12,
+                'modelUrl': {
+                  'animations': [
+                    'idle',
+                    'walk',
+                    'attack-melee-right',
+                    'die',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'guard',
+                  'dimension': '3d',
+                  'name': 'character-j',
+                  'role': 'player',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb',
+                },
+                'name': 'Sentinel',
+                'position': {
+                  'x': 12,
+                  'y': 14,
                 },
                 'team': 'player',
                 'unitType': 'guard',
@@ -2605,7 +2080,7 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                 'name': 'Goblin',
                 'position': {
                   'x': 4,
-                  'y': 4,
+                  'y': 1,
                 },
                 'team': 'enemy',
                 'unitType': 'goblin',
@@ -2632,14 +2107,42 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                 },
                 'name': 'Troll',
                 'position': {
-                  'x': 4,
+                  'x': 8,
                   'y': 1,
                 },
                 'team': 'enemy',
                 'unitType': 'troll',
               },
+              {
+                'health': 10,
+                'id': 'raider',
+                'maxHealth': 10,
+                'modelUrl': {
+                  'animations': [
+                    'idle',
+                    'walk',
+                    'attack-melee-right',
+                    'die',
+                  ],
+                  'aspect': '1:1',
+                  'category': 'goblin',
+                  'dimension': '3d',
+                  'name': 'character-l',
+                  'role': 'enemy',
+                  'style': 'lowpoly-flat',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb',
+                },
+                'name': 'Raider',
+                'position': {
+                  'x': 12,
+                  'y': 1,
+                },
+                'team': 'enemy',
+                'unitType': 'goblin',
+              },
             ],
-            'description': 'Initial unit roster (Soldier + Guard defenders vs Goblin + Troll raiders) — takes priority over entity-derived units.',
+            'description': 'Initial unit roster (3 defenders vs 3 raiders at opposite ends) — takes priority over entity-derived units.',
             'items': {
               'properties': {
                 'elevation': {
@@ -3060,6 +2563,7 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
             'phase',
             'result',
             'selectedUnitId',
+            'tiles',
             'turn',
             'units',
             'validMoves',
@@ -3261,17 +2765,122 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                 [
                   'set',
                   '@entity.gridWidth',
-                  6,
+                  16,
                 ],
                 [
                   'set',
                   '@entity.gridHeight',
-                  6,
+                  16,
                 ],
                 [
                   'set',
                   '@entity.movementRange',
-                  2,
+                  4,
+                ],
+                [
+                  'set',
+                  '@entity.tiles',
+                  [
+                    'array/flatten',
+                    [
+                      'array/map',
+                      [
+                        'array/range',
+                        0,
+                        16,
+                      ],
+                      [
+                        'fn',
+                        'gy',
+                        [
+                          'array/map',
+                          [
+                            'array/range',
+                            0,
+                            16,
+                          ],
+                          [
+                            'fn',
+                            'gx',
+                            [
+                              'let',
+                              [
+                                [
+                                  'cover',
+                                  [
+                                    'and',
+                                    [
+                                      '>=',
+                                      '@gy',
+                                      3,
+                                    ],
+                                    [
+                                      'and',
+                                      [
+                                        '<=',
+                                        '@gy',
+                                        12,
+                                      ],
+                                      [
+                                        '==',
+                                        [
+                                          'math/mod',
+                                          [
+                                            '+',
+                                            [
+                                              '*',
+                                              '@gx',
+                                              3,
+                                            ],
+                                            [
+                                              '*',
+                                              '@gy',
+                                              7,
+                                            ],
+                                          ],
+                                          8,
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              {
+                                'id': [
+                                  'str/concat',
+                                  't-',
+                                  '@gx',
+                                  '-',
+                                  '@gy',
+                                ],
+                                'modelUrl': [
+                                  'if',
+                                  '@cover',
+                                  '@config.coverAsset',
+                                  '@config.groundAsset',
+                                ],
+                                'passable': [
+                                  'if',
+                                  '@cover',
+                                  false,
+                                  true,
+                                ],
+                                'terrain': [
+                                  'if',
+                                  '@cover',
+                                  'wall',
+                                  'stone',
+                                ],
+                                'x': '@gx',
+                                'y': '@gy',
+                              },
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                  ],
                 ],
                 [
                   'render-ui',
@@ -3305,12 +2914,13 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3331,6 +2941,14 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all raiders',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3495,12 +3113,13 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3521,6 +3140,14 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all raiders',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -3613,7 +3240,7 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                     'array/map',
                     [
                       'array/filter',
-                      '@config.tiles',
+                      '@entity.tiles',
                       [
                         'fn',
                         't',
@@ -3774,12 +3401,13 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -3800,6 +3428,14 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all raiders',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -4085,12 +3721,13 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -4111,6 +3748,14 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all raiders',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -4314,12 +3959,13 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -4340,6 +3986,14 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all raiders',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -4552,12 +4206,13 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -4578,6 +4233,14 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all raiders',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -4681,12 +4344,13 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -4707,6 +4371,14 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all raiders',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -4867,12 +4539,13 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -4893,6 +4566,14 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all raiders',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -5059,12 +4740,12 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                 [
                   'set',
                   '@entity.gridWidth',
-                  6,
+                  16,
                 ],
                 [
                   'set',
                   '@entity.gridHeight',
-                  6,
+                  16,
                 ],
                 [
                   'render-ui',
@@ -5098,12 +4779,13 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                     'children': [
                       {
                         'attackTargets': '@entity.attackTargets',
+                        'cameraMode': 'isometric',
                         'events': '@entity.fx',
                         'features': '@config.features',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@config.tiles',
+                        'tiles': '@entity.tiles',
                         'type': 'game-canvas-3d',
                         'unitClickEvent': 'UNIT_CLICK',
                         'unitScale': '@config.unitScale',
@@ -5124,6 +4806,14 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                         {
                           'label': 'Result',
                           'value': '@entity.result',
+                        },
+                        {
+                          'label': 'Goal',
+                          'value': 'Defeat all raiders',
+                        },
+                        {
+                          'label': 'How',
+                          'value': 'Click your unit → move → click it again → strike an adjacent foe',
                         },
                       ],
                       'type': 'game-hud',
@@ -5513,7 +5203,7 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                                       'object/get',
                                       [
                                         'array/find',
-                                        '@config.tiles',
+                                        '@entity.tiles',
                                         [
                                           'fn',
                                           't',
@@ -5751,12 +5441,13 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                   'children': [
                     {
                       'attackTargets': '@entity.attackTargets',
+                      'cameraMode': 'isometric',
                       'events': '@entity.fx',
                       'features': '@config.features',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@config.tiles',
+                      'tiles': '@entity.tiles',
                       'type': 'game-canvas-3d',
                       'unitClickEvent': 'UNIT_CLICK',
                       'unitScale': '@config.unitScale',
@@ -5777,6 +5468,14 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                       {
                         'label': 'Result',
                         'value': '@entity.result',
+                      },
+                      {
+                        'label': 'Goal',
+                        'value': 'Defeat all raiders',
+                      },
+                      {
+                        'label': 'How',
+                        'value': 'Click your unit → move → click it again → strike an adjacent foe',
                       },
                     ],
                     'type': 'game-hud',
@@ -5910,12 +5609,13 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                   'children': [
                     {
                       'attackTargets': '@entity.attackTargets',
+                      'cameraMode': 'isometric',
                       'events': '@entity.fx',
                       'features': '@config.features',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@config.tiles',
+                      'tiles': '@entity.tiles',
                       'type': 'game-canvas-3d',
                       'unitClickEvent': 'UNIT_CLICK',
                       'unitScale': '@config.unitScale',
@@ -5936,6 +5636,14 @@ export function stdUiFantasyTownBoard3dFantasyTownBoard3DOrbital(params: StdUiFa
                       {
                         'label': 'Result',
                         'value': '@entity.result',
+                      },
+                      {
+                        'label': 'Goal',
+                        'value': 'Defeat all raiders',
+                      },
+                      {
+                        'label': 'How',
+                        'value': 'Click your unit → move → click it again → strike an adjacent foe',
                       },
                     ],
                     'type': 'game-hud',

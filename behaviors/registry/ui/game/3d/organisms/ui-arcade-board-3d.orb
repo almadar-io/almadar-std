@@ -235,6 +235,11 @@
             "type": "number"
           },
           {
+            "default": 1.0,
+            "name": "lastRoll",
+            "type": "number"
+          },
+          {
             "default": "none",
             "name": "result",
             "type": "string",
@@ -634,6 +639,13 @@
               "default": 14.0,
               "description": "Tokens the player starts with",
               "label": "Starting Tokens",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "ticketChance": {
+              "default": 0.42,
+              "description": "Probability each play awards a ticket — luck-based so tokens can run out before winning",
+              "label": "Ticket Chance",
               "tier": "presentation",
               "type": "number"
             },
@@ -1677,6 +1689,7 @@
               "fx",
               "gridHeight",
               "gridWidth",
+              "lastRoll",
               "npcTick",
               "playCount",
               "result",
@@ -1890,6 +1903,7 @@
                       },
                       "children": [
                         {
+                          "cameraMode": "isometric",
                           "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
@@ -1919,6 +1933,14 @@
                               {
                                 "label": "Result",
                                 "value": "@entity.result"
+                              },
+                              {
+                                "label": "Goal",
+                                "value": "Win 5 tickets then reach the prize counter"
+                              },
+                              {
+                                "label": "How",
+                                "value": "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token"
                               }
                             ],
                             "type": "game-hud"
@@ -2096,6 +2118,7 @@
                       },
                       "children": [
                         {
+                          "cameraMode": "isometric",
                           "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
@@ -2125,6 +2148,14 @@
                               {
                                 "label": "Result",
                                 "value": "@entity.result"
+                              },
+                              {
+                                "label": "Goal",
+                                "value": "Win 5 tickets then reach the prize counter"
+                              },
+                              {
+                                "label": "How",
+                                "value": "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token"
                               }
                             ],
                             "type": "game-hud"
@@ -2233,6 +2264,7 @@
                       },
                       "children": [
                         {
+                          "cameraMode": "isometric",
                           "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
@@ -2262,6 +2294,14 @@
                               {
                                 "label": "Result",
                                 "value": "@entity.result"
+                              },
+                              {
+                                "label": "Goal",
+                                "value": "Win 5 tickets then reach the prize counter"
+                              },
+                              {
+                                "label": "How",
+                                "value": "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token"
                               }
                             ],
                             "type": "game-hud"
@@ -2413,6 +2453,7 @@
                       },
                       "children": [
                         {
+                          "cameraMode": "isometric",
                           "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
@@ -2442,6 +2483,14 @@
                               {
                                 "label": "Result",
                                 "value": "@entity.result"
+                              },
+                              {
+                                "label": "Goal",
+                                "value": "Win 5 tickets then reach the prize counter"
+                              },
+                              {
+                                "label": "How",
+                                "value": "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token"
                               }
                             ],
                             "type": "game-hud"
@@ -2526,6 +2575,7 @@
                       },
                       "children": [
                         {
+                          "cameraMode": "isometric",
                           "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
@@ -2555,6 +2605,14 @@
                               {
                                 "label": "Result",
                                 "value": "@entity.result"
+                              },
+                              {
+                                "label": "Goal",
+                                "value": "Win 5 tickets then reach the prize counter"
+                              },
+                              {
+                                "label": "How",
+                                "value": "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token"
                               }
                             ],
                             "type": "game-hud"
@@ -2653,17 +2711,20 @@
                   ],
                   [
                     "set",
+                    "@entity.lastRoll",
+                    [
+                      "math/random"
+                    ]
+                  ],
+                  [
+                    "set",
                     "@entity.tickets",
                     [
                       "if",
                       [
-                        "==",
-                        [
-                          "%",
-                          "@entity.playCount",
-                          2.0
-                        ],
-                        0.0
+                        "<",
+                        "@entity.lastRoll",
+                        "@config.ticketChance"
                       ],
                       [
                         "+",
@@ -2682,13 +2743,9 @@
                       [
                         "if",
                         [
-                          "==",
-                          [
-                            "%",
-                            "@entity.playCount",
-                            2.0
-                          ],
-                          0.0
+                          "<",
+                          "@entity.lastRoll",
+                          "@config.ticketChance"
                         ],
                         {
                           "id": [
@@ -2767,6 +2824,7 @@
                       },
                       "children": [
                         {
+                          "cameraMode": "isometric",
                           "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
@@ -2796,6 +2854,14 @@
                               {
                                 "label": "Result",
                                 "value": "@entity.result"
+                              },
+                              {
+                                "label": "Goal",
+                                "value": "Win 5 tickets then reach the prize counter"
+                              },
+                              {
+                                "label": "How",
+                                "value": "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token"
                               }
                             ],
                             "type": "game-hud"
@@ -2886,6 +2952,7 @@
                       },
                       "children": [
                         {
+                          "cameraMode": "isometric",
                           "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
@@ -2915,6 +2982,14 @@
                               {
                                 "label": "Result",
                                 "value": "@entity.result"
+                              },
+                              {
+                                "label": "Goal",
+                                "value": "Win 5 tickets then reach the prize counter"
+                              },
+                              {
+                                "label": "How",
+                                "value": "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token"
                               }
                             ],
                             "type": "game-hud"
@@ -2975,6 +3050,7 @@
                       },
                       "children": [
                         {
+                          "cameraMode": "isometric",
                           "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
@@ -3004,6 +3080,14 @@
                               {
                                 "label": "Result",
                                 "value": "@entity.result"
+                              },
+                              {
+                                "label": "Goal",
+                                "value": "Win 5 tickets then reach the prize counter"
+                              },
+                              {
+                                "label": "How",
+                                "value": "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token"
                               }
                             ],
                             "type": "game-hud"
@@ -3105,6 +3189,7 @@
                       },
                       "children": [
                         {
+                          "cameraMode": "isometric",
                           "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
@@ -3134,6 +3219,14 @@
                               {
                                 "label": "Result",
                                 "value": "@entity.result"
+                              },
+                              {
+                                "label": "Goal",
+                                "value": "Win 5 tickets then reach the prize counter"
+                              },
+                              {
+                                "label": "How",
+                                "value": "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token"
                               }
                             ],
                             "type": "game-hud"
@@ -3217,6 +3310,7 @@
                       },
                       "children": [
                         {
+                          "cameraMode": "isometric",
                           "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
@@ -3246,6 +3340,14 @@
                               {
                                 "label": "Result",
                                 "value": "@entity.result"
+                              },
+                              {
+                                "label": "Goal",
+                                "value": "Win 5 tickets then reach the prize counter"
+                              },
+                              {
+                                "label": "How",
+                                "value": "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token"
                               }
                             ],
                             "type": "game-hud"
@@ -3385,6 +3487,7 @@
                     },
                     "children": [
                       {
+                        "cameraMode": "isometric",
                         "events": "@entity.fx",
                         "featureClickEvent": "FEATURE_CLICK",
                         "features": "@config.features",
@@ -3414,6 +3517,14 @@
                             {
                               "label": "Result",
                               "value": "@entity.result"
+                            },
+                            {
+                              "label": "Goal",
+                              "value": "Win 5 tickets then reach the prize counter"
+                            },
+                            {
+                              "label": "How",
+                              "value": "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token"
                             }
                           ],
                           "type": "game-hud"

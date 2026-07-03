@@ -1,5 +1,5 @@
 app ui-racing-board-3d "1.0.0"
-"RacingBoard3D — throttled keyboard/d-pad racing on a multi-lap 6x6 ring track with a follow camera and a ticking rival."
+"RacingBoard3D — steer a car (heading + throttle) around a long oval circuit with a chase camera, hitting checkpoints to complete laps before the rival."
 orbital RacingBoard3DOrbital {
   type RacingBoard3DError = {
     message : string!
@@ -38,6 +38,7 @@ orbital RacingBoard3DOrbital {
     team : "player" | "enemy" | "neutral"
     health : number
     maxHealth : number
+    heading : number
     modelUrl : Asset
   }
   type RacingBoard3DFeaturesItem = {
@@ -47,11 +48,10 @@ orbital RacingBoard3DOrbital {
     type : string!
     assetUrl : Asset
   }
-  type RacingBoard3DTrackOrderItem = {
+  type RacingBoard3DCheckpointItem = {
     x : number!
     y : number!
-    nextX : number!
-    nextY : number!
+    order : number!
   }
   type RacingBoard3DEffectItem = {
     id : string!
@@ -68,13 +68,23 @@ orbital RacingBoard3DOrbital {
     units : [RacingBoard3DUnitsItem]
     selectedUnitId : string = "player"
     phase : "racing" | "finished" = racing
-    playerProgress : number = 0
-    rivalProgress : number = 0
-    lap : number = 1
     result : "none" | "won" | "lost" = none
-    canAdvance : boolean = true
-    gridWidth : number = 6
-    gridHeight : number = 6
+    lap : number = 1
+    checkpoint : number = 0
+    carX : number = 17
+    carY : number = 10
+    heading : number = 0
+    speed : number = 0
+    steer : number = 0
+    accelerating : boolean = false
+    braking : boolean = false
+    rivalCarX : number = 17
+    rivalCarY : number = 13
+    rivalCheckpoint : number = 0
+    rivalLap : number = 1
+    gridWidth : number = 20
+    gridHeight : number = 20
+    tiles : [RacingBoard3DTilesItem] = []
     fx : [RacingBoard3DEffectItem] = []
   }
 
@@ -85,46 +95,65 @@ orbital RacingBoard3DOrbital {
       INIT -> racing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "player")
-        (set @entity.playerProgress 0)
-        (set @entity.rivalProgress 0)
-        (set @entity.lap 1)
-        (set @entity.canAdvance true)
         (set @entity.phase "racing")
         (set @entity.result "none")
-        (set @entity.gridWidth 6)
-        (set @entity.gridHeight 6)
+        (set @entity.lap 1)
+        (set @entity.checkpoint 0)
+        (set @entity.carX 17)
+        (set @entity.carY 10)
+        (set @entity.heading 0)
+        (set @entity.speed 0)
+        (set @entity.steer 0)
+        (set @entity.accelerating false)
+        (set @entity.braking false)
+        (set @entity.rivalCarX 17)
+        (set @entity.rivalCarY 13)
+        (set @entity.rivalCheckpoint 0)
+        (set @entity.rivalLap 1)
+        (set @entity.gridWidth 20)
+        (set @entity.gridHeight 20)
         (set @entity.fx [])
+        (set @entity.tiles (array/flatten (array/map (array/range 0 20) (fn gy (array/map (array/range 0 20) (fn gx (let ((road (let ((ex (/ (- @gx 10) 7)) (ey (/ (- @gy 10) 5))) (let ((d (math/sqrt (+ (* @ex @ex) (* @ey @ey))))) (and (>= @d 0.72) (<= @d 1.3)))))) { id: (str/concat "t-" @gx "-" @gy), x: @gx, y: @gy, terrain: (if @road "track" "grass"), passable: true, modelUrl: (if @road @config.roadAsset @config.grassAsset) })))))))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "Result", value: @entity.result } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "ACCELERATE" } } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "CP", value: (str/concat @entity.checkpoint "/8") }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Finish 2 laps before the rival" }, { label: "How", value: "Hold Up to accelerate, Left/Right to steer, Down to brake — pass the checkpoints in order" } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "THROTTLE_ON", down: "BRAKE_ON", left: "STEER_LEFT", right: "STEER_RIGHT" }, directionReleaseEvents: { up: "THROTTLE_OFF", down: "BRAKE_OFF", left: "STEER_STOP", right: "STEER_STOP" } } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, cameraMode: "follow", keyMap: { ArrowUp: "ACCELERATE", KeyW: "ACCELERATE", Space: "ACCELERATE" } } ]
+          children: [ { type: game-canvas-3d, cameraMode: "chase", tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, keyMap: { ArrowUp: "THROTTLE_ON", KeyW: "THROTTLE_ON", ArrowDown: "BRAKE_ON", KeyS: "BRAKE_ON", ArrowLeft: "STEER_LEFT", KeyA: "STEER_LEFT", ArrowRight: "STEER_RIGHT", KeyD: "STEER_RIGHT" }, keyUpMap: { ArrowUp: "THROTTLE_OFF", KeyW: "THROTTLE_OFF", ArrowDown: "BRAKE_OFF", KeyS: "BRAKE_OFF", ArrowLeft: "STEER_STOP", KeyA: "STEER_STOP", ArrowRight: "STEER_STOP", KeyD: "STEER_STOP" } } ]
         })
 
-      ACCELERATE -> racing when (and (== @entity.canAdvance true) (== @entity.result "none"))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id "player") (let ((cur (array/find @config.trackOrder (fn t (and (== (object/get @t x) (object/get @u.position x)) (== (object/get @t y) (object/get @u.position y))))))) (object/merge @u { position: { x: (object/get @cur nextX), y: (object/get @cur nextY) } })) @u))))
-        (set @entity.playerProgress (+ @entity.playerProgress 1))
-        (set @entity.canAdvance false)
-        (set @entity.lap (+ (math/floor (/ @entity.playerProgress (array/len @config.trackOrder))) 1))
-        (set @entity.fx (if (== (% @entity.playerProgress (array/len @config.trackOrder)) 0) (array/append @entity.fx { id: (str/concat "lap-" @entity.playerProgress), type: "score", x: 0, z: 0, message: "Lap!", ttl: 5 }) @entity.fx))
-        (set @entity.result (if (>= @entity.playerProgress (* @config.totalLaps (array/len @config.trackOrder))) "won" @entity.result))
-        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
-        (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "Result", value: @entity.result } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "ACCELERATE" } } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, cameraMode: "follow", keyMap: { ArrowUp: "ACCELERATE", KeyW: "ACCELERATE", Space: "ACCELERATE" } } ]
-        })
+      THROTTLE_ON -> racing when (== @entity.result "none")
+        (set @entity.accelerating true)
+
+      THROTTLE_OFF -> racing
+        (set @entity.accelerating false)
+
+      BRAKE_ON -> racing when (== @entity.result "none")
+        (set @entity.braking true)
+
+      BRAKE_OFF -> racing
+        (set @entity.braking false)
+
+      STEER_LEFT -> racing when (== @entity.result "none")
+        (set @entity.steer -1)
+
+      STEER_RIGHT -> racing when (== @entity.result "none")
+        (set @entity.steer 1)
+
+      STEER_STOP -> racing
+        (set @entity.steer 0)
 
       GAME_END -> finished when (or (== @entity.result "won") (== @entity.result "lost"))
         (set @entity.phase "finished")
-        (set @entity.fx (array/append @entity.fx { id: "result-fx", type: (if (== @entity.result "won") "win" "lose"), x: 0, z: 0, message: (if (== @entity.result "won") "You Win!" "You Lose!"), ttl: 999 }))
+        (set @entity.speed 0)
+        (set @entity.accelerating false)
+        (set @entity.braking false)
+        (set @entity.fx (array/append @entity.fx { id: "result-fx", type: (if (== @entity.result "won") "win" "lose"), x: @entity.carX, z: @entity.carY, message: (if (== @entity.result "won") "You Win!" "You Lose!"), ttl: 999 }))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "Result", value: @entity.result } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "ACCELERATE" } } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "CP", value: (str/concat @entity.checkpoint "/8") }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Finish 2 laps before the rival" }, { label: "How", value: "Hold Up to accelerate, Left/Right to steer, Down to brake — pass the checkpoints in order" } ] } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           overlay: { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, cameraMode: "follow", keyMap: { ArrowUp: "ACCELERATE", KeyW: "ACCELERATE", Space: "ACCELERATE" } } ]
+          children: [ { type: game-canvas-3d, cameraMode: "chase", tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
         })
     }
 
@@ -132,46 +161,96 @@ orbital RacingBoard3DOrbital {
       PLAY_AGAIN -> racing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "player")
-        (set @entity.playerProgress 0)
-        (set @entity.rivalProgress 0)
-        (set @entity.lap 1)
-        (set @entity.canAdvance true)
         (set @entity.phase "racing")
         (set @entity.result "none")
+        (set @entity.lap 1)
+        (set @entity.checkpoint 0)
+        (set @entity.carX 17)
+        (set @entity.carY 10)
+        (set @entity.heading 0)
+        (set @entity.speed 0)
+        (set @entity.steer 0)
+        (set @entity.accelerating false)
+        (set @entity.braking false)
+        (set @entity.rivalCarX 17)
+        (set @entity.rivalCarY 13)
+        (set @entity.rivalCheckpoint 0)
+        (set @entity.rivalLap 1)
         (set @entity.fx [])
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "Result", value: @entity.result } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "ACCELERATE" } } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "CP", value: (str/concat @entity.checkpoint "/8") }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Finish 2 laps before the rival" }, { label: "How", value: "Hold Up to accelerate, Left/Right to steer, Down to brake — pass the checkpoints in order" } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "THROTTLE_ON", down: "BRAKE_ON", left: "STEER_LEFT", right: "STEER_RIGHT" }, directionReleaseEvents: { up: "THROTTLE_OFF", down: "BRAKE_OFF", left: "STEER_STOP", right: "STEER_STOP" } } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, cameraMode: "follow", keyMap: { ArrowUp: "ACCELERATE", KeyW: "ACCELERATE", Space: "ACCELERATE" } } ]
+          children: [ { type: game-canvas-3d, cameraMode: "chase", tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, keyMap: { ArrowUp: "THROTTLE_ON", KeyW: "THROTTLE_ON", ArrowDown: "BRAKE_ON", KeyS: "BRAKE_ON", ArrowLeft: "STEER_LEFT", KeyA: "STEER_LEFT", ArrowRight: "STEER_RIGHT", KeyD: "STEER_RIGHT" }, keyUpMap: { ArrowUp: "THROTTLE_OFF", KeyW: "THROTTLE_OFF", ArrowDown: "BRAKE_OFF", KeyS: "BRAKE_OFF", ArrowLeft: "STEER_STOP", KeyA: "STEER_STOP", ArrowRight: "STEER_STOP", KeyD: "STEER_STOP" } } ]
         })
     }
 
     ticks {
-      paceTick every 400ms
-        when (== @entity.result "none")
-        (set @entity.canAdvance true)
-        (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
-
-      rivalTick every 1000ms
-        when (== @entity.result "none")
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id "rival") (let ((cur (array/find @config.trackOrder (fn t (and (== (object/get @t x) (object/get @u.position x)) (== (object/get @t y) (object/get @u.position y))))))) (object/merge @u { position: { x: (object/get @cur nextX), y: (object/get @cur nextY) } })) @u))))
-        (set @entity.rivalProgress (+ @entity.rivalProgress 1))
-        (set @entity.result (if (>= @entity.rivalProgress (* @config.totalLaps (array/len @config.trackOrder))) "lost" @entity.result))
+      physicsTick every 90ms
+        when (and (== @entity.phase "racing") (== @entity.result "none"))
+        (set @entity.speed (if @entity.braking (math/max 0 (- @entity.speed @config.brakeDecel)) (if @entity.accelerating (math/min @config.maxSpeed (+ @entity.speed @config.accel)) (* @entity.speed @config.friction))))
+        (set @entity.heading (+ @entity.heading (if (> @entity.speed 0.02) (* @entity.steer @config.turnRate) 0)))
+        (set @entity.carX (math/clamp (+ @entity.carX (* (math/sin @entity.heading) @entity.speed)) 0 (- @entity.gridWidth 1)))
+        (set @entity.carY (math/clamp (+ @entity.carY (* (math/cos @entity.heading) @entity.speed)) 0 (- @entity.gridHeight 1)))
+        (set @entity.lap (+ @entity.lap (let ((tgt (array/find @config.checkpoints (fn c (== (object/get @c order) @entity.checkpoint))))) (if (and (< (+ (* (- @entity.carX (object/get @tgt x)) (- @entity.carX (object/get @tgt x))) (* (- @entity.carY (object/get @tgt y)) (- @entity.carY (object/get @tgt y)))) @config.cpRadiusSq) (== (math/mod (+ @entity.checkpoint 1) (array/len @config.checkpoints)) 0)) 1 0))))
+        (set @entity.checkpoint (let ((tgt (array/find @config.checkpoints (fn c (== (object/get @c order) @entity.checkpoint))))) (if (< (+ (* (- @entity.carX (object/get @tgt x)) (- @entity.carX (object/get @tgt x))) (* (- @entity.carY (object/get @tgt y)) (- @entity.carY (object/get @tgt y)))) @config.cpRadiusSq) (math/mod (+ @entity.checkpoint 1) (array/len @config.checkpoints)) @entity.checkpoint)))
+        (set @entity.result (if (> @entity.lap @config.totalLaps) "won" @entity.result))
         (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id "player") (object/merge @u { position: { x: @entity.carX, y: @entity.carY }, heading: @entity.heading }) @u))))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "Result", value: @entity.result } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "ACCELERATE" } } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "CP", value: (str/concat @entity.checkpoint "/8") }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Finish 2 laps before the rival" }, { label: "How", value: "Hold Up to accelerate, Left/Right to steer, Down to brake — pass the checkpoints in order" } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "THROTTLE_ON", down: "BRAKE_ON", left: "STEER_LEFT", right: "STEER_RIGHT" }, directionReleaseEvents: { up: "THROTTLE_OFF", down: "BRAKE_OFF", left: "STEER_STOP", right: "STEER_STOP" } } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, cameraMode: "follow", keyMap: { ArrowUp: "ACCELERATE", KeyW: "ACCELERATE", Space: "ACCELERATE" } } ]
+          children: [ { type: game-canvas-3d, cameraMode: "chase", tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, keyMap: { ArrowUp: "THROTTLE_ON", KeyW: "THROTTLE_ON", ArrowDown: "BRAKE_ON", KeyS: "BRAKE_ON", ArrowLeft: "STEER_LEFT", KeyA: "STEER_LEFT", ArrowRight: "STEER_RIGHT", KeyD: "STEER_RIGHT" }, keyUpMap: { ArrowUp: "THROTTLE_OFF", KeyW: "THROTTLE_OFF", ArrowDown: "BRAKE_OFF", KeyS: "BRAKE_OFF", ArrowLeft: "STEER_STOP", KeyA: "STEER_STOP", ArrowRight: "STEER_STOP", KeyD: "STEER_STOP" } } ]
         })
+
+      rivalTick every 130ms
+        when (and (== @entity.phase "racing") (== @entity.result "none"))
+        (set @entity.rivalLap (+ @entity.rivalLap (let ((tgt (array/find @config.checkpoints (fn c (== (object/get @c order) @entity.rivalCheckpoint))))) (if (and (< (+ (* (- @entity.rivalCarX (object/get @tgt x)) (- @entity.rivalCarX (object/get @tgt x))) (* (- @entity.rivalCarY (object/get @tgt y)) (- @entity.rivalCarY (object/get @tgt y)))) 1.6) (== (math/mod (+ @entity.rivalCheckpoint 1) (array/len @config.checkpoints)) 0)) 1 0))))
+        (set @entity.rivalCheckpoint (let ((tgt (array/find @config.checkpoints (fn c (== (object/get @c order) @entity.rivalCheckpoint))))) (if (< (+ (* (- @entity.rivalCarX (object/get @tgt x)) (- @entity.rivalCarX (object/get @tgt x))) (* (- @entity.rivalCarY (object/get @tgt y)) (- @entity.rivalCarY (object/get @tgt y)))) 1.6) (math/mod (+ @entity.rivalCheckpoint 1) (array/len @config.checkpoints)) @entity.rivalCheckpoint)))
+        (set @entity.rivalCarX (let ((tgt (array/find @config.checkpoints (fn c (== (object/get @c order) @entity.rivalCheckpoint))))) (let ((dx (- (object/get @tgt x) @entity.rivalCarX)) (dy (- (object/get @tgt y) @entity.rivalCarY))) (let ((d (math/max 0.001 (math/sqrt (+ (* @dx @dx) (* @dy @dy)))))) (+ @entity.rivalCarX (* (/ @dx @d) @config.rivalSpeed))))))
+        (set @entity.rivalCarY (let ((tgt (array/find @config.checkpoints (fn c (== (object/get @c order) @entity.rivalCheckpoint))))) (let ((dx (- (object/get @tgt x) @entity.rivalCarX)) (dy (- (object/get @tgt y) @entity.rivalCarY))) (let ((d (math/max 0.001 (math/sqrt (+ (* @dx @dx) (* @dy @dy)))))) (+ @entity.rivalCarY (* (/ @dy @d) @config.rivalSpeed))))))
+        (set @entity.result (if (> @entity.rivalLap @config.totalLaps) "lost" @entity.result))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id "rival") (object/merge @u { position: { x: @entity.rivalCarX, y: @entity.rivalCarY } }) @u))))
     }
 
     emits {
-      ACCELERATE -> external {
+      THROTTLE_ON -> external {
         id : string
       }
-        @description "Accelerate intent (keyboard keyMap or d-pad directionEvents) — advances one track cell when paced"
+        @description "Throttle held down (keyboard keyUp/Down or d-pad press/release)"
+        @tier "domain"
+      THROTTLE_OFF -> external {
+        id : string
+      }
+        @description "Throttle released — car coasts"
+        @tier "domain"
+      BRAKE_ON -> external {
+        id : string
+      }
+        @description "Brake held down"
+        @tier "domain"
+      BRAKE_OFF -> external {
+        id : string
+      }
+        @description "Brake released"
+        @tier "domain"
+      STEER_LEFT -> external {
+        id : string
+      }
+        @description "Steer left held"
+        @tier "domain"
+      STEER_RIGHT -> external {
+        id : string
+      }
+        @description "Steer right held"
+        @tier "domain"
+      STEER_STOP -> external {
+        id : string
+      }
+        @description "Steering released — wheels straighten"
         @tier "domain"
       GAME_END -> external {
         result : string
@@ -200,29 +279,61 @@ orbital RacingBoard3DOrbital {
         @tier "presentation"
       totalLaps : number = 2
         @label "Total Laps"
-        @description "Laps around the loop required to win"
+        @description "Laps around the circuit required to win"
         @tier "presentation"
-      tiles : [RacingBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "start", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStart.glb", role: "tile", category: "roadStart", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStart", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t20", x: 2, y: 0, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t30", x: 3, y: 0, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t40", x: 4, y: 0, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t50", x: 5, y: 0, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t11", x: 1, y: 1, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t21", x: 2, y: 1, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t31", x: 3, y: 1, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t41", x: 4, y: 1, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t51", x: 5, y: 1, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t02", x: 0, y: 2, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t12", x: 1, y: 2, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t22", x: 2, y: 2, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t32", x: 3, y: 2, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t42", x: 4, y: 2, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t52", x: 5, y: 2, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t03", x: 0, y: 3, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t13", x: 1, y: 3, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t23", x: 2, y: 3, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t33", x: 3, y: 3, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t43", x: 4, y: 3, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t53", x: 5, y: 3, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t04", x: 0, y: 4, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t14", x: 1, y: 4, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t24", x: 2, y: 4, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t34", x: 3, y: 4, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t44", x: 4, y: 4, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t54", x: 5, y: 4, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t05", x: 0, y: 5, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t15", x: 1, y: 5, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t25", x: 2, y: 5, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t35", x: 3, y: 5, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t45", x: 4, y: 5, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t55", x: 5, y: 5, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }]
-        @label "Tiles"
-        @description "6x6 ring-track tile data — perimeter is track, interior is impassable grass."
+      maxSpeed : number = 0.4
+        @label "Max Speed"
+        @description "Top speed in grid cells per physics tick"
         @tier "presentation"
-      units : [RacingBoard3DUnitsItem] = [{ id: "player", position: { x: 0, y: 0 }, unitType: "racecar", name: "Player Car", team: player, health: 100, maxHealth: 100, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-car-kit/units/race.glb", role: "player", category: "race", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "race", thumbnailUrl: "" } }, { id: "rival", position: { x: 1, y: 0 }, unitType: "racecar", name: "Rival Car", team: enemy, health: 100, maxHealth: 100, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-car-kit/units/race-future.glb", role: "enemy", category: "race-future", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "race-future", thumbnailUrl: "" } }]
+      accel : number = 0.05
+        @label "Acceleration"
+        @description "Speed gained per tick while the throttle is held"
+        @tier "presentation"
+      friction : number = 0.94
+        @label "Friction"
+        @description "Speed multiplier per tick while coasting"
+        @tier "presentation"
+      brakeDecel : number = 0.08
+        @label "Brake Deceleration"
+        @description "Speed lost per tick while braking"
+        @tier "presentation"
+      turnRate : number = 0.14
+        @label "Turn Rate"
+        @description "Radians the heading turns per tick while steering and moving"
+        @tier "presentation"
+      cpRadiusSq : number = 6.25
+        @label "Checkpoint Radius Squared"
+        @description "Squared grid distance within which a checkpoint counts as passed"
+        @tier "presentation"
+      rivalSpeed : number = 0.22
+        @label "Rival Speed"
+        @description "Rival car speed in grid cells per rival tick"
+        @tier "presentation"
+      roadAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" }
+        @label "Road Asset"
+        @description "Track tile model, tiled along the oval band"
+        @tier "presentation"
+      grassAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" }
+        @label "Grass Asset"
+        @description "Off-track infield/verge tile model"
+        @tier "presentation"
+      units : [RacingBoard3DUnitsItem] = [{ id: "player", position: { x: 17, y: 10 }, unitType: "racecar", name: "Player Car", team: player, health: 100, maxHealth: 100, heading: 0, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-car-kit/units/race.glb", role: "player", category: "race", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "race", thumbnailUrl: "" } }, { id: "rival", position: { x: 17, y: 13 }, unitType: "racecar", name: "Rival Car", team: enemy, health: 100, maxHealth: 100, heading: 0, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-car-kit/units/race-future.glb", role: "enemy", category: "race-future", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "race-future", thumbnailUrl: "" } }]
         @label "Units"
-        @description "Player race car + 1 rival race car, staggered at the start line."
+        @description "Player race car + 1 rival race car at the start line."
         @tier "presentation"
-      features : [RacingBoard3DFeaturesItem] = [{ id: "startArch", x: 0, y: 0, type: "start_arch", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/flagCheckers.glb", role: "decoration", category: "flagCheckers", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "flagCheckers", thumbnailUrl: "" } }, { id: "grandstandNorth", x: 2, y: 1, type: "grandstand", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grandStand.glb", role: "decoration", category: "grandStand", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grandStand", thumbnailUrl: "" } }, { id: "grandstandSouth", x: 3, y: 4, type: "grandstand", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grandStandCovered.glb", role: "decoration", category: "grandStandCovered", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grandStandCovered", thumbnailUrl: "" } }, { id: "pitGarage", x: 1, y: 1, type: "pit", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/pitsGarage.glb", role: "decoration", category: "pitsGarage", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "pitsGarage", thumbnailUrl: "" } }, { id: "pitOffice", x: 4, y: 4, type: "pit", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/pitsOffice.glb", role: "decoration", category: "pitsOffice", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "pitsOffice", thumbnailUrl: "" } }]
+      features : [RacingBoard3DFeaturesItem] = [{ id: "startArch", x: 17, y: 10, type: "start_arch", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/flagCheckers.glb", role: "decoration", category: "flagCheckers", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "flagCheckers", thumbnailUrl: "" } }, { id: "grandstandNorth", x: 10, y: 17, type: "grandstand", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grandStand.glb", role: "decoration", category: "grandStand", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grandStand", thumbnailUrl: "" } }, { id: "grandstandSouth", x: 10, y: 3, type: "grandstand", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grandStandCovered.glb", role: "decoration", category: "grandStandCovered", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grandStandCovered", thumbnailUrl: "" } }, { id: "pitGarage", x: 9, y: 10, type: "pit", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/pitsGarage.glb", role: "decoration", category: "pitsGarage", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "pitsGarage", thumbnailUrl: "" } }, { id: "pitOffice", x: 12, y: 10, type: "pit", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/pitsOffice.glb", role: "decoration", category: "pitsOffice", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "pitsOffice", thumbnailUrl: "" } }]
         @label "Features"
-        @description "Start arch, 2 grandstands and 2 pit buildings placed around the infield."
+        @description "Start arch on the line, 2 grandstands outside the oval and 2 pit buildings in the infield."
         @tier "presentation"
-      trackOrder : [RacingBoard3DTrackOrderItem] = [{ x: 0, y: 0, nextX: 1, nextY: 0 }, { x: 1, y: 0, nextX: 2, nextY: 0 }, { x: 2, y: 0, nextX: 3, nextY: 0 }, { x: 3, y: 0, nextX: 4, nextY: 0 }, { x: 4, y: 0, nextX: 5, nextY: 0 }, { x: 5, y: 0, nextX: 5, nextY: 1 }, { x: 5, y: 1, nextX: 5, nextY: 2 }, { x: 5, y: 2, nextX: 5, nextY: 3 }, { x: 5, y: 3, nextX: 5, nextY: 4 }, { x: 5, y: 4, nextX: 5, nextY: 5 }, { x: 5, y: 5, nextX: 4, nextY: 5 }, { x: 4, y: 5, nextX: 3, nextY: 5 }, { x: 3, y: 5, nextX: 2, nextY: 5 }, { x: 2, y: 5, nextX: 1, nextY: 5 }, { x: 1, y: 5, nextX: 0, nextY: 5 }, { x: 0, y: 5, nextX: 0, nextY: 4 }, { x: 0, y: 4, nextX: 0, nextY: 3 }, { x: 0, y: 3, nextX: 0, nextY: 2 }, { x: 0, y: 2, nextX: 0, nextY: 1 }, { x: 0, y: 1, nextX: 0, nextY: 0 }]
-        @label "Track Order"
-        @description "The 20-cell closed loop in clockwise order, each entry pointing at its next cell."
+      checkpoints : [RacingBoard3DCheckpointItem] = [{ x: 17, y: 10, order: 0 }, { x: 15, y: 14, order: 1 }, { x: 10, y: 15, order: 2 }, { x: 5, y: 14, order: 3 }, { x: 3, y: 10, order: 4 }, { x: 5, y: 6, order: 5 }, { x: 10, y: 5, order: 6 }, { x: 15, y: 6, order: 7 }]
+        @label "Checkpoints"
+        @description "8 gates around the oval, passed in order; a full lap = passing all 8."
         @tier "presentation"
-      scale : number = 0.45
+      scale : number = 0.5
         @label "Scale"
         @description "Canvas render scale"
         @tier "presentation"
-      unitScale : number = 1
+      unitScale : number = 1.4
         @label "Unit Scale"
         @description "Unit draw-size multiplier"
         @tier "presentation"

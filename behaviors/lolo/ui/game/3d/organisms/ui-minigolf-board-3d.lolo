@@ -95,10 +95,10 @@ orbital MinigolfBoard3DOrbital {
         (set @entity.fx [])
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
+          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Sink the ball in par or fewer strokes" }, { label: "How", value: "Click the ball → click an adjacent fairway cell to putt; reach the hole" } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Strokes", value: @entity.strokes } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
 
       UNIT_CLICK -> playing
@@ -106,10 +106,10 @@ orbital MinigolfBoard3DOrbital {
         (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== (object/get @t passable) true) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange)))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
+          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Sink the ball in par or fewer strokes" }, { label: "How", value: "Click the ball → click an adjacent fairway cell to putt; reach the hole" } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Strokes", value: @entity.strokes } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
 
       TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (and (== (object/get (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) passable) true) (!= (object/get (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) terrain) "hole")))))
@@ -120,10 +120,10 @@ orbital MinigolfBoard3DOrbital {
         (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
+          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Sink the ball in par or fewer strokes" }, { label: "How", value: "Click the ball → click an adjacent fairway cell to putt; reach the hole" } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Strokes", value: @entity.strokes } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
 
       TILE_CLICK -> gameover when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (and (== (object/get (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) passable) true) (== (object/get (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) terrain) "hole")))))
@@ -135,10 +135,10 @@ orbital MinigolfBoard3DOrbital {
         (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
+          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Sink the ball in par or fewer strokes" }, { label: "How", value: "Click the ball → click an adjacent fairway cell to putt; reach the hole" } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Strokes", value: @entity.strokes } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
 
       CANCEL -> playing when (!= @entity.selectedUnitId "")
@@ -146,10 +146,10 @@ orbital MinigolfBoard3DOrbital {
         (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
+          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Sink the ball in par or fewer strokes" }, { label: "How", value: "Click the ball → click an adjacent fairway cell to putt; reach the hole" } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Strokes", value: @entity.strokes } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
     }
 
@@ -165,10 +165,10 @@ orbital MinigolfBoard3DOrbital {
         (set @entity.fx [])
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
+          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Sink the ball in par or fewer strokes" }, { label: "How", value: "Click the ball → click an adjacent fairway cell to putt; reach the hole" } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Strokes", value: @entity.strokes } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
     }
 
@@ -229,7 +229,7 @@ orbital MinigolfBoard3DOrbital {
         @label "Features"
         @description "Pin flag at the hole plus wooden peg-wall borders along the rough."
         @tier "presentation"
-      par : number = 8
+      par : number = 22
         @label "Par"
         @description "Stroke target — holing out at or under this value wins"
         @tier "presentation"

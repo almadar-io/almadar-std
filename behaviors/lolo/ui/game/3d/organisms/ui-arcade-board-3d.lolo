@@ -75,6 +75,7 @@ orbital ArcadeBoard3DOrbital {
     npcTick : number = 0
     gridWidth : number = 5
     gridHeight : number = 6
+    lastRoll : number = 1
     result : "none" | "won" | "lost" = none
   }
 
@@ -97,9 +98,9 @@ orbital ArcadeBoard3DOrbital {
         (set @entity.result "none")
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Win 5 tickets then reach the prize counter" }, { label: "How", value: "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token" } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           addons: { type: button, action: CANCEL, label: "Cancel", variant: secondary }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
         })
 
       UNIT_CLICK -> playing when (and (== @entity.result "none") (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
@@ -107,9 +108,9 @@ orbital ArcadeBoard3DOrbital {
         (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u2 (== @u2.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) 1) (== (array/len (array/filter @entity.units (fn u3 (and (== (object/get (object/get @u3 position) x) (object/get @t x)) (== (object/get (object/get @u3 position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Win 5 tickets then reach the prize counter" }, { label: "How", value: "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token" } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           addons: { type: button, action: CANCEL, label: "Cancel", variant: secondary }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
         })
 
       TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (== @entity.result "none") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) 1) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0)))))
@@ -118,9 +119,9 @@ orbital ArcadeBoard3DOrbital {
         (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Win 5 tickets then reach the prize counter" }, { label: "How", value: "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token" } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           addons: { type: button, action: CANCEL, label: "Cancel", variant: secondary }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
         })
 
       CANCEL -> playing when (!= @entity.selectedUnitId "")
@@ -128,9 +129,9 @@ orbital ArcadeBoard3DOrbital {
         (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Win 5 tickets then reach the prize counter" }, { label: "How", value: "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token" } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           addons: { type: button, action: CANCEL, label: "Cancel", variant: secondary }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
         })
 
       FEATURE_CLICK -> playing when (and (== @entity.result "none") (and (== ?type "prize_counter") (and (>= @entity.tickets @entity.ticketsToWin) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.team "player"))) position) { x: ?x, y: ?z }) 1))))
@@ -139,41 +140,42 @@ orbital ArcadeBoard3DOrbital {
         (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Win 5 tickets then reach the prize counter" }, { label: "How", value: "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token" } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           addons: { type: button, action: CANCEL, label: "Cancel", variant: secondary }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
         })
 
       FEATURE_CLICK -> playing when (and (== @entity.result "none") (and (!= ?type "prize_counter") (and (> @entity.tokens 0) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.team "player"))) position) { x: ?x, y: ?z }) 1))))
         (set @entity.tokens (- @entity.tokens 1))
         (set @entity.playCount (+ @entity.playCount 1))
-        (set @entity.tickets (if (== (% @entity.playCount 2) 0) (+ @entity.tickets 1) @entity.tickets))
-        (set @entity.fx (array/append @entity.fx (if (== (% @entity.playCount 2) 0) { id: (str/concat "fx-ticket-" @entity.playCount), type: "score", x: ?x, z: ?z, message: "+1 ticket", ttl: 3 } { id: (str/concat "fx-dud-" @entity.playCount), type: "info", x: ?x, z: ?z, message: "no luck", ttl: 3 })))
+        (set @entity.lastRoll (math/random))
+        (set @entity.tickets (if (< @entity.lastRoll @config.ticketChance) (+ @entity.tickets 1) @entity.tickets))
+        (set @entity.fx (array/append @entity.fx (if (< @entity.lastRoll @config.ticketChance) { id: (str/concat "fx-ticket-" @entity.playCount), type: "score", x: ?x, z: ?z, message: "+1 ticket", ttl: 3 } { id: (str/concat "fx-dud-" @entity.playCount), type: "info", x: ?x, z: ?z, message: "no luck", ttl: 3 })))
         (set @entity.result (if (and (== @entity.tokens 0) (< @entity.tickets @entity.ticketsToWin)) "lost" "none"))
         (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Win 5 tickets then reach the prize counter" }, { label: "How", value: "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token" } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           addons: { type: button, action: CANCEL, label: "Cancel", variant: secondary }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
         })
 
       GAME_END -> won when (== @entity.result "won")
         (render-ui main {
           type: game-shell
           overlay: { type: game-menu, title: "YOU WIN!", subtitle: (str/concat "Tickets earned: " @entity.tickets), options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Win 5 tickets then reach the prize counter" }, { label: "How", value: "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token" } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           addons: { type: button, action: CANCEL, label: "Cancel", variant: secondary }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
         })
 
       GAME_END -> lost when (== @entity.result "lost")
         (render-ui main {
           type: game-shell
           overlay: { type: game-menu, title: "OUT OF TOKENS", subtitle: "No luck this time — try again!", options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Win 5 tickets then reach the prize counter" }, { label: "How", value: "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token" } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           addons: { type: button, action: CANCEL, label: "Cancel", variant: secondary }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
         })
     }
 
@@ -190,9 +192,9 @@ orbital ArcadeBoard3DOrbital {
         (set @entity.result "none")
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Win 5 tickets then reach the prize counter" }, { label: "How", value: "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token" } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           addons: { type: button, action: CANCEL, label: "Cancel", variant: secondary }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
         })
     }
 
@@ -209,9 +211,9 @@ orbital ArcadeBoard3DOrbital {
         (set @entity.result "none")
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Win 5 tickets then reach the prize counter" }, { label: "How", value: "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token" } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           addons: { type: button, action: CANCEL, label: "Cancel", variant: secondary }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
         })
     }
 
@@ -223,9 +225,9 @@ orbital ArcadeBoard3DOrbital {
         (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- @e.ttl 1) }))) (fn e (> @e.ttl 0))))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Tokens", value: @entity.tokens }, { label: "Tickets", value: @entity.tickets }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Win 5 tickets then reach the prize counter" }, { label: "How", value: "Click your kid → click an adjacent tile to walk; click a game cabinet to play a token" } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           addons: { type: button, action: CANCEL, label: "Cancel", variant: secondary }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "isometric", tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, featureClickEvent: FEATURE_CLICK } ]
         })
     }
 
@@ -289,6 +291,10 @@ orbital ArcadeBoard3DOrbital {
       gridHeight : number = 6
         @label "Grid Height"
         @description "Arcade hall height in cells"
+        @tier "presentation"
+      ticketChance : number = 0.42
+        @label "Ticket Chance"
+        @description "Probability each play awards a ticket — luck-based so tokens can run out before winning"
         @tier "presentation"
       startingTokens : number = 14
         @label "Starting Tokens"
