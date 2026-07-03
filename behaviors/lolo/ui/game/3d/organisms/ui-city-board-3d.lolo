@@ -141,7 +141,7 @@ orbital CityBoard3DOrbital {
             (set @entity.targets (array/map @entity.targets (fn t (if (and (== (object/get @t delivered) false) (<= (grid/manhattan-distance { x: ?x, y: ?z } { x: (object/get @t x), y: (object/get @t y) }) 1)) (object/merge @t { delivered: true }) @t))))
             (set @entity.deliveries (array/len (array/filter @entity.targets (fn t (== (object/get @t delivered) true)))))
             (set @entity.movesLeft (math/max 0 (- @entity.movesLeft 1)))
-            (set @entity.fx (array/reduce @newlyDelivered (fn acc t (array/append @acc { id: (str/concat "fx-deliver-" (object/get @t id)), type: "pickup", x: (object/get @t x), z: (object/get @t y), message: "Delivered", ttl: 3 })) @entity.fx))
+            (set @entity.fx (array/reduce @newlyDelivered @entity.fx (fn acc t (array/append @acc { id: (str/concat "fx-deliver-" (object/get @t id)), type: "pickup", x: (object/get @t x), z: (object/get @t y), message: "Delivered", ttl: 3 }))))
             (set @entity.result (if (== @entity.deliveries @entity.totalTargets) "won" (if (<= @entity.movesLeft 0) "lost" "none")))
             (set @entity.fx (if (== @entity.result "lost") (array/append @entity.fx { id: (str/concat "fx-fail-" ?x), type: "lose", x: ?x, z: ?z, message: "Out of moves", ttl: 3 }) @entity.fx))
             (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)

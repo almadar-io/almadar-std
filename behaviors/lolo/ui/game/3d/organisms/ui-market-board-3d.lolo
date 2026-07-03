@@ -171,7 +171,7 @@ orbital MarketBoard3DOrbital {
         (set @entity.units (array/map @entity.units (fn u (if (== @u.team "neutral") (object/merge @u { patience: (math/clamp (- @u.patience 1) 0 @u.maxPatience) }) @u))))
         (let ((starved (array/filter @entity.units (fn u (and (== @u.team "neutral") (<= @u.patience 0))))))
           (do
-            (set @entity.fx (array/reduce @starved (fn acc u (array/append @acc { id: (str/concat "fx-starve-" @u.id), type: "damage", x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y), message: "-1 life", ttl: 3 })) @entity.fx))
+            (set @entity.fx (array/reduce @starved @entity.fx (fn acc u (array/append @acc { id: (str/concat "fx-starve-" @u.id), type: "damage", x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y), message: "-1 life", ttl: 3 }))))
             (set @entity.lives (math/max 0 (- @entity.lives (array/len @starved))))))
         (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "neutral") (<= @u.patience 0)) (object/merge @u { patience: @u.maxPatience }) @u))))
         (set @entity.result (if (<= @entity.lives 0) "lost" @entity.result))
