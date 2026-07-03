@@ -1,0 +1,1531 @@
+[
+  {
+    "organism": "ui-racing-board-3d",
+    "orbital": "RacingBoard3DOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/3d/organisms/ui-racing-board-3d.ts",
+    "entities": [
+      {
+        "name": "RacingBoard3DItem",
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "phase",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "playerProgress",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "rivalProgress",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lap",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "canAdvance",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "gridWidth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "gridHeight",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "RacingBoard3DRender",
+        "emittedEvents": [
+          "ACCELERATE",
+          "GAME_END",
+          "PLAY_AGAIN"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "ACCELERATE",
+            "direction": "emit",
+            "description": "Accelerate intent (keyboard keyMap or d-pad directionEvents) — advances one track cell when paced",
+            "tier": "domain"
+          },
+          {
+            "name": "GAME_END",
+            "direction": "emit",
+            "description": "Called when the lap race ends",
+            "tier": "domain"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "RacingBoard3DError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "features",
+            "type": "[RacingBoard3DFeaturesItem]",
+            "default": [
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "flagCheckers",
+                  "dimension": "3d",
+                  "name": "flagCheckers",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/flagCheckers.glb"
+                },
+                "id": "startArch",
+                "type": "start_arch",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grandStand",
+                  "dimension": "3d",
+                  "name": "grandStand",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grandStand.glb"
+                },
+                "id": "grandstandNorth",
+                "type": "grandstand",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grandStandCovered",
+                  "dimension": "3d",
+                  "name": "grandStandCovered",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grandStandCovered.glb"
+                },
+                "id": "grandstandSouth",
+                "type": "grandstand",
+                "x": 3,
+                "y": 4
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "pitsGarage",
+                  "dimension": "3d",
+                  "name": "pitsGarage",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/pitsGarage.glb"
+                },
+                "id": "pitGarage",
+                "type": "pit",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "pitsOffice",
+                  "dimension": "3d",
+                  "name": "pitsOffice",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/pitsOffice.glb"
+                },
+                "id": "pitOffice",
+                "type": "pit",
+                "x": 4,
+                "y": 4
+              }
+            ],
+            "label": "Features",
+            "description": "Start arch, 2 grandstands and 2 pit buildings placed around the infield.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "assetUrl": {
+                  "name": "assetUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.45,
+            "label": "Scale",
+            "description": "Canvas render scale",
+            "tier": "presentation"
+          },
+          {
+            "key": "tiles",
+            "type": "[RacingBoard3DTilesItem]",
+            "default": [
+              {
+                "id": "t00",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStart",
+                  "dimension": "3d",
+                  "name": "roadStart",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStart.glb"
+                },
+                "passable": true,
+                "terrain": "start",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "id": "t10",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 1,
+                "y": 0
+              },
+              {
+                "id": "t20",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "id": "t30",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 3,
+                "y": 0
+              },
+              {
+                "id": "t40",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "id": "t50",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 5,
+                "y": 0
+              },
+              {
+                "id": "t01",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "id": "t11",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "id": "t21",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "id": "t31",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "id": "t41",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 4,
+                "y": 1
+              },
+              {
+                "id": "t51",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 5,
+                "y": 1
+              },
+              {
+                "id": "t02",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 0,
+                "y": 2
+              },
+              {
+                "id": "t12",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "id": "t22",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "id": "t32",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "id": "t42",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 4,
+                "y": 2
+              },
+              {
+                "id": "t52",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 5,
+                "y": 2
+              },
+              {
+                "id": "t03",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 0,
+                "y": 3
+              },
+              {
+                "id": "t13",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "id": "t23",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 2,
+                "y": 3
+              },
+              {
+                "id": "t33",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "id": "t43",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "id": "t53",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 5,
+                "y": 3
+              },
+              {
+                "id": "t04",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 0,
+                "y": 4
+              },
+              {
+                "id": "t14",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "id": "t24",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "id": "t34",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 3,
+                "y": 4
+              },
+              {
+                "id": "t44",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "3d",
+                  "name": "grass",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 4,
+                "y": 4
+              },
+              {
+                "id": "t54",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 5,
+                "y": 4
+              },
+              {
+                "id": "t05",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 0,
+                "y": 5
+              },
+              {
+                "id": "t15",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 1,
+                "y": 5
+              },
+              {
+                "id": "t25",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 2,
+                "y": 5
+              },
+              {
+                "id": "t35",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 3,
+                "y": 5
+              },
+              {
+                "id": "t45",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 4,
+                "y": 5
+              },
+              {
+                "id": "t55",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "roadStraight",
+                  "dimension": "3d",
+                  "name": "roadStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                },
+                "passable": true,
+                "terrain": "track",
+                "x": 5,
+                "y": 5
+              }
+            ],
+            "label": "Tiles",
+            "description": "6x6 ring-track tile data — perimeter is track, interior is impassable grass.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "terrain": {
+                  "name": "terrain",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "totalLaps",
+            "type": "number",
+            "default": 2,
+            "label": "Total Laps",
+            "description": "Laps around the loop required to win",
+            "tier": "presentation"
+          },
+          {
+            "key": "trackOrder",
+            "type": "[RacingBoard3DTrackOrderItem]",
+            "default": [
+              {
+                "nextX": 1,
+                "nextY": 0,
+                "x": 0,
+                "y": 0
+              },
+              {
+                "nextX": 2,
+                "nextY": 0,
+                "x": 1,
+                "y": 0
+              },
+              {
+                "nextX": 3,
+                "nextY": 0,
+                "x": 2,
+                "y": 0
+              },
+              {
+                "nextX": 4,
+                "nextY": 0,
+                "x": 3,
+                "y": 0
+              },
+              {
+                "nextX": 5,
+                "nextY": 0,
+                "x": 4,
+                "y": 0
+              },
+              {
+                "nextX": 5,
+                "nextY": 1,
+                "x": 5,
+                "y": 0
+              },
+              {
+                "nextX": 5,
+                "nextY": 2,
+                "x": 5,
+                "y": 1
+              },
+              {
+                "nextX": 5,
+                "nextY": 3,
+                "x": 5,
+                "y": 2
+              },
+              {
+                "nextX": 5,
+                "nextY": 4,
+                "x": 5,
+                "y": 3
+              },
+              {
+                "nextX": 5,
+                "nextY": 5,
+                "x": 5,
+                "y": 4
+              },
+              {
+                "nextX": 4,
+                "nextY": 5,
+                "x": 5,
+                "y": 5
+              },
+              {
+                "nextX": 3,
+                "nextY": 5,
+                "x": 4,
+                "y": 5
+              },
+              {
+                "nextX": 2,
+                "nextY": 5,
+                "x": 3,
+                "y": 5
+              },
+              {
+                "nextX": 1,
+                "nextY": 5,
+                "x": 2,
+                "y": 5
+              },
+              {
+                "nextX": 0,
+                "nextY": 5,
+                "x": 1,
+                "y": 5
+              },
+              {
+                "nextX": 0,
+                "nextY": 4,
+                "x": 0,
+                "y": 5
+              },
+              {
+                "nextX": 0,
+                "nextY": 3,
+                "x": 0,
+                "y": 4
+              },
+              {
+                "nextX": 0,
+                "nextY": 2,
+                "x": 0,
+                "y": 3
+              },
+              {
+                "nextX": 0,
+                "nextY": 1,
+                "x": 0,
+                "y": 2
+              },
+              {
+                "nextX": 0,
+                "nextY": 0,
+                "x": 0,
+                "y": 1
+              }
+            ],
+            "label": "Track Order",
+            "description": "The 20-cell closed loop in clockwise order, each entry pointing at its next cell.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "nextX": {
+                  "name": "nextX",
+                  "required": true,
+                  "type": "number"
+                },
+                "nextY": {
+                  "name": "nextY",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "unitScale",
+            "type": "number",
+            "default": 1,
+            "label": "Unit Scale",
+            "description": "Unit draw-size multiplier",
+            "tier": "presentation"
+          },
+          {
+            "key": "units",
+            "type": "[RacingBoard3DUnitsItem]",
+            "default": [
+              {
+                "health": 100,
+                "id": "player",
+                "maxHealth": 100,
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "race",
+                  "dimension": "3d",
+                  "name": "race",
+                  "role": "player",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-car-kit/units/race.glb"
+                },
+                "name": "Player Car",
+                "position": {
+                  "x": 0,
+                  "y": 0
+                },
+                "team": "player",
+                "unitType": "racecar"
+              },
+              {
+                "health": 100,
+                "id": "rival",
+                "maxHealth": 100,
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "race-future",
+                  "dimension": "3d",
+                  "name": "race-future",
+                  "role": "enemy",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-car-kit/units/race-future.glb"
+                },
+                "name": "Rival Car",
+                "position": {
+                  "x": 1,
+                  "y": 0
+                },
+                "team": "enemy",
+                "unitType": "racecar"
+              }
+            ],
+            "label": "Units",
+            "description": "Player race car + 1 rival race car, staggered at the start line.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "canAdvance",
+            "fx",
+            "gridHeight",
+            "gridWidth",
+            "lap",
+            "phase",
+            "playerProgress",
+            "result",
+            "rivalProgress",
+            "selectedUnitId",
+            "units"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "RacingBoard3DPage",
+        "defaultPath": "/racing-board-3d",
+        "primaryEntity": "RacingBoard3DItem"
+      }
+    ],
+    "emittedEvents": [
+      "ACCELERATE",
+      "GAME_END",
+      "PLAY_AGAIN"
+    ],
+    "listenedEvents": []
+  }
+]

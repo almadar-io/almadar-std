@@ -30,18 +30,7 @@ const ALIAS = 'UiTanksBoard';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiTanksBoardEventKey = 'CANCEL' | 'END_TURN' | 'FIRE' | 'GAME_END' | 'INIT' | 'PLAY_AGAIN' | 'START' | 'TILE_CLICK' | 'UNIT_CLICK';
-
-/**
- * Payload shape for the `FIRE` event.
- */
-export interface StdUiTanksBoardFirePayload {
-  attacker?: EntityRow;
-  target?: EntityRow;
-  damage?: number;
-  attackerId: string;
-  targetId: string;
-}
+export type StdUiTanksBoardEventKey = 'CANCEL' | 'END_TURN' | 'GAME_END' | 'INIT' | 'PLAY_AGAIN' | 'START' | 'TILE_CLICK' | 'UNIT_CLICK';
 
 /**
  * Payload shape for the `GAME_END` event.
@@ -3149,36 +3138,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
         },
         'emits': [
           {
-            'description': 'Fired when a tank shoots at a target.',
-            'event': 'FIRE',
-            'payloadSchema': [
-              {
-                'name': 'attacker',
-                'type': 'object',
-              },
-              {
-                'name': 'target',
-                'type': 'object',
-              },
-              {
-                'name': 'damage',
-                'type': 'number',
-              },
-              {
-                'name': 'attackerId',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'name': 'targetId',
-                'required': true,
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'domain',
-          },
-          {
             'description': 'Called when the battle ends.',
             'event': 'GAME_END',
             'payloadSchema': [
@@ -3322,36 +3281,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
               'tier': 'domain',
             },
             {
-              'description': 'Fired when a tank shoots at a target.',
-              'key': 'FIRE',
-              'name': 'Fire',
-              'payloadSchema': [
-                {
-                  'name': 'attacker',
-                  'type': 'object',
-                },
-                {
-                  'name': 'target',
-                  'type': 'object',
-                },
-                {
-                  'name': 'damage',
-                  'type': 'number',
-                },
-                {
-                  'name': 'attackerId',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'targetId',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'tier': 'domain',
-            },
-            {
               'description': 'Emits UI:{endTurnEvent} with {} on end turn.',
               'key': 'END_TURN',
               'name': 'End Turn',
@@ -3469,6 +3398,26 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'tank_arrowEmpty.png',
+                        'style': 'sci-fi',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -3500,6 +3449,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -3560,31 +3510,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                             },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'label': 'SCORE',
-                          'score': '@entity.score',
-                          'type': 'score-display',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'tank_arrowEmpty.png',
-                            'style': 'sci-fi',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -3685,6 +3610,26 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'tank_arrowEmpty.png',
+                        'style': 'sci-fi',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -3716,6 +3661,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -3776,31 +3722,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                             },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'label': 'SCORE',
-                          'score': '@entity.score',
-                          'type': 'score-display',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'tank_arrowEmpty.png',
-                            'style': 'sci-fi',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -3841,6 +3762,26 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'tank_arrowEmpty.png',
+                        'style': 'sci-fi',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -3872,6 +3813,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -3932,31 +3874,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                             },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'label': 'SCORE',
-                          'score': '@entity.score',
-                          'type': 'score-display',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'tank_arrowEmpty.png',
-                            'style': 'sci-fi',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -4201,6 +4118,26 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'tank_arrowEmpty.png',
+                        'style': 'sci-fi',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -4232,6 +4169,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -4292,31 +4230,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                             },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'label': 'SCORE',
-                          'score': '@entity.score',
-                          'type': 'score-display',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'tank_arrowEmpty.png',
-                            'style': 'sci-fi',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -4420,6 +4333,26 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'tank_arrowEmpty.png',
+                        'style': 'sci-fi',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -4451,6 +4384,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -4511,31 +4445,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                             },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'label': 'SCORE',
-                          'score': '@entity.score',
-                          'type': 'score-display',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'tank_arrowEmpty.png',
-                            'style': 'sci-fi',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -4676,7 +4585,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                         [
                           '==',
                           '@u.id',
-                          '@payload.targetId',
+                          '@payload.unitId',
                         ],
                         [
                           'object/merge',
@@ -4696,7 +4605,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                                       '@u',
                                       'health',
                                     ],
-                                    '@payload.damage',
+                                    3,
                                   ],
                                 ],
                                 0,
@@ -4714,7 +4623,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                                   '@u',
                                   'health',
                                 ],
-                                '@payload.damage',
+                                3,
                               ],
                             ],
                           },
@@ -4724,7 +4633,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                           [
                             '==',
                             '@u.id',
-                            '@payload.attackerId',
+                            '@entity.selectedUnitId',
                           ],
                           [
                             'object/merge',
@@ -4761,7 +4670,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                               [
                                 '==',
                                 '@u.id',
-                                '@payload.targetId',
+                                '@payload.unitId',
                               ],
                             ],
                           ],
@@ -4782,7 +4691,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                               [
                                 '==',
                                 '@u.id',
-                                '@payload.targetId',
+                                '@payload.unitId',
                               ],
                             ],
                           ],
@@ -4808,7 +4717,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                           [
                             '==',
                             '@u.id',
-                            '@payload.targetId',
+                            '@payload.unitId',
                           ],
                         ],
                       ],
@@ -4838,7 +4747,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                                 [
                                   '==',
                                   '@u.id',
-                                  '@payload.targetId',
+                                  '@payload.unitId',
                                 ],
                               ],
                             ],
@@ -4859,7 +4768,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                                 [
                                   '==',
                                   '@u.id',
-                                  '@payload.targetId',
+                                  '@payload.unitId',
                                 ],
                               ],
                             ],
@@ -4890,7 +4799,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                             [
                               '==',
                               '@u.id',
-                              '@payload.targetId',
+                              '@payload.unitId',
                             ],
                           ],
                         ],
@@ -4926,9 +4835,33 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                   'observation',
                 ],
                 [
+                  'emit',
+                  'GAME_END',
+                ],
+                [
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'tank_arrowEmpty.png',
+                        'style': 'sci-fi',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -4960,6 +4893,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -5021,31 +4955,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                           ],
                           'type': 'game-hud',
                         },
-                        {
-                          'label': 'SCORE',
-                          'score': '@entity.score',
-                          'type': 'score-display',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'tank_arrowEmpty.png',
-                            'style': 'sci-fi',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
-                        },
                       ],
                       'direction': 'horizontal',
                       'gap': 'md',
@@ -5070,67 +4979,78 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                   },
                 ],
               ],
-              'event': 'FIRE',
+              'event': 'UNIT_CLICK',
               'from': 'playing',
               'guard': [
-                'let',
+                'and',
                 [
-                  [
-                    'ap',
-                    [
-                      'object/get',
-                      [
-                        'array/find',
-                        '@entity.units',
-                        [
-                          'fn',
-                          'u',
-                          [
-                            '==',
-                            '@u.id',
-                            '@payload.attackerId',
-                          ],
-                        ],
-                      ],
-                      'position',
-                    ],
-                  ],
-                  [
-                    'tp',
-                    [
-                      'object/get',
-                      [
-                        'array/find',
-                        '@entity.units',
-                        [
-                          'fn',
-                          'u',
-                          [
-                            '==',
-                            '@u.id',
-                            '@payload.targetId',
-                          ],
-                        ],
-                      ],
-                      'position',
-                    ],
-                  ],
+                  '!=',
+                  '@entity.selectedUnitId',
+                  '',
                 ],
                 [
                   'and',
                   [
+                    '==',
+                    [
+                      'object/get',
+                      [
+                        'array/find',
+                        '@entity.units',
+                        [
+                          'fn',
+                          'u',
+                          [
+                            '==',
+                            '@u.id',
+                            '@payload.unitId',
+                          ],
+                        ],
+                      ],
+                      'team',
+                    ],
+                    'enemy',
+                  ],
+                  [
                     '<=',
                     [
                       'grid/manhattan-distance',
-                      '@ap',
-                      '@tp',
+                      [
+                        'object/get',
+                        [
+                          'array/find',
+                          '@entity.units',
+                          [
+                            'fn',
+                            'u',
+                            [
+                              '==',
+                              '@u.id',
+                              '@entity.selectedUnitId',
+                            ],
+                          ],
+                        ],
+                        'position',
+                      ],
+                      [
+                        'object/get',
+                        [
+                          'array/find',
+                          '@entity.units',
+                          [
+                            'fn',
+                            'u',
+                            [
+                              '==',
+                              '@u.id',
+                              '@payload.unitId',
+                            ],
+                          ],
+                        ],
+                        'position',
+                      ],
                     ],
                     '@entity.firingRange',
-                  ],
-                  [
-                    '!=',
-                    '@ap',
-                    '@tp',
                   ],
                 ],
               ],
@@ -5166,6 +5086,26 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'tank_arrowEmpty.png',
+                        'style': 'sci-fi',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -5197,6 +5137,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -5257,31 +5198,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                             },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'label': 'SCORE',
-                          'score': '@entity.score',
-                          'type': 'score-display',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'tank_arrowEmpty.png',
-                            'style': 'sci-fi',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -5337,6 +5253,26 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'tank_arrowEmpty.png',
+                        'style': 'sci-fi',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -5368,6 +5304,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -5428,31 +5365,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                             },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'label': 'SCORE',
-                          'score': '@entity.score',
-                          'type': 'score-display',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'tank_arrowEmpty.png',
-                            'style': 'sci-fi',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -5561,6 +5473,26 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'tank_arrowEmpty.png',
+                        'style': 'sci-fi',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -5592,6 +5524,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -5652,31 +5585,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                             },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'label': 'SCORE',
-                          'score': '@entity.score',
-                          'type': 'score-display',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'tank_arrowEmpty.png',
-                            'style': 'sci-fi',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -5829,6 +5737,26 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'tank_arrowEmpty.png',
+                        'style': 'sci-fi',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -5860,6 +5788,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -5921,31 +5850,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                           ],
                           'type': 'game-hud',
                         },
-                        {
-                          'label': 'SCORE',
-                          'score': '@entity.score',
-                          'type': 'score-display',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'tank_arrowEmpty.png',
-                            'style': 'sci-fi',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
-                        },
                       ],
                       'direction': 'horizontal',
                       'gap': 'md',
@@ -5983,6 +5887,26 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                 'render-ui',
                 'main',
                 {
+                  'addons': {
+                    'action': 'END_TURN',
+                    'iconAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'icon-end-turn',
+                      'role': 'ui',
+                      'sprite': 'tank_arrowEmpty.png',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
+                      'variant': '',
+                    },
+                    'label': 'End Turn',
+                    'type': 'button',
+                    'variant': 'primary',
+                  },
                   'backgroundAsset': {
                     'animations': [],
                     'aspect': '1:1',
@@ -6014,6 +5938,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                       'validMoves': '@entity.validMoves',
                     },
                   ],
+                  'fontFamily': 'future',
                   'hud': {
                     'children': [
                       {
@@ -6075,31 +6000,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                         ],
                         'type': 'game-hud',
                       },
-                      {
-                        'label': 'SCORE',
-                        'score': '@entity.score',
-                        'type': 'score-display',
-                      },
-                      {
-                        'action': 'END_TURN',
-                        'iconAsset': {
-                          'animations': [],
-                          'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
-                          'category': 'ui',
-                          'dimension': '2d',
-                          'name': 'icon-end-turn',
-                          'role': 'ui',
-                          'sprite': 'tank_arrowEmpty.png',
-                          'style': 'sci-fi',
-                          'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
-                          'variant': '',
-                        },
-                        'label': 'End Turn',
-                        'type': 'button',
-                        'variant': 'secondary',
-                      },
                     ],
                     'direction': 'horizontal',
                     'gap': 'md',
@@ -6123,6 +6023,11 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                   'type': 'game-shell',
                 },
               ],
+            ],
+            'guard': [
+              '==',
+              '@entity.result',
+              'none',
             ],
             'interval': 100,
             'name': 'renderTick',
@@ -6626,9 +6531,42 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                 ],
               ],
               [
+                'if',
+                [
+                  '!=',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  'emit',
+                  'GAME_END',
+                ],
+                null,
+              ],
+              [
                 'render-ui',
                 'main',
                 {
+                  'addons': {
+                    'action': 'END_TURN',
+                    'iconAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'icon-end-turn',
+                      'role': 'ui',
+                      'sprite': 'tank_arrowEmpty.png',
+                      'style': 'sci-fi',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
+                      'variant': '',
+                    },
+                    'label': 'End Turn',
+                    'type': 'button',
+                    'variant': 'primary',
+                  },
                   'backgroundAsset': {
                     'animations': [],
                     'aspect': '1:1',
@@ -6660,6 +6598,7 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                       'validMoves': '@entity.validMoves',
                     },
                   ],
+                  'fontFamily': 'future',
                   'hud': {
                     'children': [
                       {
@@ -6720,31 +6659,6 @@ export function stdUiTanksBoardTanksBoardOrbital(params: StdUiTanksBoardTanksBoa
                           },
                         ],
                         'type': 'game-hud',
-                      },
-                      {
-                        'label': 'SCORE',
-                        'score': '@entity.score',
-                        'type': 'score-display',
-                      },
-                      {
-                        'action': 'END_TURN',
-                        'iconAsset': {
-                          'animations': [],
-                          'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json',
-                          'category': 'ui',
-                          'dimension': '2d',
-                          'name': 'icon-end-turn',
-                          'role': 'ui',
-                          'sprite': 'tank_arrowEmpty.png',
-                          'style': 'sci-fi',
-                          'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png',
-                          'variant': '',
-                        },
-                        'label': 'End Turn',
-                        'type': 'button',
-                        'variant': 'secondary',
                       },
                     ],
                     'direction': 'horizontal',

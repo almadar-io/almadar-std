@@ -9,8 +9,8 @@
         "name": "PinballBoardItem",
         "fields": [
           {
-            "name": "units",
-            "type": "array",
+            "name": "ball",
+            "type": "object",
             "required": false
           },
           {
@@ -29,17 +29,27 @@
             "required": false
           },
           {
-            "name": "effects",
-            "type": "array",
+            "name": "ballLive",
+            "type": "boolean",
             "required": false
           },
           {
-            "name": "selectedUnitId",
+            "name": "leftFlipperActive",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "rightFlipperActive",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "result",
             "type": "string",
             "required": false
           },
           {
-            "name": "validMoves",
+            "name": "effects",
             "type": "array",
             "required": false
           }
@@ -51,37 +61,37 @@
       {
         "name": "PinballBoardRender",
         "emittedEvents": [
-          "TILE_CLICK",
-          "UNIT_CLICK",
-          "BUMPER_HIT",
-          "BALL_LOST",
+          "LEFT_FLIPPER",
+          "RIGHT_FLIPPER",
+          "LAUNCH",
+          "GAME_END",
           "PLAY_AGAIN",
           "TOGGLE_AUDIO"
         ],
         "listenedEvents": [],
         "events": [
           {
-            "name": "TILE_CLICK",
+            "name": "LEFT_FLIPPER",
             "direction": "emit",
-            "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
+            "description": "Left flipper flick (KeyZ / ArrowLeft / Left Flipper button)",
             "tier": "domain"
           },
           {
-            "name": "UNIT_CLICK",
+            "name": "RIGHT_FLIPPER",
             "direction": "emit",
-            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+            "description": "Right flipper flick (KeySlash / ArrowRight / Right Flipper button)",
             "tier": "domain"
           },
           {
-            "name": "BUMPER_HIT",
+            "name": "LAUNCH",
             "direction": "emit",
-            "description": "Emits when the ball strikes a bumper",
+            "description": "Launches the ball from the plunger lane (Space / Launch button)",
             "tier": "domain"
           },
           {
-            "name": "BALL_LOST",
+            "name": "GAME_END",
             "direction": "emit",
-            "description": "Emits when a ball drains",
+            "description": "Emits when the last ball drains",
             "tier": "domain"
           },
           {
@@ -103,30 +113,40 @@
         ],
         "overridableConfigKeys": [
           {
-            "key": "assetBaseUrl",
-            "type": "string",
-            "default": "https://almadar-kflow-assets.web.app/shared/",
-            "label": "Asset Base Url",
-            "description": "Base URL prepended to manifest sprite paths",
-            "tier": "presentation"
-          },
-          {
             "key": "assetManifest",
             "type": "PinballBoardAssetManifest",
             "default": {
+              "background": {
+                "animations": [
+                  "static"
+                ],
+                "aspect": "1:1",
+                "atlas": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.json",
+                "category": "background",
+                "dimension": "2d",
+                "name": "playfield",
+                "role": "background",
+                "sprite": "background_blue.png",
+                "style": "vector",
+                "thumbnailUrl": "",
+                "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.png",
+                "variant": ""
+              },
               "effects": {
                 "spark": {
                   "animations": [
                     "static"
                   ],
-                  "aspect": "8:1",
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/effects/spritesheet_particles.json",
                   "category": "spark",
                   "dimension": "2d",
                   "name": "spark",
                   "role": "effect",
-                  "style": "",
+                  "sprite": "particleYellow_1.png",
+                  "style": "vector",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/spark_06.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/effects/spritesheet_particles.png",
                   "variant": ""
                 }
               },
@@ -136,85 +156,143 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets/features/spritesheet_default.json",
                   "category": "bumper",
                   "dimension": "2d",
                   "name": "bumper",
                   "role": "decoration",
-                  "style": "",
+                  "sprite": "element_red_polygon_glossy.png",
+                  "style": "vector",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets/features/spritesheet_default.png",
                   "variant": ""
                 },
                 "paddle": {
                   "animations": [
                     "static"
                   ],
-                  "aspect": "1:1",
+                  "aspect": "4:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_paddles.json",
                   "category": "paddle",
                   "dimension": "2d",
                   "name": "paddle",
                   "role": "decoration",
-                  "style": "",
+                  "sprite": "paddle_01.png",
+                  "style": "vector",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/paddle.png",
-                  "variant": ""
-                }
-              },
-              "terrains": {
-                "playfield": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_paddles.png",
                   "variant": ""
                 },
-                "wall": {
+                "paddleActive": {
                   "animations": [
                     "static"
                   ],
-                  "aspect": "1:1",
-                  "category": "wall",
+                  "aspect": "4:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_paddles.json",
+                  "category": "paddle",
                   "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
+                  "name": "paddle-active",
+                  "role": "decoration",
+                  "sprite": "paddle_07.png",
+                  "style": "vector",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_paddles.png",
                   "variant": ""
                 }
               },
               "units": {
                 "ball": {
                   "animations": [
-                    "idle",
-                    "walk",
-                    "attack",
-                    "hit",
-                    "death"
+                    "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.json",
                   "category": "ball",
                   "dimension": "2d",
                   "name": "ball",
                   "role": "npc",
-                  "style": "",
+                  "sprite": "ballGrey_01.png",
+                  "style": "vector",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/units/ball.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.png",
                   "variant": ""
                 }
               }
             },
             "label": "Asset Manifest",
-            "description": "Asset sprite manifest",
+            "description": "Ball/bumper/paddle/spark sprite maps + playfield background",
             "tier": "presentation",
             "properties": {
+              "background": {
+                "name": "background",
+                "required": false,
+                "properties": {
+                  "animations": {
+                    "name": "animations",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "aspect": {
+                    "name": "aspect",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "atlas": {
+                    "name": "atlas",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "category": {
+                    "name": "category",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "dimension": {
+                    "name": "dimension",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "role": {
+                    "name": "role",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "style": {
+                    "name": "style",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "thumbnailUrl": {
+                    "name": "thumbnailUrl",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "url": {
+                    "name": "url",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
               "effects": {
                 "name": "effects",
                 "required": false,
@@ -231,6 +309,11 @@
                     },
                     "aspect": {
                       "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
                       "required": false,
                       "type": "string"
                     },
@@ -251,6 +334,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -297,66 +385,8 @@
                       "required": false,
                       "type": "string"
                     },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "terrains": {
-                "name": "terrains",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
+                    "atlas": {
+                      "name": "atlas",
                       "required": false,
                       "type": "string"
                     },
@@ -377,6 +407,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -423,6 +458,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -440,6 +480,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -467,6 +512,82 @@
                   "type": "object"
                 }
               }
+            }
+          },
+          {
+            "key": "ballRadius",
+            "type": "number",
+            "default": 12,
+            "label": "Ball Radius",
+            "description": "Ball collision radius against the playfield walls",
+            "tier": "presentation"
+          },
+          {
+            "key": "bumperKick",
+            "type": "number",
+            "default": 0.8,
+            "label": "Bumper Kick",
+            "description": "Velocity multiplier applied radially away from a hit bumper",
+            "tier": "presentation"
+          },
+          {
+            "key": "bumperRadius",
+            "type": "number",
+            "default": 40,
+            "label": "Bumper Radius",
+            "description": "Ball-to-bumper collision radius in pixels",
+            "tier": "presentation"
+          },
+          {
+            "key": "bumperScore",
+            "type": "number",
+            "default": 100,
+            "label": "Bumper Score",
+            "description": "Points awarded per bumper hit",
+            "tier": "presentation"
+          },
+          {
+            "key": "bumpers",
+            "type": "[PinballBoardBumperItem]",
+            "default": [
+              {
+                "id": "bumper1",
+                "x": 140,
+                "y": 180
+              },
+              {
+                "id": "bumper2",
+                "x": 240,
+                "y": 110
+              },
+              {
+                "id": "bumper3",
+                "x": 340,
+                "y": 180
+              }
+            ],
+            "label": "Bumpers",
+            "description": "Bumper positions on the playfield in pixels",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
             }
           },
           {
@@ -515,273 +636,52 @@
             }
           },
           {
-            "key": "features",
-            "type": "[PinballBoardFeaturesItem]",
-            "default": [
-              {
-                "id": "bumper1",
-                "sprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "bumper",
-                  "dimension": "2d",
-                  "name": "bumper",
-                  "role": "decoration",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png",
-                  "variant": ""
-                },
-                "type": "bumper",
-                "x": 2,
-                "y": 2
-              },
-              {
-                "id": "bumper2",
-                "sprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "bumper",
-                  "dimension": "2d",
-                  "name": "bumper",
-                  "role": "decoration",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png",
-                  "variant": ""
-                },
-                "type": "bumper",
-                "x": 1,
-                "y": 3
-              },
-              {
-                "id": "bumper3",
-                "sprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "bumper",
-                  "dimension": "2d",
-                  "name": "bumper",
-                  "role": "decoration",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png",
-                  "variant": ""
-                },
-                "type": "bumper",
-                "x": 3,
-                "y": 3
-              },
-              {
-                "id": "paddle_left",
-                "sprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "paddle",
-                  "dimension": "2d",
-                  "name": "paddle",
-                  "role": "decoration",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/paddle.png",
-                  "variant": ""
-                },
-                "type": "paddle",
-                "x": 1,
-                "y": 7
-              },
-              {
-                "id": "paddle_right",
-                "sprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "paddle",
-                  "dimension": "2d",
-                  "name": "paddle",
-                  "role": "decoration",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/paddle.png",
-                  "variant": ""
-                },
-                "type": "paddle",
-                "x": 3,
-                "y": 7
-              }
-            ],
-            "label": "Features",
-            "description": "Features (bumpers, paddles, etc.) on the board",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "assetUrl": {
-                  "name": "assetUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "sprite": {
-                  "name": "sprite",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "type": {
-                  "name": "type",
-                  "required": true,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
+            "key": "flipperPower",
+            "type": "number",
+            "default": 36,
+            "label": "Flipper Power",
+            "description": "Upward velocity a flipper flick gives the ball",
+            "tier": "presentation"
+          },
+          {
+            "key": "flipperSideKick",
+            "type": "number",
+            "default": 6,
+            "label": "Flipper Side Kick",
+            "description": "Horizontal velocity a flipper adds toward the table center",
+            "tier": "presentation"
+          },
+          {
+            "key": "flipperY",
+            "type": "number",
+            "default": 566,
+            "label": "Flipper Y",
+            "description": "Y position where the flipper paddles are drawn",
+            "tier": "presentation"
+          },
+          {
+            "key": "flipperZoneY",
+            "type": "number",
+            "default": 500,
+            "label": "Flipper Zone Y",
+            "description": "Ball must be below this y for a flipper flick to connect",
+            "tier": "presentation"
+          },
+          {
+            "key": "gravity",
+            "type": "number",
+            "default": 1.6,
+            "label": "Gravity",
+            "description": "Downward velocity added to the ball each physics tick",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 640,
+            "label": "Height",
+            "description": "Playfield height in pixels; a ball past this drains",
+            "tier": "presentation"
           },
           {
             "key": "isLoading",
@@ -789,6 +689,54 @@
             "default": false,
             "label": "Is Loading",
             "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "launchSpeed",
+            "type": "number",
+            "default": 40,
+            "label": "Launch Speed",
+            "description": "Initial upward velocity when the ball is launched",
+            "tier": "presentation"
+          },
+          {
+            "key": "launchVx",
+            "type": "number",
+            "default": -3,
+            "label": "Launch Vx",
+            "description": "Initial horizontal velocity when the ball is launched",
+            "tier": "presentation"
+          },
+          {
+            "key": "launchX",
+            "type": "number",
+            "default": 452,
+            "label": "Launch X",
+            "description": "Plunger lane x position where the ball waits and respawns",
+            "tier": "presentation"
+          },
+          {
+            "key": "launchY",
+            "type": "number",
+            "default": 560,
+            "label": "Launch Y",
+            "description": "Plunger lane y position where the ball waits and respawns",
+            "tier": "presentation"
+          },
+          {
+            "key": "leftFlipperX",
+            "type": "number",
+            "default": 150,
+            "label": "Left Flipper X",
+            "description": "X position of the left flipper paddle",
+            "tier": "presentation"
+          },
+          {
+            "key": "rightFlipperX",
+            "type": "number",
+            "default": 330,
+            "label": "Right Flipper X",
+            "description": "X position of the right flipper paddle",
             "tier": "presentation"
           },
           {
@@ -808,1461 +756,20 @@
             "tier": "presentation"
           },
           {
-            "key": "tiles",
-            "type": "[PinballBoardTilesItem]",
-            "default": [
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 0
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 0
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 0
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 0
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 0
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 1
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 1
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 2
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 2
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 3
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 3
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 4
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 4
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 5
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 5
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 5
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 5
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 5
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 6
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 6
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 6
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 6
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 6
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 7
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 7
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 7
-              },
-              {
-                "passable": true,
-                "terrain": "playfield",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "playfield",
-                  "dimension": "2d",
-                  "name": "playfield",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 7
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 7
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 8
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 8
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 8
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 8
-              },
-              {
-                "passable": false,
-                "terrain": "wall",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "2d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 8
-              }
-            ],
-            "label": "Tiles",
-            "description": "Playfield tiles",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "movementCost": {
-                  "name": "movementCost",
-                  "required": false,
-                  "type": "number"
-                },
-                "passable": {
-                  "name": "passable",
-                  "required": false,
-                  "type": "boolean"
-                },
-                "terrain": {
-                  "name": "terrain",
-                  "required": false,
-                  "type": "string"
-                },
-                "terrainSprite": {
-                  "name": "terrainSprite",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "tileType": {
-                  "name": "tileType",
-                  "required": false,
-                  "type": "string"
-                },
-                "type": {
-                  "name": "type",
-                  "required": false,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
+            "key": "startingBalls",
+            "type": "number",
+            "default": 3,
+            "label": "Starting Balls",
+            "description": "Balls per game; draining the last one ends the game",
+            "tier": "presentation"
           },
           {
-            "key": "units",
-            "type": "[PinballBoardUnitsItem]",
-            "default": [
-              {
-                "animation": "idle",
-                "frame": 0,
-                "health": 1,
-                "id": "ball1",
-                "maxHealth": 1,
-                "name": "Ball",
-                "position": {
-                  "x": 2,
-                  "y": 5
-                },
-                "sprite": {
-                  "animations": [
-                    "idle",
-                    "walk",
-                    "attack",
-                    "hit",
-                    "death"
-                  ],
-                  "aspect": "1:1",
-                  "category": "ball",
-                  "dimension": "2d",
-                  "name": "ball",
-                  "role": "npc",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/units/ball.png",
-                  "variant": ""
-                },
-                "team": "player",
-                "unitType": "ball"
-              }
-            ],
-            "label": "Units",
-            "description": "Ball units on the board",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "animation": {
-                  "name": "animation",
-                  "required": false,
-                  "type": "string"
-                },
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "faction": {
-                  "name": "faction",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
-                },
-                "frame": {
-                  "name": "frame",
-                  "required": false,
-                  "type": "number"
-                },
-                "health": {
-                  "name": "health",
-                  "required": false,
-                  "type": "number"
-                },
-                "heroId": {
-                  "name": "heroId",
-                  "required": false,
-                  "type": "string"
-                },
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
-                "maxHealth": {
-                  "name": "maxHealth",
-                  "required": false,
-                  "type": "number"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "name": {
-                  "name": "name",
-                  "required": false,
-                  "type": "string"
-                },
-                "position": {
-                  "name": "position",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "previousPosition": {
-                  "name": "previousPosition",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "sprite": {
-                  "name": "sprite",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "spriteSheet": {
-                  "name": "spriteSheet",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "team": {
-                  "name": "team",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
-                },
-                "traits": {
-                  "name": "traits",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "properties": {
-                      "cooldown": {
-                        "name": "cooldown",
-                        "required": true,
-                        "type": "number"
-                      },
-                      "currentState": {
-                        "name": "currentState",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "name": {
-                        "name": "name",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "states": {
-                        "name": "states",
-                        "required": true,
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "type": "object"
-                  }
-                },
-                "unitType": {
-                  "name": "unitType",
-                  "required": false,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": false,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": false,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
+            "key": "width",
+            "type": "number",
+            "default": 480,
+            "label": "Width",
+            "description": "Playfield width in pixels",
+            "tier": "presentation"
           }
         ],
         "capabilities": [],
@@ -2271,28 +778,16 @@
           "requires": [],
           "provides": [
             "audioEnabled",
+            "ball",
+            "ballLive",
             "balls",
             "effects",
-            "score",
-            "selectedUnitId",
-            "units",
-            "validMoves"
+            "leftFlipperActive",
+            "result",
+            "rightFlipperActive",
+            "score"
           ]
         }
-      },
-      {
-        "name": "PinballBoardAnimTick",
-        "emittedEvents": [],
-        "listenedEvents": [],
-        "overridableConfigKeys": [
-          {
-            "key": "frameCount",
-            "type": "unknown",
-            "default": 8
-          }
-        ],
-        "capabilities": [],
-        "ref": "AnimTick.traits.AnimTick"
       }
     ],
     "pages": [
@@ -2303,12 +798,12 @@
       }
     ],
     "emittedEvents": [
-      "BALL_LOST",
-      "BUMPER_HIT",
+      "GAME_END",
+      "LAUNCH",
+      "LEFT_FLIPPER",
       "PLAY_AGAIN",
-      "TILE_CLICK",
-      "TOGGLE_AUDIO",
-      "UNIT_CLICK"
+      "RIGHT_FLIPPER",
+      "TOGGLE_AUDIO"
     ],
     "listenedEvents": []
   }

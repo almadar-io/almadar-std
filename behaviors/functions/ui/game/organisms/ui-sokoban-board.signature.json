@@ -9,7 +9,12 @@
         "name": "SokobanBoardItem",
         "fields": [
           {
-            "name": "units",
+            "name": "player",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "crates",
             "type": "array",
             "required": false
           },
@@ -24,17 +29,12 @@
             "required": false
           },
           {
-            "name": "effects",
-            "type": "array",
-            "required": false
-          },
-          {
-            "name": "selectedUnitId",
+            "name": "result",
             "type": "string",
             "required": false
           },
           {
-            "name": "validMoves",
+            "name": "effects",
             "type": "array",
             "required": false
           }
@@ -46,21 +46,49 @@
       {
         "name": "SokobanBoardRender",
         "emittedEvents": [
-          "TILE_CLICK",
-          "UNIT_CLICK"
+          "MOVE_UP",
+          "MOVE_DOWN",
+          "MOVE_LEFT",
+          "MOVE_RIGHT",
+          "PLAY_AGAIN",
+          "GAME_END"
         ],
         "listenedEvents": [],
         "events": [
           {
-            "name": "TILE_CLICK",
+            "name": "MOVE_UP",
             "direction": "emit",
-            "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+            "description": "Step north (keyboard keyMap or d-pad directionEvents); pushes an adjacent crate when the cell beyond is free",
             "tier": "domain"
           },
           {
-            "name": "UNIT_CLICK",
+            "name": "MOVE_DOWN",
             "direction": "emit",
-            "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+            "description": "Step south (keyboard keyMap or d-pad directionEvents); pushes an adjacent crate when the cell beyond is free",
+            "tier": "domain"
+          },
+          {
+            "name": "MOVE_LEFT",
+            "direction": "emit",
+            "description": "Step west (keyboard keyMap or d-pad directionEvents); pushes an adjacent crate when the cell beyond is free",
+            "tier": "domain"
+          },
+          {
+            "name": "MOVE_RIGHT",
+            "direction": "emit",
+            "description": "Step east (keyboard keyMap or d-pad directionEvents); pushes an adjacent crate when the cell beyond is free",
+            "tier": "domain"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Resets crates, pusher, and counters to the authored level",
+            "tier": "domain"
+          },
+          {
+            "name": "GAME_END",
+            "direction": "emit",
+            "description": "Emitted when every crate sits on a target (result solved)",
             "tier": "domain"
           },
           {
@@ -69,69 +97,6 @@
           }
         ],
         "overridableConfigKeys": [
-          {
-            "key": "assetBaseUrl",
-            "type": "Asset",
-            "default": "https://almadar-kflow-assets.web.app/shared/",
-            "label": "Asset Base Url",
-            "description": "Base URL prepended to manifest sprite paths",
-            "tier": "presentation",
-            "properties": {
-              "animations": {
-                "name": "animations",
-                "required": false,
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "aspect": {
-                "name": "aspect",
-                "required": false,
-                "type": "string"
-              },
-              "category": {
-                "name": "category",
-                "required": false,
-                "type": "string"
-              },
-              "dimension": {
-                "name": "dimension",
-                "required": false,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "role": {
-                "name": "role",
-                "required": false,
-                "type": "string"
-              },
-              "style": {
-                "name": "style",
-                "required": false,
-                "type": "string"
-              },
-              "thumbnailUrl": {
-                "name": "thumbnailUrl",
-                "required": false,
-                "type": "string"
-              },
-              "url": {
-                "name": "url",
-                "required": false,
-                "type": "string"
-              },
-              "variant": {
-                "name": "variant",
-                "required": false,
-                "type": "string"
-              }
-            }
-          },
           {
             "key": "assetManifest",
             "type": "SokobanBoardAssetManifest",
@@ -143,13 +108,31 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "crate",
                   "dimension": "2d",
                   "name": "crate",
-                  "role": "decoration",
+                  "role": "feature",
+                  "sprite": "crate_02.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/features/crate.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
+                  "variant": ""
+                },
+                "crate_done": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
+                  "category": "crate",
+                  "dimension": "2d",
+                  "name": "crate-done",
+                  "role": "feature",
+                  "sprite": "crate_45.png",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 }
               },
@@ -159,13 +142,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
                 "target": {
@@ -173,13 +158,15 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "target",
                   "dimension": "2d",
                   "name": "target",
                   "role": "tile",
+                  "sprite": "environment_01.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/target.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
                 "wall": {
@@ -187,39 +174,39 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 }
               },
               "units": {
                 "pusher": {
                   "animations": [
-                    "idle",
-                    "walk",
-                    "attack",
-                    "hit",
-                    "death"
+                    "static"
                   ],
                   "aspect": "1:1",
-                  "category": "pusher",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
+                  "category": "player",
                   "dimension": "2d",
                   "name": "pusher",
-                  "role": "npc",
+                  "role": "unit",
+                  "sprite": "player_01.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/units/pusher.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 }
               }
             },
             "label": "Asset Manifest",
-            "description": "Asset sprite manifest",
+            "description": "Sokoban-pack sprite atlas refs for terrain, pusher, and crates",
             "tier": "presentation",
             "properties": {
               "effects": {
@@ -241,6 +228,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -258,6 +250,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -304,6 +301,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -321,6 +323,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -367,6 +374,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -384,6 +396,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -430,6 +447,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -447,6 +469,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -477,220 +504,40 @@
             }
           },
           {
-            "key": "enableCamera",
-            "type": "boolean",
-            "default": false,
-            "label": "Enable Camera",
-            "description": "Enable camera pan/zoom controls",
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "className prop",
             "tier": "presentation"
           },
           {
-            "key": "features",
-            "type": "[SokobanBoardFeaturesItem]",
+            "key": "crates",
+            "type": "[SokobanCrateItem]",
             "default": [
               {
-                "id": "crate1",
-                "sprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "crate",
-                  "dimension": "2d",
-                  "name": "crate",
-                  "role": "decoration",
-                  "style": "pixel",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/features/crate.png",
-                  "variant": ""
-                },
-                "type": "crate",
-                "x": 2,
-                "y": 1
-              },
-              {
-                "id": "crate2",
-                "sprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "crate",
-                  "dimension": "2d",
-                  "name": "crate",
-                  "role": "decoration",
-                  "style": "pixel",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/features/crate.png",
-                  "variant": ""
-                },
-                "type": "crate",
-                "x": 2,
+                "id": "c1",
+                "x": 3,
                 "y": 3
               },
               {
-                "id": "crate3",
-                "sprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "crate",
-                  "dimension": "2d",
-                  "name": "crate",
-                  "role": "decoration",
-                  "style": "pixel",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/features/crate.png",
-                  "variant": ""
-                },
-                "type": "crate",
+                "id": "c2",
                 "x": 2,
-                "y": 5
+                "y": 4
+              },
+              {
+                "id": "c3",
+                "x": 4,
+                "y": 4
               }
             ],
-            "label": "Features",
-            "description": "Features (crates) on the board",
+            "label": "Crates",
+            "description": "Crate starting positions",
             "tier": "presentation",
             "items": {
               "properties": {
-                "assetUrl": {
-                  "name": "assetUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
                 "id": {
                   "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "sprite": {
-                  "name": "sprite",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "type": {
-                  "name": "type",
                   "required": true,
                   "type": "string"
                 },
@@ -703,31 +550,114 @@
                   "name": "y",
                   "required": true,
                   "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
                 }
               },
               "type": "object"
             }
           },
           {
-            "key": "scale",
-            "type": "number",
-            "default": 0.45,
-            "label": "Scale",
-            "description": "Render scale",
+            "key": "error",
+            "type": "SokobanBoardError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
             "tier": "presentation"
           },
           {
-            "key": "showMinimap",
-            "type": "boolean",
-            "default": false,
-            "label": "Show Minimap",
-            "description": "Show minimap overlay",
+            "key": "player",
+            "type": "SokobanBoardPos",
+            "default": {
+              "x": 5,
+              "y": 5
+            },
+            "label": "Pusher Start",
+            "description": "Pusher starting position",
+            "tier": "presentation",
+            "properties": {
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.5,
+            "label": "Scale",
+            "description": "Canvas render scale",
             "tier": "presentation"
+          },
+          {
+            "key": "targets",
+            "type": "[SokobanBoardPos]",
+            "default": [
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 3
+              },
+              {
+                "x": 1,
+                "y": 5
+              }
+            ],
+            "label": "Targets",
+            "description": "Target cells every crate must reach",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "tiles",
@@ -741,15 +671,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 0,
                 "y": 0
               },
@@ -761,15 +694,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 1,
                 "y": 0
               },
@@ -781,15 +717,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 2,
                 "y": 0
               },
@@ -801,15 +740,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 3,
                 "y": 0
               },
@@ -821,15 +763,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 4,
                 "y": 0
               },
@@ -841,15 +786,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 5,
                 "y": 0
               },
@@ -861,15 +809,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 6,
                 "y": 0
               },
@@ -881,15 +832,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 0,
                 "y": 1
               },
@@ -901,15 +855,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "target",
                   "dimension": "2d",
                   "name": "target",
                   "role": "tile",
+                  "sprite": "environment_01.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/target.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "target",
                 "x": 1,
                 "y": 1
               },
@@ -921,15 +878,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 2,
                 "y": 1
               },
@@ -941,15 +901,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 3,
                 "y": 1
               },
@@ -961,15 +924,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 4,
                 "y": 1
               },
@@ -981,15 +947,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 5,
                 "y": 1
               },
@@ -1001,15 +970,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 6,
                 "y": 1
               },
@@ -1021,15 +993,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 0,
                 "y": 2
               },
@@ -1041,55 +1016,64 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 1,
                 "y": 2
               },
               {
-                "passable": true,
-                "terrain": "floor",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
-                  "category": "floor",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "floor",
+                  "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 2,
                 "y": 2
               },
               {
-                "passable": true,
-                "terrain": "floor",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
-                  "category": "floor",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "floor",
+                  "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 3,
                 "y": 2
               },
@@ -1101,15 +1085,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 4,
                 "y": 2
               },
@@ -1121,15 +1108,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 5,
                 "y": 2
               },
@@ -1141,15 +1131,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 6,
                 "y": 2
               },
@@ -1161,15 +1154,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 0,
                 "y": 3
               },
@@ -1181,15 +1177,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "target",
                   "dimension": "2d",
                   "name": "target",
                   "role": "tile",
+                  "sprite": "environment_01.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/target.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "target",
                 "x": 1,
                 "y": 3
               },
@@ -1201,15 +1200,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 2,
                 "y": 3
               },
@@ -1221,15 +1223,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 3,
                 "y": 3
               },
@@ -1241,15 +1246,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 4,
                 "y": 3
               },
@@ -1261,15 +1269,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 5,
                 "y": 3
               },
@@ -1281,15 +1292,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 6,
                 "y": 3
               },
@@ -1301,15 +1315,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 0,
                 "y": 4
               },
@@ -1321,15 +1338,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 1,
                 "y": 4
               },
@@ -1341,15 +1361,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 2,
                 "y": 4
               },
@@ -1361,15 +1384,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 3,
                 "y": 4
               },
@@ -1381,15 +1407,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 4,
                 "y": 4
               },
@@ -1401,15 +1430,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 5,
                 "y": 4
               },
@@ -1421,15 +1453,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 6,
                 "y": 4
               },
@@ -1441,15 +1476,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 0,
                 "y": 5
               },
@@ -1461,15 +1499,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "target",
                   "dimension": "2d",
                   "name": "target",
                   "role": "tile",
+                  "sprite": "environment_01.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/target.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "target",
                 "x": 1,
                 "y": 5
               },
@@ -1481,15 +1522,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 2,
                 "y": 5
               },
@@ -1501,15 +1545,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 3,
                 "y": 5
               },
@@ -1521,15 +1568,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 4,
                 "y": 5
               },
@@ -1541,15 +1591,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "floor",
                   "dimension": "2d",
                   "name": "floor",
                   "role": "tile",
+                  "sprite": "environment_15.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "floor",
                 "x": 5,
                 "y": 5
               },
@@ -1561,15 +1614,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 6,
                 "y": 5
               },
@@ -1581,15 +1637,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 0,
                 "y": 6
               },
@@ -1601,15 +1660,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 1,
                 "y": 6
               },
@@ -1621,15 +1683,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 2,
                 "y": 6
               },
@@ -1641,15 +1706,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 3,
                 "y": 6
               },
@@ -1661,15 +1729,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 4,
                 "y": 6
               },
@@ -1681,15 +1752,18 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 5,
                 "y": 6
               },
@@ -1701,98 +1775,31 @@
                     "static"
                   ],
                   "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.json",
                   "category": "wall",
                   "dimension": "2d",
                   "name": "wall",
                   "role": "tile",
+                  "sprite": "block_05.png",
                   "style": "pixel",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/kenney-sokoban-pack/terrain/sokoban_spritesheet.png",
                   "variant": ""
                 },
+                "tileType": "wall",
                 "x": 6,
                 "y": 6
               }
             ],
             "label": "Tiles",
-            "description": "Grid tiles (floor, wall, target)",
+            "description": "7x7 warehouse: border walls, interior wall bar, three targets on the west aisle",
             "tier": "presentation",
             "items": {
               "properties": {
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
                 "id": {
                   "name": "id",
                   "required": false,
                   "type": "string"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "movementCost": {
-                  "name": "movementCost",
-                  "required": false,
-                  "type": "number"
                 },
                 "passable": {
                   "name": "passable",
@@ -1821,6 +1828,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -1838,6 +1850,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -1869,11 +1886,6 @@
                   "required": false,
                   "type": "string"
                 },
-                "type": {
-                  "name": "type",
-                  "required": false,
-                  "type": "string"
-                },
                 "x": {
                   "name": "x",
                   "required": true,
@@ -1882,384 +1894,6 @@
                 "y": {
                   "name": "y",
                   "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
-          },
-          {
-            "key": "units",
-            "type": "[SokobanBoardUnitsItem]",
-            "default": [
-              {
-                "animation": "idle",
-                "frame": 0,
-                "health": 10,
-                "id": "pusher",
-                "maxHealth": 10,
-                "name": "Pusher",
-                "position": {
-                  "x": 4,
-                  "y": 2
-                },
-                "sprite": {
-                  "animations": [
-                    "idle",
-                    "walk",
-                    "attack",
-                    "hit",
-                    "death"
-                  ],
-                  "aspect": "1:1",
-                  "category": "pusher",
-                  "dimension": "2d",
-                  "name": "pusher",
-                  "role": "npc",
-                  "style": "pixel",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/units/pusher.png",
-                  "variant": ""
-                },
-                "team": "player",
-                "unitType": "pusher"
-              }
-            ],
-            "label": "Units",
-            "description": "Units on the board (the pusher character)",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "animation": {
-                  "name": "animation",
-                  "required": false,
-                  "type": "string"
-                },
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "faction": {
-                  "name": "faction",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
-                },
-                "frame": {
-                  "name": "frame",
-                  "required": false,
-                  "type": "number"
-                },
-                "health": {
-                  "name": "health",
-                  "required": false,
-                  "type": "number"
-                },
-                "heroId": {
-                  "name": "heroId",
-                  "required": false,
-                  "type": "string"
-                },
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
-                "maxHealth": {
-                  "name": "maxHealth",
-                  "required": false,
-                  "type": "number"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "name": {
-                  "name": "name",
-                  "required": false,
-                  "type": "string"
-                },
-                "position": {
-                  "name": "position",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "previousPosition": {
-                  "name": "previousPosition",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "sprite": {
-                  "name": "sprite",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "spriteSheet": {
-                  "name": "spriteSheet",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "team": {
-                  "name": "team",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
-                },
-                "traits": {
-                  "name": "traits",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "properties": {
-                      "cooldown": {
-                        "name": "cooldown",
-                        "required": true,
-                        "type": "number"
-                      },
-                      "currentState": {
-                        "name": "currentState",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "name": {
-                        "name": "name",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "states": {
-                        "name": "states",
-                        "required": true,
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "type": "object"
-                  }
-                },
-                "unitType": {
-                  "name": "unitType",
-                  "required": false,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": false,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": false,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
                   "type": "number"
                 }
               },
@@ -2273,27 +1907,13 @@
           "requires": [],
           "provides": [
             "boxesDone",
+            "crates",
             "effects",
             "moves",
-            "selectedUnitId",
-            "units",
-            "validMoves"
+            "player",
+            "result"
           ]
         }
-      },
-      {
-        "name": "SokobanBoardAnimTick",
-        "emittedEvents": [],
-        "listenedEvents": [],
-        "overridableConfigKeys": [
-          {
-            "key": "frameCount",
-            "type": "unknown",
-            "default": 8
-          }
-        ],
-        "capabilities": [],
-        "ref": "AnimTick.traits.AnimTick"
       }
     ],
     "pages": [
@@ -2304,8 +1924,12 @@
       }
     ],
     "emittedEvents": [
-      "TILE_CLICK",
-      "UNIT_CLICK"
+      "GAME_END",
+      "MOVE_DOWN",
+      "MOVE_LEFT",
+      "MOVE_RIGHT",
+      "MOVE_UP",
+      "PLAY_AGAIN"
     ],
     "listenedEvents": []
   }

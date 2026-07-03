@@ -30,18 +30,7 @@ const ALIAS = 'UiBattleBoard';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiBattleBoardEventKey = 'ATTACK' | 'CANCEL' | 'END_TURN' | 'GAME_END' | 'INIT' | 'PLAY_AGAIN' | 'START' | 'TILE_CLICK' | 'UNIT_CLICK' | 'UNIT_MOVE';
-
-/**
- * Payload shape for the `ATTACK` event.
- */
-export interface StdUiBattleBoardAttackPayload {
-  attacker?: EntityRow;
-  target?: EntityRow;
-  damage?: number;
-  attackerId: string;
-  targetId: string;
-}
+export type StdUiBattleBoardEventKey = 'CANCEL' | 'END_TURN' | 'GAME_END' | 'INIT' | 'PLAY_AGAIN' | 'START' | 'TILE_CLICK' | 'UNIT_CLICK' | 'UNIT_MOVE';
 
 /**
  * Payload shape for the `GAME_END` event.
@@ -7657,36 +7646,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
         },
         'emits': [
           {
-            'description': '-- Callbacks --',
-            'event': 'ATTACK',
-            'payloadSchema': [
-              {
-                'name': 'attacker',
-                'type': 'object',
-              },
-              {
-                'name': 'target',
-                'type': 'object',
-              },
-              {
-                'name': 'damage',
-                'type': 'number',
-              },
-              {
-                'name': 'attackerId',
-                'required': true,
-                'type': 'string',
-              },
-              {
-                'name': 'targetId',
-                'required': true,
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'domain',
-          },
-          {
             'description': 'Called when battle ends',
             'event': 'GAME_END',
             'payloadSchema': [
@@ -7860,36 +7819,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               'tier': 'domain',
             },
             {
-              'description': '-- Callbacks --',
-              'key': 'ATTACK',
-              'name': 'Attack',
-              'payloadSchema': [
-                {
-                  'name': 'attacker',
-                  'type': 'object',
-                },
-                {
-                  'name': 'target',
-                  'type': 'object',
-                },
-                {
-                  'name': 'damage',
-                  'type': 'number',
-                },
-                {
-                  'name': 'attackerId',
-                  'required': true,
-                  'type': 'string',
-                },
-                {
-                  'name': 'targetId',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'tier': 'domain',
-            },
-            {
               'description': 'Emits UI:{endTurnEvent} with {} on end turn',
               'key': 'END_TURN',
               'name': 'End Turn',
@@ -8045,6 +7974,26 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'arrowStraight.png',
+                        'style': 'adventure',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -8076,6 +8025,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -8163,26 +8113,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                             },
                           ],
                           'type': 'resource-bar',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'arrowStraight.png',
-                            'style': 'adventure',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -8293,6 +8223,26 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'arrowStraight.png',
+                        'style': 'adventure',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -8324,6 +8274,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -8411,26 +8362,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                             },
                           ],
                           'type': 'resource-bar',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'arrowStraight.png',
-                            'style': 'adventure',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -8471,6 +8402,26 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'arrowStraight.png',
+                        'style': 'adventure',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -8502,6 +8453,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -8589,26 +8541,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                             },
                           ],
                           'type': 'resource-bar',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'arrowStraight.png',
-                            'style': 'adventure',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -8830,6 +8762,26 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'arrowStraight.png',
+                        'style': 'adventure',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -8861,6 +8813,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -8948,26 +8901,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                             },
                           ],
                           'type': 'resource-bar',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'arrowStraight.png',
-                            'style': 'adventure',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -9079,6 +9012,26 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'arrowStraight.png',
+                        'style': 'adventure',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -9110,6 +9063,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -9197,26 +9151,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                             },
                           ],
                           'type': 'resource-bar',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'arrowStraight.png',
-                            'style': 'adventure',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -9357,7 +9291,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         [
                           '==',
                           '@u.id',
-                          '@payload.targetId',
+                          '@payload.unitId',
                         ],
                         [
                           'object/merge',
@@ -9377,7 +9311,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                                       '@u',
                                       'health',
                                     ],
-                                    '@payload.damage',
+                                    3,
                                   ],
                                 ],
                                 0,
@@ -9395,7 +9329,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                                   '@u',
                                   'health',
                                 ],
-                                '@payload.damage',
+                                3,
                               ],
                             ],
                           },
@@ -9405,7 +9339,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                           [
                             '==',
                             '@u.id',
-                            '@payload.attackerId',
+                            '@entity.selectedUnitId',
                           ],
                           [
                             'object/merge',
@@ -9442,7 +9376,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                               [
                                 '==',
                                 '@u.id',
-                                '@payload.targetId',
+                                '@payload.unitId',
                               ],
                             ],
                           ],
@@ -9463,7 +9397,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                               [
                                 '==',
                                 '@u.id',
-                                '@payload.targetId',
+                                '@payload.unitId',
                               ],
                             ],
                           ],
@@ -9489,7 +9423,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                           [
                             '==',
                             '@u.id',
-                            '@payload.targetId',
+                            '@payload.unitId',
                           ],
                         ],
                       ],
@@ -9519,7 +9453,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                                 [
                                   '==',
                                   '@u.id',
-                                  '@payload.targetId',
+                                  '@payload.unitId',
                                 ],
                               ],
                             ],
@@ -9540,7 +9474,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                                 [
                                   '==',
                                   '@u.id',
-                                  '@payload.targetId',
+                                  '@payload.unitId',
                                 ],
                               ],
                             ],
@@ -9565,13 +9499,117 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 ],
                 [
                   'set',
+                  '@entity.xp',
+                  [
+                    '+',
+                    '@entity.xp',
+                    25,
+                  ],
+                ],
+                [
+                  'if',
+                  [
+                    '>=',
+                    '@entity.xp',
+                    '@entity.xpToNext',
+                  ],
+                  [
+                    'set',
+                    '@entity.units',
+                    [
+                      'array/map',
+                      '@entity.units',
+                      [
+                        'fn',
+                        'u',
+                        [
+                          'if',
+                          [
+                            '==',
+                            '@u.team',
+                            'player',
+                          ],
+                          [
+                            'object/merge',
+                            '@u',
+                            {
+                              'health': [
+                                'math/min',
+                                [
+                                  'object/get',
+                                  '@u',
+                                  'maxHealth',
+                                ],
+                                [
+                                  '+',
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'health',
+                                  ],
+                                  2,
+                                ],
+                              ],
+                            },
+                          ],
+                          '@u',
+                        ],
+                      ],
+                    ],
+                  ],
+                  null,
+                ],
+                [
+                  'if',
+                  [
+                    '>=',
+                    '@entity.xp',
+                    '@entity.xpToNext',
+                  ],
+                  [
+                    'set',
+                    '@entity.xpToNext',
+                    [
+                      '+',
+                      '@entity.xpToNext',
+                      50,
+                    ],
+                  ],
+                  null,
+                ],
+                [
+                  'set',
                   '@entity.phase',
                   'observation',
+                ],
+                [
+                  'emit',
+                  'GAME_END',
                 ],
                 [
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'arrowStraight.png',
+                        'style': 'adventure',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -9603,6 +9641,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -9691,26 +9730,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                           ],
                           'type': 'resource-bar',
                         },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'arrowStraight.png',
-                            'style': 'adventure',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
-                        },
                       ],
                       'direction': 'horizontal',
                       'gap': 'md',
@@ -9735,100 +9754,124 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   },
                 ],
               ],
-              'event': 'ATTACK',
+              'event': 'UNIT_CLICK',
               'from': 'playing',
               'guard': [
-                'let',
+                'and',
                 [
-                  [
-                    'ap',
-                    [
-                      'object/get',
-                      [
-                        'array/find',
-                        '@entity.units',
-                        [
-                          'fn',
-                          'u',
-                          [
-                            '==',
-                            '@u.id',
-                            '@payload.attackerId',
-                          ],
-                        ],
-                      ],
-                      'position',
-                    ],
-                  ],
-                  [
-                    'tp',
-                    [
-                      'object/get',
-                      [
-                        'array/find',
-                        '@entity.units',
-                        [
-                          'fn',
-                          'u',
-                          [
-                            '==',
-                            '@u.id',
-                            '@payload.targetId',
-                          ],
-                        ],
-                      ],
-                      'position',
-                    ],
-                  ],
+                  '!=',
+                  '@entity.selectedUnitId',
+                  '',
                 ],
                 [
                   'and',
                   [
-                    '<=',
+                    '==',
                     [
-                      'math/abs',
+                      'object/get',
                       [
-                        '-',
+                        'array/find',
+                        '@entity.units',
                         [
-                          'object/get',
-                          '@ap',
-                          'x',
-                        ],
-                        [
-                          'object/get',
-                          '@tp',
-                          'x',
+                          'fn',
+                          'u',
+                          [
+                            '==',
+                            '@u.id',
+                            '@payload.unitId',
+                          ],
                         ],
                       ],
+                      'team',
                     ],
-                    1,
+                    'enemy',
                   ],
                   [
-                    'and',
+                    'let',
                     [
-                      '<=',
                       [
-                        'math/abs',
+                        'ap',
                         [
-                          '-',
+                          'object/get',
                           [
-                            'object/get',
-                            '@ap',
-                            'y',
+                            'array/find',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              [
+                                '==',
+                                '@u.id',
+                                '@entity.selectedUnitId',
+                              ],
+                            ],
                           ],
-                          [
-                            'object/get',
-                            '@tp',
-                            'y',
-                          ],
+                          'position',
                         ],
                       ],
-                      1,
+                      [
+                        'tp',
+                        [
+                          'object/get',
+                          [
+                            'array/find',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              [
+                                '==',
+                                '@u.id',
+                                '@payload.unitId',
+                              ],
+                            ],
+                          ],
+                          'position',
+                        ],
+                      ],
                     ],
                     [
-                      '!=',
-                      '@ap',
-                      '@tp',
+                      'and',
+                      [
+                        '<=',
+                        [
+                          'math/abs',
+                          [
+                            '-',
+                            [
+                              'object/get',
+                              '@ap',
+                              'x',
+                            ],
+                            [
+                              'object/get',
+                              '@tp',
+                              'x',
+                            ],
+                          ],
+                        ],
+                        1,
+                      ],
+                      [
+                        '<=',
+                        [
+                          'math/abs',
+                          [
+                            '-',
+                            [
+                              'object/get',
+                              '@ap',
+                              'y',
+                            ],
+                            [
+                              'object/get',
+                              '@tp',
+                              'y',
+                            ],
+                          ],
+                        ],
+                        1,
+                      ],
                     ],
                   ],
                 ],
@@ -9870,6 +9913,26 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'arrowStraight.png',
+                        'style': 'adventure',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -9901,6 +9964,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -9988,26 +10052,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                             },
                           ],
                           'type': 'resource-bar',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'arrowStraight.png',
-                            'style': 'adventure',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -10063,6 +10107,26 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'arrowStraight.png',
+                        'style': 'adventure',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -10094,6 +10158,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -10181,26 +10246,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                             },
                           ],
                           'type': 'resource-bar',
-                        },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'arrowStraight.png',
-                            'style': 'adventure',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -10287,6 +10332,26 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'arrowStraight.png',
+                        'style': 'adventure',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -10318,6 +10383,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -10406,26 +10472,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                           ],
                           'type': 'resource-bar',
                         },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'arrowStraight.png',
-                            'style': 'adventure',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
-                        },
                       ],
                       'direction': 'horizontal',
                       'gap': 'md',
@@ -10445,6 +10491,28 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                       'thumbnailUrl': '',
                       'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
                       'variant': '',
+                    },
+                    'overlay': {
+                      'options': [
+                        {
+                          'event': 'PLAY_AGAIN',
+                          'id': 'again',
+                          'label': 'Play Again',
+                          'variant': 'primary',
+                        },
+                      ],
+                      'subtitle': 'Battle complete',
+                      'title': [
+                        'if',
+                        [
+                          '==',
+                          '@entity.result',
+                          'victory',
+                        ],
+                        'VICTORY',
+                        'DEFEAT',
+                      ],
+                      'type': 'game-menu',
                     },
                     'type': 'game-shell',
                   },
@@ -10567,6 +10635,26 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'render-ui',
                   'main',
                   {
+                    'addons': {
+                      'action': 'END_TURN',
+                      'iconAsset': {
+                        'animations': [],
+                        'aspect': '1:1',
+                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                        'category': 'ui',
+                        'dimension': '2d',
+                        'name': 'icon-end-turn',
+                        'role': 'ui',
+                        'sprite': 'arrowStraight.png',
+                        'style': 'adventure',
+                        'thumbnailUrl': '',
+                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                        'variant': '',
+                      },
+                      'label': 'End Turn',
+                      'type': 'button',
+                      'variant': 'primary',
+                    },
                     'backgroundAsset': {
                       'animations': [],
                       'aspect': '1:1',
@@ -10598,6 +10686,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         'validMoves': '@entity.validMoves',
                       },
                     ],
+                    'fontFamily': 'future',
                     'hud': {
                       'children': [
                         {
@@ -10686,26 +10775,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                           ],
                           'type': 'resource-bar',
                         },
-                        {
-                          'action': 'END_TURN',
-                          'iconAsset': {
-                            'animations': [],
-                            'aspect': '1:1',
-                            'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                            'category': 'ui',
-                            'dimension': '2d',
-                            'name': 'icon-end-turn',
-                            'role': 'ui',
-                            'sprite': 'arrowStraight.png',
-                            'style': 'adventure',
-                            'thumbnailUrl': '',
-                            'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                            'variant': '',
-                          },
-                          'label': 'End Turn',
-                          'type': 'button',
-                          'variant': 'secondary',
-                        },
                       ],
                       'direction': 'horizontal',
                       'gap': 'md',
@@ -10743,6 +10812,26 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 'render-ui',
                 'main',
                 {
+                  'addons': {
+                    'action': 'END_TURN',
+                    'iconAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'icon-end-turn',
+                      'role': 'ui',
+                      'sprite': 'arrowStraight.png',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                      'variant': '',
+                    },
+                    'label': 'End Turn',
+                    'type': 'button',
+                    'variant': 'primary',
+                  },
                   'backgroundAsset': {
                     'animations': [],
                     'aspect': '1:1',
@@ -10774,6 +10863,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                       'validMoves': '@entity.validMoves',
                     },
                   ],
+                  'fontFamily': 'future',
                   'hud': {
                     'children': [
                       {
@@ -10862,26 +10952,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         ],
                         'type': 'resource-bar',
                       },
-                      {
-                        'action': 'END_TURN',
-                        'iconAsset': {
-                          'animations': [],
-                          'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                          'category': 'ui',
-                          'dimension': '2d',
-                          'name': 'icon-end-turn',
-                          'role': 'ui',
-                          'sprite': 'arrowStraight.png',
-                          'style': 'adventure',
-                          'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                          'variant': '',
-                        },
-                        'label': 'End Turn',
-                        'type': 'button',
-                        'variant': 'secondary',
-                      },
                     ],
                     'direction': 'horizontal',
                     'gap': 'md',
@@ -10905,6 +10975,11 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'type': 'game-shell',
                 },
               ],
+            ],
+            'guard': [
+              '==',
+              '@entity.result',
+              'none',
             ],
             'interval': 100,
             'name': 'renderTick',
@@ -11401,9 +11476,42 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 ],
               ],
               [
+                'if',
+                [
+                  '!=',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  'emit',
+                  'GAME_END',
+                ],
+                null,
+              ],
+              [
                 'render-ui',
                 'main',
                 {
+                  'addons': {
+                    'action': 'END_TURN',
+                    'iconAsset': {
+                      'animations': [],
+                      'aspect': '1:1',
+                      'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                      'category': 'ui',
+                      'dimension': '2d',
+                      'name': 'icon-end-turn',
+                      'role': 'ui',
+                      'sprite': 'arrowStraight.png',
+                      'style': 'adventure',
+                      'thumbnailUrl': '',
+                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                      'variant': '',
+                    },
+                    'label': 'End Turn',
+                    'type': 'button',
+                    'variant': 'primary',
+                  },
                   'backgroundAsset': {
                     'animations': [],
                     'aspect': '1:1',
@@ -11435,6 +11543,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                       'validMoves': '@entity.validMoves',
                     },
                   ],
+                  'fontFamily': 'future',
                   'hud': {
                     'children': [
                       {
@@ -11522,26 +11631,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                           },
                         ],
                         'type': 'resource-bar',
-                      },
-                      {
-                        'action': 'END_TURN',
-                        'iconAsset': {
-                          'animations': [],
-                          'aspect': '1:1',
-                          'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                          'category': 'ui',
-                          'dimension': '2d',
-                          'name': 'icon-end-turn',
-                          'role': 'ui',
-                          'sprite': 'arrowStraight.png',
-                          'style': 'adventure',
-                          'thumbnailUrl': '',
-                          'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                          'variant': '',
-                        },
-                        'label': 'End Turn',
-                        'type': 'button',
-                        'variant': 'secondary',
                       },
                     ],
                     'direction': 'horizontal',

@@ -1,7 +1,6 @@
 app ui-battle-board "1.0.0"
 "BattleBoard — reference game board: game-shell/game-hud/canvas-2d descriptor tree with live input wiring (TILE_CLICK/UNIT_CLICK + selectedUnitId/validMoves) and an END_TURN HUD control. The canonical atomic-composition contract for game boards (see docs/Almadar_Std_Game_UI_Lift.md)."
 orbital BattleBoardOrbital {
-  uses AnimTick from "std/behaviors/std-anim-tick"
 
   type BattleBoardError = {
     message : string!
@@ -126,32 +125,7 @@ orbital BattleBoardOrbital {
   trait BattleBoardRender -> @rebindable BattleBoardItem [interaction, instance] {
     initial: playing
 
-    state menu {
-      START -> playing
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.turn 0)
-        (set @entity.result "none")
-        (set @entity.phase "observation")
-        (set @entity.enemyTurn false)
-        (set @entity.effects [])
-        (set @entity.xp 0)
-        (set @entity.xpToNext 100)
-        (set @entity.inventory [])
-        (set @entity.selectedUnitEffects [])
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "adventure", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "adventure", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_coin.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "coin", thumbnailUrl: "" } }, { label: "Result", value: @entity.result, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "star", thumbnailUrl: "" } } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: resource-bar, resources: [{ label: "XP", value: @entity.xp, max: @entity.xpToNext, assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "barBlue_horizontalBlue.png", role: "ui", category: "ui", animations: [], style: "adventure", variant: "", dimension: "2d", aspect: "1:1", name: "bar-fill-blue", thumbnailUrl: "" } }] } ] }
-          addons: { type: button, action: END_TURN, label: "End Turn", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/kenney-cartography-pack/ui/spritesheet_default.json", sprite: "arrowStraight.png", role: "ui", category: "ui", animations: [], style: "adventure", variant: "", dimension: "2d", aspect: "1:1", name: "icon-end-turn", thumbnailUrl: "" }, variant: primary }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-    }
-
-    state playing {
+state playing {
       INIT -> playing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "")
@@ -287,7 +261,7 @@ orbital BattleBoardOrbital {
     }
 
     state gameover {
-      PLAY_AGAIN -> menu
+      PLAY_AGAIN -> playing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
@@ -461,9 +435,5 @@ orbital BattleBoardOrbital {
     }
   }
 
-  trait BattleBoardAnimTick = AnimTick.traits.AnimTick -> BattleBoardItem {
-    config { frameCount: 8 }
-  }
-
-  page "/battle-board" as BattleBoardPage -> BattleBoardRender, BattleBoardAnimTick
+page "/battle-board" as BattleBoardPage -> BattleBoardRender
 }

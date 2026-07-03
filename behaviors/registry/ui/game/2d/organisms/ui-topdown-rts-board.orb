@@ -1,5 +1,5 @@
 {
-  "description": "TopdownRtsBoard — turn-based medieval skirmish on an RTS Medieval tile grid with UNIT_CLICK/TILE_CLICK/FIRE input and END_TURN HUD.",
+  "description": "TopdownRtsBoard — medieval RTS skirmish: move/attack units, produce recruits from a barracks, and repel 3 enemy waves.",
   "name": "ui-topdown-rts-board",
   "orbitals": [
     {
@@ -442,7 +442,7 @@
             "type": "number"
           },
           {
-            "default": 3.0,
+            "default": 2.0,
             "name": "firingRange",
             "type": "number"
           },
@@ -480,6 +480,16 @@
             },
             "name": "effects",
             "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "productionPoints",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "wave",
+            "type": "number"
           }
         ],
         "name": "TopdownRtsBoardItem",
@@ -493,9 +503,6 @@
           "traits": [
             {
               "ref": "TopdownRtsBoardRender"
-            },
-            {
-              "ref": "TopdownRtsBoardAnimTick"
             }
           ]
         }
@@ -525,6 +532,22 @@
                   }
                 },
                 "features": {
+                  "barracks": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                    "category": "barracks",
+                    "dimension": "2d",
+                    "name": "barracks",
+                    "role": "decoration",
+                    "sprite": "medievalStructure_01.png",
+                    "style": "vector-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                    "variant": ""
+                  },
                   "obstacle": {
                     "animations": [
                       "static"
@@ -1066,6 +1089,28 @@
                   "type": "obstacle",
                   "x": 2.0,
                   "y": 4.0
+                },
+                {
+                  "id": "barracks1",
+                  "sprite": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                    "category": "barracks",
+                    "dimension": "2d",
+                    "name": "barracks",
+                    "role": "decoration",
+                    "sprite": "medievalStructure_01.png",
+                    "style": "vector-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                    "variant": ""
+                  },
+                  "type": "barracks",
+                  "x": 0.0,
+                  "y": 0.0
                 }
               ],
               "description": "Obstacles and structures on the board",
@@ -3001,29 +3046,11 @@
           },
           "emits": [
             {
-              "description": "Fired when a tank shoots at a target.",
-              "event": "FIRE",
+              "description": "Emits UI:{produceEvent} with {} on produce unit.",
+              "event": "PRODUCE",
               "payloadSchema": [
                 {
-                  "name": "attacker",
-                  "type": "object"
-                },
-                {
-                  "name": "target",
-                  "type": "object"
-                },
-                {
-                  "name": "damage",
-                  "type": "number"
-                },
-                {
-                  "name": "attackerId",
-                  "required": true,
-                  "type": "string"
-                },
-                {
-                  "name": "targetId",
-                  "required": true,
+                  "name": "id",
                   "type": "string"
                 }
               ],
@@ -3119,12 +3146,14 @@
               "gridWidth",
               "lives",
               "phase",
+              "productionPoints",
               "result",
               "score",
               "selectedUnitId",
               "turn",
               "units",
-              "validMoves"
+              "validMoves",
+              "wave"
             ],
             "requires": []
           },
@@ -3134,10 +3163,6 @@
           "scope": "instance",
           "stateMachine": {
             "events": [
-              {
-                "key": "START",
-                "name": "Start"
-              },
               {
                 "key": "INIT",
                 "name": "Initialize"
@@ -3174,36 +3199,6 @@
                 "tier": "domain"
               },
               {
-                "description": "Fired when a tank shoots at a target.",
-                "key": "FIRE",
-                "name": "Fire",
-                "payloadSchema": [
-                  {
-                    "name": "attacker",
-                    "type": "object"
-                  },
-                  {
-                    "name": "target",
-                    "type": "object"
-                  },
-                  {
-                    "name": "damage",
-                    "type": "number"
-                  },
-                  {
-                    "name": "attackerId",
-                    "required": true,
-                    "type": "string"
-                  },
-                  {
-                    "name": "targetId",
-                    "required": true,
-                    "type": "string"
-                  }
-                ],
-                "tier": "domain"
-              },
-              {
                 "description": "Emits UI:{endTurnEvent} with {} on end turn.",
                 "key": "END_TURN",
                 "name": "End Turn",
@@ -3219,6 +3214,18 @@
                 "description": "Emits UI:{cancelEvent} with {} on cancel.",
                 "key": "CANCEL",
                 "name": "Cancel",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emits UI:{produceEvent} with {} on produce unit.",
+                "key": "PRODUCE",
+                "name": "Produce",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -3256,9 +3263,6 @@
               {
                 "isInitial": true,
                 "name": "playing"
-              },
-              {
-                "name": "menu"
               },
               {
                 "name": "gameover"
@@ -3318,201 +3322,14 @@
                     []
                   ],
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "addons": {
-                        "action": "END_TURN",
-                        "iconAsset": {
-                          "animations": [],
-                          "aspect": "1:1",
-                          "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
-                          "category": "ui",
-                          "dimension": "2d",
-                          "name": "icon-end-turn",
-                          "role": "ui",
-                          "sprite": "arrowStraight.png",
-                          "style": "vector-flat",
-                          "thumbnailUrl": "",
-                          "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
-                          "variant": ""
-                        },
-                        "label": "End Turn",
-                        "type": "button",
-                        "variant": "primary"
-                      },
-                      "backgroundAsset": {
-                        "animations": [],
-                        "aspect": "1:1",
-                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
-                        "category": "ui",
-                        "dimension": "2d",
-                        "name": "panel-frame",
-                        "role": "ui",
-                        "sprite": "panel_beige.png",
-                        "style": "vector-flat",
-                        "thumbnailUrl": "",
-                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
-                        "variant": ""
-                      },
-                      "children": [
-                        {
-                          "assetManifest": "@config.assetManifest",
-                          "effects": "@entity.effects",
-                          "features": "@config.features",
-                          "projection": "flat",
-                          "scale": "@config.scale",
-                          "selectedUnitId": "@entity.selectedUnitId",
-                          "showMinimap": false,
-                          "tileClickEvent": "TILE_CLICK",
-                          "tiles": "@config.tiles",
-                          "type": "canvas-2d",
-                          "unitClickEvent": "UNIT_CLICK",
-                          "units": "@entity.units",
-                          "validMoves": "@entity.validMoves"
-                        }
-                      ],
-                      "fontFamily": "future",
-                      "hud": {
-                        "children": [
-                          {
-                            "stats": [
-                              {
-                                "iconUrl": {
-                                  "animations": [],
-                                  "aspect": "1:1",
-                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
-                                  "category": "ui",
-                                  "dimension": "2d",
-                                  "name": "icon-score",
-                                  "role": "ui",
-                                  "sprite": "emote_star.png",
-                                  "style": "vector-flat",
-                                  "thumbnailUrl": "",
-                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
-                                  "variant": ""
-                                },
-                                "label": "Score",
-                                "value": "@entity.score"
-                              },
-                              {
-                                "iconUrl": {
-                                  "animations": [],
-                                  "aspect": "1:1",
-                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
-                                  "category": "ui",
-                                  "dimension": "2d",
-                                  "name": "icon-lives",
-                                  "role": "ui",
-                                  "sprite": "emote_heart.png",
-                                  "style": "vector-flat",
-                                  "thumbnailUrl": "",
-                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
-                                  "variant": ""
-                                },
-                                "label": "Lives",
-                                "value": "@entity.lives"
-                              },
-                              {
-                                "iconUrl": {
-                                  "animations": [],
-                                  "aspect": "1:1",
-                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
-                                  "category": "ui",
-                                  "dimension": "2d",
-                                  "name": "icon-turn",
-                                  "role": "ui",
-                                  "sprite": "arrowHead.png",
-                                  "style": "vector-flat",
-                                  "thumbnailUrl": "",
-                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
-                                  "variant": ""
-                                },
-                                "label": "Turn",
-                                "value": "@entity.turn"
-                              }
-                            ],
-                            "type": "game-hud"
-                          }
-                        ],
-                        "direction": "horizontal",
-                        "gap": "md",
-                        "justify": "between",
-                        "type": "stack"
-                      },
-                      "hudBackgroundAsset": {
-                        "animations": [],
-                        "aspect": "1:1",
-                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
-                        "category": "ui",
-                        "dimension": "2d",
-                        "name": "panel-frame",
-                        "role": "ui",
-                        "sprite": "panel_beige.png",
-                        "style": "vector-flat",
-                        "thumbnailUrl": "",
-                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
-                        "variant": ""
-                      },
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "START",
-                "from": "menu",
-                "to": "playing"
-              },
-              {
-                "effects": [
-                  [
                     "set",
-                    "@entity.units",
-                    "@config.units"
-                  ],
-                  [
-                    "set",
-                    "@entity.selectedUnitId",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.validMoves",
-                    []
-                  ],
-                  [
-                    "set",
-                    "@entity.score",
+                    "@entity.productionPoints",
                     0.0
                   ],
                   [
                     "set",
-                    "@entity.lives",
-                    3.0
-                  ],
-                  [
-                    "set",
-                    "@entity.turn",
+                    "@entity.wave",
                     0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.result",
-                    "none"
-                  ],
-                  [
-                    "set",
-                    "@entity.phase",
-                    "observation"
-                  ],
-                  [
-                    "set",
-                    "@entity.enemyTurn",
-                    false
-                  ],
-                  [
-                    "set",
-                    "@entity.effects",
-                    []
                   ],
                   [
                     "set",
@@ -3527,31 +3344,58 @@
                   [
                     "set",
                     "@entity.firingRange",
-                    3.0
+                    2.0
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "addons": {
-                        "action": "END_TURN",
-                        "iconAsset": {
-                          "animations": [],
-                          "aspect": "1:1",
-                          "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
-                          "category": "ui",
-                          "dimension": "2d",
-                          "name": "icon-end-turn",
-                          "role": "ui",
-                          "sprite": "arrowStraight.png",
-                          "style": "vector-flat",
-                          "thumbnailUrl": "",
-                          "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
-                          "variant": ""
-                        },
-                        "label": "End Turn",
-                        "type": "button",
-                        "variant": "primary"
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-end-turn",
+                              "role": "ui",
+                              "sprite": "arrowStraight.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                              "variant": ""
+                            },
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "PRODUCE",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-produce",
+                              "role": "ui",
+                              "sprite": "medievalStructure_01.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                              "variant": ""
+                            },
+                            "label": "Produce (3)",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
                       },
                       "backgroundAsset": {
                         "animations": [],
@@ -3642,6 +3486,83 @@
                                 },
                                 "label": "Turn",
                                 "value": "@entity.turn"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-production",
+                                  "role": "ui",
+                                  "sprite": "emote_cash.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Production",
+                                "value": "@entity.productionPoints"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-units",
+                                  "role": "ui",
+                                  "sprite": "medievalUnit_01.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                                  "variant": ""
+                                },
+                                "label": "Units",
+                                "value": [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@u.team",
+                                          "player"
+                                        ],
+                                        [
+                                          ">",
+                                          "@u.health",
+                                          0.0
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-wave",
+                                  "role": "ui",
+                                  "sprite": "emote_alert.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Wave",
+                                "value": "@entity.wave"
                               }
                             ],
                             "type": "game-hud"
@@ -3686,24 +3607,51 @@
                     "main",
                     {
                       "addons": {
-                        "action": "END_TURN",
-                        "iconAsset": {
-                          "animations": [],
-                          "aspect": "1:1",
-                          "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
-                          "category": "ui",
-                          "dimension": "2d",
-                          "name": "icon-end-turn",
-                          "role": "ui",
-                          "sprite": "arrowStraight.png",
-                          "style": "vector-flat",
-                          "thumbnailUrl": "",
-                          "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
-                          "variant": ""
-                        },
-                        "label": "End Turn",
-                        "type": "button",
-                        "variant": "primary"
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-end-turn",
+                              "role": "ui",
+                              "sprite": "arrowStraight.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                              "variant": ""
+                            },
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "PRODUCE",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-produce",
+                              "role": "ui",
+                              "sprite": "medievalStructure_01.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                              "variant": ""
+                            },
+                            "label": "Produce (3)",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
                       },
                       "backgroundAsset": {
                         "animations": [],
@@ -3794,6 +3742,83 @@
                                 },
                                 "label": "Turn",
                                 "value": "@entity.turn"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-production",
+                                  "role": "ui",
+                                  "sprite": "emote_cash.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Production",
+                                "value": "@entity.productionPoints"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-units",
+                                  "role": "ui",
+                                  "sprite": "medievalUnit_01.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                                  "variant": ""
+                                },
+                                "label": "Units",
+                                "value": [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@u.team",
+                                          "player"
+                                        ],
+                                        [
+                                          ">",
+                                          "@u.health",
+                                          0.0
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-wave",
+                                  "role": "ui",
+                                  "sprite": "emote_alert.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Wave",
+                                "value": "@entity.wave"
                               }
                             ],
                             "type": "game-hud"
@@ -4042,24 +4067,51 @@
                     "main",
                     {
                       "addons": {
-                        "action": "END_TURN",
-                        "iconAsset": {
-                          "animations": [],
-                          "aspect": "1:1",
-                          "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
-                          "category": "ui",
-                          "dimension": "2d",
-                          "name": "icon-end-turn",
-                          "role": "ui",
-                          "sprite": "arrowStraight.png",
-                          "style": "vector-flat",
-                          "thumbnailUrl": "",
-                          "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
-                          "variant": ""
-                        },
-                        "label": "End Turn",
-                        "type": "button",
-                        "variant": "primary"
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-end-turn",
+                              "role": "ui",
+                              "sprite": "arrowStraight.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                              "variant": ""
+                            },
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "PRODUCE",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-produce",
+                              "role": "ui",
+                              "sprite": "medievalStructure_01.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                              "variant": ""
+                            },
+                            "label": "Produce (3)",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
                       },
                       "backgroundAsset": {
                         "animations": [],
@@ -4150,6 +4202,83 @@
                                 },
                                 "label": "Turn",
                                 "value": "@entity.turn"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-production",
+                                  "role": "ui",
+                                  "sprite": "emote_cash.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Production",
+                                "value": "@entity.productionPoints"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-units",
+                                  "role": "ui",
+                                  "sprite": "medievalUnit_01.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                                  "variant": ""
+                                },
+                                "label": "Units",
+                                "value": [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@u.team",
+                                          "player"
+                                        ],
+                                        [
+                                          ">",
+                                          "@u.health",
+                                          0.0
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-wave",
+                                  "role": "ui",
+                                  "sprite": "emote_alert.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Wave",
+                                "value": "@entity.wave"
                               }
                             ],
                             "type": "game-hud"
@@ -4257,24 +4386,51 @@
                     "main",
                     {
                       "addons": {
-                        "action": "END_TURN",
-                        "iconAsset": {
-                          "animations": [],
-                          "aspect": "1:1",
-                          "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
-                          "category": "ui",
-                          "dimension": "2d",
-                          "name": "icon-end-turn",
-                          "role": "ui",
-                          "sprite": "arrowStraight.png",
-                          "style": "vector-flat",
-                          "thumbnailUrl": "",
-                          "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
-                          "variant": ""
-                        },
-                        "label": "End Turn",
-                        "type": "button",
-                        "variant": "primary"
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-end-turn",
+                              "role": "ui",
+                              "sprite": "arrowStraight.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                              "variant": ""
+                            },
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "PRODUCE",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-produce",
+                              "role": "ui",
+                              "sprite": "medievalStructure_01.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                              "variant": ""
+                            },
+                            "label": "Produce (3)",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
                       },
                       "backgroundAsset": {
                         "animations": [],
@@ -4365,6 +4521,83 @@
                                 },
                                 "label": "Turn",
                                 "value": "@entity.turn"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-production",
+                                  "role": "ui",
+                                  "sprite": "emote_cash.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Production",
+                                "value": "@entity.productionPoints"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-units",
+                                  "role": "ui",
+                                  "sprite": "medievalUnit_01.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                                  "variant": ""
+                                },
+                                "label": "Units",
+                                "value": [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@u.team",
+                                          "player"
+                                        ],
+                                        [
+                                          ">",
+                                          "@u.health",
+                                          0.0
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-wave",
+                                  "role": "ui",
+                                  "sprite": "emote_alert.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Wave",
+                                "value": "@entity.wave"
                               }
                             ],
                             "type": "game-hud"
@@ -4508,7 +4741,7 @@
                           [
                             "==",
                             "@u.id",
-                            "@payload.targetId"
+                            "@payload.unitId"
                           ],
                           [
                             "object/merge",
@@ -4528,7 +4761,7 @@
                                         "@u",
                                         "health"
                                       ],
-                                      "@payload.damage"
+                                      3.0
                                     ]
                                   ],
                                   0.0
@@ -4546,7 +4779,7 @@
                                     "@u",
                                     "health"
                                   ],
-                                  "@payload.damage"
+                                  3.0
                                 ]
                               ]
                             }
@@ -4556,7 +4789,7 @@
                             [
                               "==",
                               "@u.id",
-                              "@payload.attackerId"
+                              "@entity.selectedUnitId"
                             ],
                             [
                               "object/merge",
@@ -4593,7 +4826,7 @@
                                 [
                                   "==",
                                   "@u.id",
-                                  "@payload.targetId"
+                                  "@payload.unitId"
                                 ]
                               ]
                             ],
@@ -4614,7 +4847,7 @@
                                 [
                                   "==",
                                   "@u.id",
-                                  "@payload.targetId"
+                                  "@payload.unitId"
                                 ]
                               ]
                             ],
@@ -4640,7 +4873,7 @@
                             [
                               "==",
                               "@u.id",
-                              "@payload.targetId"
+                              "@payload.unitId"
                             ]
                           ]
                         ],
@@ -4670,7 +4903,7 @@
                                   [
                                     "==",
                                     "@u.id",
-                                    "@payload.targetId"
+                                    "@payload.unitId"
                                   ]
                                 ]
                               ],
@@ -4691,7 +4924,7 @@
                                   [
                                     "==",
                                     "@u.id",
-                                    "@payload.targetId"
+                                    "@payload.unitId"
                                   ]
                                 ]
                               ],
@@ -4722,7 +4955,7 @@
                               [
                                 "==",
                                 "@u.id",
-                                "@payload.targetId"
+                                "@payload.unitId"
                               ]
                             ]
                           ],
@@ -4758,28 +4991,59 @@
                     "observation"
                   ],
                   [
+                    "emit",
+                    "GAME_END"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "addons": {
-                        "action": "END_TURN",
-                        "iconAsset": {
-                          "animations": [],
-                          "aspect": "1:1",
-                          "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
-                          "category": "ui",
-                          "dimension": "2d",
-                          "name": "icon-end-turn",
-                          "role": "ui",
-                          "sprite": "arrowStraight.png",
-                          "style": "vector-flat",
-                          "thumbnailUrl": "",
-                          "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
-                          "variant": ""
-                        },
-                        "label": "End Turn",
-                        "type": "button",
-                        "variant": "primary"
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-end-turn",
+                              "role": "ui",
+                              "sprite": "arrowStraight.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                              "variant": ""
+                            },
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "PRODUCE",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-produce",
+                              "role": "ui",
+                              "sprite": "medievalStructure_01.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                              "variant": ""
+                            },
+                            "label": "Produce (3)",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
                       },
                       "backgroundAsset": {
                         "animations": [],
@@ -4870,6 +5134,83 @@
                                 },
                                 "label": "Turn",
                                 "value": "@entity.turn"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-production",
+                                  "role": "ui",
+                                  "sprite": "emote_cash.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Production",
+                                "value": "@entity.productionPoints"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-units",
+                                  "role": "ui",
+                                  "sprite": "medievalUnit_01.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                                  "variant": ""
+                                },
+                                "label": "Units",
+                                "value": [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@u.team",
+                                          "player"
+                                        ],
+                                        [
+                                          ">",
+                                          "@u.health",
+                                          0.0
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-wave",
+                                  "role": "ui",
+                                  "sprite": "emote_alert.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Wave",
+                                "value": "@entity.wave"
                               }
                             ],
                             "type": "game-hud"
@@ -4898,67 +5239,78 @@
                     }
                   ]
                 ],
-                "event": "FIRE",
+                "event": "UNIT_CLICK",
                 "from": "playing",
                 "guard": [
-                  "let",
+                  "and",
                   [
-                    [
-                      "ap",
-                      [
-                        "object/get",
-                        [
-                          "array/find",
-                          "@entity.units",
-                          [
-                            "fn",
-                            "u",
-                            [
-                              "==",
-                              "@u.id",
-                              "@payload.attackerId"
-                            ]
-                          ]
-                        ],
-                        "position"
-                      ]
-                    ],
-                    [
-                      "tp",
-                      [
-                        "object/get",
-                        [
-                          "array/find",
-                          "@entity.units",
-                          [
-                            "fn",
-                            "u",
-                            [
-                              "==",
-                              "@u.id",
-                              "@payload.targetId"
-                            ]
-                          ]
-                        ],
-                        "position"
-                      ]
-                    ]
+                    "!=",
+                    "@entity.selectedUnitId",
+                    ""
                   ],
                   [
                     "and",
                     [
+                      "==",
+                      [
+                        "object/get",
+                        [
+                          "array/find",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "==",
+                              "@u.id",
+                              "@payload.unitId"
+                            ]
+                          ]
+                        ],
+                        "team"
+                      ],
+                      "enemy"
+                    ],
+                    [
                       "<=",
                       [
                         "grid/manhattan-distance",
-                        "@ap",
-                        "@tp"
+                        [
+                          "object/get",
+                          [
+                            "array/find",
+                            "@entity.units",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "==",
+                                "@u.id",
+                                "@entity.selectedUnitId"
+                              ]
+                            ]
+                          ],
+                          "position"
+                        ],
+                        [
+                          "object/get",
+                          [
+                            "array/find",
+                            "@entity.units",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "==",
+                                "@u.id",
+                                "@payload.unitId"
+                              ]
+                            ]
+                          ],
+                          "position"
+                        ]
                       ],
                       "@entity.firingRange"
-                    ],
-                    [
-                      "!=",
-                      "@ap",
-                      "@tp"
                     ]
                   ]
                 ],
@@ -4995,24 +5347,51 @@
                     "main",
                     {
                       "addons": {
-                        "action": "END_TURN",
-                        "iconAsset": {
-                          "animations": [],
-                          "aspect": "1:1",
-                          "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
-                          "category": "ui",
-                          "dimension": "2d",
-                          "name": "icon-end-turn",
-                          "role": "ui",
-                          "sprite": "arrowStraight.png",
-                          "style": "vector-flat",
-                          "thumbnailUrl": "",
-                          "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
-                          "variant": ""
-                        },
-                        "label": "End Turn",
-                        "type": "button",
-                        "variant": "primary"
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-end-turn",
+                              "role": "ui",
+                              "sprite": "arrowStraight.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                              "variant": ""
+                            },
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "PRODUCE",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-produce",
+                              "role": "ui",
+                              "sprite": "medievalStructure_01.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                              "variant": ""
+                            },
+                            "label": "Produce (3)",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
                       },
                       "backgroundAsset": {
                         "animations": [],
@@ -5103,6 +5482,83 @@
                                 },
                                 "label": "Turn",
                                 "value": "@entity.turn"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-production",
+                                  "role": "ui",
+                                  "sprite": "emote_cash.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Production",
+                                "value": "@entity.productionPoints"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-units",
+                                  "role": "ui",
+                                  "sprite": "medievalUnit_01.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                                  "variant": ""
+                                },
+                                "label": "Units",
+                                "value": [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@u.team",
+                                          "player"
+                                        ],
+                                        [
+                                          ">",
+                                          "@u.health",
+                                          0.0
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-wave",
+                                  "role": "ui",
+                                  "sprite": "emote_alert.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Wave",
+                                "value": "@entity.wave"
                               }
                             ],
                             "type": "game-hud"
@@ -5162,24 +5618,51 @@
                     "main",
                     {
                       "addons": {
-                        "action": "END_TURN",
-                        "iconAsset": {
-                          "animations": [],
-                          "aspect": "1:1",
-                          "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
-                          "category": "ui",
-                          "dimension": "2d",
-                          "name": "icon-end-turn",
-                          "role": "ui",
-                          "sprite": "arrowStraight.png",
-                          "style": "vector-flat",
-                          "thumbnailUrl": "",
-                          "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
-                          "variant": ""
-                        },
-                        "label": "End Turn",
-                        "type": "button",
-                        "variant": "primary"
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-end-turn",
+                              "role": "ui",
+                              "sprite": "arrowStraight.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                              "variant": ""
+                            },
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "PRODUCE",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-produce",
+                              "role": "ui",
+                              "sprite": "medievalStructure_01.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                              "variant": ""
+                            },
+                            "label": "Produce (3)",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
                       },
                       "backgroundAsset": {
                         "animations": [],
@@ -5270,6 +5753,83 @@
                                 },
                                 "label": "Turn",
                                 "value": "@entity.turn"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-production",
+                                  "role": "ui",
+                                  "sprite": "emote_cash.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Production",
+                                "value": "@entity.productionPoints"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-units",
+                                  "role": "ui",
+                                  "sprite": "medievalUnit_01.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                                  "variant": ""
+                                },
+                                "label": "Units",
+                                "value": [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@u.team",
+                                          "player"
+                                        ],
+                                        [
+                                          ">",
+                                          "@u.health",
+                                          0.0
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-wave",
+                                  "role": "ui",
+                                  "sprite": "emote_alert.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Wave",
+                                "value": "@entity.wave"
                               }
                             ],
                             "type": "game-hud"
@@ -5304,6 +5864,360 @@
                   "!=",
                   "@entity.selectedUnitId",
                   ""
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.productionPoints",
+                    [
+                      "-",
+                      "@entity.productionPoints",
+                      3.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/append",
+                      "@entity.units",
+                      {
+                        "animation": "idle",
+                        "faction": "player",
+                        "frame": 0.0,
+                        "health": 10.0,
+                        "id": [
+                          "str/concat",
+                          "p-",
+                          [
+                            "array/len",
+                            "@entity.units"
+                          ]
+                        ],
+                        "maxHealth": 10.0,
+                        "name": "Recruit",
+                        "position": {
+                          "x": 0.0,
+                          "y": 0.0
+                        },
+                        "sprite": {
+                          "animations": [
+                            "idle",
+                            "walk",
+                            "attack",
+                            "hit",
+                            "death"
+                          ],
+                          "aspect": "1:1",
+                          "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                          "category": "tankBody_green",
+                          "dimension": "2d",
+                          "name": "tankBody_green",
+                          "role": "npc",
+                          "sprite": "medievalUnit_02.png",
+                          "style": "vector-flat",
+                          "thumbnailUrl": "",
+                          "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                          "variant": ""
+                        },
+                        "team": "player",
+                        "unitType": "tank"
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-end-turn",
+                              "role": "ui",
+                              "sprite": "arrowStraight.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                              "variant": ""
+                            },
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "PRODUCE",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-produce",
+                              "role": "ui",
+                              "sprite": "medievalStructure_01.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                              "variant": ""
+                            },
+                            "label": "Produce (3)",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
+                      "backgroundAsset": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "panel-frame",
+                        "role": "ui",
+                        "sprite": "panel_beige.png",
+                        "style": "vector-flat",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
+                        "variant": ""
+                      },
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "projection": "flat",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "showMinimap": false,
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "fontFamily": "future",
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-score",
+                                  "role": "ui",
+                                  "sprite": "emote_star.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-lives",
+                                  "role": "ui",
+                                  "sprite": "emote_heart.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-turn",
+                                  "role": "ui",
+                                  "sprite": "arrowHead.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                                  "variant": ""
+                                },
+                                "label": "Turn",
+                                "value": "@entity.turn"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-production",
+                                  "role": "ui",
+                                  "sprite": "emote_cash.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Production",
+                                "value": "@entity.productionPoints"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-units",
+                                  "role": "ui",
+                                  "sprite": "medievalUnit_01.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                                  "variant": ""
+                                },
+                                "label": "Units",
+                                "value": [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@u.team",
+                                          "player"
+                                        ],
+                                        [
+                                          ">",
+                                          "@u.health",
+                                          0.0
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-wave",
+                                  "role": "ui",
+                                  "sprite": "emote_alert.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Wave",
+                                "value": "@entity.wave"
+                              }
+                            ],
+                            "type": "game-hud"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "hudBackgroundAsset": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "panel-frame",
+                        "role": "ui",
+                        "sprite": "panel_beige.png",
+                        "style": "vector-flat",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
+                        "variant": ""
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "PRODUCE",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "and",
+                    [
+                      ">=",
+                      "@entity.productionPoints",
+                      3.0
+                    ],
+                    [
+                      "<",
+                      [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@u.team",
+                                "player"
+                              ],
+                              [
+                                ">",
+                                "@u.health",
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      6.0
+                    ]
+                  ]
                 ],
                 "to": "playing"
               },
@@ -5382,24 +6296,51 @@
                     "main",
                     {
                       "addons": {
-                        "action": "END_TURN",
-                        "iconAsset": {
-                          "animations": [],
-                          "aspect": "1:1",
-                          "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
-                          "category": "ui",
-                          "dimension": "2d",
-                          "name": "icon-end-turn",
-                          "role": "ui",
-                          "sprite": "arrowStraight.png",
-                          "style": "vector-flat",
-                          "thumbnailUrl": "",
-                          "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
-                          "variant": ""
-                        },
-                        "label": "End Turn",
-                        "type": "button",
-                        "variant": "primary"
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-end-turn",
+                              "role": "ui",
+                              "sprite": "arrowStraight.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                              "variant": ""
+                            },
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "PRODUCE",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-produce",
+                              "role": "ui",
+                              "sprite": "medievalStructure_01.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                              "variant": ""
+                            },
+                            "label": "Produce (3)",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
                       },
                       "backgroundAsset": {
                         "animations": [],
@@ -5490,6 +6431,83 @@
                                 },
                                 "label": "Turn",
                                 "value": "@entity.turn"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-production",
+                                  "role": "ui",
+                                  "sprite": "emote_cash.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Production",
+                                "value": "@entity.productionPoints"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-units",
+                                  "role": "ui",
+                                  "sprite": "medievalUnit_01.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                                  "variant": ""
+                                },
+                                "label": "Units",
+                                "value": [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@u.team",
+                                          "player"
+                                        ],
+                                        [
+                                          ">",
+                                          "@u.health",
+                                          0.0
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-wave",
+                                  "role": "ui",
+                                  "sprite": "emote_alert.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Wave",
+                                "value": "@entity.wave"
                               }
                             ],
                             "type": "game-hud"
@@ -5514,6 +6532,37 @@
                         "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
                         "variant": ""
                       },
+                      "overlay": {
+                        "options": [
+                          {
+                            "event": "PLAY_AGAIN",
+                            "id": "again",
+                            "label": "Play Again",
+                            "variant": "primary"
+                          }
+                        ],
+                        "subtitle": [
+                          "if",
+                          [
+                            "==",
+                            "@entity.result",
+                            "victory"
+                          ],
+                          "The realm is secure — three waves repelled.",
+                          "Your garrison has fallen."
+                        ],
+                        "title": [
+                          "if",
+                          [
+                            "==",
+                            "@entity.result",
+                            "victory"
+                          ],
+                          "VICTORY",
+                          "DEFEAT"
+                        ],
+                        "type": "game-menu"
+                      },
                       "type": "game-shell"
                     }
                   ]
@@ -5522,38 +6571,6 @@
                 "from": "playing",
                 "guard": [
                   "or",
-                  [
-                    "==",
-                    [
-                      "array/len",
-                      [
-                        "array/filter",
-                        "@entity.units",
-                        [
-                          "fn",
-                          "u",
-                          [
-                            "and",
-                            [
-                              "==",
-                              "@u.team",
-                              "enemy"
-                            ],
-                            [
-                              ">",
-                              [
-                                "object/get",
-                                "@u",
-                                "health"
-                              ],
-                              0.0
-                            ]
-                          ]
-                        ]
-                      ]
-                    ],
-                    0.0
-                  ],
                   [
                     "==",
                     [
@@ -5585,6 +6602,46 @@
                       ]
                     ],
                     0.0
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@u.team",
+                                "enemy"
+                              ],
+                              [
+                                ">",
+                                [
+                                  "object/get",
+                                  "@u",
+                                  "health"
+                                ],
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      0.0
+                    ],
+                    [
+                      ">=",
+                      "@entity.wave",
+                      3.0
+                    ]
                   ]
                 ],
                 "to": "gameover"
@@ -5642,28 +6699,65 @@
                     []
                   ],
                   [
+                    "set",
+                    "@entity.productionPoints",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.wave",
+                    0.0
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "addons": {
-                        "action": "END_TURN",
-                        "iconAsset": {
-                          "animations": [],
-                          "aspect": "1:1",
-                          "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
-                          "category": "ui",
-                          "dimension": "2d",
-                          "name": "icon-end-turn",
-                          "role": "ui",
-                          "sprite": "arrowStraight.png",
-                          "style": "vector-flat",
-                          "thumbnailUrl": "",
-                          "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
-                          "variant": ""
-                        },
-                        "label": "End Turn",
-                        "type": "button",
-                        "variant": "primary"
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-end-turn",
+                              "role": "ui",
+                              "sprite": "arrowStraight.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                              "variant": ""
+                            },
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "PRODUCE",
+                            "iconAsset": {
+                              "animations": [],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-produce",
+                              "role": "ui",
+                              "sprite": "medievalStructure_01.png",
+                              "style": "vector-flat",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                              "variant": ""
+                            },
+                            "label": "Produce (3)",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "type": "stack"
                       },
                       "backgroundAsset": {
                         "animations": [],
@@ -5754,6 +6848,83 @@
                                 },
                                 "label": "Turn",
                                 "value": "@entity.turn"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-production",
+                                  "role": "ui",
+                                  "sprite": "emote_cash.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Production",
+                                "value": "@entity.productionPoints"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-units",
+                                  "role": "ui",
+                                  "sprite": "medievalUnit_01.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                                  "variant": ""
+                                },
+                                "label": "Units",
+                                "value": [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@u.team",
+                                          "player"
+                                        ],
+                                        [
+                                          ">",
+                                          "@u.health",
+                                          0.0
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-wave",
+                                  "role": "ui",
+                                  "sprite": "emote_alert.png",
+                                  "style": "vector-flat",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Wave",
+                                "value": "@entity.wave"
                               }
                             ],
                             "type": "game-hud"
@@ -5784,7 +6955,7 @@
                 ],
                 "event": "PLAY_AGAIN",
                 "from": "gameover",
-                "to": "menu"
+                "to": "playing"
               }
             ]
           },
@@ -5796,24 +6967,51 @@
                   "main",
                   {
                     "addons": {
-                      "action": "END_TURN",
-                      "iconAsset": {
-                        "animations": [],
-                        "aspect": "1:1",
-                        "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
-                        "category": "ui",
-                        "dimension": "2d",
-                        "name": "icon-end-turn",
-                        "role": "ui",
-                        "sprite": "arrowStraight.png",
-                        "style": "vector-flat",
-                        "thumbnailUrl": "",
-                        "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
-                        "variant": ""
-                      },
-                      "label": "End Turn",
-                      "type": "button",
-                      "variant": "primary"
+                      "children": [
+                        {
+                          "action": "END_TURN",
+                          "iconAsset": {
+                            "animations": [],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                            "category": "ui",
+                            "dimension": "2d",
+                            "name": "icon-end-turn",
+                            "role": "ui",
+                            "sprite": "arrowStraight.png",
+                            "style": "vector-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                            "variant": ""
+                          },
+                          "label": "End Turn",
+                          "type": "button",
+                          "variant": "primary"
+                        },
+                        {
+                          "action": "PRODUCE",
+                          "iconAsset": {
+                            "animations": [],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                            "category": "ui",
+                            "dimension": "2d",
+                            "name": "icon-produce",
+                            "role": "ui",
+                            "sprite": "medievalStructure_01.png",
+                            "style": "vector-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                            "variant": ""
+                          },
+                          "label": "Produce (3)",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
                     },
                     "backgroundAsset": {
                       "animations": [],
@@ -5904,6 +7102,83 @@
                               },
                               "label": "Turn",
                               "value": "@entity.turn"
+                            },
+                            {
+                              "iconUrl": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-production",
+                                "role": "ui",
+                                "sprite": "emote_cash.png",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                "variant": ""
+                              },
+                              "label": "Production",
+                              "value": "@entity.productionPoints"
+                            },
+                            {
+                              "iconUrl": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-units",
+                                "role": "ui",
+                                "sprite": "medievalUnit_01.png",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                                "variant": ""
+                              },
+                              "label": "Units",
+                              "value": [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@entity.units",
+                                  [
+                                    "fn",
+                                    "u",
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        "@u.team",
+                                        "player"
+                                      ],
+                                      [
+                                        ">",
+                                        "@u.health",
+                                        0.0
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            },
+                            {
+                              "iconUrl": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-wave",
+                                "role": "ui",
+                                "sprite": "emote_alert.png",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                "variant": ""
+                              },
+                              "label": "Wave",
+                              "value": "@entity.wave"
                             }
                           ],
                           "type": "game-hud"
@@ -5932,8 +7207,281 @@
                   }
                 ]
               ],
+              "guard": [
+                "==",
+                "@entity.result",
+                "none"
+              ],
               "interval": 100.0,
               "name": "renderTick"
+            },
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.productionPoints",
+                  [
+                    "math/min",
+                    10.0,
+                    [
+                      "+",
+                      "@entity.productionPoints",
+                      1.0
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "END_TURN",
+                          "iconAsset": {
+                            "animations": [],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                            "category": "ui",
+                            "dimension": "2d",
+                            "name": "icon-end-turn",
+                            "role": "ui",
+                            "sprite": "arrowStraight.png",
+                            "style": "vector-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                            "variant": ""
+                          },
+                          "label": "End Turn",
+                          "type": "button",
+                          "variant": "primary"
+                        },
+                        {
+                          "action": "PRODUCE",
+                          "iconAsset": {
+                            "animations": [],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                            "category": "ui",
+                            "dimension": "2d",
+                            "name": "icon-produce",
+                            "role": "ui",
+                            "sprite": "medievalStructure_01.png",
+                            "style": "vector-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                            "variant": ""
+                          },
+                          "label": "Produce (3)",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    "backgroundAsset": {
+                      "animations": [],
+                      "aspect": "1:1",
+                      "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
+                      "category": "ui",
+                      "dimension": "2d",
+                      "name": "panel-frame",
+                      "role": "ui",
+                      "sprite": "panel_beige.png",
+                      "style": "vector-flat",
+                      "thumbnailUrl": "",
+                      "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
+                      "variant": ""
+                    },
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "projection": "flat",
+                        "scale": "@config.scale",
+                        "selectedUnitId": "@entity.selectedUnitId",
+                        "showMinimap": false,
+                        "tileClickEvent": "TILE_CLICK",
+                        "tiles": "@config.tiles",
+                        "type": "canvas-2d",
+                        "unitClickEvent": "UNIT_CLICK",
+                        "units": "@entity.units",
+                        "validMoves": "@entity.validMoves"
+                      }
+                    ],
+                    "fontFamily": "future",
+                    "hud": {
+                      "children": [
+                        {
+                          "stats": [
+                            {
+                              "iconUrl": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-score",
+                                "role": "ui",
+                                "sprite": "emote_star.png",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                "variant": ""
+                              },
+                              "label": "Score",
+                              "value": "@entity.score"
+                            },
+                            {
+                              "iconUrl": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-lives",
+                                "role": "ui",
+                                "sprite": "emote_heart.png",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                "variant": ""
+                              },
+                              "label": "Lives",
+                              "value": "@entity.lives"
+                            },
+                            {
+                              "iconUrl": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-turn",
+                                "role": "ui",
+                                "sprite": "arrowHead.png",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                                "variant": ""
+                              },
+                              "label": "Turn",
+                              "value": "@entity.turn"
+                            },
+                            {
+                              "iconUrl": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-production",
+                                "role": "ui",
+                                "sprite": "emote_cash.png",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                "variant": ""
+                              },
+                              "label": "Production",
+                              "value": "@entity.productionPoints"
+                            },
+                            {
+                              "iconUrl": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-units",
+                                "role": "ui",
+                                "sprite": "medievalUnit_01.png",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                                "variant": ""
+                              },
+                              "label": "Units",
+                              "value": [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@entity.units",
+                                  [
+                                    "fn",
+                                    "u",
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        "@u.team",
+                                        "player"
+                                      ],
+                                      [
+                                        ">",
+                                        "@u.health",
+                                        0.0
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            },
+                            {
+                              "iconUrl": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-wave",
+                                "role": "ui",
+                                "sprite": "emote_alert.png",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                "variant": ""
+                              },
+                              "label": "Wave",
+                              "value": "@entity.wave"
+                            }
+                          ],
+                          "type": "game-hud"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
+                    },
+                    "hudBackgroundAsset": {
+                      "animations": [],
+                      "aspect": "1:1",
+                      "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
+                      "category": "ui",
+                      "dimension": "2d",
+                      "name": "panel-frame",
+                      "role": "ui",
+                      "sprite": "panel_beige.png",
+                      "style": "vector-flat",
+                      "thumbnailUrl": "",
+                      "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
+                      "variant": ""
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "guard": [
+                "==",
+                "@entity.result",
+                "none"
+              ],
+              "interval": 2000.0,
+              "name": "productionTick"
             },
             {
               "effects": [
@@ -6346,6 +7894,153 @@
                   ]
                 ],
                 [
+                  "if",
+                  [
+                    "and",
+                    [
+                      "==",
+                      [
+                        "math/mod",
+                        "@entity.turn",
+                        5.0
+                      ],
+                      0.0
+                    ],
+                    [
+                      "<",
+                      [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@u.team",
+                                "enemy"
+                              ],
+                              [
+                                ">",
+                                "@u.health",
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      6.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/append",
+                      "@entity.units",
+                      {
+                        "animation": "idle",
+                        "faction": "enemy",
+                        "frame": 0.0,
+                        "health": 10.0,
+                        "id": [
+                          "str/concat",
+                          "e-",
+                          [
+                            "array/len",
+                            "@entity.units"
+                          ]
+                        ],
+                        "maxHealth": 10.0,
+                        "name": "Reinforcement",
+                        "position": {
+                          "x": 7.0,
+                          "y": 5.0
+                        },
+                        "sprite": {
+                          "animations": [
+                            "idle",
+                            "walk",
+                            "attack",
+                            "hit",
+                            "death"
+                          ],
+                          "aspect": "1:1",
+                          "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                          "category": "tankBody_dark",
+                          "dimension": "2d",
+                          "name": "tankBody_dark",
+                          "role": "npc",
+                          "sprite": "medievalUnit_06.png",
+                          "style": "vector-flat",
+                          "thumbnailUrl": "",
+                          "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                          "variant": ""
+                        },
+                        "team": "enemy",
+                        "unitType": "tank"
+                      }
+                    ]
+                  ],
+                  null
+                ],
+                [
+                  "if",
+                  [
+                    "and",
+                    [
+                      "==",
+                      [
+                        "math/mod",
+                        "@entity.turn",
+                        5.0
+                      ],
+                      0.0
+                    ],
+                    [
+                      "<",
+                      [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@u.team",
+                                "enemy"
+                              ],
+                              [
+                                ">",
+                                "@u.health",
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      6.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.wave",
+                    [
+                      "+",
+                      "@entity.wave",
+                      1.0
+                    ]
+                  ],
+                  null
+                ],
+                [
                   "set",
                   "@entity.result",
                   [
@@ -6382,32 +8077,40 @@
                     [
                       "if",
                       [
-                        "==",
+                        "and",
                         [
-                          "array/len",
+                          "==",
                           [
-                            "array/filter",
-                            "@entity.units",
+                            "array/len",
                             [
-                              "fn",
-                              "u",
+                              "array/filter",
+                              "@entity.units",
                               [
-                                "and",
+                                "fn",
+                                "u",
                                 [
-                                  "==",
-                                  "@u.team",
-                                  "enemy"
-                                ],
-                                [
-                                  ">",
-                                  "@u.health",
-                                  0.0
+                                  "and",
+                                  [
+                                    "==",
+                                    "@u.team",
+                                    "enemy"
+                                  ],
+                                  [
+                                    ">",
+                                    "@u.health",
+                                    0.0
+                                  ]
                                 ]
                               ]
                             ]
-                          ]
+                          ],
+                          0.0
                         ],
-                        0.0
+                        [
+                          ">=",
+                          "@entity.wave",
+                          3.0
+                        ]
                       ],
                       "victory",
                       "none"
@@ -6434,28 +8137,68 @@
                   ]
                 ],
                 [
+                  "if",
+                  [
+                    "!=",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "emit",
+                    "GAME_END"
+                  ],
+                  null
+                ],
+                [
                   "render-ui",
                   "main",
                   {
                     "addons": {
-                      "action": "END_TURN",
-                      "iconAsset": {
-                        "animations": [],
-                        "aspect": "1:1",
-                        "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
-                        "category": "ui",
-                        "dimension": "2d",
-                        "name": "icon-end-turn",
-                        "role": "ui",
-                        "sprite": "arrowStraight.png",
-                        "style": "vector-flat",
-                        "thumbnailUrl": "",
-                        "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
-                        "variant": ""
-                      },
-                      "label": "End Turn",
-                      "type": "button",
-                      "variant": "primary"
+                      "children": [
+                        {
+                          "action": "END_TURN",
+                          "iconAsset": {
+                            "animations": [],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.json",
+                            "category": "ui",
+                            "dimension": "2d",
+                            "name": "icon-end-turn",
+                            "role": "ui",
+                            "sprite": "arrowStraight.png",
+                            "style": "vector-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-cartography-pack/ui/spritesheet_default.png",
+                            "variant": ""
+                          },
+                          "label": "End Turn",
+                          "type": "button",
+                          "variant": "primary"
+                        },
+                        {
+                          "action": "PRODUCE",
+                          "iconAsset": {
+                            "animations": [],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                            "category": "ui",
+                            "dimension": "2d",
+                            "name": "icon-produce",
+                            "role": "ui",
+                            "sprite": "medievalStructure_01.png",
+                            "style": "vector-flat",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                            "variant": ""
+                          },
+                          "label": "Produce (3)",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
                     },
                     "backgroundAsset": {
                       "animations": [],
@@ -6546,6 +8289,83 @@
                               },
                               "label": "Turn",
                               "value": "@entity.turn"
+                            },
+                            {
+                              "iconUrl": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-production",
+                                "role": "ui",
+                                "sprite": "emote_cash.png",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                "variant": ""
+                              },
+                              "label": "Production",
+                              "value": "@entity.productionPoints"
+                            },
+                            {
+                              "iconUrl": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-units",
+                                "role": "ui",
+                                "sprite": "medievalUnit_01.png",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-rts-board/kenney-rts-medieval/terrain/medievalRTS_spritesheet.png",
+                                "variant": ""
+                              },
+                              "label": "Units",
+                              "value": [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@entity.units",
+                                  [
+                                    "fn",
+                                    "u",
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        "@u.team",
+                                        "player"
+                                      ],
+                                      [
+                                        ">",
+                                        "@u.health",
+                                        0.0
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            },
+                            {
+                              "iconUrl": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-wave",
+                                "role": "ui",
+                                "sprite": "emote_alert.png",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                "variant": ""
+                              },
+                              "label": "Wave",
+                              "value": "@entity.wave"
                             }
                           ],
                           "type": "game-hud"
@@ -6591,23 +8411,6 @@
               "name": "enemyAiTick"
             }
           ]
-        },
-        {
-          "config": {
-            "frameCount": {
-              "default": 8.0,
-              "type": "unknown"
-            }
-          },
-          "linkedEntity": "TopdownRtsBoardItem",
-          "name": "TopdownRtsBoardAnimTick",
-          "ref": "AnimTick.traits.AnimTick"
-        }
-      ],
-      "uses": [
-        {
-          "as": "AnimTick",
-          "from": "std/behaviors/std-anim-tick"
         }
       ]
     }

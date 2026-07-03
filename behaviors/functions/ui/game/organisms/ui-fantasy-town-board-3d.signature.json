@@ -1,0 +1,2509 @@
+[
+  {
+    "organism": "ui-fantasy-town-board-3d",
+    "orbital": "FantasyTownBoard3DOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/3d/organisms/ui-fantasy-town-board-3d.ts",
+    "entities": [
+      {
+        "name": "FantasyTownBoard3DItem",
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validMoves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "attackTargets",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "phase",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "turn",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "currentTeam",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "gridWidth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "gridHeight",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "movementRange",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "enemyTurn",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "FantasyTownBoard3DRender",
+        "emittedEvents": [
+          "GAME_END",
+          "UNIT_MOVE",
+          "TILE_CLICK",
+          "UNIT_CLICK",
+          "END_TURN",
+          "CANCEL",
+          "PLAY_AGAIN"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "GAME_END",
+            "direction": "emit",
+            "description": "Called when the match ends",
+            "tier": "domain"
+          },
+          {
+            "name": "UNIT_MOVE",
+            "direction": "emit",
+            "description": "Called after a unit moves",
+            "tier": "domain"
+          },
+          {
+            "name": "TILE_CLICK",
+            "direction": "emit",
+            "description": "Emitted on tile click with grid coordinates",
+            "tier": "domain"
+          },
+          {
+            "name": "UNIT_CLICK",
+            "direction": "emit",
+            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+            "tier": "domain"
+          },
+          {
+            "name": "END_TURN",
+            "direction": "emit",
+            "description": "Emits UI:{endTurnEvent} with {} on end turn",
+            "tier": "domain"
+          },
+          {
+            "name": "CANCEL",
+            "direction": "emit",
+            "description": "Emits UI:{cancelEvent} with {} on cancel",
+            "tier": "domain"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "assetManifest",
+            "type": "FantasyTownBoard3DAssetManifest",
+            "default": {
+              "effects": {
+                "death": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "8:1",
+                  "atlas": "",
+                  "category": "death",
+                  "dimension": "3d",
+                  "name": "death",
+                  "role": "effect",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/rock-large.glb",
+                  "variant": ""
+                },
+                "heal": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "8:1",
+                  "atlas": "",
+                  "category": "heal",
+                  "dimension": "3d",
+                  "name": "heal",
+                  "role": "effect",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/fountain-center.glb",
+                  "variant": ""
+                },
+                "hit": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "8:1",
+                  "atlas": "",
+                  "category": "hit",
+                  "dimension": "3d",
+                  "name": "hit",
+                  "role": "effect",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/features/statue.glb",
+                  "variant": ""
+                },
+                "magic": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "8:1",
+                  "atlas": "",
+                  "category": "magic",
+                  "dimension": "3d",
+                  "name": "magic",
+                  "role": "effect",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/banner-red.glb",
+                  "variant": ""
+                },
+                "melee": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "8:1",
+                  "atlas": "",
+                  "category": "melee",
+                  "dimension": "3d",
+                  "name": "melee",
+                  "role": "effect",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/features/weapon-sword.glb",
+                  "variant": ""
+                },
+                "ranged": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "8:1",
+                  "atlas": "",
+                  "category": "ranged",
+                  "dimension": "3d",
+                  "name": "ranged",
+                  "role": "effect",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/features/weapon-spear.glb",
+                  "variant": ""
+                }
+              },
+              "features": {
+                "cart": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "",
+                  "category": "cart",
+                  "dimension": "3d",
+                  "name": "cart",
+                  "role": "decoration",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/cart.glb",
+                  "variant": ""
+                },
+                "catapult": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "",
+                  "category": "catapult",
+                  "dimension": "3d",
+                  "name": "catapult",
+                  "role": "decoration",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-catapult.glb",
+                  "variant": ""
+                },
+                "fountain": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "",
+                  "category": "fountain",
+                  "dimension": "3d",
+                  "name": "fountain",
+                  "role": "decoration",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/fountain-center.glb",
+                  "variant": ""
+                },
+                "tower": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "",
+                  "category": "tower",
+                  "dimension": "3d",
+                  "name": "tower",
+                  "role": "decoration",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/tower-square.glb",
+                  "variant": ""
+                },
+                "trebuchet": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "",
+                  "category": "trebuchet",
+                  "dimension": "3d",
+                  "name": "trebuchet",
+                  "role": "decoration",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-trebuchet.glb",
+                  "variant": ""
+                },
+                "windmill": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "",
+                  "category": "windmill",
+                  "dimension": "3d",
+                  "name": "windmill",
+                  "role": "decoration",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/windmill.glb",
+                  "variant": ""
+                }
+              },
+              "terrains": {
+                "cobble": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "",
+                  "category": "cobble",
+                  "dimension": "3d",
+                  "name": "cobble",
+                  "role": "tile",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb",
+                  "variant": ""
+                },
+                "stone": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "",
+                  "category": "stone",
+                  "dimension": "3d",
+                  "name": "stone",
+                  "role": "tile",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb",
+                  "variant": ""
+                },
+                "wall": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb",
+                  "variant": ""
+                }
+              },
+              "units": {
+                "goblin": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack-melee-right",
+                    "die"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "",
+                  "category": "goblin",
+                  "dimension": "3d",
+                  "name": "goblin",
+                  "role": "npc",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb",
+                  "variant": ""
+                },
+                "guard": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack-melee-right",
+                    "die"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "",
+                  "category": "guard",
+                  "dimension": "3d",
+                  "name": "guard",
+                  "role": "npc",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb",
+                  "variant": ""
+                },
+                "soldier": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack-melee-right",
+                    "die"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "",
+                  "category": "soldier",
+                  "dimension": "3d",
+                  "name": "soldier",
+                  "role": "npc",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/units/character-soldier.glb",
+                  "variant": ""
+                },
+                "troll": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack-melee-right",
+                    "die"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "",
+                  "category": "troll",
+                  "dimension": "3d",
+                  "name": "troll",
+                  "role": "npc",
+                  "sprite": "",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-o.glb",
+                  "variant": ""
+                }
+              }
+            },
+            "label": "Asset Manifest",
+            "description": "Asset manifest for terrain/unit/feature/effect sprites.",
+            "tier": "presentation",
+            "properties": {
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          },
+          {
+            "key": "attackDamage",
+            "type": "number",
+            "default": 3,
+            "label": "Attack Damage",
+            "description": "Damage dealt per melee attack",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "FantasyTownBoard3DError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "features",
+            "type": "[FantasyTownBoard3DFeaturesItem]",
+            "default": [
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fountain",
+                  "dimension": "3d",
+                  "name": "fountain-center",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/fountain-center.glb"
+                },
+                "id": "fountain",
+                "type": "fountain",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "tower",
+                  "dimension": "3d",
+                  "name": "tower-square",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/tower-square.glb"
+                },
+                "id": "tower",
+                "type": "tower",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "catapult",
+                  "dimension": "3d",
+                  "name": "siege-catapult",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-catapult.glb"
+                },
+                "id": "catapult",
+                "type": "catapult",
+                "x": 5,
+                "y": 0
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "trebuchet",
+                  "dimension": "3d",
+                  "name": "siege-trebuchet",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-trebuchet.glb"
+                },
+                "id": "trebuchet",
+                "type": "trebuchet",
+                "x": 0,
+                "y": 5
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "windmill",
+                  "dimension": "3d",
+                  "name": "windmill",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/windmill.glb"
+                },
+                "id": "windmill",
+                "type": "windmill",
+                "x": 5,
+                "y": 5
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "cart",
+                  "dimension": "3d",
+                  "name": "cart",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/cart.glb"
+                },
+                "id": "cart",
+                "type": "cart",
+                "x": 2,
+                "y": 4
+              }
+            ],
+            "label": "Features",
+            "description": "Decorative town features: fountain, tower, siege engines, windmill, cart.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "assetUrl": {
+                  "name": "assetUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.45,
+            "label": "Scale",
+            "description": "Canvas render scale",
+            "tier": "presentation"
+          },
+          {
+            "key": "tiles",
+            "type": "[FantasyTownBoard3DTilesItem]",
+            "default": [
+              {
+                "id": "t00",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "id": "t10",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 1,
+                "y": 0
+              },
+              {
+                "id": "t20",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "id": "t30",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 3,
+                "y": 0
+              },
+              {
+                "id": "t40",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "id": "t50",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 5,
+                "y": 0
+              },
+              {
+                "id": "t01",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "id": "t11",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "stone",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "id": "t21",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "3d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
+                },
+                "passable": true,
+                "terrain": "cobble",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "id": "t31",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "stone",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "id": "t41",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "3d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
+                },
+                "passable": true,
+                "terrain": "cobble",
+                "x": 4,
+                "y": 1
+              },
+              {
+                "id": "t51",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 5,
+                "y": 1
+              },
+              {
+                "id": "t02",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 2
+              },
+              {
+                "id": "t12",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "3d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
+                },
+                "passable": true,
+                "terrain": "cobble",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "id": "t22",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "stone",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "id": "t32",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "3d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
+                },
+                "passable": true,
+                "terrain": "cobble",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "id": "t42",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "stone",
+                "x": 4,
+                "y": 2
+              },
+              {
+                "id": "t52",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 5,
+                "y": 2
+              },
+              {
+                "id": "t03",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 3
+              },
+              {
+                "id": "t13",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "stone",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "id": "t23",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "3d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
+                },
+                "passable": true,
+                "terrain": "cobble",
+                "x": 2,
+                "y": 3
+              },
+              {
+                "id": "t33",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "stone",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "id": "t43",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "3d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
+                },
+                "passable": true,
+                "terrain": "cobble",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "id": "t53",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 5,
+                "y": 3
+              },
+              {
+                "id": "t04",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 4
+              },
+              {
+                "id": "t14",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "3d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
+                },
+                "passable": true,
+                "terrain": "cobble",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "id": "t24",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "stone",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "id": "t34",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "3d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
+                },
+                "passable": true,
+                "terrain": "cobble",
+                "x": 3,
+                "y": 4
+              },
+              {
+                "id": "t44",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "stone",
+                "x": 4,
+                "y": 4
+              },
+              {
+                "id": "t54",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 5,
+                "y": 4
+              },
+              {
+                "id": "t05",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 5
+              },
+              {
+                "id": "t15",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 1,
+                "y": 5
+              },
+              {
+                "id": "t25",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 2,
+                "y": 5
+              },
+              {
+                "id": "t35",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 3,
+                "y": 5
+              },
+              {
+                "id": "t45",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 4,
+                "y": 5
+              },
+              {
+                "id": "t55",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-block",
+                  "dimension": "3d",
+                  "name": "wall-block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 5,
+                "y": 5
+              }
+            ],
+            "label": "Tiles",
+            "description": "6x6 town-square grid — wall-block border, alternating stone-floor and cobbled-road interior.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "movementCost": {
+                  "name": "movementCost",
+                  "required": false,
+                  "type": "number"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "terrain": {
+                  "name": "terrain",
+                  "required": false,
+                  "type": "string"
+                },
+                "terrainSprite": {
+                  "name": "terrainSprite",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "tileType": {
+                  "name": "tileType",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "unitScale",
+            "type": "number",
+            "default": 1,
+            "label": "Unit Scale",
+            "description": "Unit draw-size multiplier",
+            "tier": "presentation"
+          },
+          {
+            "key": "units",
+            "type": "[FantasyTownBoard3DUnitsItem]",
+            "default": [
+              {
+                "health": 12,
+                "id": "soldier",
+                "maxHealth": 12,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack-melee-right",
+                    "die"
+                  ],
+                  "aspect": "1:1",
+                  "category": "soldier",
+                  "dimension": "3d",
+                  "name": "character-soldier",
+                  "role": "player",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/units/character-soldier.glb"
+                },
+                "name": "Soldier",
+                "position": {
+                  "x": 1,
+                  "y": 1
+                },
+                "team": "player",
+                "unitType": "soldier"
+              },
+              {
+                "health": 12,
+                "id": "guard",
+                "maxHealth": 12,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack-melee-right",
+                    "die"
+                  ],
+                  "aspect": "1:1",
+                  "category": "guard",
+                  "dimension": "3d",
+                  "name": "character-j",
+                  "role": "player",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb"
+                },
+                "name": "Guard",
+                "position": {
+                  "x": 1,
+                  "y": 4
+                },
+                "team": "player",
+                "unitType": "guard"
+              },
+              {
+                "health": 10,
+                "id": "goblin",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack-melee-right",
+                    "die"
+                  ],
+                  "aspect": "1:1",
+                  "category": "goblin",
+                  "dimension": "3d",
+                  "name": "character-l",
+                  "role": "enemy",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb"
+                },
+                "name": "Goblin",
+                "position": {
+                  "x": 4,
+                  "y": 4
+                },
+                "team": "enemy",
+                "unitType": "goblin"
+              },
+              {
+                "health": 14,
+                "id": "troll",
+                "maxHealth": 14,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack-melee-right",
+                    "die"
+                  ],
+                  "aspect": "1:1",
+                  "category": "troll",
+                  "dimension": "3d",
+                  "name": "character-o",
+                  "role": "enemy",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-o.glb"
+                },
+                "name": "Troll",
+                "position": {
+                  "x": 4,
+                  "y": 1
+                },
+                "team": "enemy",
+                "unitType": "troll"
+              }
+            ],
+            "label": "Units",
+            "description": "Initial unit roster (Soldier + Guard defenders vs Goblin + Troll raiders) — takes priority over entity-derived units.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "faction": {
+                  "name": "faction",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "heroId": {
+                  "name": "heroId",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "previousPosition": {
+                  "name": "previousPosition",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "traits": {
+                  "name": "traits",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "cooldown": {
+                        "name": "cooldown",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "currentState": {
+                        "name": "currentState",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "states": {
+                        "name": "states",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "attackTargets",
+            "currentTeam",
+            "enemyTurn",
+            "fx",
+            "gridHeight",
+            "gridWidth",
+            "movementRange",
+            "phase",
+            "result",
+            "selectedUnitId",
+            "turn",
+            "units",
+            "validMoves"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "FantasyTownBoard3DPage",
+        "defaultPath": "/fantasy-town-board-3d",
+        "primaryEntity": "FantasyTownBoard3DItem"
+      }
+    ],
+    "emittedEvents": [
+      "CANCEL",
+      "END_TURN",
+      "GAME_END",
+      "PLAY_AGAIN",
+      "TILE_CLICK",
+      "UNIT_CLICK",
+      "UNIT_MOVE"
+    ],
+    "listenedEvents": []
+  }
+]

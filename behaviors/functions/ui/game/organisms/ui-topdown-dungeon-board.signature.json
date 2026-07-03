@@ -14,37 +14,22 @@
             "required": false
           },
           {
-            "name": "selectedUnitId",
-            "type": "string",
-            "required": false
-          },
-          {
-            "name": "validMoves",
-            "type": "array",
-            "required": false
-          },
-          {
             "name": "score",
             "type": "number",
             "required": false
           },
           {
-            "name": "lives",
+            "name": "hp",
             "type": "number",
             "required": false
           },
           {
-            "name": "turn",
+            "name": "maxHp",
             "type": "number",
             "required": false
           },
           {
             "name": "result",
-            "type": "string",
-            "required": false
-          },
-          {
-            "name": "phase",
             "type": "string",
             "required": false
           },
@@ -59,13 +44,13 @@
             "required": false
           },
           {
-            "name": "firingRange",
+            "name": "chestX",
             "type": "number",
             "required": false
           },
           {
-            "name": "enemyTurn",
-            "type": "boolean",
+            "name": "chestY",
+            "type": "number",
             "required": false
           },
           {
@@ -81,61 +66,50 @@
       {
         "name": "TopdownDungeonBoardRender",
         "emittedEvents": [
-          "FIRE",
-          "GAME_END",
-          "TILE_CLICK",
-          "UNIT_CLICK",
-          "END_TURN",
-          "CANCEL",
-          "PLAY_AGAIN"
+          "MOVE_UP",
+          "MOVE_DOWN",
+          "MOVE_LEFT",
+          "MOVE_RIGHT",
+          "PLAY_AGAIN",
+          "GAME_END"
         ],
         "listenedEvents": [],
         "events": [
           {
-            "name": "FIRE",
+            "name": "MOVE_UP",
             "direction": "emit",
-            "description": "Fired when a tank shoots at a target.",
+            "description": "Step north (keyMap or d-pad directionEvents)",
             "tier": "domain"
           },
           {
-            "name": "GAME_END",
+            "name": "MOVE_DOWN",
             "direction": "emit",
-            "description": "Called when the battle ends.",
+            "description": "Step south (keyMap or d-pad directionEvents)",
             "tier": "domain"
           },
           {
-            "name": "TILE_CLICK",
+            "name": "MOVE_LEFT",
             "direction": "emit",
-            "description": "Emits UI:{tileClickEvent} with { x, y } on tile click.",
+            "description": "Step west (keyMap or d-pad directionEvents)",
             "tier": "domain"
           },
           {
-            "name": "UNIT_CLICK",
+            "name": "MOVE_RIGHT",
             "direction": "emit",
-            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click.",
-            "tier": "domain"
-          },
-          {
-            "name": "END_TURN",
-            "direction": "emit",
-            "description": "Emits UI:{endTurnEvent} with {} on end turn.",
-            "tier": "domain"
-          },
-          {
-            "name": "CANCEL",
-            "direction": "emit",
-            "description": "Emits UI:{cancelEvent} with {} on cancel.",
+            "description": "Step east (keyMap or d-pad directionEvents)",
             "tier": "domain"
           },
           {
             "name": "PLAY_AGAIN",
             "direction": "emit",
-            "description": "Emits UI:{playAgainEvent} with {} on play again / reset.",
+            "description": "Resets the dungeon run",
             "tier": "domain"
           },
           {
-            "name": "START",
-            "direction": "listen"
+            "name": "GAME_END",
+            "direction": "emit",
+            "description": "Emitted when result transitions to victory or defeat",
+            "tier": "domain"
           },
           {
             "name": "INIT",
@@ -152,7 +126,7 @@
                   "animations": [
                     "static"
                   ],
-                  "aspect": "8:1",
+                  "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_pixelExplosion.json",
                   "category": "explosion",
                   "dimension": "2d",
@@ -166,17 +140,33 @@
                 }
               },
               "features": {
-                "obstacle": {
+                "barrel": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "obstacle",
+                  "category": "barrel",
                   "dimension": "2d",
-                  "name": "obstacle",
+                  "name": "barrel",
                   "role": "decoration",
                   "sprite": "6,5",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "chest": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "chest",
+                  "dimension": "2d",
+                  "name": "chest",
+                  "role": "decoration",
+                  "sprite": "5,7",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -184,15 +174,15 @@
                 }
               },
               "terrains": {
-                "ground": {
+                "floor": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "ground",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "ground",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -200,17 +190,17 @@
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
                   "variant": ""
                 },
-                "sand": {
+                "wall": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "sand",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "sand",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "3,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -218,21 +208,65 @@
                 }
               },
               "units": {
-                "tank": {
+                "crab": {
                   "animations": [
-                    "idle",
-                    "walk",
-                    "attack",
-                    "hit",
-                    "death"
+                    "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tank",
+                  "category": "crab",
                   "dimension": "2d",
-                  "name": "tank",
+                  "name": "crab",
+                  "role": "npc",
+                  "sprite": "2,9",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "ghost": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "ghost",
+                  "dimension": "2d",
+                  "name": "ghost",
+                  "role": "npc",
+                  "sprite": "1,10",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "knight": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "knight",
+                  "dimension": "2d",
+                  "name": "knight",
                   "role": "npc",
                   "sprite": "0,8",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "slime": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "slime",
+                  "dimension": "2d",
+                  "name": "slime",
+                  "role": "npc",
+                  "sprite": "0,9",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -539,6 +573,22 @@
             }
           },
           {
+            "key": "chestX",
+            "type": "number",
+            "default": 10,
+            "label": "Chest X",
+            "description": "Chest goal tile X coordinate",
+            "tier": "presentation"
+          },
+          {
+            "key": "chestY",
+            "type": "number",
+            "default": 7,
+            "label": "Chest Y",
+            "description": "Chest goal tile Y coordinate",
+            "tier": "presentation"
+          },
+          {
             "key": "className",
             "type": "string",
             "default": "",
@@ -587,19 +637,19 @@
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "sandbagBeige",
+                  "category": "chest",
                   "dimension": "2d",
-                  "name": "sandbagBeige",
+                  "name": "chest",
                   "role": "decoration",
-                  "sprite": "6,5",
+                  "sprite": "5,7",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
                   "variant": ""
                 },
-                "type": "obstacle",
-                "x": 2,
-                "y": 1
+                "type": "chest",
+                "x": 10,
+                "y": 7
               },
               {
                 "id": "f2",
@@ -609,9 +659,9 @@
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "sandbagBeige",
+                  "category": "barrel",
                   "dimension": "2d",
-                  "name": "sandbagBeige",
+                  "name": "barrel",
                   "role": "decoration",
                   "sprite": "6,5",
                   "style": "pixel",
@@ -619,9 +669,9 @@
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
                   "variant": ""
                 },
-                "type": "obstacle",
-                "x": 3,
-                "y": 2
+                "type": "prop",
+                "x": 4,
+                "y": 3
               },
               {
                 "id": "f3",
@@ -631,9 +681,9 @@
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "sandbagBeige",
+                  "category": "barrel",
                   "dimension": "2d",
-                  "name": "sandbagBeige",
+                  "name": "barrel",
                   "role": "decoration",
                   "sprite": "6,5",
                   "style": "pixel",
@@ -641,162 +691,16 @@
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
                   "variant": ""
                 },
-                "type": "obstacle",
-                "x": 4,
-                "y": 3
-              },
-              {
-                "id": "f4",
-                "sprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "sandbagBeige",
-                  "dimension": "2d",
-                  "name": "sandbagBeige",
-                  "role": "decoration",
-                  "sprite": "6,5",
-                  "style": "pixel",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
-                  "variant": ""
-                },
-                "type": "obstacle",
-                "x": 5,
-                "y": 3
-              },
-              {
-                "id": "f5",
-                "sprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "sandbagBeige",
-                  "dimension": "2d",
-                  "name": "sandbagBeige",
-                  "role": "decoration",
-                  "sprite": "6,5",
-                  "style": "pixel",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
-                  "variant": ""
-                },
-                "type": "obstacle",
-                "x": 5,
-                "y": 4
-              },
-              {
-                "id": "f6",
-                "sprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "sandbagBeige",
-                  "dimension": "2d",
-                  "name": "sandbagBeige",
-                  "role": "decoration",
-                  "sprite": "6,5",
-                  "style": "pixel",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
-                  "variant": ""
-                },
-                "type": "obstacle",
+                "type": "prop",
                 "x": 2,
-                "y": 4
+                "y": 7
               }
             ],
             "label": "Features",
-            "description": "Obstacles and structures on the board",
+            "description": "Chest goal and decorative props",
             "tier": "presentation",
             "items": {
               "properties": {
-                "assetUrl": {
-                  "name": "assetUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
                 "id": {
                   "name": "id",
                   "required": false,
@@ -886,11 +790,6 @@
                   "name": "y",
                   "required": true,
                   "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
                 }
               },
               "type": "object"
@@ -907,7 +806,7 @@
           {
             "key": "scale",
             "type": "number",
-            "default": 0.45,
+            "default": 0.3,
             "label": "Scale",
             "description": "Render scale",
             "tier": "presentation"
@@ -917,19 +816,19 @@
             "type": "[TopdownDungeonBoardTilesItem]",
             "default": [
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -939,19 +838,19 @@
                 "y": 0
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -961,19 +860,19 @@
                 "y": 0
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -983,19 +882,19 @@
                 "y": 0
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1005,19 +904,19 @@
                 "y": 0
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1027,19 +926,19 @@
                 "y": 0
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1049,19 +948,19 @@
                 "y": 0
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1071,19 +970,19 @@
                 "y": 0
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1093,19 +992,107 @@
                 "y": 0
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 8,
+                "y": 0
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 9,
+                "y": 0
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 10,
+                "y": 0
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 11,
+                "y": 0
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1116,16 +1103,16 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1138,16 +1125,16 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1160,18 +1147,18 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floorVariant",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floorVariant",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "3,4",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1182,16 +1169,16 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1203,19 +1190,19 @@
                 "y": 1
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1226,16 +1213,16 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1247,19 +1234,19 @@
                 "y": 1
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1270,18 +1257,106 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 8,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 9,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 10,
+                "y": 1
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 11,
+                "y": 1
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1292,16 +1367,16 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1314,16 +1389,16 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1336,18 +1411,18 @@
               },
               {
                 "passable": true,
-                "terrain": "sand",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileSand1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileSand1",
+                  "name": "floor",
                   "role": "tile",
-                  "sprite": "3,4",
+                  "sprite": "1,4",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1358,18 +1433,18 @@
               },
               {
                 "passable": true,
-                "terrain": "sand",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileSand1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileSand1",
+                  "name": "floor",
                   "role": "tile",
-                  "sprite": "3,4",
+                  "sprite": "1,4",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1380,18 +1455,18 @@
               },
               {
                 "passable": true,
-                "terrain": "sand",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileSand1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileSand1",
+                  "name": "floor",
                   "role": "tile",
-                  "sprite": "3,4",
+                  "sprite": "1,4",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1402,18 +1477,18 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floorVariant",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floorVariant",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "3,4",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1424,16 +1499,16 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1446,18 +1521,106 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 8,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 9,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 10,
+                "y": 2
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 11,
+                "y": 2
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1468,16 +1631,16 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1490,18 +1653,18 @@
               },
               {
                 "passable": true,
-                "terrain": "sand",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileSand1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileSand1",
+                  "name": "floor",
                   "role": "tile",
-                  "sprite": "3,4",
+                  "sprite": "1,4",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1512,18 +1675,18 @@
               },
               {
                 "passable": true,
-                "terrain": "sand",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileSand1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileSand1",
+                  "name": "floor",
                   "role": "tile",
-                  "sprite": "3,4",
+                  "sprite": "1,4",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1534,18 +1697,18 @@
               },
               {
                 "passable": true,
-                "terrain": "sand",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileSand1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileSand1",
+                  "name": "floor",
                   "role": "tile",
-                  "sprite": "3,4",
+                  "sprite": "1,4",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1555,19 +1718,19 @@
                 "y": 3
               },
               {
-                "passable": true,
-                "terrain": "sand",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileSand1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileSand1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "3,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1578,16 +1741,16 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1599,19 +1762,19 @@
                 "y": 3
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1622,18 +1785,106 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 8,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floorVariant",
+                  "dimension": "2d",
+                  "name": "floorVariant",
+                  "role": "tile",
+                  "sprite": "3,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 9,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 10,
+                "y": 3
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 11,
+                "y": 3
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1643,19 +1894,19 @@
                 "y": 4
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1665,19 +1916,19 @@
                 "y": 4
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1687,19 +1938,19 @@
                 "y": 4
               },
               {
-                "passable": true,
-                "terrain": "sand",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileSand1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileSand1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "3,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1709,19 +1960,19 @@
                 "y": 4
               },
               {
-                "passable": true,
-                "terrain": "sand",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileSand1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileSand1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "3,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1731,19 +1982,19 @@
                 "y": 4
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1754,16 +2005,16 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1775,19 +2026,19 @@
                 "y": 4
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1797,19 +2048,107 @@
                 "y": 4
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 8,
+                "y": 4
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 9,
+                "y": 4
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 10,
+                "y": 4
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 11,
+                "y": 4
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1820,16 +2159,16 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1842,16 +2181,16 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1864,18 +2203,18 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floorVariant",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floorVariant",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "3,4",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1886,16 +2225,16 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1907,19 +2246,19 @@
                 "y": 5
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
                   "role": "tile",
-                  "sprite": "1,4",
+                  "sprite": "1,3",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
@@ -1930,16 +2269,16 @@
               },
               {
                 "passable": true,
-                "terrain": "ground",
+                "terrain": "floor",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "floor",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1951,17 +2290,281 @@
                 "y": 5
               },
               {
-                "passable": true,
-                "terrain": "ground",
+                "passable": false,
+                "terrain": "wall",
                 "terrainSprite": {
                   "animations": [
                     "static"
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tileGrass1",
+                  "category": "wall",
                   "dimension": "2d",
-                  "name": "tileGrass1",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 7,
+                "y": 5
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 8,
+                "y": 5
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 9,
+                "y": 5
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 10,
+                "y": 5
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 11,
+                "y": 5
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 0,
+                "y": 6
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 1,
+                "y": 6
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 2,
+                "y": 6
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 3,
+                "y": 6
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 4,
+                "y": 6
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 5,
+                "y": 6
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floorVariant",
+                  "dimension": "2d",
+                  "name": "floorVariant",
+                  "role": "tile",
+                  "sprite": "3,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 6,
+                "y": 6
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
                   "role": "tile",
                   "sprite": "1,4",
                   "style": "pixel",
@@ -1970,99 +2573,630 @@
                   "variant": ""
                 },
                 "x": 7,
-                "y": 5
+                "y": 6
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 8,
+                "y": 6
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 9,
+                "y": 6
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 10,
+                "y": 6
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 11,
+                "y": 6
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 0,
+                "y": 7
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 1,
+                "y": 7
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 2,
+                "y": 7
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 3,
+                "y": 7
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 4,
+                "y": 7
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 5,
+                "y": 7
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 6,
+                "y": 7
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 7,
+                "y": 7
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 8,
+                "y": 7
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floorVariant",
+                  "dimension": "2d",
+                  "name": "floorVariant",
+                  "role": "tile",
+                  "sprite": "3,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 9,
+                "y": 7
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "sprite": "1,4",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 10,
+                "y": 7
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 11,
+                "y": 7
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 0,
+                "y": 8
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 1,
+                "y": 8
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 2,
+                "y": 8
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 3,
+                "y": 8
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 4,
+                "y": 8
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 5,
+                "y": 8
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 6,
+                "y": 8
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 7,
+                "y": 8
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 8,
+                "y": 8
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 9,
+                "y": 8
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 10,
+                "y": 8
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "sprite": "1,3",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "x": 11,
+                "y": 8
               }
             ],
             "label": "Tiles",
-            "description": "Ground/sand terrain tiles",
+            "description": "Dungeon floor/wall grid",
             "tier": "presentation",
             "items": {
               "properties": {
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "movementCost": {
-                  "name": "movementCost",
-                  "required": false,
-                  "type": "number"
-                },
                 "passable": {
                   "name": "passable",
                   "required": false,
@@ -2143,16 +3277,6 @@
                   },
                   "type": "object"
                 },
-                "tileType": {
-                  "name": "tileType",
-                  "required": false,
-                  "type": "string"
-                },
-                "type": {
-                  "name": "type",
-                  "required": false,
-                  "type": "string"
-                },
                 "x": {
                   "name": "x",
                   "required": true,
@@ -2161,11 +3285,6 @@
                 "y": {
                   "name": "y",
                   "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
                   "type": "number"
                 }
               },
@@ -2179,12 +3298,12 @@
               {
                 "animation": "idle",
                 "frame": 0,
-                "health": 10,
-                "id": "t1",
-                "maxHealth": 10,
-                "name": "Alpha",
+                "health": 5,
+                "id": "hero",
+                "maxHealth": 5,
+                "name": "Hero",
                 "position": {
-                  "x": 1,
+                  "x": 2,
                   "y": 1
                 },
                 "sprite": {
@@ -2197,9 +3316,9 @@
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tankBody_green",
+                  "category": "knight",
                   "dimension": "2d",
-                  "name": "tankBody_green",
+                  "name": "knight",
                   "role": "npc",
                   "sprite": "0,8",
                   "style": "pixel",
@@ -2208,18 +3327,18 @@
                   "variant": ""
                 },
                 "team": "player",
-                "unitType": "tank"
+                "unitType": "hero"
               },
               {
                 "animation": "idle",
                 "frame": 0,
-                "health": 10,
-                "id": "t2",
-                "maxHealth": 10,
-                "name": "Bravo",
+                "health": 2,
+                "id": "m1",
+                "maxHealth": 2,
+                "name": "Slime",
                 "position": {
-                  "x": 6,
-                  "y": 0
+                  "x": 9,
+                  "y": 1
                 },
                 "sprite": {
                   "animations": [
@@ -2231,9 +3350,9 @@
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tankBody_dark",
+                  "category": "slime",
                   "dimension": "2d",
-                  "name": "tankBody_dark",
+                  "name": "slime",
                   "role": "npc",
                   "sprite": "0,9",
                   "style": "pixel",
@@ -2242,18 +3361,18 @@
                   "variant": ""
                 },
                 "team": "enemy",
-                "unitType": "tank"
+                "unitType": "slime"
               },
               {
                 "animation": "idle",
                 "frame": 0,
-                "health": 8,
-                "id": "t3",
-                "maxHealth": 10,
-                "name": "Charlie",
+                "health": 2,
+                "id": "m2",
+                "maxHealth": 2,
+                "name": "Crab",
                 "position": {
-                  "x": 6,
-                  "y": 4
+                  "x": 2,
+                  "y": 6
                 },
                 "sprite": {
                   "animations": [
@@ -2265,22 +3384,56 @@
                   ],
                   "aspect": "1:1",
                   "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
-                  "category": "tankBody_dark",
+                  "category": "crab",
                   "dimension": "2d",
-                  "name": "tankBody_dark",
+                  "name": "crab",
                   "role": "npc",
-                  "sprite": "0,9",
+                  "sprite": "2,9",
                   "style": "pixel",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
                   "variant": ""
                 },
                 "team": "enemy",
-                "unitType": "tank"
+                "unitType": "crab"
+              },
+              {
+                "animation": "idle",
+                "frame": 0,
+                "health": 2,
+                "id": "m3",
+                "maxHealth": 2,
+                "name": "Ghost",
+                "position": {
+                  "x": 8,
+                  "y": 5
+                },
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/Tilemap_tilemap_packed.tiles.json",
+                  "category": "ghost",
+                  "dimension": "2d",
+                  "name": "ghost",
+                  "role": "npc",
+                  "sprite": "1,10",
+                  "style": "pixel",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-topdown-dungeon-board/kenney-tiny-dungeon/terrain/tilemap_packed.png",
+                  "variant": ""
+                },
+                "team": "enemy",
+                "unitType": "ghost"
               }
             ],
             "label": "Units",
-            "description": "Tank units on the board",
+            "description": "Hero and monster units",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -2288,21 +3441,6 @@
                   "name": "animation",
                   "required": false,
                   "type": "string"
-                },
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "faction": {
-                  "name": "faction",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
                 },
                 "frame": {
                   "name": "frame",
@@ -2314,11 +3452,6 @@
                   "required": false,
                   "type": "number"
                 },
-                "heroId": {
-                  "name": "heroId",
-                  "required": false,
-                  "type": "string"
-                },
                 "id": {
                   "name": "id",
                   "required": true,
@@ -2329,76 +3462,6 @@
                   "required": false,
                   "type": "number"
                 },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
                 "name": {
                   "name": "name",
                   "required": false,
@@ -2406,23 +3469,6 @@
                 },
                 "position": {
                   "name": "position",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "previousPosition": {
-                  "name": "previousPosition",
                   "required": false,
                   "properties": {
                     "x": {
@@ -2508,138 +3554,19 @@
                   },
                   "type": "object"
                 },
-                "spriteSheet": {
-                  "name": "spriteSheet",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
                 "team": {
                   "name": "team",
                   "required": false,
                   "type": "string",
                   "values": [
                     "player",
-                    "enemy",
-                    "neutral"
+                    "enemy"
                   ]
-                },
-                "traits": {
-                  "name": "traits",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "properties": {
-                      "cooldown": {
-                        "name": "cooldown",
-                        "required": true,
-                        "type": "number"
-                      },
-                      "currentState": {
-                        "name": "currentState",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "name": {
-                        "name": "name",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "states": {
-                        "name": "states",
-                        "required": true,
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "type": "object"
-                  }
                 },
                 "unitType": {
                   "name": "unitType",
                   "required": false,
                   "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": false,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": false,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
                 }
               },
               "type": "object"
@@ -2651,35 +3578,18 @@
         "entityContract": {
           "requires": [],
           "provides": [
+            "chestX",
+            "chestY",
             "effects",
-            "enemyTurn",
-            "firingRange",
             "gridHeight",
             "gridWidth",
-            "lives",
-            "phase",
+            "hp",
+            "maxHp",
             "result",
             "score",
-            "selectedUnitId",
-            "turn",
-            "units",
-            "validMoves"
+            "units"
           ]
         }
-      },
-      {
-        "name": "TopdownDungeonBoardAnimTick",
-        "emittedEvents": [],
-        "listenedEvents": [],
-        "overridableConfigKeys": [
-          {
-            "key": "frameCount",
-            "type": "unknown",
-            "default": 8
-          }
-        ],
-        "capabilities": [],
-        "ref": "AnimTick.traits.AnimTick"
       }
     ],
     "pages": [
@@ -2690,13 +3600,12 @@
       }
     ],
     "emittedEvents": [
-      "CANCEL",
-      "END_TURN",
-      "FIRE",
       "GAME_END",
-      "PLAY_AGAIN",
-      "TILE_CLICK",
-      "UNIT_CLICK"
+      "MOVE_DOWN",
+      "MOVE_LEFT",
+      "MOVE_RIGHT",
+      "MOVE_UP",
+      "PLAY_AGAIN"
     ],
     "listenedEvents": []
   }

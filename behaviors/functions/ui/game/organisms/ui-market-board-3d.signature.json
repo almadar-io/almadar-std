@@ -1,0 +1,1578 @@
+[
+  {
+    "organism": "ui-market-board-3d",
+    "orbital": "MarketBoard3DOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/3d/organisms/ui-market-board-3d.ts",
+    "entities": [
+      {
+        "name": "MarketBoard3DItem",
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validMoves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "attackTargets",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lives",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "gridWidth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "gridHeight",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "movementRange",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "scoreTarget",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "MarketBoard3DRender",
+        "emittedEvents": [
+          "GAME_END",
+          "TILE_CLICK",
+          "UNIT_CLICK",
+          "PLAY_AGAIN"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "GAME_END",
+            "direction": "emit",
+            "description": "Emitted when result becomes won or lost",
+            "tier": "domain"
+          },
+          {
+            "name": "TILE_CLICK",
+            "direction": "emit",
+            "description": "Moves the shopkeeper toward the clicked tile",
+            "tier": "domain"
+          },
+          {
+            "name": "UNIT_CLICK",
+            "direction": "emit",
+            "description": "Serves the clicked customer when the shopkeeper is adjacent",
+            "tier": "domain"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "MarketBoard3DError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "features",
+            "type": "[MarketBoard3DFeaturesItem]",
+            "default": [
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "shelf-boxes",
+                  "dimension": "3d",
+                  "name": "shelf-boxes",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-boxes.glb"
+                },
+                "id": "f1",
+                "type": "shelf",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "shelf-bags",
+                  "dimension": "3d",
+                  "name": "shelf-bags",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-bags.glb"
+                },
+                "id": "f2",
+                "type": "shelf",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "shopping-basket",
+                  "dimension": "3d",
+                  "name": "shopping-basket",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shopping-basket.glb"
+                },
+                "id": "f3",
+                "type": "shopping_basket",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "freezer",
+                  "dimension": "3d",
+                  "name": "freezer",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/freezer.glb"
+                },
+                "id": "f4",
+                "type": "freezer",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "freezers-standing",
+                  "dimension": "3d",
+                  "name": "freezers-standing",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/freezers-standing.glb"
+                },
+                "id": "f5",
+                "type": "freezer",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "display-fruit",
+                  "dimension": "3d",
+                  "name": "display-fruit",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/display-fruit.glb"
+                },
+                "id": "f6",
+                "type": "display_fruit",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "apple",
+                  "dimension": "3d",
+                  "name": "apple",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/apple.glb"
+                },
+                "id": "f7",
+                "type": "food",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "banana",
+                  "dimension": "3d",
+                  "name": "banana",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/banana.glb"
+                },
+                "id": "f8",
+                "type": "food",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "carrot",
+                  "dimension": "3d",
+                  "name": "carrot",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/carrot.glb"
+                },
+                "id": "f9",
+                "type": "food",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "display-bread",
+                  "dimension": "3d",
+                  "name": "display-bread",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/display-bread.glb"
+                },
+                "id": "f10",
+                "type": "display_bread",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "bread",
+                  "dimension": "3d",
+                  "name": "bread",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/bread.glb"
+                },
+                "id": "f11",
+                "type": "food",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "shopping-cart",
+                  "dimension": "3d",
+                  "name": "shopping-cart",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shopping-cart.glb"
+                },
+                "id": "f12",
+                "type": "shopping_cart",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "cash-register",
+                  "dimension": "3d",
+                  "name": "cash-register",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/cash-register.glb"
+                },
+                "id": "f13",
+                "type": "checkout",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "bottle-return",
+                  "dimension": "3d",
+                  "name": "bottle-return",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/bottle-return.glb"
+                },
+                "id": "f14",
+                "type": "bottle_return",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "shelf-end",
+                  "dimension": "3d",
+                  "name": "shelf-end",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-end.glb"
+                },
+                "id": "f15",
+                "type": "shelf",
+                "x": 3,
+                "y": 1
+              }
+            ],
+            "label": "Features",
+            "description": "Shop fixtures (shelves/freezers/checkout/carts) and food props on the floor.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "assetUrl": {
+                  "name": "assetUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.45,
+            "label": "Scale",
+            "description": "Canvas render scale",
+            "tier": "presentation"
+          },
+          {
+            "key": "scoreTarget",
+            "type": "number",
+            "default": 10,
+            "label": "Score Target",
+            "description": "Score needed to win",
+            "tier": "presentation"
+          },
+          {
+            "key": "tiles",
+            "type": "[MarketBoard3DTilesItem]",
+            "default": [
+              {
+                "id": "t00",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-corner",
+                  "dimension": "3d",
+                  "name": "wall-corner",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall-corner.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "id": "t10",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-window",
+                  "dimension": "3d",
+                  "name": "wall-window",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall-window.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 1,
+                "y": 0
+              },
+              {
+                "id": "t20",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "id": "t30",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-window",
+                  "dimension": "3d",
+                  "name": "wall-window",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall-window.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 3,
+                "y": 0
+              },
+              {
+                "id": "t40",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-corner",
+                  "dimension": "3d",
+                  "name": "wall-corner",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall-corner.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "id": "t01",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "id": "t11",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "id": "t21",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "id": "t31",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "id": "t41",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 4,
+                "y": 1
+              },
+              {
+                "id": "t02",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 2
+              },
+              {
+                "id": "t12",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "id": "t22",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "id": "t32",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "id": "t42",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 4,
+                "y": 2
+              },
+              {
+                "id": "t03",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 3
+              },
+              {
+                "id": "t13",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "id": "t23",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 3
+              },
+              {
+                "id": "t33",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "id": "t43",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "id": "t04",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 4
+              },
+              {
+                "id": "t14",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "id": "t24",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "id": "t34",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 4
+              },
+              {
+                "id": "t44",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 4,
+                "y": 4
+              },
+              {
+                "id": "t05",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-corner",
+                  "dimension": "3d",
+                  "name": "wall-corner",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall-corner.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 5
+              },
+              {
+                "id": "t15",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 1,
+                "y": 5
+              },
+              {
+                "id": "t25",
+                "modelUrl": {
+                  "animations": [
+                    "open",
+                    "close",
+                    "open-and-close"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-door-rotate",
+                  "dimension": "3d",
+                  "name": "wall-door-rotate",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall-door-rotate.glb"
+                },
+                "passable": true,
+                "terrain": "door",
+                "x": 2,
+                "y": 5
+              },
+              {
+                "id": "t35",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 3,
+                "y": 5
+              },
+              {
+                "id": "t45",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-corner",
+                  "dimension": "3d",
+                  "name": "wall-corner",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/wall-corner.glb"
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 4,
+                "y": 5
+              }
+            ],
+            "label": "Tiles",
+            "description": "5×6 shop floor grid (wall border + door) — takes priority over entity-derived tiles.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "terrain": {
+                  "name": "terrain",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "unitScale",
+            "type": "number",
+            "default": 1,
+            "label": "Unit Scale",
+            "description": "Unit draw-size multiplier",
+            "tier": "presentation"
+          },
+          {
+            "key": "units",
+            "type": "[MarketBoard3DUnitsItem]",
+            "default": [
+              {
+                "id": "u1",
+                "modelUrl": {
+                  "animations": [
+                    "static",
+                    "idle",
+                    "walk",
+                    "sprint",
+                    "jump",
+                    "fall",
+                    "crouch",
+                    "sit",
+                    "drive",
+                    "die",
+                    "pick-up",
+                    "emote-yes",
+                    "emote-no",
+                    "holding-right",
+                    "holding-left",
+                    "holding-both",
+                    "holding-right-shoot",
+                    "holding-left-shoot",
+                    "holding-both-shoot",
+                    "attack-melee-right",
+                    "attack-melee-left",
+                    "attack-kick-right",
+                    "attack-kick-left",
+                    "interact-right",
+                    "interact-left",
+                    "wheelchair-sit",
+                    "wheelchair-look-left",
+                    "wheelchair-look-right",
+                    "wheelchair-move-forward",
+                    "wheelchair-move-back",
+                    "wheelchair-move-left",
+                    "wheelchair-move-right"
+                  ],
+                  "aspect": "1:1",
+                  "category": "character-employee",
+                  "dimension": "3d",
+                  "name": "character-employee",
+                  "role": "player",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/units/character-employee.glb"
+                },
+                "name": "Shopkeeper",
+                "position": {
+                  "x": 2,
+                  "y": 2
+                },
+                "team": "player",
+                "unitType": "shopkeeper"
+              },
+              {
+                "id": "c1",
+                "maxPatience": 8,
+                "modelUrl": {
+                  "animations": [
+                    "static",
+                    "idle",
+                    "walk",
+                    "sprint",
+                    "jump",
+                    "fall",
+                    "crouch",
+                    "sit",
+                    "drive",
+                    "die",
+                    "pick-up",
+                    "emote-yes",
+                    "emote-no",
+                    "holding-right",
+                    "holding-left",
+                    "holding-both",
+                    "holding-right-shoot",
+                    "holding-left-shoot",
+                    "holding-both-shoot",
+                    "attack-melee-right",
+                    "attack-melee-left",
+                    "attack-kick-right",
+                    "attack-kick-left",
+                    "interact-right",
+                    "interact-left",
+                    "wheelchair-sit",
+                    "wheelchair-look-left",
+                    "wheelchair-look-right",
+                    "wheelchair-move-forward",
+                    "wheelchair-move-back",
+                    "wheelchair-move-left",
+                    "wheelchair-move-right"
+                  ],
+                  "aspect": "1:1",
+                  "category": "character-female-a",
+                  "dimension": "3d",
+                  "name": "character-female-a",
+                  "role": "npc",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-female-a.glb"
+                },
+                "name": "Customer A",
+                "patience": 8,
+                "position": {
+                  "x": 2,
+                  "y": 3
+                },
+                "team": "neutral",
+                "unitType": "customer"
+              },
+              {
+                "id": "c2",
+                "maxPatience": 12,
+                "modelUrl": {
+                  "animations": [
+                    "static",
+                    "idle",
+                    "walk",
+                    "sprint",
+                    "jump",
+                    "fall",
+                    "crouch",
+                    "sit",
+                    "drive",
+                    "die",
+                    "pick-up",
+                    "emote-yes",
+                    "emote-no",
+                    "holding-right",
+                    "holding-left",
+                    "holding-both",
+                    "holding-right-shoot",
+                    "holding-left-shoot",
+                    "holding-both-shoot",
+                    "attack-melee-right",
+                    "attack-melee-left",
+                    "attack-kick-right",
+                    "attack-kick-left",
+                    "interact-right",
+                    "interact-left",
+                    "wheelchair-sit",
+                    "wheelchair-look-left",
+                    "wheelchair-look-right",
+                    "wheelchair-move-forward",
+                    "wheelchair-move-back",
+                    "wheelchair-move-left",
+                    "wheelchair-move-right"
+                  ],
+                  "aspect": "1:1",
+                  "category": "character-male-a",
+                  "dimension": "3d",
+                  "name": "character-male-a",
+                  "role": "npc",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-male-a.glb"
+                },
+                "name": "Customer B",
+                "patience": 12,
+                "position": {
+                  "x": 3,
+                  "y": 4
+                },
+                "team": "neutral",
+                "unitType": "customer"
+              }
+            ],
+            "label": "Units",
+            "description": "Initial roster: shopkeeper + 2 customers — takes priority over entity-derived units.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxPatience": {
+                  "name": "maxPatience",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "patience": {
+                  "name": "patience",
+                  "required": false,
+                  "type": "number"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "neutral"
+                  ]
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "attackTargets",
+            "fx",
+            "gridHeight",
+            "gridWidth",
+            "lives",
+            "movementRange",
+            "result",
+            "score",
+            "scoreTarget",
+            "selectedUnitId",
+            "units",
+            "validMoves"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MarketBoard3DPage",
+        "defaultPath": "/market-board-3d",
+        "primaryEntity": "MarketBoard3DItem"
+      }
+    ],
+    "emittedEvents": [
+      "GAME_END",
+      "PLAY_AGAIN",
+      "TILE_CLICK",
+      "UNIT_CLICK"
+    ],
+    "listenedEvents": []
+  }
+]

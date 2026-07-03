@@ -1,0 +1,1401 @@
+[
+  {
+    "organism": "ui-minigolf-board-3d",
+    "orbital": "MinigolfBoard3DOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/3d/organisms/ui-minigolf-board-3d.ts",
+    "entities": [
+      {
+        "name": "MinigolfBoard3DItem",
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validMoves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "strokes",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "par",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "gridWidth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "gridHeight",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "movementRange",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "MinigolfBoard3DRender",
+        "emittedEvents": [
+          "TILE_CLICK",
+          "UNIT_CLICK",
+          "CANCEL",
+          "PLAY_AGAIN"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TILE_CLICK",
+            "direction": "emit",
+            "description": "Emits UI:{tileClickEvent} with { tileId, x, z } — putts the selected ball one adjacent cell toward the target tile",
+            "tier": "domain"
+          },
+          {
+            "name": "UNIT_CLICK",
+            "direction": "emit",
+            "description": "Emits UI:{unitClickEvent} with { unitId, x, z } on ball click",
+            "tier": "domain"
+          },
+          {
+            "name": "CANCEL",
+            "direction": "emit",
+            "description": "Emits UI:{cancelEvent} with {} on cancel / deselect",
+            "tier": "domain"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "MinigolfBoard3DError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "features",
+            "type": "[MinigolfBoard3DFeaturesItem]",
+            "default": [
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "features",
+                  "dimension": "3d",
+                  "name": "flag-red",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/flag-red.glb",
+                  "variant": ""
+                },
+                "id": "f1",
+                "type": "flag",
+                "x": 5,
+                "y": 5
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "features",
+                  "dimension": "3d",
+                  "name": "supports",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/supports.glb",
+                  "variant": ""
+                },
+                "id": "f2",
+                "type": "peg_wall",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "features",
+                  "dimension": "3d",
+                  "name": "supports",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/supports.glb",
+                  "variant": ""
+                },
+                "id": "f3",
+                "type": "peg_wall",
+                "x": 5,
+                "y": 3
+              }
+            ],
+            "label": "Features",
+            "description": "Pin flag at the hole plus wooden peg-wall borders along the rough.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "assetUrl": {
+                  "name": "assetUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "par",
+            "type": "number",
+            "default": 8,
+            "label": "Par",
+            "description": "Stroke target — holing out at or under this value wins",
+            "tier": "presentation"
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.45,
+            "label": "Scale",
+            "description": "Canvas render scale",
+            "tier": "presentation"
+          },
+          {
+            "key": "tiles",
+            "type": "[MinigolfBoard3DTilesItem]",
+            "default": [
+              {
+                "id": "t00",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "features",
+                  "dimension": "3d",
+                  "name": "start",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/start.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "tee",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "id": "t10",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "straight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 1,
+                "y": 0
+              },
+              {
+                "id": "t20",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "straight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "id": "t30",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "straight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 3,
+                "y": 0
+              },
+              {
+                "id": "t40",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "straight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "id": "t50",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "corner",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/corner.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 5,
+                "y": 0
+              },
+              {
+                "id": "t01",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "id": "t11",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "id": "t21",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "features",
+                  "dimension": "3d",
+                  "name": "windmill",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/windmill.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "id": "t31",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "id": "t41",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 4,
+                "y": 1
+              },
+              {
+                "id": "t51",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "straight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 5,
+                "y": 1
+              },
+              {
+                "id": "t02",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "corner",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/corner.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 0,
+                "y": 2
+              },
+              {
+                "id": "t12",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "straight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "id": "t22",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "straight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "id": "t32",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "straight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "id": "t42",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "straight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 4,
+                "y": 2
+              },
+              {
+                "id": "t52",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "corner",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/corner.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 5,
+                "y": 2
+              },
+              {
+                "id": "t03",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "straight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 0,
+                "y": 3
+              },
+              {
+                "id": "t13",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "id": "t23",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 2,
+                "y": 3
+              },
+              {
+                "id": "t33",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "features",
+                  "dimension": "3d",
+                  "name": "castle",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/castle.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "id": "t43",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "id": "t53",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 5,
+                "y": 3
+              },
+              {
+                "id": "t04",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "corner",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/corner.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 0,
+                "y": 4
+              },
+              {
+                "id": "t14",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "straight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "id": "t24",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "straight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "id": "t34",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "straight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 3,
+                "y": 4
+              },
+              {
+                "id": "t44",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "straight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/straight.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 4,
+                "y": 4
+              },
+              {
+                "id": "t54",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "corner",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/corner.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "fairway",
+                "x": 5,
+                "y": 4
+              },
+              {
+                "id": "t05",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 0,
+                "y": 5
+              },
+              {
+                "id": "t15",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 1,
+                "y": 5
+              },
+              {
+                "id": "t25",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "features",
+                  "dimension": "3d",
+                  "name": "windmill",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/windmill.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 2,
+                "y": 5
+              },
+              {
+                "id": "t35",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 3,
+                "y": 5
+              },
+              {
+                "id": "t45",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "terrain",
+                  "dimension": "3d",
+                  "name": "block",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/terrain/block.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "obstacle",
+                "x": 4,
+                "y": 5
+              },
+              {
+                "id": "t55",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "features",
+                  "dimension": "3d",
+                  "name": "hole-round",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/hole-round.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "hole",
+                "x": 5,
+                "y": 5
+              }
+            ],
+            "label": "Tiles",
+            "description": "6×6 S-shaped fairway grid — takes priority over entity-derived tiles.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "terrain": {
+                  "name": "terrain",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "unitScale",
+            "type": "number",
+            "default": 1,
+            "label": "Unit Scale",
+            "description": "Unit draw-size multiplier",
+            "tier": "presentation"
+          },
+          {
+            "key": "units",
+            "type": "[MinigolfBoard3DUnitsItem]",
+            "default": [
+              {
+                "health": 1,
+                "id": "ball",
+                "maxHealth": 1,
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "features",
+                  "dimension": "3d",
+                  "name": "ball-blue",
+                  "role": "player",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board-3d/kenney-minigolf-kit/features/ball-blue.glb",
+                  "variant": ""
+                },
+                "name": "Ball",
+                "position": {
+                  "x": 0,
+                  "y": 0
+                },
+                "team": "player",
+                "unitType": "ball"
+              }
+            ],
+            "label": "Units",
+            "description": "The putting ball, starting at the tee (t00).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "fx",
+            "gridHeight",
+            "gridWidth",
+            "movementRange",
+            "par",
+            "result",
+            "selectedUnitId",
+            "strokes",
+            "units",
+            "validMoves"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MinigolfBoard3DPage",
+        "defaultPath": "/minigolf-board-3d",
+        "primaryEntity": "MinigolfBoard3DItem"
+      }
+    ],
+    "emittedEvents": [
+      "CANCEL",
+      "PLAY_AGAIN",
+      "TILE_CLICK",
+      "UNIT_CLICK"
+    ],
+    "listenedEvents": []
+  }
+]

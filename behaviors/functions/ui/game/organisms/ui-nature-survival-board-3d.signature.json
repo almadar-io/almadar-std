@@ -1,0 +1,1536 @@
+[
+  {
+    "organism": "ui-nature-survival-board-3d",
+    "orbital": "NatureSurvivalBoard3DOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/3d/organisms/ui-nature-survival-board-3d.ts",
+    "entities": [
+      {
+        "name": "NatureSurvivalBoard3DItem",
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "features",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validMoves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "attackTargets",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "wood",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "stone",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "woodGoal",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "stoneGoal",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "energyLeft",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "gridWidth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "gridHeight",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "movementRange",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "NatureSurvivalBoard3DRender",
+        "emittedEvents": [
+          "UNIT_CLICK",
+          "TILE_CLICK",
+          "CANCEL",
+          "BUILD_CAMP",
+          "GAME_END",
+          "PLAY_AGAIN"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "UNIT_CLICK",
+            "direction": "emit",
+            "description": "Selects the survivor unit and computes valid move tiles",
+            "tier": "domain"
+          },
+          {
+            "name": "TILE_CLICK",
+            "direction": "emit",
+            "description": "Gathers an adjacent resource, or moves the survivor to a valid tile",
+            "tier": "domain"
+          },
+          {
+            "name": "CANCEL",
+            "direction": "emit",
+            "description": "Clears the current unit selection",
+            "tier": "domain"
+          },
+          {
+            "name": "BUILD_CAMP",
+            "direction": "emit",
+            "description": "Builds the camp (campfire + tent) once wood/stone goals are met",
+            "tier": "domain"
+          },
+          {
+            "name": "GAME_END",
+            "direction": "emit",
+            "description": "Called when the match ends in victory or defeat",
+            "tier": "domain"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Resets the board after victory or defeat",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "NatureSurvivalBoard3DError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "features",
+            "type": "[NatureSurvivalBoard3DFeaturesItem]",
+            "default": [
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "tree_default",
+                  "dimension": "3d",
+                  "name": "tree_default",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_default.glb",
+                  "variant": ""
+                },
+                "id": "f1",
+                "type": "tree",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "tree_oak",
+                  "dimension": "3d",
+                  "name": "tree_oak",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_oak.glb",
+                  "variant": ""
+                },
+                "id": "f2",
+                "type": "tree",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "tree_pineRoundA",
+                  "dimension": "3d",
+                  "name": "tree_pineRoundA",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_pineRoundA.glb",
+                  "variant": ""
+                },
+                "id": "f3",
+                "type": "tree",
+                "x": 4,
+                "y": 1
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "rock_largeA",
+                  "dimension": "3d",
+                  "name": "rock_largeA",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeA.glb",
+                  "variant": ""
+                },
+                "id": "f4",
+                "type": "rock",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "rock_largeB",
+                  "dimension": "3d",
+                  "name": "rock_largeB",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeB.glb",
+                  "variant": ""
+                },
+                "id": "f5",
+                "type": "rock",
+                "x": 2,
+                "y": 5
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "rock_largeC",
+                  "dimension": "3d",
+                  "name": "rock_largeC",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeC.glb",
+                  "variant": ""
+                },
+                "id": "f6",
+                "type": "rock",
+                "x": 4,
+                "y": 3
+              }
+            ],
+            "label": "Features",
+            "description": "Initial resource nodes (3 trees for wood, 3 rocks for stone).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "assetUrl": {
+                  "name": "assetUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "roamMaxX",
+            "type": "number",
+            "default": 1,
+            "label": "Roam Max X",
+            "description": "Animal roam rectangle max x",
+            "tier": "presentation"
+          },
+          {
+            "key": "roamMaxY",
+            "type": "number",
+            "default": 3,
+            "label": "Roam Max Y",
+            "description": "Animal roam rectangle max y",
+            "tier": "presentation"
+          },
+          {
+            "key": "roamMinX",
+            "type": "number",
+            "default": 0,
+            "label": "Roam Min X",
+            "description": "Animal roam rectangle min x",
+            "tier": "presentation"
+          },
+          {
+            "key": "roamMinY",
+            "type": "number",
+            "default": 2,
+            "label": "Roam Min Y",
+            "description": "Animal roam rectangle min y",
+            "tier": "presentation"
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.45,
+            "label": "Scale",
+            "description": "Canvas render scale",
+            "tier": "presentation"
+          },
+          {
+            "key": "tiles",
+            "type": "[NatureSurvivalBoard3DTilesItem]",
+            "default": [
+              {
+                "id": "t00",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "id": "t10",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 1,
+                "y": 0
+              },
+              {
+                "id": "t20",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "id": "t30",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_riverStraight",
+                  "dimension": "3d",
+                  "name": "ground_riverStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_riverStraight.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "river",
+                "x": 3,
+                "y": 0
+              },
+              {
+                "id": "t40",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "id": "t50",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 5,
+                "y": 0
+              },
+              {
+                "id": "t01",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "id": "t11",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "id": "t21",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "id": "t31",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_riverStraight",
+                  "dimension": "3d",
+                  "name": "ground_riverStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_riverStraight.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "river",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "id": "t41",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 4,
+                "y": 1
+              },
+              {
+                "id": "t51",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 5,
+                "y": 1
+              },
+              {
+                "id": "t02",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 0,
+                "y": 2
+              },
+              {
+                "id": "t12",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "id": "t22",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "id": "t32",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_riverStraight",
+                  "dimension": "3d",
+                  "name": "ground_riverStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_riverStraight.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "river",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "id": "t42",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 4,
+                "y": 2
+              },
+              {
+                "id": "t52",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 5,
+                "y": 2
+              },
+              {
+                "id": "t03",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 0,
+                "y": 3
+              },
+              {
+                "id": "t13",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "id": "t23",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 2,
+                "y": 3
+              },
+              {
+                "id": "t33",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_riverStraight",
+                  "dimension": "3d",
+                  "name": "ground_riverStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_riverStraight.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "river",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "id": "t43",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "id": "t53",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 5,
+                "y": 3
+              },
+              {
+                "id": "t04",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 0,
+                "y": 4
+              },
+              {
+                "id": "t14",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "id": "t24",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "id": "t34",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_riverStraight",
+                  "dimension": "3d",
+                  "name": "ground_riverStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_riverStraight.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "river",
+                "x": 3,
+                "y": 4
+              },
+              {
+                "id": "t44",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "cliff_block_rock",
+                  "dimension": "3d",
+                  "name": "cliff_block_rock",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/cliff_block_rock.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "cliff",
+                "x": 4,
+                "y": 4
+              },
+              {
+                "id": "t54",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "cliff_block_rock",
+                  "dimension": "3d",
+                  "name": "cliff_block_rock",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/cliff_block_rock.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "cliff",
+                "x": 5,
+                "y": 4
+              },
+              {
+                "id": "t05",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 0,
+                "y": 5
+              },
+              {
+                "id": "t15",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "grass",
+                "x": 1,
+                "y": 5
+              },
+              {
+                "id": "t25",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_grass",
+                  "dimension": "3d",
+                  "name": "ground_grass",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "grass",
+                "x": 2,
+                "y": 5
+              },
+              {
+                "id": "t35",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ground_riverStraight",
+                  "dimension": "3d",
+                  "name": "ground_riverStraight",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_riverStraight.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "river",
+                "x": 3,
+                "y": 5
+              },
+              {
+                "id": "t45",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "cliff_block_rock",
+                  "dimension": "3d",
+                  "name": "cliff_block_rock",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/cliff_block_rock.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "cliff",
+                "x": 4,
+                "y": 5
+              },
+              {
+                "id": "t55",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "cliff_block_rock",
+                  "dimension": "3d",
+                  "name": "cliff_block_rock",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/cliff_block_rock.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "cliff",
+                "x": 5,
+                "y": 5
+              }
+            ],
+            "label": "Tiles",
+            "description": "6x6 wilderness grid — grass with a river column and a cliff corner.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "terrain": {
+                  "name": "terrain",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "turnBudget",
+            "type": "number",
+            "default": 40,
+            "label": "Turn Budget",
+            "description": "Energy ticks allowed before defeat if the camp is not yet built",
+            "tier": "presentation"
+          },
+          {
+            "key": "unitScale",
+            "type": "number",
+            "default": 1,
+            "label": "Unit Scale",
+            "description": "Unit draw-size multiplier",
+            "tier": "presentation"
+          },
+          {
+            "key": "units",
+            "type": "[NatureSurvivalBoard3DUnitsItem]",
+            "default": [
+              {
+                "health": 1,
+                "id": "survivor",
+                "maxHealth": 1,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk"
+                  ],
+                  "aspect": "1:1",
+                  "category": "character-male-a",
+                  "dimension": "3d",
+                  "name": "character-male-a",
+                  "role": "player",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-male-a.glb",
+                  "variant": ""
+                },
+                "name": "Survivor",
+                "position": {
+                  "x": 2,
+                  "y": 2
+                },
+                "team": "player",
+                "unitType": "survivor"
+              },
+              {
+                "health": 1,
+                "id": "deer",
+                "maxHealth": 1,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk"
+                  ],
+                  "aspect": "1:1",
+                  "category": "animal-deer",
+                  "dimension": "3d",
+                  "name": "animal-deer",
+                  "role": "npc",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cube-pets/units/animal-deer.glb",
+                  "variant": ""
+                },
+                "name": "Deer",
+                "position": {
+                  "x": 0,
+                  "y": 3
+                },
+                "team": "neutral",
+                "unitType": "deer"
+              }
+            ],
+            "label": "Units",
+            "description": "Survivor (player) and a wandering deer (neutral).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "neutral"
+                  ]
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "attackTargets",
+            "energyLeft",
+            "features",
+            "fx",
+            "gridHeight",
+            "gridWidth",
+            "movementRange",
+            "result",
+            "selectedUnitId",
+            "stone",
+            "stoneGoal",
+            "units",
+            "validMoves",
+            "wood",
+            "woodGoal"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "NatureSurvivalBoard3DPage",
+        "defaultPath": "/nature-survival-board-3d",
+        "primaryEntity": "NatureSurvivalBoard3DItem"
+      }
+    ],
+    "emittedEvents": [
+      "BUILD_CAMP",
+      "CANCEL",
+      "GAME_END",
+      "PLAY_AGAIN",
+      "TILE_CLICK",
+      "UNIT_CLICK"
+    ],
+    "listenedEvents": []
+  }
+]

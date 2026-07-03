@@ -739,9 +739,6 @@
           "traits": [
             {
               "ref": "WorldMapBoardRender"
-            },
-            {
-              "ref": "WorldMapBoardAnimTick"
             }
           ]
         }
@@ -7357,7 +7354,7 @@
               "event": "HERO_SELECT",
               "payloadSchema": [
                 {
-                  "name": "heroId",
+                  "name": "unitId",
                   "required": true,
                   "type": "string"
                 }
@@ -7366,21 +7363,16 @@
               "tier": "domain"
             },
             {
-              "description": "Emits UI:{heroMoveEvent} with { heroId, toX, toY }",
+              "description": "Emits UI:{tileClickEvent} with { x, y }",
               "event": "HERO_MOVE",
               "payloadSchema": [
                 {
-                  "name": "heroId",
-                  "required": true,
-                  "type": "string"
-                },
-                {
-                  "name": "toX",
+                  "name": "x",
                   "required": true,
                   "type": "number"
                 },
                 {
-                  "name": "toY",
+                  "name": "y",
                   "required": true,
                   "type": "number"
                 }
@@ -7521,7 +7513,7 @@
                 "name": "Hero Select",
                 "payloadSchema": [
                   {
-                    "name": "heroId",
+                    "name": "unitId",
                     "required": true,
                     "type": "string"
                   }
@@ -7541,22 +7533,17 @@
                 "tier": "domain"
               },
               {
-                "description": "Emits UI:{heroMoveEvent} with { heroId, toX, toY }",
+                "description": "Emits UI:{tileClickEvent} with { x, y }",
                 "key": "HERO_MOVE",
                 "name": "Hero Move",
                 "payloadSchema": [
                   {
-                    "name": "heroId",
-                    "required": true,
-                    "type": "string"
-                  },
-                  {
-                    "name": "toX",
+                    "name": "x",
                     "required": true,
                     "type": "number"
                   },
                   {
-                    "name": "toY",
+                    "name": "y",
                     "required": true,
                     "type": "number"
                   }
@@ -8107,7 +8094,7 @@
                   [
                     "set",
                     "@entity.selectedHeroId",
-                    "@payload.heroId"
+                    "@payload.unitId"
                   ],
                   [
                     "set",
@@ -8156,7 +8143,7 @@
                                         [
                                           "==",
                                           "@u.id",
-                                          "@payload.heroId"
+                                          "@payload.unitId"
                                         ]
                                       ]
                                     ],
@@ -8423,7 +8410,7 @@
                         [
                           "==",
                           "@u.id",
-                          "@payload.heroId"
+                          "@payload.unitId"
                         ]
                       ]
                     ],
@@ -8627,8 +8614,8 @@
                             {
                               "animation": "walk",
                               "position": {
-                                "x": "@payload.toX",
-                                "y": "@payload.toY"
+                                "x": "@payload.x",
+                                "y": "@payload.y"
                               }
                             }
                           ],
@@ -8801,8 +8788,8 @@
                     [
                       "grid/in-bounds",
                       {
-                        "x": "@payload.toX",
-                        "y": "@payload.toY"
+                        "x": "@payload.x",
+                        "y": "@payload.y"
                       },
                       "@entity.gridWidth",
                       "@entity.gridHeight"
@@ -8831,8 +8818,8 @@
                             "position"
                           ],
                           {
-                            "x": "@payload.toX",
-                            "y": "@payload.toY"
+                            "x": "@payload.x",
+                            "y": "@payload.y"
                           }
                         ],
                         "@entity.movementRange"
@@ -8858,7 +8845,7 @@
                                       "@t",
                                       "x"
                                     ],
-                                    "@payload.toX"
+                                    "@payload.x"
                                   ],
                                   [
                                     "==",
@@ -8867,7 +8854,7 @@
                                       "@t",
                                       "y"
                                     ],
-                                    "@payload.toY"
+                                    "@payload.y"
                                   ]
                                 ]
                               ]
@@ -8899,7 +8886,7 @@
                                       ],
                                       "x"
                                     ],
-                                    "@payload.toX"
+                                    "@payload.x"
                                   ],
                                   [
                                     "==",
@@ -8912,7 +8899,7 @@
                                       ],
                                       "y"
                                     ],
-                                    "@payload.toY"
+                                    "@payload.y"
                                   ]
                                 ]
                               ]
@@ -10160,23 +10147,6 @@
               "name": "renderTick"
             }
           ]
-        },
-        {
-          "config": {
-            "frameCount": {
-              "default": 8.0,
-              "type": "unknown"
-            }
-          },
-          "linkedEntity": "WorldMapBoardItem",
-          "name": "WorldMapBoardAnimTick",
-          "ref": "AnimTick.traits.AnimTick"
-        }
-      ],
-      "uses": [
-        {
-          "as": "AnimTick",
-          "from": "std/behaviors/std-anim-tick"
         }
       ]
     }

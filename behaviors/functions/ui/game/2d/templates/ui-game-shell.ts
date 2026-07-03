@@ -45,6 +45,8 @@ export interface StdUiGameShellConfig {
   backgroundAsset?: EntityRow;
   /** Default: `""` */
   className?: string;
+  /** Default: `"future"` */
+  fontFamily?: string;
   /** Default: `{"animations":["static"],"aspect":"1:1","category":"hudBackgroundAsset","dimension":"2d","name":"hudBackgroundAsset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"}` */
   hudBackgroundAsset?: EntityRow;
   /** Default: `true` */

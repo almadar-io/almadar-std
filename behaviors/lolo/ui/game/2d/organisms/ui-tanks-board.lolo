@@ -1,7 +1,6 @@
 app ui-tanks-board "1.0.0"
 "TanksBoard — sci-fi tank combat with TILE_CLICK/UNIT_CLICK/FIRE input wiring, END_TURN HUD control, and UI Pack - Sci-fi assets."
 orbital TanksBoardOrbital {
-  uses AnimTick from "std/behaviors/std-anim-tick"
 
   type TanksBoardError = {
     message : string!
@@ -121,30 +120,7 @@ orbital TanksBoardOrbital {
   trait TanksBoardRender -> @rebindable TanksBoardItem [interaction, instance] {
     initial: playing
 
-    state menu {
-      START -> playing
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.score 0)
-        (set @entity.lives 3)
-        (set @entity.turn 0)
-        (set @entity.result "none")
-        (set @entity.phase "observation")
-        (set @entity.enemyTurn false)
-        (set @entity.effects [])
-        (render-ui main {
-          type: game-shell
-          fontFamily: "future"
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-simple-space/features/simpleSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-simple-space/features/simpleSpace_sheet.json", sprite: "star_medium.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-space-shooter-redux/features/sheet.json", sprite: "playerLife1_green.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } }, { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json", sprite: "tank_arrowFull.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-turn", thumbnailUrl: "" } } ] } ] }
-          addons: { type: button, action: END_TURN, label: "End Turn", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-tank-pack/features/tanks_spritesheetDefault.json", sprite: "tank_arrowEmpty.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-end-turn", thumbnailUrl: "" }, variant: primary }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-    }
-
-    state playing {
+state playing {
       INIT -> playing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "")
@@ -275,7 +251,7 @@ orbital TanksBoardOrbital {
     }
 
     state gameover {
-      PLAY_AGAIN -> menu
+      PLAY_AGAIN -> playing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
@@ -400,9 +376,5 @@ orbital TanksBoardOrbital {
     }
   }
 
-  trait TanksBoardAnimTick = AnimTick.traits.AnimTick -> TanksBoardItem {
-    config { frameCount: 8 }
-  }
-
-  page "/tanks-board" as TanksBoardPage -> TanksBoardRender, TanksBoardAnimTick
+page "/tanks-board" as TanksBoardPage -> TanksBoardRender
 }
