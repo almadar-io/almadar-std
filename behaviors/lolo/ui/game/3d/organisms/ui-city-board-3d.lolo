@@ -1,5 +1,5 @@
 app ui-city-board-3d "1.0.0"
-"CityBoard3D — 3D delivery board organism; courier car drives city roads delivering to shops via game-canvas-3d."
+"CityBoard3D — courier car follows city roads to deliver to every shop within a move budget or the run is lost."
 orbital CityBoard3DOrbital {
   type CityBoard3DError = {
     message : string!
@@ -60,6 +60,15 @@ orbital CityBoard3DOrbital {
     y : number!
     delivered : boolean
   }
+  type CityBoard3DFxEvent = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
 
   entity CityBoard3DItem [runtime] {
     id : string!
@@ -68,12 +77,14 @@ orbital CityBoard3DOrbital {
     validMoves : [CityBoard3DValidMovesItem]
     attackTargets : [CityBoard3DValidMovesItem] = []
     targets : [CityBoard3DTargetsItem]
+    fx : [CityBoard3DFxEvent] = []
     deliveries : number = 0
     totalTargets : number = 3
-    result : "none" | "won" = none
+    movesLeft : number = 16
+    result : "none" | "won" | "lost" = none
     gridWidth : number = 6
     gridHeight : number = 6
-    movementRange : number = 6
+    movementRange : number = 1
   }
 
   trait CityBoard3DRender -> @rebindable CityBoard3DItem [interaction, instance] {
@@ -86,16 +97,19 @@ orbital CityBoard3DOrbital {
         (set @entity.validMoves [])
         (set @entity.attackTargets [])
         (set @entity.targets @config.targets)
+        (set @entity.fx [])
         (set @entity.deliveries 0)
         (set @entity.totalTargets 3)
+        (set @entity.movesLeft @config.moveBudget)
         (set @entity.result "none")
         (set @entity.gridWidth 6)
         (set @entity.gridHeight 6)
-        (set @entity.movementRange 6)
+        (set @entity.movementRange 1)
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Moves", value: @entity.movesLeft }, { label: "Result", value: @entity.result } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, events: @entity.fx } ]
         })
 
       UNIT_CLICK -> playing when (== @entity.selectedUnitId ?unitId)
@@ -103,8 +117,9 @@ orbital CityBoard3DOrbital {
         (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Moves", value: @entity.movesLeft }, { label: "Result", value: @entity.result } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, events: @entity.fx } ]
         })
 
       UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
@@ -112,22 +127,29 @@ orbital CityBoard3DOrbital {
         (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== (object/get t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get t x), y: (object/get t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn o (and (== (object/get (object/get o position) x) (object/get t x)) (== (object/get (object/get o position) y) (object/get t y)))))) 0))))) (fn t { x: (object/get t x), z: (object/get t y) })))
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Moves", value: @entity.movesLeft }, { label: "Result", value: @entity.result } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, events: @entity.fx } ]
         })
 
       TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (and (== (object/get (array/find @config.tiles (fn t (and (== (object/get t x) ?x) (== (object/get t y) ?z)))) passable) true) (== (array/len (array/filter @entity.units (fn o (and (== (object/get (object/get o position) x) ?x) (== (object/get (object/get o position) y) ?z))))) 0)))))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
-        (set @entity.targets (array/map @entity.targets (fn t (if (and (== (object/get t delivered) false) (<= (grid/manhattan-distance { x: ?x, y: ?z } { x: (object/get t x), y: (object/get t y) }) 1)) (object/merge t { delivered: true }) t))))
-        (set @entity.deliveries (array/len (array/filter @entity.targets (fn t (== (object/get t delivered) true)))))
-        (set @entity.result (if (== @entity.deliveries @entity.totalTargets) "won" "none"))
-        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
+        (let ((newlyDelivered (array/filter @entity.targets (fn t (and (== (object/get @t delivered) false) (<= (grid/manhattan-distance { x: ?x, y: ?z } { x: (object/get @t x), y: (object/get @t y) }) 1))))))
+          (do
+            (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
+            (set @entity.targets (array/map @entity.targets (fn t (if (and (== (object/get @t delivered) false) (<= (grid/manhattan-distance { x: ?x, y: ?z } { x: (object/get @t x), y: (object/get @t y) }) 1)) (object/merge @t { delivered: true }) @t))))
+            (set @entity.deliveries (array/len (array/filter @entity.targets (fn t (== (object/get @t delivered) true)))))
+            (set @entity.movesLeft (math/max 0 (- @entity.movesLeft 1)))
+            (set @entity.fx (array/reduce @newlyDelivered (fn acc t (array/append @acc { id: (str/concat "fx-deliver-" (object/get @t id)), type: "pickup", x: (object/get @t x), z: (object/get @t y), message: "Delivered", ttl: 3 })) @entity.fx))
+            (set @entity.result (if (== @entity.deliveries @entity.totalTargets) "won" (if (<= @entity.movesLeft 0) "lost" "none")))
+            (set @entity.fx (if (== @entity.result "lost") (array/append @entity.fx { id: (str/concat "fx-fail-" ?x), type: "lose", x: ?x, z: ?z, message: "Out of moves", ttl: 3 }) @entity.fx))
+            (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+            (set @entity.selectedUnitId "")
+            (set @entity.validMoves [])))
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Moves", value: @entity.movesLeft }, { label: "Result", value: @entity.result } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, events: @entity.fx } ]
         })
 
       CANCEL -> playing when (!= @entity.selectedUnitId "")
@@ -135,8 +157,9 @@ orbital CityBoard3DOrbital {
         (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Moves", value: @entity.movesLeft }, { label: "Result", value: @entity.result } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, events: @entity.fx } ]
         })
 
       GAME_END -> gameover when (!= @entity.result "none")
@@ -144,8 +167,10 @@ orbital CityBoard3DOrbital {
         (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Moves", value: @entity.movesLeft }, { label: "Result", value: @entity.result } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, events: @entity.fx } ]
         })
     }
 
@@ -156,23 +181,28 @@ orbital CityBoard3DOrbital {
         (set @entity.validMoves [])
         (set @entity.attackTargets [])
         (set @entity.targets @config.targets)
+        (set @entity.fx [])
         (set @entity.deliveries 0)
+        (set @entity.movesLeft @config.moveBudget)
         (set @entity.result "none")
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Moves", value: @entity.movesLeft }, { label: "Result", value: @entity.result } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, events: @entity.fx } ]
         })
     }
 
     ticks {
       trafficTick every 1200ms
         when (== @entity.result "none")
-        (set @entity.units (array/map @entity.units (fn u (if (== (object/get @u team) "neutral") (let ((cur (object/get @u position)) (headingB (object/get @u headingToB))) (let ((tgt (if @headingB (object/get @u routeB) (object/get @u routeA)))) (let ((atTarget (and (== (object/get @cur x) (object/get @tgt x)) (== (object/get @cur y) (object/get @tgt y))))) (let ((nextHeading (if @atTarget (if @headingB false true) @headingB))) (object/merge @u { position: { x: (math/clamp (+ (object/get @cur x) (math/sign (- (object/get @tgt x) (object/get @cur x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get @cur y) (math/sign (- (object/get @tgt y) (object/get @cur y)))) 0 (- @entity.gridHeight 1)) }, headingToB: @nextHeading }))))) @u))))
+        (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (set @entity.units (array/map @entity.units (fn u (if (== (object/get @u team) "neutral") (let ((cur (object/get @u position)) (headingB (object/get @u headingToB))) (let ((tgt (if @headingB (object/get @u routeB) (object/get @u routeA)))) (let ((atTarget (and (== (object/get @cur x) (object/get @tgt x)) (== (object/get @cur y) (object/get @tgt y))))) (let ((nextHeading (if @atTarget (if @headingB false true) @headingB))) (let ((step { x: (math/clamp (+ (object/get @cur x) (math/sign (- (object/get @tgt x) (object/get @cur x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get @cur y) (math/sign (- (object/get @tgt y) (object/get @cur y)))) 0 (- @entity.gridHeight 1)) })) (let ((ntile (array/find @config.tiles (fn t (and (== (object/get @t x) (object/get @step x)) (== (object/get @t y) (object/get @step y)))))) (occupied (array/find @entity.units (fn o (and (!= @o.id @u.id) (and (== (object/get (object/get @o position) x) (object/get @step x)) (== (object/get (object/get @o position) y) (object/get @step y)))))))) (if (and (!= @ntile null) (and (== (object/get @ntile passable) true) (== @occupied null))) (object/merge @u { position: @step, headingToB: @nextHeading }) (object/merge @u { headingToB: @nextHeading })))))))) @u))))
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+          hud: { type: game-hud, stats: [ { label: "Deliveries", value: @entity.deliveries }, { label: "Moves", value: @entity.movesLeft }, { label: "Result", value: @entity.result } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, events: @entity.fx } ]
         })
     }
 
@@ -241,6 +271,10 @@ orbital CityBoard3DOrbital {
       unitScale : number = 1
         @label "Unit Scale"
         @description "Unit draw-size multiplier"
+        @tier "presentation"
+      moveBudget : number = 16
+        @label "Move Budget"
+        @description "Delivery moves allowed before the run is lost with shops unfilled"
         @tier "presentation"
     }
   }

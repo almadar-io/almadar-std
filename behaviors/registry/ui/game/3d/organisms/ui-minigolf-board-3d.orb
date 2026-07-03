@@ -1,5 +1,5 @@
 {
-  "description": "MinigolfBoard3D — 3D grid mini-golf board organism; putt an S-shaped fairway past obstacles into the hole within par.",
+  "description": "MinigolfBoard3D — grid mini-golf; putt one adjacent cell at a time along an S-shaped fairway past obstacles into the hole.",
   "name": "ui-minigolf-board-3d",
   "orbitals": [
     {
@@ -165,25 +165,6 @@
             "type": "array"
           },
           {
-            "items": {
-              "properties": {
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": true,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            },
-            "name": "attackTargets",
-            "type": "array"
-          },
-          {
             "default": 0.0,
             "name": "strokes",
             "type": "number"
@@ -214,9 +195,54 @@
             "type": "number"
           },
           {
-            "default": 2.0,
+            "default": 1.0,
             "name": "movementRange",
             "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "fx",
+            "type": "array"
           }
         ],
         "name": "MinigolfBoard3DItem",
@@ -1492,7 +1518,7 @@
           },
           "emits": [
             {
-              "description": "Emits UI:{tileClickEvent} with { tileId, x, z } — putts the selected ball toward the target tile",
+              "description": "Emits UI:{tileClickEvent} with { tileId, x, z } — putts the selected ball one adjacent cell toward the target tile",
               "event": "TILE_CLICK",
               "payloadSchema": [
                 {
@@ -1560,7 +1586,7 @@
           ],
           "entityContract": {
             "provides": [
-              "attackTargets",
+              "fx",
               "gridHeight",
               "gridWidth",
               "movementRange",
@@ -1579,10 +1605,6 @@
           "scope": "instance",
           "stateMachine": {
             "events": [
-              {
-                "key": "START",
-                "name": "Start"
-              },
               {
                 "key": "INIT",
                 "name": "Initialize"
@@ -1609,7 +1631,7 @@
                 "tier": "domain"
               },
               {
-                "description": "Emits UI:{tileClickEvent} with { tileId, x, z } — putts the selected ball toward the target tile",
+                "description": "Emits UI:{tileClickEvent} with { tileId, x, z } — putts the selected ball one adjacent cell toward the target tile",
                 "key": "TILE_CLICK",
                 "name": "Tile Click",
                 "payloadSchema": [
@@ -1660,9 +1682,6 @@
                 "name": "playing"
               },
               {
-                "name": "menu"
-              },
-              {
                 "name": "gameover"
               }
             ],
@@ -1686,11 +1705,6 @@
                   ],
                   [
                     "set",
-                    "@entity.attackTargets",
-                    []
-                  ],
-                  [
-                    "set",
                     "@entity.strokes",
                     0.0
                   ],
@@ -1717,15 +1731,39 @@
                   [
                     "set",
                     "@entity.movementRange",
-                    2.0
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.fx",
+                    []
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
-                          "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -1755,102 +1793,42 @@
                         ],
                         "type": "game-hud"
                       },
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "START",
-                "from": "menu",
-                "to": "playing"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.units",
-                    "@config.units"
-                  ],
-                  [
-                    "set",
-                    "@entity.selectedUnitId",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.validMoves",
-                    []
-                  ],
-                  [
-                    "set",
-                    "@entity.attackTargets",
-                    []
-                  ],
-                  [
-                    "set",
-                    "@entity.strokes",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.par",
-                    "@config.par"
-                  ],
-                  [
-                    "set",
-                    "@entity.result",
-                    "none"
-                  ],
-                  [
-                    "set",
-                    "@entity.gridWidth",
-                    6.0
-                  ],
-                  [
-                    "set",
-                    "@entity.gridHeight",
-                    6.0
-                  ],
-                  [
-                    "set",
-                    "@entity.movementRange",
-                    2.0
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "attackTargets": "@entity.attackTargets",
-                          "features": "@config.features",
-                          "scale": "@config.scale",
-                          "selectedUnitId": "@entity.selectedUnitId",
-                          "tileClickEvent": "TILE_CLICK",
-                          "tiles": "@config.tiles",
-                          "type": "game-canvas-3d",
-                          "unitClickEvent": "UNIT_CLICK",
-                          "unitScale": "@config.unitScale",
-                          "units": "@entity.units",
-                          "validMoves": "@entity.validMoves"
-                        }
-                      ],
-                      "hud": {
-                        "stats": [
-                          {
-                            "label": "Strokes",
-                            "value": "@entity.strokes"
-                          },
-                          {
-                            "label": "Par",
-                            "value": "@entity.par"
-                          },
-                          {
-                            "label": "Result",
-                            "value": "@entity.result"
-                          }
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
                         ],
-                        "type": "game-hud"
-                      },
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                },
+                                {
+                                  "label": "Strokes",
+                                  "value": "@entity.strokes"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -1949,9 +1927,28 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
-                          "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -1981,6 +1978,42 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                },
+                                {
+                                  "label": "Strokes",
+                                  "value": "@entity.strokes"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -2033,6 +2066,30 @@
                   ],
                   [
                     "set",
+                    "@entity.fx",
+                    [
+                      "array/append",
+                      "@entity.fx",
+                      {
+                        "id": [
+                          "str/concat",
+                          "putt-",
+                          "@entity.strokes"
+                        ],
+                        "message": [
+                          "str/concat",
+                          "putt ",
+                          "@entity.strokes"
+                        ],
+                        "ttl": 5.0,
+                        "type": "score",
+                        "x": "@payload.x",
+                        "z": "@payload.z"
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
                     "@entity.selectedUnitId",
                     ""
                   ],
@@ -2045,9 +2102,28 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
-                          "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2077,6 +2153,42 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                },
+                                {
+                                  "label": "Strokes",
+                                  "value": "@entity.strokes"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -2246,15 +2358,40 @@
                       "if",
                       [
                         "<=",
-                        [
-                          "+",
-                          "@entity.strokes",
-                          1.0
-                        ],
+                        "@entity.strokes",
                         "@entity.par"
                       ],
                       "won",
                       "lost"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.fx",
+                    [
+                      "array/append",
+                      "@entity.fx",
+                      {
+                        "id": "result-fx",
+                        "message": [
+                          "str/concat",
+                          "Strokes: ",
+                          "@entity.strokes"
+                        ],
+                        "ttl": 999.0,
+                        "type": [
+                          "if",
+                          [
+                            "==",
+                            "@entity.result",
+                            "won"
+                          ],
+                          "win",
+                          "lose"
+                        ],
+                        "x": "@payload.x",
+                        "z": "@payload.z"
+                      }
                     ]
                   ],
                   [
@@ -2271,9 +2408,28 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
-                          "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2303,6 +2459,42 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                },
+                                {
+                                  "label": "Strokes",
+                                  "value": "@entity.strokes"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -2439,9 +2631,28 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
-                          "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2471,6 +2682,42 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                },
+                                {
+                                  "label": "Strokes",
+                                  "value": "@entity.strokes"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -2503,11 +2750,6 @@
                   ],
                   [
                     "set",
-                    "@entity.attackTargets",
-                    []
-                  ],
-                  [
-                    "set",
                     "@entity.strokes",
                     0.0
                   ],
@@ -2522,12 +2764,41 @@
                     "none"
                   ],
                   [
+                    "set",
+                    "@entity.movementRange",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.fx",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
-                          "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2557,16 +2828,103 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                },
+                                {
+                                  "label": "Strokes",
+                                  "value": "@entity.strokes"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
                 ],
                 "event": "PLAY_AGAIN",
                 "from": "gameover",
-                "to": "menu"
+                "to": "playing"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.fx",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.fx",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              "interval": 500.0,
+              "name": "decayTick"
+            }
+          ]
         }
       ]
     }

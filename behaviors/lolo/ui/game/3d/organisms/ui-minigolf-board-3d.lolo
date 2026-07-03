@@ -1,5 +1,5 @@
 app ui-minigolf-board-3d "1.0.0"
-"MinigolfBoard3D — 3D grid mini-golf board organism; putt an S-shaped fairway past obstacles into the hole within par."
+"MinigolfBoard3D — grid mini-golf; putt one adjacent cell at a time along an S-shaped fairway past obstacles into the hole."
 orbital MinigolfBoard3DOrbital {
   type MinigolfBoard3DError = {
     message : string!
@@ -54,9 +54,14 @@ orbital MinigolfBoard3DOrbital {
     x : number!
     z : number!
   }
-  type MinigolfBoard3DAttackTargetsItem = {
+  type MinigolfBoard3DEffectItem = {
+    id : string!
+    type : string!
     x : number!
-    z : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
   }
 
   entity MinigolfBoard3DItem [runtime] {
@@ -64,53 +69,36 @@ orbital MinigolfBoard3DOrbital {
     units : [MinigolfBoard3DUnitsItem]
     selectedUnitId : string
     validMoves : [MinigolfBoard3DValidMovesItem]
-    attackTargets : [MinigolfBoard3DAttackTargetsItem]
     strokes : number = 0
     par : number = 8
     result : "none" | "won" | "lost" = none
     gridWidth : number = 6
     gridHeight : number = 6
-    movementRange : number = 2
+    movementRange : number = 1
+    fx : [MinigolfBoard3DEffectItem] = []
   }
 
   trait MinigolfBoard3DRender -> @rebindable MinigolfBoard3DItem [interaction, instance] {
     initial: playing
-
-    state menu {
-      START -> playing
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.attackTargets [])
-        (set @entity.strokes 0)
-        (set @entity.par @config.par)
-        (set @entity.result "none")
-        (set @entity.gridWidth 6)
-        (set @entity.gridHeight 6)
-        (set @entity.movementRange 2)
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
-        })
-    }
 
     state playing {
       INIT -> playing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
-        (set @entity.attackTargets [])
         (set @entity.strokes 0)
         (set @entity.par @config.par)
         (set @entity.result "none")
         (set @entity.gridWidth 6)
         (set @entity.gridHeight 6)
-        (set @entity.movementRange 2)
+        (set @entity.movementRange 1)
+        (set @entity.fx [])
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Strokes", value: @entity.strokes } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
 
       UNIT_CLICK -> playing
@@ -119,30 +107,38 @@ orbital MinigolfBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Strokes", value: @entity.strokes } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
 
       TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (and (== (object/get (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) passable) true) (!= (object/get (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) terrain) "hole")))))
         (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
         (set @entity.strokes (+ @entity.strokes 1))
+        (set @entity.fx (array/append @entity.fx { id: (str/concat "putt-" @entity.strokes), type: "score", x: ?x, z: ?z, message: (str/concat "putt " @entity.strokes), ttl: 5 }))
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Strokes", value: @entity.strokes } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
 
       TILE_CLICK -> gameover when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (and (== (object/get (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) passable) true) (== (object/get (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) terrain) "hole")))))
         (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
         (set @entity.strokes (+ @entity.strokes 1))
-        (set @entity.result (if (<= (+ @entity.strokes 1) @entity.par) "won" "lost"))
+        (set @entity.result (if (<= @entity.strokes @entity.par) "won" "lost"))
+        (set @entity.fx (array/append @entity.fx { id: "result-fx", type: (if (== @entity.result "won") "win" "lose"), x: ?x, z: ?z, message: (str/concat "Strokes: " @entity.strokes), ttl: 999 }))
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Strokes", value: @entity.strokes } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
 
       CANCEL -> playing when (!= @entity.selectedUnitId "")
@@ -151,24 +147,34 @@ orbital MinigolfBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Strokes", value: @entity.strokes } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
     }
 
     state gameover {
-      PLAY_AGAIN -> menu
+      PLAY_AGAIN -> playing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
-        (set @entity.attackTargets [])
         (set @entity.strokes 0)
         (set @entity.par @config.par)
         (set @entity.result "none")
+        (set @entity.movementRange 1)
+        (set @entity.fx [])
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Strokes", value: @entity.strokes }, { label: "Par", value: @entity.par }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Strokes", value: @entity.strokes } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
+    }
+
+    ticks {
+      decayTick every 500ms
+        (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
     }
 
     emits {
@@ -177,7 +183,7 @@ orbital MinigolfBoard3DOrbital {
         x : number!
         z : number
       }
-        @description "Emits UI:{tileClickEvent} with { tileId, x, z } — putts the selected ball toward the target tile"
+        @description "Emits UI:{tileClickEvent} with { tileId, x, z } — putts the selected ball one adjacent cell toward the target tile"
         @tier "domain"
       UNIT_CLICK -> external {
         unitId : string!

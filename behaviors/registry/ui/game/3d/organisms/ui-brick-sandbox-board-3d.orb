@@ -179,6 +179,51 @@
             "type": "array"
           },
           {
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "fx",
+            "type": "array"
+          },
+          {
             "default": 0.0,
             "name": "placed",
             "type": "number"
@@ -1436,6 +1481,7 @@
             "provides": [
               "blueprint",
               "features",
+              "fx",
               "mistakes",
               "placed",
               "result"
@@ -1531,6 +1577,11 @@
                   ],
                   [
                     "set",
+                    "@entity.fx",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.features",
                     [
                       "array/map",
@@ -1570,6 +1621,7 @@
                       "children": [
                         {
                           "backgroundColor": "@config.bgColor",
+                          "events": "@entity.fx",
                           "features": "@entity.features",
                           "scale": "@config.scale",
                           "tileClickEvent": "TILE_CLICK",
@@ -1609,6 +1661,41 @@
                         "justify": "between",
                         "type": "stack"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "options": [
+                            {
+                              "event": "PLAY_AGAIN",
+                              "id": "again",
+                              "label": "Play Again",
+                              "variant": "primary"
+                            }
+                          ],
+                          "subtitle": [
+                            "str/concat",
+                            "Placed ",
+                            "@entity.placed"
+                          ],
+                          "title": [
+                            "if",
+                            [
+                              "==",
+                              "@entity.result",
+                              "won"
+                            ],
+                            "BUILD COMPLETE",
+                            "OUT OF TRIES"
+                          ],
+                          "type": "game-menu"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -1746,7 +1833,10 @@
                           [
                             ">=",
                             "@entity.placed",
-                            8.0
+                            [
+                              "array/len",
+                              "@entity.blueprint"
+                            ]
                           ],
                           "won",
                           [
@@ -1802,6 +1892,7 @@
                           "children": [
                             {
                               "backgroundColor": "@config.bgColor",
+                              "events": "@entity.fx",
                               "features": "@entity.features",
                               "scale": "@config.scale",
                               "tileClickEvent": "TILE_CLICK",
@@ -1841,6 +1932,41 @@
                             "justify": "between",
                             "type": "stack"
                           },
+                          "overlay": [
+                            "if",
+                            [
+                              "!=",
+                              "@entity.result",
+                              "none"
+                            ],
+                            {
+                              "options": [
+                                {
+                                  "event": "PLAY_AGAIN",
+                                  "id": "again",
+                                  "label": "Play Again",
+                                  "variant": "primary"
+                                }
+                              ],
+                              "subtitle": [
+                                "str/concat",
+                                "Placed ",
+                                "@entity.placed"
+                              ],
+                              "title": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.result",
+                                  "won"
+                                ],
+                                "BUILD COMPLETE",
+                                "OUT OF TRIES"
+                              ],
+                              "type": "game-menu"
+                            },
+                            null
+                          ],
                           "type": "game-shell"
                         }
                       ]
@@ -1894,6 +2020,11 @@
                   ],
                   [
                     "set",
+                    "@entity.fx",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.features",
                     [
                       "array/map",
@@ -1933,6 +2064,7 @@
                       "children": [
                         {
                           "backgroundColor": "@config.bgColor",
+                          "events": "@entity.fx",
                           "features": "@entity.features",
                           "scale": "@config.scale",
                           "tileClickEvent": "TILE_CLICK",
@@ -1972,6 +2104,41 @@
                         "justify": "between",
                         "type": "stack"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "options": [
+                            {
+                              "event": "PLAY_AGAIN",
+                              "id": "again",
+                              "label": "Play Again",
+                              "variant": "primary"
+                            }
+                          ],
+                          "subtitle": [
+                            "str/concat",
+                            "Placed ",
+                            "@entity.placed"
+                          ],
+                          "title": [
+                            "if",
+                            [
+                              "==",
+                              "@entity.result",
+                              "won"
+                            ],
+                            "BUILD COMPLETE",
+                            "OUT OF TRIES"
+                          ],
+                          "type": "game-menu"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]

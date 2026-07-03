@@ -1,8 +1,6 @@
 app ui-space-shmup-board "1.0.0"
-"SpaceShmupBoard — sci-fi SHMUP with TILE_CLICK/UNIT_CLICK input wiring, SHOOT HUD control, score/lives display, and UI Pack - Sci-fi assets."
+"SpaceShmupBoard — sci-fi shmup: dodge enemy lasers, blast descending waves with Space/Fire, clear every wave to win."
 orbital SpaceShmupBoardOrbital {
-  uses AnimTick from "std/behaviors/std-anim-tick"
-
   type SpaceShmupBoardError = {
     message : string!
     name : string
@@ -11,6 +9,8 @@ orbital SpaceShmupBoardOrbital {
   }
   type Asset = {
       url : asset
+      atlas : asset
+      sprite : string
       role : string
       category : string
       animations : [string]
@@ -21,61 +21,32 @@ orbital SpaceShmupBoardOrbital {
       name : string
       thumbnailUrl : string
     }
-  type SpaceShmupBoardTilesItem = {
-    id : string
+  type SpaceShmupBoardPlayer = {
     x : number!
     y : number!
-    z : number
-    terrain : string
-    type : string
-    terrainSprite : Asset
-    passable : boolean
-    movementCost : number
-    tileType : string
-    elevation : number
-    modelUrl : Asset
-  }
-  type SpaceShmupBoardUnitsItem = {
-    id : string!
-    position : SpaceShmupBoardUnitsItemPosition
-    x : number
-    y : number
-    z : number
-    sprite : Asset
-    spriteSheet : Asset
-    modelUrl : Asset
-    unitType : string
-    heroId : string
-    name : string
-    team : "player" | "enemy" | "neutral"
-    faction : "player" | "enemy" | "neutral"
-    health : number
-    maxHealth : number
-    traits : [SpaceShmupBoardUnitsItemTraitsItem]
-    previousPosition : SpaceShmupBoardUnitsItemPreviousPosition
-    elevation : number
     animation : string
     frame : number
+  }
+  type SpaceShmupBoardEnemiesItem = {
+    id : string!
+    x : number!
+    y : number!
+    hp : number!
+    animation : string
+    frame : number
+  }
+  type SpaceShmupBoardProjectilesItem = {
+    id : string!
+    x : number!
+    y : number!
+    vx : number!
+    vy : number!
   }
   type SpaceShmupBoardEffectItem = {
     key : string!
     x : number!
     y : number!
     ttl : number!
-  }
-  type SpaceShmupBoardUnitsItemPosition = {
-    x : number!
-    y : number!
-  }
-  type SpaceShmupBoardUnitsItemTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number!
-  }
-  type SpaceShmupBoardUnitsItemPreviousPosition = {
-    x : number!
-    y : number!
   }
   type SpaceShmupBoardFeaturesItem = {
     id : string
@@ -89,7 +60,6 @@ orbital SpaceShmupBoardOrbital {
     elevation : number
   }
   type SpaceShmupBoardAssetManifest = {
-    terrains : Map string Asset
     units : Map string Asset
     features : Map string Asset
     effects : Map string Asset
@@ -97,224 +67,247 @@ orbital SpaceShmupBoardOrbital {
 
   entity SpaceShmupBoardItem [runtime] {
     id : string!
-    units : [SpaceShmupBoardUnitsItem]
-    selectedUnitId : string = ""
-    validMoves : [SpaceShmupBoardUnitsItemPosition] = []
+    player : SpaceShmupBoardPlayer
+    enemies : [SpaceShmupBoardEnemiesItem]
+    projectiles : [SpaceShmupBoardProjectilesItem]
+    enemyProjectiles : [SpaceShmupBoardProjectilesItem]
     score : number = 0
+    wave : number = 1
     lives : number = 3
     result : "none" | "victory" | "defeat" = none
+    tick : number = 0
+    nextId : number = 0
+    paused : boolean = false
     effects : [SpaceShmupBoardEffectItem] = []
   }
 
   trait SpaceShmupBoardRender -> @rebindable SpaceShmupBoardItem [interaction, instance] {
     initial: playing
 
-    state menu {
-      START -> playing
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.score 0)
-        (set @entity.lives 3)
-        (set @entity.result "none")
-        (set @entity.effects [])
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-lives.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-fire.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-pause.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT" }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-    }
-
     state playing {
       INIT -> playing
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
+        (set @entity.player { x: (/ @config.width 2), y: (- @config.height @config.spriteSize), animation: "idle", frame: 0 })
+        (set @entity.enemies (array/map (array/range 0 @config.enemiesPerWave) (fn i { id: (str/concat "enemy-" @i), x: (+ @config.spriteSize (* @i (/ @config.width @config.enemiesPerWave))), y: @config.spriteSize, hp: @config.enemyHp, animation: "idle", frame: 0 })))
+        (set @entity.projectiles [])
+        (set @entity.enemyProjectiles [])
         (set @entity.score 0)
-        (set @entity.lives 3)
+        (set @entity.wave 1)
+        (set @entity.lives @config.lives)
         (set @entity.result "none")
+        (set @entity.tick 0)
+        (set @entity.nextId 0)
+        (set @entity.paused false)
         (set @entity.effects [])
         (render-ui main {
           type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-lives.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-fire.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-pause.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT" }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          fontFamily: "future"
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "star_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "ufoRed.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-wave", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, max: @config.lives, format: "hearts", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "playerLife1_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }
+          controls: { type: control-grid, kind: "dpad", directionEvents: { up: "MOVE_UP", down: "MOVE_DOWN", left: "MOVE_LEFT", right: "MOVE_RIGHT" } }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "bolt_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.json", sprite: "icon_pause", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: (array/concat [ { id: "player", position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, sprite: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation), frame: (object/get @entity.player frame), team: "player" } ] (array/map @entity.enemies (fn e { id: @e.id, position: { x: (object/get @e x), y: (object/get @e y) }, sprite: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation), frame: (object/get @e frame), team: "enemy" }))), features: (array/concat @config.features (array/concat (array/map @entity.projectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) playerLaser) })) (array/map @entity.enemyProjectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) enemyLaser) })))), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT", Space: "SHOOT" } } ]
         })
 
-      TILE_CLICK -> playing
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
+      MOVE_LEFT -> playing when (== @entity.result "none")
+        (set @entity.player (object/merge @entity.player { x: (math/max 0 (- (object/get @entity.player x) @config.moveStep)), animation: "walk" }))
+
+      MOVE_RIGHT -> playing when (== @entity.result "none")
+        (set @entity.player (object/merge @entity.player { x: (math/min @config.width (+ (object/get @entity.player x) @config.moveStep)), animation: "walk" }))
+
+      MOVE_UP -> playing when (== @entity.result "none")
+        (set @entity.player (object/merge @entity.player { y: (math/max @config.playerMinY (- (object/get @entity.player y) @config.moveStep)), animation: "walk" }))
+
+      MOVE_DOWN -> playing when (== @entity.result "none")
+        (set @entity.player (object/merge @entity.player { y: (math/min @config.height (+ (object/get @entity.player y) @config.moveStep)), animation: "walk" }))
+
+      SHOOT -> playing when (== @entity.result "none")
+        (set @entity.player (object/merge @entity.player { animation: "attack" }))
+        (set @entity.projectiles (array/concat @entity.projectiles [{ id: (str/concat "proj-" @entity.nextId), x: (object/get @entity.player x), y: (object/get @entity.player y), vx: 0, vy: (- 0 @config.projectileSpeed) }]))
+        (set @entity.nextId (+ @entity.nextId 1))
         (render-ui main {
           type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-lives.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-fire.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-pause.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT" }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-
-      UNIT_CLICK -> playing
-        (set @entity.selectedUnitId ?unitId)
-        (set @entity.validMoves [])
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-lives.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-fire.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-pause.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT" }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-
-      MOVE_LEFT -> playing
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "player") (object/merge @u { position: { x: (math/max 0 (- @u.position.x 1)), y: @u.position.y }, animation: "walk" }) @u))))
-
-      MOVE_RIGHT -> playing
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "player") (object/merge @u { position: { x: (+ @u.position.x 1), y: @u.position.y }, animation: "walk" }) @u))))
-
-      MOVE_UP -> playing
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "player") (object/merge @u { position: { x: @u.position.x, y: (math/max 0 (- @u.position.y 1)) }, animation: "walk" }) @u))))
-
-      MOVE_DOWN -> playing
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "player") (object/merge @u { position: { x: @u.position.x, y: (+ @u.position.y 1) }, animation: "walk" }) @u))))
-
-      SHOOT -> playing when (!= (array/len (array/filter @entity.units (fn u (== @u.team "player")))) 0)
-        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.id ?targetId) (== @u.team "enemy")) (object/merge @u { health: (math/max 0 (- (object/get @u health) 1)), animation: (if (<= (math/max 0 (- (object/get @u health) 1)) 0) "death" "hit") }) @u))))
-        (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 5 })) null)
-        (set @entity.score (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (+ @entity.score 100) @entity.score))
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-lives.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-fire.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-pause.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT" }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-
-      PLAYER_HIT -> playing when (> @entity.lives 0)
-        (set @entity.lives (- @entity.lives 1))
-        (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/first (array/filter @entity.units (fn u (== @u.team "player")))) position) x), y: (object/get (object/get (array/first (array/filter @entity.units (fn u (== @u.team "player")))) position) y), ttl: 5 }))
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-lives.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-fire.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-pause.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT" }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          fontFamily: "future"
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "star_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "ufoRed.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-wave", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, max: @config.lives, format: "hearts", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "playerLife1_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }
+          controls: { type: control-grid, kind: "dpad", directionEvents: { up: "MOVE_UP", down: "MOVE_DOWN", left: "MOVE_LEFT", right: "MOVE_RIGHT" } }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "bolt_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.json", sprite: "icon_pause", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: (array/concat [ { id: "player", position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, sprite: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation), frame: (object/get @entity.player frame), team: "player" } ] (array/map @entity.enemies (fn e { id: @e.id, position: { x: (object/get @e x), y: (object/get @e y) }, sprite: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation), frame: (object/get @e frame), team: "enemy" }))), features: (array/concat @config.features (array/concat (array/map @entity.projectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) playerLaser) })) (array/map @entity.enemyProjectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) enemyLaser) })))), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT", Space: "SHOOT" } } ]
         })
 
       PAUSE -> paused
+        (set @entity.paused true)
         (render-ui main {
           type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-lives.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-fire.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-pause.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
-          overlay: { type: game-menu, title: "Paused", items: [ { label: "Resume", action: RESUME }, { label: "Restart", action: INIT } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT" }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          fontFamily: "future"
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "star_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "ufoRed.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-wave", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, max: @config.lives, format: "hearts", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "playerLife1_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }
+          controls: { type: control-grid, kind: "dpad", directionEvents: { up: "MOVE_UP", down: "MOVE_DOWN", left: "MOVE_LEFT", right: "MOVE_RIGHT" } }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "bolt_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.json", sprite: "icon_pause", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
+          overlay: { type: game-menu, title: "PAUSED", subtitle: "Mission on hold", options: [ { id: "resume", label: "Resume", event: "RESUME", variant: "primary" }, { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "secondary" } ] }
+          children: [ { type: canvas-2d, tiles: [], units: (array/concat [ { id: "player", position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, sprite: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation), frame: (object/get @entity.player frame), team: "player" } ] (array/map @entity.enemies (fn e { id: @e.id, position: { x: (object/get @e x), y: (object/get @e y) }, sprite: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation), frame: (object/get @e frame), team: "enemy" }))), features: (array/concat @config.features (array/concat (array/map @entity.projectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) playerLaser) })) (array/map @entity.enemyProjectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) enemyLaser) })))), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT", Space: "SHOOT" } } ]
         })
 
-      GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (<= @entity.lives 0))
-        (set @entity.result (if (<= @entity.lives 0) "defeat" "victory"))
+      GAME_END -> gameover when (!= @entity.result "none")
         (render-ui main {
           type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-lives.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-fire.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-pause.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT" }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          fontFamily: "future"
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "star_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "ufoRed.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-wave", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, max: @config.lives, format: "hearts", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "playerLife1_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }
+          controls: { type: control-grid, kind: "dpad", directionEvents: { up: "MOVE_UP", down: "MOVE_DOWN", left: "MOVE_LEFT", right: "MOVE_RIGHT" } }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "bolt_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.json", sprite: "icon_pause", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
+          overlay: { type: game-menu, title: (if (== @entity.result "victory") "VICTORY" "DEFEAT"), subtitle: (if (== @entity.result "victory") "All waves cleared" "The fleet broke through"), options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] }
+          children: [ { type: canvas-2d, tiles: [], units: (array/concat [ { id: "player", position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, sprite: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation), frame: (object/get @entity.player frame), team: "player" } ] (array/map @entity.enemies (fn e { id: @e.id, position: { x: (object/get @e x), y: (object/get @e y) }, sprite: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation), frame: (object/get @e frame), team: "enemy" }))), features: (array/concat @config.features (array/concat (array/map @entity.projectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) playerLaser) })) (array/map @entity.enemyProjectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) enemyLaser) })))), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT", Space: "SHOOT" } } ]
         })
     }
 
     state paused {
       RESUME -> playing
+        (set @entity.paused false)
         (render-ui main {
           type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-lives.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-fire.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-pause.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT" }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          fontFamily: "future"
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "star_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "ufoRed.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-wave", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, max: @config.lives, format: "hearts", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "playerLife1_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }
+          controls: { type: control-grid, kind: "dpad", directionEvents: { up: "MOVE_UP", down: "MOVE_DOWN", left: "MOVE_LEFT", right: "MOVE_RIGHT" } }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "bolt_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.json", sprite: "icon_pause", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: (array/concat [ { id: "player", position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, sprite: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation), frame: (object/get @entity.player frame), team: "player" } ] (array/map @entity.enemies (fn e { id: @e.id, position: { x: (object/get @e x), y: (object/get @e y) }, sprite: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation), frame: (object/get @e frame), team: "enemy" }))), features: (array/concat @config.features (array/concat (array/map @entity.projectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) playerLaser) })) (array/map @entity.enemyProjectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) enemyLaser) })))), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT", Space: "SHOOT" } } ]
+        })
+
+      PLAY_AGAIN -> playing
+        (set @entity.player { x: (/ @config.width 2), y: (- @config.height @config.spriteSize), animation: "idle", frame: 0 })
+        (set @entity.enemies (array/map (array/range 0 @config.enemiesPerWave) (fn i { id: (str/concat "enemy-" @i), x: (+ @config.spriteSize (* @i (/ @config.width @config.enemiesPerWave))), y: @config.spriteSize, hp: @config.enemyHp, animation: "idle", frame: 0 })))
+        (set @entity.projectiles [])
+        (set @entity.enemyProjectiles [])
+        (set @entity.score 0)
+        (set @entity.wave 1)
+        (set @entity.lives @config.lives)
+        (set @entity.result "none")
+        (set @entity.tick 0)
+        (set @entity.nextId 0)
+        (set @entity.paused false)
+        (set @entity.effects [])
+        (render-ui main {
+          type: game-shell
+          fontFamily: "future"
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "star_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "ufoRed.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-wave", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, max: @config.lives, format: "hearts", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "playerLife1_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }
+          controls: { type: control-grid, kind: "dpad", directionEvents: { up: "MOVE_UP", down: "MOVE_DOWN", left: "MOVE_LEFT", right: "MOVE_RIGHT" } }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "bolt_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.json", sprite: "icon_pause", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: (array/concat [ { id: "player", position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, sprite: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation), frame: (object/get @entity.player frame), team: "player" } ] (array/map @entity.enemies (fn e { id: @e.id, position: { x: (object/get @e x), y: (object/get @e y) }, sprite: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation), frame: (object/get @e frame), team: "enemy" }))), features: (array/concat @config.features (array/concat (array/map @entity.projectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) playerLaser) })) (array/map @entity.enemyProjectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) enemyLaser) })))), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT", Space: "SHOOT" } } ]
         })
     }
 
     state gameover {
-      PLAY_AGAIN -> menu
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
+      PLAY_AGAIN -> playing
+        (set @entity.player { x: (/ @config.width 2), y: (- @config.height @config.spriteSize), animation: "idle", frame: 0 })
+        (set @entity.enemies (array/map (array/range 0 @config.enemiesPerWave) (fn i { id: (str/concat "enemy-" @i), x: (+ @config.spriteSize (* @i (/ @config.width @config.enemiesPerWave))), y: @config.spriteSize, hp: @config.enemyHp, animation: "idle", frame: 0 })))
+        (set @entity.projectiles [])
+        (set @entity.enemyProjectiles [])
         (set @entity.score 0)
-        (set @entity.lives 3)
+        (set @entity.wave 1)
+        (set @entity.lives @config.lives)
         (set @entity.result "none")
+        (set @entity.tick 0)
+        (set @entity.nextId 0)
+        (set @entity.paused false)
         (set @entity.effects [])
         (render-ui main {
           type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-lives.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-fire.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-pause.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT" }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          fontFamily: "future"
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "star_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "ufoRed.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-wave", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, max: @config.lives, format: "hearts", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "playerLife1_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }
+          controls: { type: control-grid, kind: "dpad", directionEvents: { up: "MOVE_UP", down: "MOVE_DOWN", left: "MOVE_LEFT", right: "MOVE_RIGHT" } }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "bolt_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.json", sprite: "icon_pause", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: (array/concat [ { id: "player", position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, sprite: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation), frame: (object/get @entity.player frame), team: "player" } ] (array/map @entity.enemies (fn e { id: @e.id, position: { x: (object/get @e x), y: (object/get @e y) }, sprite: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation), frame: (object/get @e frame), team: "enemy" }))), features: (array/concat @config.features (array/concat (array/map @entity.projectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) playerLaser) })) (array/map @entity.enemyProjectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) enemyLaser) })))), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT", Space: "SHOOT" } } ]
         })
     }
 
     ticks {
-      renderTick every 100ms
+      animTick every 100ms
+        when (and (== @entity.paused false) (== @entity.result "none"))
+        (set @entity.player (object/merge @entity.player { frame: (% (+ (object/get @entity.player frame) 1) 8) }))
+        (set @entity.enemies (array/map @entity.enemies (fn e (object/merge @e { frame: (% (+ (object/get @e frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn ef (object/merge @ef { ttl: (- (object/get @ef ttl) 1) }))) (fn ef (> (object/get @ef ttl) 0))))
         (render-ui main {
           type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-lives.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-fire.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/icon-pause.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT" }, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          fontFamily: "future"
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "star_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "ufoRed.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-wave", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, max: @config.lives, format: "hearts", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "playerLife1_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }
+          controls: { type: control-grid, kind: "dpad", directionEvents: { up: "MOVE_UP", down: "MOVE_DOWN", left: "MOVE_LEFT", right: "MOVE_RIGHT" } }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "bolt_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.json", sprite: "icon_pause", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: (array/concat [ { id: "player", position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, sprite: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation), frame: (object/get @entity.player frame), team: "player" } ] (array/map @entity.enemies (fn e { id: @e.id, position: { x: (object/get @e x), y: (object/get @e y) }, sprite: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation), frame: (object/get @e frame), team: "enemy" }))), features: (array/concat @config.features (array/concat (array/map @entity.projectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) playerLaser) })) (array/map @entity.enemyProjectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) enemyLaser) })))), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT", Space: "SHOOT" } } ]
         })
+
+      simulateTick every 100ms
+        when (and (== @entity.paused false) (== @entity.result "none"))
+        (set @entity.tick (+ @entity.tick 1))
+        (set @entity.projectiles (array/map @entity.projectiles (fn p (object/merge @p { y: (+ (object/get @p y) (object/get @p vy)) }))))
+        (set @entity.projectiles (array/filter @entity.projectiles (fn p (>= (object/get @p y) 0))))
+        (set @entity.enemyProjectiles (array/map @entity.enemyProjectiles (fn p (object/merge @p { y: (+ (object/get @p y) (object/get @p vy)) }))))
+        (set @entity.enemyProjectiles (array/filter @entity.enemyProjectiles (fn p (<= (object/get @p y) @config.height))))
+        (set @entity.enemyProjectiles (array/concat @entity.enemyProjectiles (array/map (array/filter @entity.enemies (fn e (< (math/random) @config.enemyFireChance))) (fn e { id: (str/concat "eproj-" (str/concat @e.id (str/concat "-" @entity.tick))), x: (object/get @e x), y: (object/get @e y), vx: 0, vy: @config.enemyProjectileSpeed }))))
+        (set @entity.enemies (array/map @entity.enemies (fn e (object/merge @e { y: (+ (object/get @e y) @config.enemySpeed), animation: "walk" }))))
+        (set @entity.score (+ @entity.score (* @config.scorePerKill (array/len (array/filter @entity.enemies (fn e (> (array/len (array/filter @entity.projectiles (fn p (<= (vec/distance { x: (object/get @e x), y: (object/get @e y) } { x: (object/get @p x), y: (object/get @p y) }) @config.hitRadius)))) 0)))))))
+        (set @entity.effects (array/concat @entity.effects (array/map (array/filter @entity.enemies (fn e (> (array/len (array/filter @entity.projectiles (fn p (<= (vec/distance { x: (object/get @e x), y: (object/get @e y) } { x: (object/get @p x), y: (object/get @p y) }) @config.hitRadius)))) 0))) (fn e { key: "hit", x: (object/get @e x), y: (object/get @e y), ttl: 4 }))))
+        (set @entity.enemies (array/map @entity.enemies (fn e (if (> (array/len (array/filter @entity.projectiles (fn p (<= (vec/distance { x: (object/get @e x), y: (object/get @e y) } { x: (object/get @p x), y: (object/get @p y) }) @config.hitRadius)))) 0) (object/merge @e { hp: (- (object/get @e hp) 1), animation: (if (<= (- (object/get @e hp) 1) 0) "death" "hit") }) @e))))
+        (set @entity.projectiles (array/filter @entity.projectiles (fn p (== (array/len (array/filter @entity.enemies (fn e (<= (vec/distance { x: (object/get @e x), y: (object/get @e y) } { x: (object/get @p x), y: (object/get @p y) }) @config.hitRadius)))) 0))))
+        (set @entity.effects (array/concat @entity.effects (array/map (array/filter @entity.enemies (fn e (<= (object/get @e hp) 0))) (fn e { key: "explosion", x: (object/get @e x), y: (object/get @e y), ttl: 5 }))))
+        (set @entity.enemies (array/filter @entity.enemies (fn e (> (object/get @e hp) 0))))
+        (set @entity.lives (- @entity.lives (array/len (array/filter @entity.enemyProjectiles (fn p (<= (vec/distance { x: (object/get @entity.player x), y: (object/get @entity.player y) } { x: (object/get @p x), y: (object/get @p y) }) @config.hitRadius))))))
+        (set @entity.effects (array/concat @entity.effects (array/map (array/filter @entity.enemyProjectiles (fn p (<= (vec/distance { x: (object/get @entity.player x), y: (object/get @entity.player y) } { x: (object/get @p x), y: (object/get @p y) }) @config.hitRadius))) (fn p { key: "explosion", x: (object/get @entity.player x), y: (object/get @entity.player y), ttl: 5 }))))
+        (set @entity.enemyProjectiles (array/filter @entity.enemyProjectiles (fn p (> (vec/distance { x: (object/get @entity.player x), y: (object/get @entity.player y) } { x: (object/get @p x), y: (object/get @p y) }) @config.hitRadius))))
+        (set @entity.lives (- @entity.lives (array/len (array/filter @entity.enemies (fn e (>= (object/get @e y) @config.height))))))
+        (set @entity.enemies (array/filter @entity.enemies (fn e (< (object/get @e y) @config.height))))
+        (set @entity.result (if (<= @entity.lives 0) "defeat" @entity.result))
+        (set @entity.wave (if (and (== (array/len @entity.enemies) 0) (== @entity.result "none")) (+ @entity.wave 1) @entity.wave))
+        (set @entity.result (if (and (== (array/len @entity.enemies) 0) (and (== @entity.result "none") (> @entity.wave @config.maxWaves))) "victory" @entity.result))
+        (set @entity.enemies (if (and (== (array/len @entity.enemies) 0) (== @entity.result "none")) (array/map (array/range 0 (+ @config.enemiesPerWave (- @entity.wave 1))) (fn i { id: (str/concat "enemy-" (+ (* @entity.wave 100) @i)), x: (+ @config.spriteSize (* @i (/ @config.width (+ @config.enemiesPerWave (- @entity.wave 1))))), y: @config.spriteSize, hp: @config.enemyHp, animation: "idle", frame: 0 })) @entity.enemies))
+        (render-ui main {
+          type: game-shell
+          fontFamily: "future"
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json", sprite: "metalPanel_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "star_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Wave", value: @entity.wave, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "ufoRed.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-wave", thumbnailUrl: "" } }, { label: "Lives", value: @entity.lives, max: @config.lives, format: "hearts", iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "playerLife1_blue.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-lives", thumbnailUrl: "" } } ] }
+          controls: { type: control-grid, kind: "dpad", directionEvents: { up: "MOVE_UP", down: "MOVE_DOWN", left: "MOVE_LEFT", right: "MOVE_RIGHT" } }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: SHOOT, label: "Fire", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "bolt_gold.png", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-fire", thumbnailUrl: "" }, variant: primary }, { type: button, action: PAUSE, label: "Pause", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mobile-controls/ui/icons-default.json", sprite: "icon_pause", role: "ui", category: "ui", animations: [], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "icon-pause", thumbnailUrl: "" }, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: (array/concat [ { id: "player", position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, sprite: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation), frame: (object/get @entity.player frame), team: "player" } ] (array/map @entity.enemies (fn e { id: @e.id, position: { x: (object/get @e x), y: (object/get @e y) }, sprite: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation), frame: (object/get @e frame), team: "enemy" }))), features: (array/concat @config.features (array/concat (array/map @entity.projectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) playerLaser) })) (array/map @entity.enemyProjectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) enemyLaser) })))), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT", Space: "SHOOT" } } ]
+        })
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
     }
 
     emits {
-      TILE_CLICK -> external {
-        x : number!
-        y : number!
-      }
-        @description "Fires on tile click with grid coordinates"
-        @tier "domain"
-      UNIT_CLICK -> external {
-        unitId : string!
-      }
-        @description "Fires on unit click with unit id"
-        @tier "domain"
       MOVE_LEFT -> external {
         id : string
       }
-        @description "Move-left intent (keyboard keyMap)"
+        @description "Move-left intent (keyboard keyMap / d-pad)"
         @tier "domain"
       MOVE_RIGHT -> external {
         id : string
       }
-        @description "Move-right intent (keyboard keyMap)"
+        @description "Move-right intent (keyboard keyMap / d-pad)"
         @tier "domain"
       MOVE_UP -> external {
         id : string
       }
-        @description "Move-up intent (keyboard keyMap)"
+        @description "Move-up intent (keyboard keyMap / d-pad)"
         @tier "domain"
       MOVE_DOWN -> external {
         id : string
       }
-        @description "Move-down intent (keyboard keyMap)"
+        @description "Move-down intent (keyboard keyMap / d-pad)"
         @tier "domain"
       SHOOT -> external {
-        targetId : string!
-      }
-        @description "Player fires at an enemy unit"
-        @tier "domain"
-      PLAYER_HIT -> external {
         id : string
       }
-        @description "Player ship takes a hit"
-        @tier "domain"
-      GAME_END -> external {
-        result : string
-      }
-        @description "Fires when all enemies are destroyed or lives reach zero"
-        @tier "domain"
-      PLAY_AGAIN -> external {
-        id : string
-      }
-        @description "Reset and restart the game"
+        @description "Fire a laser from the player ship (Space key / Fire button)"
         @tier "domain"
       PAUSE -> external {
         id : string
@@ -325,6 +318,16 @@ orbital SpaceShmupBoardOrbital {
         id : string
       }
         @description "Resume play from the pause menu"
+        @tier "domain"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Fires when every wave is cleared or lives reach zero"
+        @tier "domain"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Reset and restart the game"
         @tier "domain"
     }
 
@@ -341,32 +344,80 @@ orbital SpaceShmupBoardOrbital {
         @label "Error"
         @description "Error state (UiError)"
         @tier "presentation"
-      tiles : [SpaceShmupBoardTilesItem] = [{ x: 0, y: 0, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 1, y: 0, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 2, y: 0, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 3, y: 0, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 4, y: 0, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 5, y: 0, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 0, y: 1, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 1, y: 1, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 2, y: 1, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 3, y: 1, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 4, y: 1, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 5, y: 1, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 0, y: 2, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 1, y: 2, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 2, y: 2, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 3, y: 2, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 4, y: 2, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 5, y: 2, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 0, y: 3, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 1, y: 3, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 2, y: 3, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 3, y: 3, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 4, y: 3, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 5, y: 3, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 0, y: 4, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 1, y: 4, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 2, y: 4, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 3, y: 4, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 4, y: 4, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 5, y: 4, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 0, y: 5, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 1, y: 5, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 2, y: 5, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 3, y: 5, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 4, y: 5, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 5, y: 5, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 0, y: 6, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 1, y: 6, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 2, y: 6, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 3, y: 6, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 4, y: 6, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 5, y: 6, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 0, y: 7, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 1, y: 7, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 2, y: 7, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 3, y: 7, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 4, y: 7, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, { x: 5, y: 7, terrain: "space", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }]
-        @label "Tiles"
-        @description "6×8 flat space-terrain tile grid"
+      width : number = 640
+        @label "Width"
+        @description "Arena / canvas width in pixels"
         @tier "presentation"
-      units : [SpaceShmupBoardUnitsItem] = [{ id: "enemy1", position: { x: 1, y: 0 }, unitType: "ship", name: "Invader A", team: enemy, health: 1, maxHealth: 1, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png", role: "npc", category: "enemy", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "enemy", thumbnailUrl: "" }, animation: "idle", frame: 0 }, { id: "enemy2", position: { x: 3, y: 0 }, unitType: "ship", name: "Invader B", team: enemy, health: 1, maxHealth: 1, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png", role: "npc", category: "enemy", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "enemy", thumbnailUrl: "" }, animation: "idle", frame: 0 }, { id: "enemy3", position: { x: 0, y: 1 }, unitType: "ship", name: "Invader C", team: enemy, health: 1, maxHealth: 1, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png", role: "npc", category: "enemy", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "enemy", thumbnailUrl: "" }, animation: "idle", frame: 0 }, { id: "enemy4", position: { x: 4, y: 1 }, unitType: "ship", name: "Invader D", team: enemy, health: 1, maxHealth: 1, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png", role: "npc", category: "enemy", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "enemy", thumbnailUrl: "" }, animation: "idle", frame: 0 }, { id: "player1", position: { x: 2, y: 7 }, unitType: "ship", name: "Player", team: player, health: 3, maxHealth: 3, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/ship.png", role: "npc", category: "ship", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "ship", thumbnailUrl: "" }, animation: "idle", frame: 0 }]
-        @label "Units"
-        @description "Player ship (bottom centre) and 4 enemy ships across the top rows"
+      height : number = 480
+        @label "Height"
+        @description "Arena / canvas height in pixels"
         @tier "presentation"
-      features : [SpaceShmupBoardFeaturesItem] = []
-        @label "Features"
-        @description "Optional hazards or power-ups on the field"
+      spriteSize : number = 32
+        @label "Sprite Size"
+        @description "Pixel draw-size of ship sprites"
         @tier "presentation"
-      assetManifest : SpaceShmupBoardAssetManifest = { terrains: { space: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png", role: "tile", category: "space", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "space", thumbnailUrl: "" } }, units: { ship: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/ship.png", role: "npc", category: "ship", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "ship", thumbnailUrl: "" }, enemy: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png", role: "npc", category: "enemy", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "enemy", thumbnailUrl: "" } }, features: {}, effects: { explosion: { url: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png", role: "effect", category: "explosion", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "8:1", name: "explosion", thumbnailUrl: "" } } }
-        @label "Asset Manifest"
-        @description "Sprite manifest for terrain, units, and effects"
+      lives : number = 3
+        @label "Starting Lives"
+        @description "Lives the player starts with; reaching 0 = defeat"
         @tier "presentation"
-      scale : number = 0.45
+      maxWaves : number = 5
+        @label "Max Waves"
+        @description "Number of waves to clear to win"
+        @tier "presentation"
+      enemiesPerWave : number = 4
+        @label "Enemies Per Wave"
+        @description "Base enemy count; each wave adds one more"
+        @tier "presentation"
+      enemyHp : number = 1
+        @label "Enemy HP"
+        @description "Hit points each enemy starts with"
+        @tier "presentation"
+      enemySpeed : number = 3
+        @label "Enemy Speed"
+        @description "Pixels an enemy descends per tick"
+        @tier "presentation"
+      projectileSpeed : number = 24
+        @label "Projectile Speed"
+        @description "Pixels a player laser travels up per tick"
+        @tier "presentation"
+      enemyProjectileSpeed : number = 10
+        @label "Enemy Projectile Speed"
+        @description "Pixels an enemy laser travels down per tick"
+        @tier "presentation"
+      enemyFireChance : number = 0.02
+        @label "Enemy Fire Chance"
+        @description "Per-enemy per-tick probability of firing"
+        @tier "presentation"
+      moveStep : number = 20
+        @label "Move Step"
+        @description "Pixels the player moves per key press"
+        @tier "presentation"
+      playerMinY : number = 300
+        @label "Player Min Y"
+        @description "Upper bound of the player movement band"
+        @tier "presentation"
+      hitRadius : number = 24
+        @label "Hit Radius"
+        @description "Laser-to-ship collision radius in pixels"
+        @tier "presentation"
+      scorePerKill : number = 10
+        @label "Score Per Kill"
+        @description "Score awarded for each enemy destroyed"
+        @tier "presentation"
+      scale : number = 1
         @label "Scale"
-        @description "Render scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      features : [SpaceShmupBoardFeaturesItem] = [{ id: "meteor-1", x: 96, y: 200, type: "meteor", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-simple-space/features/simpleSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-simple-space/features/simpleSpace_sheet.json", sprite: "meteor_large.png", role: "decoration", category: "meteor", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "meteor-large", thumbnailUrl: "" } }, { id: "meteor-2", x: 520, y: 140, type: "meteor", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-simple-space/features/simpleSpace_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-simple-space/features/simpleSpace_sheet.json", sprite: "meteor_detailedLarge.png", role: "decoration", category: "meteor", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "meteor-detailed", thumbnailUrl: "" } }]
+        @label "Features"
+        @description "Static decorative meteors drifting in the play field"
+        @tier "presentation"
+      assetManifest : SpaceShmupBoardAssetManifest = { units: { player: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "playerShip1_blue.png", role: "npc", category: "ship", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "player-ship", thumbnailUrl: "" }, enemy: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "enemyRed1.png", role: "npc", category: "enemy", animations: ["idle","walk","attack","hit","death"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "enemy-ship", thumbnailUrl: "" } }, features: { playerLaser: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "laserBlue01.png", role: "decoration", category: "projectile", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "player-laser", thumbnailUrl: "" }, enemyLaser: { url: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/kenney-space-shooter-redux/features/sheet.json", sprite: "laserRed05.png", role: "decoration", category: "projectile", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "enemy-laser", thumbnailUrl: "" } }, effects: { explosion: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.json", sprite: "regularExplosion04.png", role: "effect", category: "explosion", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "explosion", thumbnailUrl: "" }, hit: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_particles.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_particles.json", sprite: "burst.png", role: "effect", category: "spark", animations: ["static"], style: "sci-fi", variant: "", dimension: "2d", aspect: "1:1", name: "hit-burst", thumbnailUrl: "" } } }
+        @label "Asset Manifest"
+        @description "Space Shooter Redux ship/laser sprites and shared explosion effects"
         @tier "presentation"
     }
   }
 
-  trait SpaceShmupBoardAnimTick = AnimTick.traits.AnimTick -> SpaceShmupBoardItem {
-    config { frameCount: 8 }
-  }
-
-  page "/space-shmup-board" as SpaceShmupBoardPage -> SpaceShmupBoardRender, SpaceShmupBoardAnimTick
+  page "/space-shmup-board" as SpaceShmupBoardPage -> SpaceShmupBoardRender
 }

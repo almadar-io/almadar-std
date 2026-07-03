@@ -1,5 +1,5 @@
 app ui-racing-board-3d "1.0.0"
-"RacingBoard3D — 3D lap race on a 6x6 ring track; player clicks forward, rival advances on ticks, first to lap wins."
+"RacingBoard3D — throttled keyboard/d-pad racing on a multi-lap 6x6 ring track with a follow camera and a ticking rival."
 orbital RacingBoard3DOrbital {
   type RacingBoard3DError = {
     message : string!
@@ -47,33 +47,35 @@ orbital RacingBoard3DOrbital {
     type : string!
     assetUrl : Asset
   }
-  type RacingBoard3DValidMovesItem = {
-    x : number!
-    z : number!
-  }
-  type RacingBoard3DAttackTargetsItem = {
-    x : number!
-    z : number!
-  }
   type RacingBoard3DTrackOrderItem = {
     x : number!
     y : number!
     nextX : number!
     nextY : number!
   }
+  type RacingBoard3DEffectItem = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
 
   entity RacingBoard3DItem [runtime] {
     id : string!
     units : [RacingBoard3DUnitsItem]
     selectedUnitId : string = "player"
-    validMoves : [RacingBoard3DValidMovesItem]
-    attackTargets : [RacingBoard3DAttackTargetsItem]
     phase : "racing" | "finished" = racing
     playerProgress : number = 0
     rivalProgress : number = 0
+    lap : number = 1
     result : "none" | "won" | "lost" = none
+    canAdvance : boolean = true
     gridWidth : number = 6
     gridHeight : number = 6
+    fx : [RacingBoard3DEffectItem] = []
   }
 
   trait RacingBoard3DRender -> @rebindable RacingBoard3DItem [interaction, instance] {
@@ -83,38 +85,46 @@ orbital RacingBoard3DOrbital {
       INIT -> racing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "player")
-        (set @entity.validMoves (let ((playerUnit (array/find @config.units (fn u (== @u.id "player"))))) (let ((pos (object/get @playerUnit position))) (let ((cur (array/find @config.trackOrder (fn t (and (== (object/get @t x) (object/get @pos x)) (== (object/get @t y) (object/get @pos y))))))) [{ x: (object/get @cur nextX), z: (object/get @cur nextY) }]))))
-        (set @entity.attackTargets [])
         (set @entity.playerProgress 0)
         (set @entity.rivalProgress 0)
+        (set @entity.lap 1)
+        (set @entity.canAdvance true)
         (set @entity.phase "racing")
         (set @entity.result "none")
         (set @entity.gridWidth 6)
         (set @entity.gridHeight 6)
+        (set @entity.fx [])
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.playerProgress }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "Result", value: @entity.result } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "ACCELERATE" } } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, cameraMode: "follow", keyMap: { ArrowUp: "ACCELERATE", KeyW: "ACCELERATE", Space: "ACCELERATE" } } ]
         })
 
-      TILE_CLICK -> racing when (and (== @entity.result "none") (let ((playerUnit (array/find @entity.units (fn u (== @u.id "player"))))) (let ((pos (object/get @playerUnit position))) (let ((cur (array/find @config.trackOrder (fn t (and (== (object/get @t x) (object/get @pos x)) (== (object/get @t y) (object/get @pos y))))))) (and (!= @cur null) (== (object/get @cur nextX) ?x) (== (object/get @cur nextY) ?z))))))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id "player") (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
+      ACCELERATE -> racing when (and (== @entity.canAdvance true) (== @entity.result "none"))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id "player") (let ((cur (array/find @config.trackOrder (fn t (and (== (object/get @t x) (object/get @u.position x)) (== (object/get @t y) (object/get @u.position y))))))) (object/merge @u { position: { x: (object/get @cur nextX), y: (object/get @cur nextY) } })) @u))))
         (set @entity.playerProgress (+ @entity.playerProgress 1))
-        (set @entity.validMoves (let ((cur (array/find @config.trackOrder (fn t (and (== (object/get @t x) ?x) (== (object/get @t y) ?z)))))) [{ x: (object/get @cur nextX), z: (object/get @cur nextY) }]))
-        (set @entity.result (if (>= @entity.playerProgress 20) "won" @entity.result))
+        (set @entity.canAdvance false)
+        (set @entity.lap (+ (math/floor (/ @entity.playerProgress (array/len @config.trackOrder))) 1))
+        (set @entity.fx (if (== (% @entity.playerProgress (array/len @config.trackOrder)) 0) (array/append @entity.fx { id: (str/concat "lap-" @entity.playerProgress), type: "score", x: 0, z: 0, message: "Lap!", ttl: 5 }) @entity.fx))
+        (set @entity.result (if (>= @entity.playerProgress (* @config.totalLaps (array/len @config.trackOrder))) "won" @entity.result))
         (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.playerProgress }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "Result", value: @entity.result } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "ACCELERATE" } } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, cameraMode: "follow", keyMap: { ArrowUp: "ACCELERATE", KeyW: "ACCELERATE", Space: "ACCELERATE" } } ]
         })
 
       GAME_END -> finished when (or (== @entity.result "won") (== @entity.result "lost"))
         (set @entity.phase "finished")
+        (set @entity.fx (array/append @entity.fx { id: "result-fx", type: (if (== @entity.result "won") "win" "lose"), x: 0, z: 0, message: (if (== @entity.result "won") "You Win!" "You Lose!"), ttl: 999 }))
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.playerProgress }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "Result", value: @entity.result } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "ACCELERATE" } } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, cameraMode: "follow", keyMap: { ArrowUp: "ACCELERATE", KeyW: "ACCELERATE", Space: "ACCELERATE" } } ]
         })
     }
 
@@ -122,40 +132,46 @@ orbital RacingBoard3DOrbital {
       PLAY_AGAIN -> racing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "player")
-        (set @entity.validMoves (let ((playerUnit (array/find @config.units (fn u (== @u.id "player"))))) (let ((pos (object/get @playerUnit position))) (let ((cur (array/find @config.trackOrder (fn t (and (== (object/get @t x) (object/get @pos x)) (== (object/get @t y) (object/get @pos y))))))) [{ x: (object/get @cur nextX), z: (object/get @cur nextY) }]))))
-        (set @entity.attackTargets [])
         (set @entity.playerProgress 0)
         (set @entity.rivalProgress 0)
+        (set @entity.lap 1)
+        (set @entity.canAdvance true)
         (set @entity.phase "racing")
         (set @entity.result "none")
+        (set @entity.fx [])
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.playerProgress }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "Result", value: @entity.result } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "ACCELERATE" } } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, cameraMode: "follow", keyMap: { ArrowUp: "ACCELERATE", KeyW: "ACCELERATE", Space: "ACCELERATE" } } ]
         })
     }
 
     ticks {
+      paceTick every 400ms
+        when (== @entity.result "none")
+        (set @entity.canAdvance true)
+        (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+
       rivalTick every 1000ms
         when (== @entity.result "none")
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id "rival") (let ((pos (object/get @u position))) (let ((cur (array/find @config.trackOrder (fn t (and (== (object/get @t x) (object/get @pos x)) (== (object/get @t y) (object/get @pos y))))))) (object/merge @u { position: { x: (object/get @cur nextX), y: (object/get @cur nextY) } }))) @u))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id "rival") (let ((cur (array/find @config.trackOrder (fn t (and (== (object/get @t x) (object/get @u.position x)) (== (object/get @t y) (object/get @u.position y))))))) (object/merge @u { position: { x: (object/get @cur nextX), y: (object/get @cur nextY) } })) @u))))
         (set @entity.rivalProgress (+ @entity.rivalProgress 1))
-        (set @entity.result (if (>= @entity.rivalProgress 20) "lost" @entity.result))
+        (set @entity.result (if (>= @entity.rivalProgress (* @config.totalLaps (array/len @config.trackOrder))) "lost" @entity.result))
         (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.playerProgress }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "Result", value: @entity.result } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "ACCELERATE" } } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, cameraMode: "follow", keyMap: { ArrowUp: "ACCELERATE", KeyW: "ACCELERATE", Space: "ACCELERATE" } } ]
         })
     }
 
     emits {
-      TILE_CLICK -> external {
-        x : number!
-        z : number!
-        tileId : string
+      ACCELERATE -> external {
+        id : string
       }
-        @description "Player advances to the clicked next track cell"
+        @description "Accelerate intent (keyboard keyMap or d-pad directionEvents) — advances one track cell when paced"
         @tier "domain"
       GAME_END -> external {
         result : string
@@ -181,6 +197,10 @@ orbital RacingBoard3DOrbital {
       error : RacingBoard3DError
         @label "Error"
         @description "Error state (UiError)"
+        @tier "presentation"
+      totalLaps : number = 2
+        @label "Total Laps"
+        @description "Laps around the loop required to win"
         @tier "presentation"
       tiles : [RacingBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "start", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStart.glb", role: "tile", category: "roadStart", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStart", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t20", x: 2, y: 0, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t30", x: 3, y: 0, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t40", x: 4, y: 0, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t50", x: 5, y: 0, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t11", x: 1, y: 1, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t21", x: 2, y: 1, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t31", x: 3, y: 1, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t41", x: 4, y: 1, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t51", x: 5, y: 1, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t02", x: 0, y: 2, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t12", x: 1, y: 2, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t22", x: 2, y: 2, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t32", x: 3, y: 2, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t42", x: 4, y: 2, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t52", x: 5, y: 2, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t03", x: 0, y: 3, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t13", x: 1, y: 3, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t23", x: 2, y: 3, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t33", x: 3, y: 3, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t43", x: 4, y: 3, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t53", x: 5, y: 3, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t04", x: 0, y: 4, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t14", x: 1, y: 4, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t24", x: 2, y: 4, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t34", x: 3, y: 4, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t44", x: 4, y: 4, terrain: "grass", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb", role: "decoration", category: "grass", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t54", x: 5, y: 4, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t05", x: 0, y: 5, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t15", x: 1, y: 5, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t25", x: 2, y: 5, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t35", x: 3, y: 5, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t45", x: 4, y: 5, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }, { id: "t55", x: 5, y: 5, terrain: "track", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb", role: "tile", category: "roadStraight", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "roadStraight", thumbnailUrl: "" } }]
         @label "Tiles"

@@ -1,5 +1,5 @@
 {
-  "description": "ToyTrackBoard3D — toy car race on a 6x6 track loop; click to advance, rival ticks, lap completion wins.",
+  "description": "ToyTrackBoard3D — throttled keyboard/d-pad toy race on a multi-lap 6x6 loop; collect coins, follow camera, ticking rival.",
   "name": "ui-toy-track-board-3d",
   "orbitals": [
     {
@@ -144,43 +144,104 @@
           {
             "items": {
               "properties": {
+                "assetUrl": {
+                  "name": "assetUrl",
+                  "properties": {
+                    "animations": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "name": "animations",
+                      "required": false,
+                      "type": "array"
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
                 "x": {
                   "name": "x",
                   "required": true,
                   "type": "number"
                 },
-                "z": {
-                  "name": "z",
+                "y": {
+                  "name": "y",
                   "required": true,
                   "type": "number"
                 }
               },
               "type": "object"
             },
-            "name": "validMoves",
+            "name": "features",
             "type": "array"
           },
           {
-            "items": {
-              "properties": {
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": true,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            },
-            "name": "attackTargets",
-            "type": "array"
-          },
-          {
-            "default": "",
+            "default": "player-car",
             "name": "selectedUnitId",
             "type": "string"
           },
@@ -198,6 +259,21 @@
             "default": 20.0,
             "name": "trackLength",
             "type": "number"
+          },
+          {
+            "default": 1.0,
+            "name": "lap",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "score",
+            "type": "number"
+          },
+          {
+            "default": true,
+            "name": "canAdvance",
+            "type": "boolean"
           },
           {
             "default": "none",
@@ -218,6 +294,51 @@
             "default": 6.0,
             "name": "gridHeight",
             "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "fx",
+            "type": "array"
           }
         ],
         "name": "ToyTrackBoard3DItem",
@@ -425,8 +546,8 @@
                   },
                   "id": "f-coin1",
                   "type": "coin",
-                  "x": 2.0,
-                  "y": 3.0
+                  "x": 5.0,
+                  "y": 2.0
                 },
                 {
                   "assetUrl": {
@@ -501,11 +622,11 @@
                   },
                   "id": "f-coin2",
                   "type": "coin",
-                  "x": 4.0,
-                  "y": 4.0
+                  "x": 0.0,
+                  "y": 3.0
                 }
               ],
-              "description": "Finish gate, halfway gate, and infield scenery.",
+              "description": "Finish gate, halfway gate, on-track coins (collectible), and infield scenery.",
               "items": {
                 "properties": {
                   "assetUrl": {
@@ -1280,6 +1401,13 @@
               "tier": "presentation",
               "type": "[ToyTrackBoard3DTilesItem]"
             },
+            "totalLaps": {
+              "default": 2.0,
+              "description": "Laps around the loop required to win",
+              "label": "Total Laps",
+              "tier": "presentation",
+              "type": "number"
+            },
             "unitScale": {
               "default": 1.0,
               "description": "Unit draw-size multiplier",
@@ -1475,21 +1603,35 @@
           },
           "emits": [
             {
-              "description": "Player advances to the next track cell along the loop",
-              "event": "TILE_CLICK",
+              "description": "Accelerate intent (keyboard keyMap or d-pad directionEvents) — advances one track cell when paced, collecting a coin if present",
+              "event": "ACCELERATE",
               "payloadSchema": [
                 {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Called when the lap race ends",
+              "event": "GAME_END",
+              "payloadSchema": [
                 {
-                  "name": "z",
-                  "required": true,
-                  "type": "number"
-                },
+                  "name": "result",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+              "event": "PLAY_AGAIN",
+              "payloadSchema": [
                 {
-                  "name": "tileId",
+                  "name": "id",
                   "type": "string"
                 }
               ],
@@ -1499,16 +1641,19 @@
           ],
           "entityContract": {
             "provides": [
-              "attackTargets",
+              "canAdvance",
+              "features",
+              "fx",
               "gridHeight",
               "gridWidth",
+              "lap",
               "playerProgress",
               "result",
               "rivalProgress",
+              "score",
               "selectedUnitId",
               "trackLength",
-              "units",
-              "validMoves"
+              "units"
             ],
             "requires": []
           },
@@ -1523,22 +1668,36 @@
                 "name": "Initialize"
               },
               {
-                "description": "Player advances to the next track cell along the loop",
-                "key": "TILE_CLICK",
-                "name": "Tile Click",
+                "description": "Accelerate intent (keyboard keyMap or d-pad directionEvents) — advances one track cell when paced, collecting a coin if present",
+                "key": "ACCELERATE",
+                "name": "Accelerate",
                 "payloadSchema": [
                   {
-                    "name": "x",
-                    "required": true,
-                    "type": "number"
-                  },
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+                "key": "PLAY_AGAIN",
+                "name": "Play Again",
+                "payloadSchema": [
                   {
-                    "name": "z",
-                    "required": true,
-                    "type": "number"
-                  },
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Called when the lap race ends",
+                "key": "GAME_END",
+                "name": "Game End",
+                "payloadSchema": [
                   {
-                    "name": "tileId",
+                    "name": "result",
                     "type": "string"
                   }
                 ],
@@ -1561,6 +1720,11 @@
                   ],
                   [
                     "set",
+                    "@entity.features",
+                    "@config.features"
+                  ],
+                  [
+                    "set",
                     "@entity.playerProgress",
                     0.0
                   ],
@@ -1573,6 +1737,21 @@
                     "set",
                     "@entity.trackLength",
                     20.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lap",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.canAdvance",
+                    true
                   ],
                   [
                     "set",
@@ -1592,65 +1771,30 @@
                   [
                     "set",
                     "@entity.selectedUnitId",
-                    ""
+                    "player-car"
                   ],
                   [
                     "set",
-                    "@entity.attackTargets",
+                    "@entity.fx",
                     []
-                  ],
-                  [
-                    "set",
-                    "@entity.validMoves",
-                    [
-                      "array/map",
-                      [
-                        "array/filter",
-                        "@config.tiles",
-                        [
-                          "fn",
-                          "t",
-                          [
-                            "==",
-                            [
-                              "object/get",
-                              "@t",
-                              "order"
-                            ],
-                            [
-                              "%",
-                              [
-                                "+",
-                                "@entity.playerProgress",
-                                1.0
-                              ],
-                              "@entity.trackLength"
-                            ]
-                          ]
-                        ]
-                      ],
-                      [
-                        "fn",
-                        "t",
-                        {
-                          "x": [
-                            "object/get",
-                            "@t",
-                            "x"
-                          ],
-                          "z": [
-                            "object/get",
-                            "@t",
-                            "y"
-                          ]
-                        }
-                      ]
-                    ]
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "backgroundAsset": {
                         "animations": [],
                         "aspect": "1:1",
@@ -1667,30 +1811,59 @@
                       },
                       "children": [
                         {
-                          "attackTargets": "@entity.attackTargets",
-                          "features": "@config.features",
+                          "cameraMode": "follow",
+                          "events": "@entity.fx",
+                          "features": "@entity.features",
+                          "interpolateUnits": true,
+                          "keyMap": {
+                            "ArrowUp": "ACCELERATE",
+                            "KeyW": "ACCELERATE",
+                            "Space": "ACCELERATE"
+                          },
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
-                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "game-canvas-3d",
                           "unitScale": "@config.unitScale",
-                          "units": "@entity.units",
-                          "validMoves": "@entity.validMoves"
+                          "units": "@entity.units"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Progress",
-                            "value": "@entity.playerProgress"
+                            "stats": [
+                              {
+                                "label": "Lap",
+                                "value": [
+                                  "str/concat",
+                                  "@entity.lap",
+                                  "/",
+                                  "@config.totalLaps"
+                                ]
+                              },
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "directionEvents": {
+                              "up": "ACCELERATE"
+                            },
+                            "kind": "dpad",
+                            "type": "control-grid"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "hudBackgroundAsset": {
                         "animations": [],
@@ -1706,6 +1879,38 @@
                         "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
                         "variant": ""
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -1717,111 +1922,420 @@
               {
                 "effects": [
                   [
-                    "set",
-                    "@entity.playerProgress",
+                    "let",
                     [
-                      "+",
-                      "@entity.playerProgress",
-                      1.0
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.units",
-                    [
-                      "array/map",
-                      "@entity.units",
                       [
-                        "fn",
-                        "u",
+                        "nextOrder",
                         [
-                          "if",
+                          "%",
                           [
-                            "==",
-                            "@u.id",
-                            "player-car"
+                            "+",
+                            "@entity.playerProgress",
+                            1.0
                           ],
-                          [
-                            "object/merge",
-                            "@u",
-                            {
-                              "position": {
-                                "x": "@payload.x",
-                                "y": "@payload.z"
-                              }
-                            }
-                          ],
-                          "@u"
+                          "@entity.trackLength"
                         ]
                       ]
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.result",
+                    ],
                     [
-                      "if",
+                      "let",
                       [
-                        ">=",
-                        "@entity.playerProgress",
-                        "@entity.trackLength"
-                      ],
-                      "victory",
-                      "@entity.result"
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.validMoves",
-                    [
-                      "array/map",
-                      [
-                        "array/filter",
-                        "@config.tiles",
                         [
-                          "fn",
-                          "t",
+                          "target",
                           [
-                            "==",
+                            "array/find",
+                            "@config.tiles",
                             [
-                              "object/get",
-                              "@t",
-                              "order"
-                            ],
-                            [
-                              "%",
+                              "fn",
+                              "t",
                               [
-                                "+",
-                                "@entity.playerProgress",
-                                1.0
-                              ],
-                              "@entity.trackLength"
+                                "==",
+                                [
+                                  "object/get",
+                                  "@t",
+                                  "order"
+                                ],
+                                "@nextOrder"
+                              ]
                             ]
                           ]
                         ]
                       ],
                       [
-                        "fn",
-                        "t",
-                        {
-                          "x": [
-                            "object/get",
-                            "@t",
-                            "x"
-                          ],
-                          "z": [
-                            "object/get",
-                            "@t",
-                            "y"
+                        "let",
+                        [
+                          [
+                            "coinHit",
+                            [
+                              "array/find",
+                              "@entity.features",
+                              [
+                                "fn",
+                                "f",
+                                [
+                                  "and",
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "@f",
+                                      "type"
+                                    ],
+                                    "coin"
+                                  ],
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "@f",
+                                        "x"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@target",
+                                        "x"
+                                      ]
+                                    ],
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "@f",
+                                        "y"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@target",
+                                        "y"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
                           ]
-                        }
+                        ],
+                        [
+                          "do",
+                          [
+                            "set",
+                            "@entity.units",
+                            [
+                              "array/map",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "player-car"
+                                  ],
+                                  [
+                                    "object/merge",
+                                    "@u",
+                                    {
+                                      "position": {
+                                        "x": [
+                                          "object/get",
+                                          "@target",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@target",
+                                          "y"
+                                        ]
+                                      }
+                                    }
+                                  ],
+                                  "@u"
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "set",
+                            "@entity.features",
+                            [
+                              "if",
+                              [
+                                "!=",
+                                "@coinHit",
+                                null
+                              ],
+                              [
+                                "array/filter",
+                                "@entity.features",
+                                [
+                                  "fn",
+                                  "f",
+                                  [
+                                    "or",
+                                    [
+                                      "!=",
+                                      [
+                                        "object/get",
+                                        "@f",
+                                        "type"
+                                      ],
+                                      "coin"
+                                    ],
+                                    [
+                                      "or",
+                                      [
+                                        "!=",
+                                        [
+                                          "object/get",
+                                          "@f",
+                                          "x"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@target",
+                                          "x"
+                                        ]
+                                      ],
+                                      [
+                                        "!=",
+                                        [
+                                          "object/get",
+                                          "@f",
+                                          "y"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@target",
+                                          "y"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              "@entity.features"
+                            ]
+                          ],
+                          [
+                            "set",
+                            "@entity.score",
+                            [
+                              "if",
+                              [
+                                "!=",
+                                "@coinHit",
+                                null
+                              ],
+                              [
+                                "+",
+                                "@entity.score",
+                                5.0
+                              ],
+                              "@entity.score"
+                            ]
+                          ],
+                          [
+                            "set",
+                            "@entity.playerProgress",
+                            [
+                              "+",
+                              "@entity.playerProgress",
+                              1.0
+                            ]
+                          ],
+                          [
+                            "set",
+                            "@entity.canAdvance",
+                            false
+                          ],
+                          [
+                            "set",
+                            "@entity.lap",
+                            [
+                              "+",
+                              [
+                                "math/floor",
+                                [
+                                  "/",
+                                  "@entity.playerProgress",
+                                  "@entity.trackLength"
+                                ]
+                              ],
+                              1.0
+                            ]
+                          ],
+                          [
+                            "set",
+                            "@entity.fx",
+                            [
+                              "if",
+                              [
+                                "!=",
+                                "@coinHit",
+                                null
+                              ],
+                              [
+                                "array/append",
+                                "@entity.fx",
+                                {
+                                  "id": [
+                                    "str/concat",
+                                    "pickup-",
+                                    "@entity.playerProgress"
+                                  ],
+                                  "message": "+5",
+                                  "ttl": 5.0,
+                                  "type": "pickup",
+                                  "x": [
+                                    "object/get",
+                                    "@target",
+                                    "x"
+                                  ],
+                                  "z": [
+                                    "object/get",
+                                    "@target",
+                                    "y"
+                                  ]
+                                }
+                              ],
+                              "@entity.fx"
+                            ]
+                          ],
+                          [
+                            "set",
+                            "@entity.fx",
+                            [
+                              "if",
+                              [
+                                "==",
+                                [
+                                  "%",
+                                  "@entity.playerProgress",
+                                  "@entity.trackLength"
+                                ],
+                                0.0
+                              ],
+                              [
+                                "array/append",
+                                "@entity.fx",
+                                {
+                                  "id": [
+                                    "str/concat",
+                                    "lap-",
+                                    "@entity.playerProgress"
+                                  ],
+                                  "message": "Lap!",
+                                  "ttl": 5.0,
+                                  "type": "score",
+                                  "x": 0.0,
+                                  "z": 0.0
+                                }
+                              ],
+                              "@entity.fx"
+                            ]
+                          ],
+                          [
+                            "set",
+                            "@entity.result",
+                            [
+                              "if",
+                              [
+                                ">=",
+                                "@entity.playerProgress",
+                                [
+                                  "*",
+                                  "@config.totalLaps",
+                                  "@entity.trackLength"
+                                ]
+                              ],
+                              "victory",
+                              "@entity.result"
+                            ]
+                          ],
+                          [
+                            "set",
+                            "@entity.fx",
+                            [
+                              "if",
+                              [
+                                "!=",
+                                "@entity.result",
+                                "none"
+                              ],
+                              [
+                                "array/append",
+                                "@entity.fx",
+                                {
+                                  "id": "result-fx",
+                                  "message": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.result",
+                                      "victory"
+                                    ],
+                                    "You Win!",
+                                    "You Lose!"
+                                  ],
+                                  "ttl": 999.0,
+                                  "type": [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@entity.result",
+                                      "victory"
+                                    ],
+                                    "win",
+                                    "lose"
+                                  ],
+                                  "x": 0.0,
+                                  "z": 0.0
+                                }
+                              ],
+                              "@entity.fx"
+                            ]
+                          ]
+                        ]
                       ]
                     ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "!=",
+                      "@entity.result",
+                      "none"
+                    ],
+                    [
+                      "emit",
+                      "GAME_END",
+                      {
+                        "result": "@entity.result"
+                      }
+                    ],
+                    null
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "backgroundAsset": {
                         "animations": [],
                         "aspect": "1:1",
@@ -1838,30 +2352,59 @@
                       },
                       "children": [
                         {
-                          "attackTargets": "@entity.attackTargets",
-                          "features": "@config.features",
+                          "cameraMode": "follow",
+                          "events": "@entity.fx",
+                          "features": "@entity.features",
+                          "interpolateUnits": true,
+                          "keyMap": {
+                            "ArrowUp": "ACCELERATE",
+                            "KeyW": "ACCELERATE",
+                            "Space": "ACCELERATE"
+                          },
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
-                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "game-canvas-3d",
                           "unitScale": "@config.unitScale",
-                          "units": "@entity.units",
-                          "validMoves": "@entity.validMoves"
+                          "units": "@entity.units"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Progress",
-                            "value": "@entity.playerProgress"
+                            "stats": [
+                              {
+                                "label": "Lap",
+                                "value": [
+                                  "str/concat",
+                                  "@entity.lap",
+                                  "/",
+                                  "@config.totalLaps"
+                                ]
+                              },
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "directionEvents": {
+                              "up": "ACCELERATE"
+                            },
+                            "kind": "dpad",
+                            "type": "control-grid"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "hudBackgroundAsset": {
                         "animations": [],
@@ -1877,99 +2420,334 @@
                         "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
                         "variant": ""
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
                 ],
-                "event": "TILE_CLICK",
+                "event": "ACCELERATE",
                 "from": "playing",
                 "guard": [
                   "and",
                   [
                     "==",
+                    "@entity.canAdvance",
+                    true
+                  ],
+                  [
+                    "==",
+                    "@entity.result",
+                    "none"
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.features",
+                    "@config.features"
+                  ],
+                  [
+                    "set",
+                    "@entity.playerProgress",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.rivalProgress",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.trackLength",
+                    20.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lap",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.canAdvance",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.gridWidth",
+                    6.0
+                  ],
+                  [
+                    "set",
+                    "@entity.gridHeight",
+                    6.0
+                  ],
+                  [
+                    "set",
                     "@entity.result",
                     "none"
                   ],
                   [
-                    "let",
-                    [
-                      [
-                        "target",
+                    "set",
+                    "@entity.selectedUnitId",
+                    "player-car"
+                  ],
+                  [
+                    "set",
+                    "@entity.fx",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
+                      "backgroundAsset": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "panel",
+                        "role": "ui",
+                        "sprite": "panelInset_beige.png",
+                        "style": "vector-flat",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
+                        "variant": ""
+                      },
+                      "children": [
+                        {
+                          "cameraMode": "follow",
+                          "events": "@entity.fx",
+                          "features": "@entity.features",
+                          "interpolateUnits": true,
+                          "keyMap": {
+                            "ArrowUp": "ACCELERATE",
+                            "KeyW": "ACCELERATE",
+                            "Space": "ACCELERATE"
+                          },
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Lap",
+                                "value": [
+                                  "str/concat",
+                                  "@entity.lap",
+                                  "/",
+                                  "@config.totalLaps"
+                                ]
+                              },
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "directionEvents": {
+                              "up": "ACCELERATE"
+                            },
+                            "kind": "dpad",
+                            "type": "control-grid"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "hudBackgroundAsset": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "hud-panel",
+                        "role": "ui",
+                        "sprite": "panelInset_beigeLight.png",
+                        "style": "vector-flat",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
+                        "variant": ""
+                      },
+                      "overlay": [
+                        "if",
                         [
-                          "array/find",
-                          "@config.tiles",
-                          [
-                            "fn",
-                            "t",
-                            [
-                              "and",
-                              [
-                                "==",
-                                [
-                                  "object/get",
-                                  "@t",
-                                  "x"
-                                ],
-                                "@payload.x"
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                }
                               ],
-                              [
-                                "==",
-                                [
-                                  "object/get",
-                                  "@t",
-                                  "y"
-                                ],
-                                "@payload.z"
-                              ]
-                            ]
-                          ]
-                        ]
-                      ]
-                    ],
-                    [
-                      "and",
-                      [
-                        "!=",
-                        "@target",
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
                         null
                       ],
-                      [
-                        "and",
-                        [
-                          "==",
-                          [
-                            "object/get",
-                            "@target",
-                            "passable"
-                          ],
-                          true
-                        ],
-                        [
-                          "==",
-                          [
-                            "object/get",
-                            "@target",
-                            "order"
-                          ],
-                          [
-                            "%",
-                            [
-                              "+",
-                              "@entity.playerProgress",
-                              1.0
-                            ],
-                            "@entity.trackLength"
-                          ]
-                        ]
-                      ]
-                    ]
+                      "type": "game-shell"
+                    }
                   ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "playing",
+                "guard": [
+                  "!=",
+                  "@entity.result",
+                  "none"
                 ],
                 "to": "playing"
               }
             ]
           },
           "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.canAdvance",
+                  true
+                ],
+                [
+                  "set",
+                  "@entity.fx",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.fx",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              "guard": [
+                "==",
+                "@entity.result",
+                "none"
+              ],
+              "interval": 400.0,
+              "name": "paceTick"
+            },
             {
               "effects": [
                 [
@@ -2070,19 +2848,95 @@
                           [
                             ">=",
                             "@entity.rivalProgress",
-                            "@entity.trackLength"
+                            [
+                              "*",
+                              "@config.totalLaps",
+                              "@entity.trackLength"
+                            ]
                           ],
                           "defeat",
                           "@entity.result"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.fx",
+                        [
+                          "if",
+                          [
+                            "!=",
+                            "@entity.result",
+                            "none"
+                          ],
+                          [
+                            "array/append",
+                            "@entity.fx",
+                            {
+                              "id": "result-fx",
+                              "message": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.result",
+                                  "victory"
+                                ],
+                                "You Win!",
+                                "You Lose!"
+                              ],
+                              "ttl": 999.0,
+                              "type": [
+                                "if",
+                                [
+                                  "==",
+                                  "@entity.result",
+                                  "victory"
+                                ],
+                                "win",
+                                "lose"
+                              ],
+                              "x": 0.0,
+                              "z": 0.0
+                            }
+                          ],
+                          "@entity.fx"
                         ]
                       ]
                     ]
                   ]
                 ],
                 [
+                  "if",
+                  [
+                    "!=",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "emit",
+                    "GAME_END",
+                    {
+                      "result": "@entity.result"
+                    }
+                  ],
+                  null
+                ],
+                [
                   "render-ui",
                   "main",
                   {
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "PLAY_AGAIN",
+                          "label": "Restart",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
                     "backgroundAsset": {
                       "animations": [],
                       "aspect": "1:1",
@@ -2099,30 +2953,59 @@
                     },
                     "children": [
                       {
-                        "attackTargets": "@entity.attackTargets",
-                        "features": "@config.features",
+                        "cameraMode": "follow",
+                        "events": "@entity.fx",
+                        "features": "@entity.features",
+                        "interpolateUnits": true,
+                        "keyMap": {
+                          "ArrowUp": "ACCELERATE",
+                          "KeyW": "ACCELERATE",
+                          "Space": "ACCELERATE"
+                        },
                         "scale": "@config.scale",
                         "selectedUnitId": "@entity.selectedUnitId",
-                        "tileClickEvent": "TILE_CLICK",
                         "tiles": "@config.tiles",
                         "type": "game-canvas-3d",
                         "unitScale": "@config.unitScale",
-                        "units": "@entity.units",
-                        "validMoves": "@entity.validMoves"
+                        "units": "@entity.units"
                       }
                     ],
                     "hud": {
-                      "stats": [
+                      "children": [
                         {
-                          "label": "Progress",
-                          "value": "@entity.playerProgress"
+                          "stats": [
+                            {
+                              "label": "Lap",
+                              "value": [
+                                "str/concat",
+                                "@entity.lap",
+                                "/",
+                                "@config.totalLaps"
+                              ]
+                            },
+                            {
+                              "label": "Score",
+                              "value": "@entity.score"
+                            },
+                            {
+                              "label": "Result",
+                              "value": "@entity.result"
+                            }
+                          ],
+                          "type": "game-hud"
                         },
                         {
-                          "label": "Result",
-                          "value": "@entity.result"
+                          "directionEvents": {
+                            "up": "ACCELERATE"
+                          },
+                          "kind": "dpad",
+                          "type": "control-grid"
                         }
                       ],
-                      "type": "game-hud"
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
                     },
                     "hudBackgroundAsset": {
                       "animations": [],
@@ -2138,6 +3021,38 @@
                       "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
                       "variant": ""
                     },
+                    "overlay": [
+                      "if",
+                      [
+                        "!=",
+                        "@entity.result",
+                        "none"
+                      ],
+                      {
+                        "align": "center",
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Play Again",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "md",
+                        "type": "stack"
+                      },
+                      null
+                    ],
                     "type": "game-shell"
                   }
                 ]

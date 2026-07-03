@@ -1,7 +1,6 @@
 app ui-pinball-board "1.0.0"
-"PinballBoard — retro pinball: ball hits bumpers for points, paddles keep it alive. game-shell + canvas-2d with live input wiring (TILE_CLICK/UNIT_CLICK/BUMPER_HIT + selectedUnitId/validMoves) and a score/balls HUD."
+"PinballBoard — flipper pinball: launch the ball, flip to bounce it into bumpers for points, three drains ends the game."
 orbital PinballBoardOrbital {
-  uses AnimTick from "std/behaviors/std-anim-tick"
   type PinballBoardError = {
     message : string!
     name : string
@@ -10,6 +9,8 @@ orbital PinballBoardOrbital {
   }
   type Asset = {
       url : asset
+      atlas : asset
+      sprite : string
       role : string
       category : string
       animations : [string]
@@ -20,41 +21,16 @@ orbital PinballBoardOrbital {
       name : string
       thumbnailUrl : string
     }
-  type PinballBoardTilesItem = {
-    id : string
+  type PinballBoardBallState = {
     x : number!
     y : number!
-    z : number
-    terrain : string
-    type : string
-    terrainSprite : Asset
-    passable : boolean
-    movementCost : number
-    tileType : string
-    elevation : number
-    modelUrl : Asset
+    vx : number!
+    vy : number!
   }
-  type PinballBoardUnitsItem = {
+  type PinballBoardBumperItem = {
     id : string!
-    position : PinballBoardUnitsItemPosition
-    x : number
-    y : number
-    z : number
-    sprite : Asset
-    spriteSheet : Asset
-    modelUrl : Asset
-    unitType : string
-    heroId : string
-    name : string
-    team : "player" | "enemy" | "neutral"
-    faction : "player" | "enemy" | "neutral"
-    health : number
-    maxHealth : number
-    traits : [PinballBoardUnitsItemTraitsItem]
-    previousPosition : PinballBoardUnitsItemPreviousPosition
-    elevation : number
-    animation : string
-    frame : number
+    x : number!
+    y : number!
   }
   type PinballBoardEffectItem = {
     key : string!
@@ -62,52 +38,24 @@ orbital PinballBoardOrbital {
     y : number!
     ttl : number!
   }
-  type PinballBoardUnitsItemPosition = {
-    x : number!
-    y : number!
-  }
-  type PinballBoardUnitsItemTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number!
-  }
-  type PinballBoardUnitsItemPreviousPosition = {
-    x : number!
-    y : number!
-  }
-  type PinballBoardFeaturesItem = {
-    id : string
-    x : number!
-    y : number!
-    z : number
-    type : string!
-    sprite : Asset
-    assetUrl : Asset
-    color : string
-    elevation : number
-  }
   type PinballBoardAssetManifest = {
-    terrains : Map string Asset
     units : Map string Asset
     features : Map string Asset
     effects : Map string Asset
-  }
-
-  type PinballBoardUnitsItemPositionRef = {
-    x : number!
-    y : number!
+    background : Asset
   }
 
   entity PinballBoardItem [runtime] {
     id : string!
-    units : [PinballBoardUnitsItem]
+    ball : PinballBoardBallState
     score : number = 0
     balls : number = 3
     audioEnabled : boolean = true
+    ballLive : boolean = false
+    leftFlipperActive : boolean = false
+    rightFlipperActive : boolean = false
+    result : "none" | "lost" = none
     effects : [PinballBoardEffectItem] = []
-    selectedUnitId : string = ""
-    validMoves : [PinballBoardUnitsItemPositionRef] = []
   }
 
   trait PinballBoardRender -> @rebindable PinballBoardItem [interaction, instance] {
@@ -115,115 +63,146 @@ orbital PinballBoardOrbital {
 
     state playing {
       INIT -> playing
-        (set @entity.units @config.units)
+        (set @entity.ball { x: @config.launchX, y: @config.launchY, vx: 0, vy: 0 })
         (set @entity.score 0)
-        (set @entity.balls 3)
+        (set @entity.balls @config.startingBalls)
         (set @entity.audioEnabled true)
+        (set @entity.ballLive false)
+        (set @entity.leftFlipperActive false)
+        (set @entity.rightFlipperActive false)
+        (set @entity.result "none")
         (set @entity.effects [])
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
         (render-ui main {
-          type: game-shell, backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }, hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-balls.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          type: game-shell
+          fontFamily: "pixel"
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-fantasy-ui-borders/ui/kenney-fantasy-ui-borders.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-fantasy-ui-borders/ui/kenney-fantasy-ui-borders.generated.json", sprite: "panel-border-010.png", role: "ui", category: "ui", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.json", sprite: "star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.json", sprite: "ballGrey_01.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
+          controls: { type: button, action: LEFT_FLIPPER, label: "Left Flipper", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json", sprite: "arrow_w.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-left-flipper", thumbnailUrl: "" }, variant: primary }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: LAUNCH, label: "Launch", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.json", sprite: "grey_arrowUpWhite.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-launch", thumbnailUrl: "" }, variant: primary }, { type: button, action: RIGHT_FLIPPER, label: "Right Flipper", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json", sprite: "arrow_e.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-right-flipper", thumbnailUrl: "" }, variant: primary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: [ { id: "ball", position: { x: (object/get @entity.ball x), y: (object/get @entity.ball y) }, sprite: (object/get (object/get @config.assetManifest units) ball), team: "player" } ], features: (array/concat (array/map @config.bumpers (fn b { id: @b.id, x: @b.x, y: @b.y, type: "bumper", sprite: (object/get (object/get @config.assetManifest features) bumper) })) [ { id: "flipperL", x: @config.leftFlipperX, y: @config.flipperY, type: "paddle", sprite: (if @entity.leftFlipperActive (object/get (object/get @config.assetManifest features) paddleActive) (object/get (object/get @config.assetManifest features) paddle)) }, { id: "flipperR", x: @config.rightFlipperX, y: @config.flipperY, type: "paddle", sprite: (if @entity.rightFlipperActive (object/get (object/get @config.assetManifest features) paddleActive) (object/get (object/get @config.assetManifest features) paddle)) } ]), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { KeyZ: "LEFT_FLIPPER", ArrowLeft: "LEFT_FLIPPER", KeySlash: "RIGHT_FLIPPER", ArrowRight: "RIGHT_FLIPPER", Space: "LAUNCH" } } ]
         })
 
-      TILE_CLICK -> playing
-        (render-ui main {
-          type: game-shell, backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }, hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-balls.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
+      LEFT_FLIPPER -> playing when (== @entity.result "none")
+        (set @entity.leftFlipperActive true)
 
-      UNIT_CLICK -> playing
-        (render-ui main {
-          type: game-shell, backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }, hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-balls.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
+      RIGHT_FLIPPER -> playing when (== @entity.result "none")
+        (set @entity.rightFlipperActive true)
 
-      BUMPER_HIT -> playing
-        (set @entity.score (+ @entity.score 100))
-        (set @entity.effects (array/append @entity.effects { key: "spark", x: ?x, y: ?y, ttl: 4 }))
-        (render-ui main {
-          type: game-shell, backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }, hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-balls.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-
-      BALL_LOST -> playing when (> @entity.balls 0)
-        (set @entity.balls (- @entity.balls 1))
-        (render-ui main {
-          type: game-shell, backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }, hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-balls.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-
-      BALL_LOST -> gameover when (== @entity.balls 0)
-        (set @entity.balls 0)
-        (render-ui main {
-          type: game-shell, backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }, hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-balls.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
+      LAUNCH -> playing when (and (== @entity.result "none") (not @entity.ballLive))
+        (set @entity.ballLive true)
+        (set @entity.ball { x: @config.launchX, y: @config.launchY, vx: @config.launchVx, vy: (- 0 @config.launchSpeed) })
 
       TOGGLE_AUDIO -> playing
         (set @entity.audioEnabled (not @entity.audioEnabled))
         (render-ui main {
-          type: game-shell, backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }, hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-balls.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          type: game-shell
+          fontFamily: "pixel"
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-fantasy-ui-borders/ui/kenney-fantasy-ui-borders.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-fantasy-ui-borders/ui/kenney-fantasy-ui-borders.generated.json", sprite: "panel-border-010.png", role: "ui", category: "ui", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.json", sprite: "star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.json", sprite: "ballGrey_01.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
+          controls: { type: button, action: LEFT_FLIPPER, label: "Left Flipper", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json", sprite: "arrow_w.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-left-flipper", thumbnailUrl: "" }, variant: primary }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: LAUNCH, label: "Launch", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.json", sprite: "grey_arrowUpWhite.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-launch", thumbnailUrl: "" }, variant: primary }, { type: button, action: RIGHT_FLIPPER, label: "Right Flipper", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json", sprite: "arrow_e.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-right-flipper", thumbnailUrl: "" }, variant: primary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: [ { id: "ball", position: { x: (object/get @entity.ball x), y: (object/get @entity.ball y) }, sprite: (object/get (object/get @config.assetManifest units) ball), team: "player" } ], features: (array/concat (array/map @config.bumpers (fn b { id: @b.id, x: @b.x, y: @b.y, type: "bumper", sprite: (object/get (object/get @config.assetManifest features) bumper) })) [ { id: "flipperL", x: @config.leftFlipperX, y: @config.flipperY, type: "paddle", sprite: (if @entity.leftFlipperActive (object/get (object/get @config.assetManifest features) paddleActive) (object/get (object/get @config.assetManifest features) paddle)) }, { id: "flipperR", x: @config.rightFlipperX, y: @config.flipperY, type: "paddle", sprite: (if @entity.rightFlipperActive (object/get (object/get @config.assetManifest features) paddleActive) (object/get (object/get @config.assetManifest features) paddle)) } ]), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { KeyZ: "LEFT_FLIPPER", ArrowLeft: "LEFT_FLIPPER", KeySlash: "RIGHT_FLIPPER", ArrowRight: "RIGHT_FLIPPER", Space: "LAUNCH" } } ]
+        })
+
+      GAME_END -> gameover when (== @entity.result "lost")
+        (render-ui main {
+          type: game-shell
+          fontFamily: "pixel"
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-fantasy-ui-borders/ui/kenney-fantasy-ui-borders.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-fantasy-ui-borders/ui/kenney-fantasy-ui-borders.generated.json", sprite: "panel-border-010.png", role: "ui", category: "ui", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.json", sprite: "star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.json", sprite: "ballGrey_01.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
+          controls: { type: button, action: LEFT_FLIPPER, label: "Left Flipper", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json", sprite: "arrow_w.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-left-flipper", thumbnailUrl: "" }, variant: primary }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: LAUNCH, label: "Launch", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.json", sprite: "grey_arrowUpWhite.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-launch", thumbnailUrl: "" }, variant: primary }, { type: button, action: RIGHT_FLIPPER, label: "Right Flipper", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json", sprite: "arrow_e.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-right-flipper", thumbnailUrl: "" }, variant: primary } ] }
+          overlay: { type: game-menu, title: "GAME OVER", subtitle: (str/concat "Final Score: " @entity.score), options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] }
+          children: [ { type: canvas-2d, tiles: [], units: [ { id: "ball", position: { x: (object/get @entity.ball x), y: (object/get @entity.ball y) }, sprite: (object/get (object/get @config.assetManifest units) ball), team: "player" } ], features: (array/concat (array/map @config.bumpers (fn b { id: @b.id, x: @b.x, y: @b.y, type: "bumper", sprite: (object/get (object/get @config.assetManifest features) bumper) })) [ { id: "flipperL", x: @config.leftFlipperX, y: @config.flipperY, type: "paddle", sprite: (if @entity.leftFlipperActive (object/get (object/get @config.assetManifest features) paddleActive) (object/get (object/get @config.assetManifest features) paddle)) }, { id: "flipperR", x: @config.rightFlipperX, y: @config.flipperY, type: "paddle", sprite: (if @entity.rightFlipperActive (object/get (object/get @config.assetManifest features) paddleActive) (object/get (object/get @config.assetManifest features) paddle)) } ]), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { KeyZ: "LEFT_FLIPPER", ArrowLeft: "LEFT_FLIPPER", KeySlash: "RIGHT_FLIPPER", ArrowRight: "RIGHT_FLIPPER", Space: "LAUNCH" } } ]
         })
     }
 
     state gameover {
       PLAY_AGAIN -> playing
-        (set @entity.units @config.units)
+        (set @entity.ball { x: @config.launchX, y: @config.launchY, vx: 0, vy: 0 })
         (set @entity.score 0)
-        (set @entity.balls 3)
-        (set @entity.audioEnabled true)
+        (set @entity.balls @config.startingBalls)
+        (set @entity.ballLive false)
+        (set @entity.leftFlipperActive false)
+        (set @entity.rightFlipperActive false)
+        (set @entity.result "none")
         (set @entity.effects [])
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
         (render-ui main {
-          type: game-shell, backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }, hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-balls.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          type: game-shell
+          fontFamily: "pixel"
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-fantasy-ui-borders/ui/kenney-fantasy-ui-borders.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-fantasy-ui-borders/ui/kenney-fantasy-ui-borders.generated.json", sprite: "panel-border-010.png", role: "ui", category: "ui", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.json", sprite: "star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.json", sprite: "ballGrey_01.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
+          controls: { type: button, action: LEFT_FLIPPER, label: "Left Flipper", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json", sprite: "arrow_w.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-left-flipper", thumbnailUrl: "" }, variant: primary }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: LAUNCH, label: "Launch", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.json", sprite: "grey_arrowUpWhite.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-launch", thumbnailUrl: "" }, variant: primary }, { type: button, action: RIGHT_FLIPPER, label: "Right Flipper", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json", sprite: "arrow_e.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-right-flipper", thumbnailUrl: "" }, variant: primary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: [ { id: "ball", position: { x: (object/get @entity.ball x), y: (object/get @entity.ball y) }, sprite: (object/get (object/get @config.assetManifest units) ball), team: "player" } ], features: (array/concat (array/map @config.bumpers (fn b { id: @b.id, x: @b.x, y: @b.y, type: "bumper", sprite: (object/get (object/get @config.assetManifest features) bumper) })) [ { id: "flipperL", x: @config.leftFlipperX, y: @config.flipperY, type: "paddle", sprite: (if @entity.leftFlipperActive (object/get (object/get @config.assetManifest features) paddleActive) (object/get (object/get @config.assetManifest features) paddle)) }, { id: "flipperR", x: @config.rightFlipperX, y: @config.flipperY, type: "paddle", sprite: (if @entity.rightFlipperActive (object/get (object/get @config.assetManifest features) paddleActive) (object/get (object/get @config.assetManifest features) paddle)) } ]), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { KeyZ: "LEFT_FLIPPER", ArrowLeft: "LEFT_FLIPPER", KeySlash: "RIGHT_FLIPPER", ArrowRight: "RIGHT_FLIPPER", Space: "LAUNCH" } } ]
         })
     }
 
     ticks {
-      renderTick every 100ms
+      physicsTick every 90ms
+        when (and (== @entity.result "none") @entity.ballLive)
+        (set @entity.ball (object/merge @entity.ball { vy: (+ (object/get @entity.ball vy) @config.gravity) }))
+        (set @entity.ball (object/merge @entity.ball { x: (+ (object/get @entity.ball x) (object/get @entity.ball vx)), y: (+ (object/get @entity.ball y) (object/get @entity.ball vy)) }))
+        (set @entity.ball (if (<= (object/get @entity.ball x) @config.ballRadius) (object/merge @entity.ball { x: @config.ballRadius, vx: (math/max (object/get @entity.ball vx) (- 0 (object/get @entity.ball vx))) }) @entity.ball))
+        (set @entity.ball (if (>= (object/get @entity.ball x) (- @config.width @config.ballRadius)) (object/merge @entity.ball { x: (- @config.width @config.ballRadius), vx: (math/min (object/get @entity.ball vx) (- 0 (object/get @entity.ball vx))) }) @entity.ball))
+        (set @entity.ball (if (<= (object/get @entity.ball y) @config.ballRadius) (object/merge @entity.ball { y: @config.ballRadius, vy: (math/max (object/get @entity.ball vy) (- 0 (object/get @entity.ball vy))) }) @entity.ball))
+        (set @entity.score (+ @entity.score (* @config.bumperScore (array/len (array/filter @config.bumpers (fn b (<= (vec/distance { x: @b.x, y: @b.y } { x: (object/get @entity.ball x), y: (object/get @entity.ball y) }) @config.bumperRadius)))))))
+        (set @entity.effects (array/concat @entity.effects (array/map (array/filter @config.bumpers (fn b (<= (vec/distance { x: @b.x, y: @b.y } { x: (object/get @entity.ball x), y: (object/get @entity.ball y) }) @config.bumperRadius))) (fn b { key: "spark", x: @b.x, y: @b.y, ttl: 4 }))))
+        (set @entity.ball (if (> (array/len (array/filter @config.bumpers (fn b (<= (vec/distance { x: @b.x, y: @b.y } { x: (object/get @entity.ball x), y: (object/get @entity.ball y) }) @config.bumperRadius)))) 0) (object/merge @entity.ball { vx: (* @config.bumperKick (- (object/get @entity.ball x) (object/get (array/find @config.bumpers (fn b (<= (vec/distance { x: @b.x, y: @b.y } { x: (object/get @entity.ball x), y: (object/get @entity.ball y) }) @config.bumperRadius))) x))), vy: (* @config.bumperKick (- (object/get @entity.ball y) (object/get (array/find @config.bumpers (fn b (<= (vec/distance { x: @b.x, y: @b.y } { x: (object/get @entity.ball x), y: (object/get @entity.ball y) }) @config.bumperRadius))) y))) }) @entity.ball))
+        (set @entity.ball (if (and @entity.leftFlipperActive (and (< (object/get @entity.ball x) (/ @config.width 2)) (> (object/get @entity.ball y) @config.flipperZoneY))) (object/merge @entity.ball { vy: (- 0 @config.flipperPower), vx: (+ (object/get @entity.ball vx) @config.flipperSideKick) }) @entity.ball))
+        (set @entity.ball (if (and @entity.rightFlipperActive (and (>= (object/get @entity.ball x) (/ @config.width 2)) (> (object/get @entity.ball y) @config.flipperZoneY))) (object/merge @entity.ball { vy: (- 0 @config.flipperPower), vx: (- (object/get @entity.ball vx) @config.flipperSideKick) }) @entity.ball))
+        (set @entity.leftFlipperActive false)
+        (set @entity.rightFlipperActive false)
+        (set @entity.balls (if (> (object/get @entity.ball y) @config.height) (- @entity.balls 1) @entity.balls))
+        (set @entity.result (if (and (> (object/get @entity.ball y) @config.height) (<= @entity.balls 0)) "lost" @entity.result))
+        (set @entity.ballLive (if (> (object/get @entity.ball y) @config.height) false @entity.ballLive))
+        (set @entity.ball (if (> (object/get @entity.ball y) @config.height) { x: @config.launchX, y: @config.launchY, vx: 0, vy: 0 } @entity.ball))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn ef (object/merge @ef { ttl: (- (object/get @ef ttl) 1) }))) (fn ef (> (object/get @ef ttl) 0))))
+        (if (== @entity.result "lost") (emit GAME_END { result: "lost" }) null)
         (render-ui main {
-          type: game-shell, backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }, hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-score.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/ui/icon-balls.png", role: "ui", category: "ui", animations: [], style: "pixel-retro", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          type: game-shell
+          fontFamily: "pixel"
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-fantasy-ui-borders/ui/kenney-fantasy-ui-borders.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-fantasy-ui-borders/ui/kenney-fantasy-ui-borders.generated.json", sprite: "panel-border-010.png", role: "ui", category: "ui", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.json", sprite: "star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.json", sprite: "ballGrey_01.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
+          controls: { type: button, action: LEFT_FLIPPER, label: "Left Flipper", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json", sprite: "arrow_w.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-left-flipper", thumbnailUrl: "" }, variant: primary }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: LAUNCH, label: "Launch", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.json", sprite: "grey_arrowUpWhite.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-launch", thumbnailUrl: "" }, variant: primary }, { type: button, action: RIGHT_FLIPPER, label: "Right Flipper", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json", sprite: "arrow_e.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-right-flipper", thumbnailUrl: "" }, variant: primary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: [ { id: "ball", position: { x: (object/get @entity.ball x), y: (object/get @entity.ball y) }, sprite: (object/get (object/get @config.assetManifest units) ball), team: "player" } ], features: (array/concat (array/map @config.bumpers (fn b { id: @b.id, x: @b.x, y: @b.y, type: "bumper", sprite: (object/get (object/get @config.assetManifest features) bumper) })) [ { id: "flipperL", x: @config.leftFlipperX, y: @config.flipperY, type: "paddle", sprite: (if @entity.leftFlipperActive (object/get (object/get @config.assetManifest features) paddleActive) (object/get (object/get @config.assetManifest features) paddle)) }, { id: "flipperR", x: @config.rightFlipperX, y: @config.flipperY, type: "paddle", sprite: (if @entity.rightFlipperActive (object/get (object/get @config.assetManifest features) paddleActive) (object/get (object/get @config.assetManifest features) paddle)) } ]), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { KeyZ: "LEFT_FLIPPER", ArrowLeft: "LEFT_FLIPPER", KeySlash: "RIGHT_FLIPPER", ArrowRight: "RIGHT_FLIPPER", Space: "LAUNCH" } } ]
+        })
+
+      idleTick every 150ms
+        when (and (== @entity.result "none") (not @entity.ballLive))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn ef (object/merge @ef { ttl: (- (object/get @ef ttl) 1) }))) (fn ef (> (object/get @ef ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          fontFamily: "pixel"
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-fantasy-ui-borders/ui/kenney-fantasy-ui-borders.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-fantasy-ui-borders/ui/kenney-fantasy-ui-borders.generated.json", sprite: "panel-border-010.png", role: "ui", category: "ui", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.json", sprite: "star.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-score", thumbnailUrl: "" } }, { label: "Balls", value: @entity.balls, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.json", sprite: "ballGrey_01.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-balls", thumbnailUrl: "" } } ] }, { type: game-audio-toggle } ] }
+          controls: { type: button, action: LEFT_FLIPPER, label: "Left Flipper", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json", sprite: "arrow_w.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-left-flipper", thumbnailUrl: "" }, variant: primary }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: LAUNCH, label: "Launch", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/greySheet.json", sprite: "grey_arrowUpWhite.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-launch", thumbnailUrl: "" }, variant: primary }, { type: button, action: RIGHT_FLIPPER, label: "Right Flipper", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json", sprite: "arrow_e.png", role: "ui", category: "ui", animations: [], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "icon-right-flipper", thumbnailUrl: "" }, variant: primary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: [ { id: "ball", position: { x: (object/get @entity.ball x), y: (object/get @entity.ball y) }, sprite: (object/get (object/get @config.assetManifest units) ball), team: "player" } ], features: (array/concat (array/map @config.bumpers (fn b { id: @b.id, x: @b.x, y: @b.y, type: "bumper", sprite: (object/get (object/get @config.assetManifest features) bumper) })) [ { id: "flipperL", x: @config.leftFlipperX, y: @config.flipperY, type: "paddle", sprite: (if @entity.leftFlipperActive (object/get (object/get @config.assetManifest features) paddleActive) (object/get (object/get @config.assetManifest features) paddle)) }, { id: "flipperR", x: @config.rightFlipperX, y: @config.flipperY, type: "paddle", sprite: (if @entity.rightFlipperActive (object/get (object/get @config.assetManifest features) paddleActive) (object/get (object/get @config.assetManifest features) paddle)) } ]), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "free", showMinimap: false, scale: @config.scale, keyMap: { KeyZ: "LEFT_FLIPPER", ArrowLeft: "LEFT_FLIPPER", KeySlash: "RIGHT_FLIPPER", ArrowRight: "RIGHT_FLIPPER", Space: "LAUNCH" } } ]
         })
     }
 
     emits {
-      TILE_CLICK -> external {
-        x : number!
-        y : number!
-      }
-        @description "Emits UI:{tileClickEvent} with { x, y } on tile click"
-        @tier "domain"
-      UNIT_CLICK -> external {
-        unitId : string!
-      }
-        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
-        @tier "domain"
-      BUMPER_HIT -> external {
-        bumperId : string!
-        x : number!
-        y : number!
-      }
-        @description "Emits when the ball strikes a bumper"
-        @tier "domain"
-      BALL_LOST -> external {
+      LEFT_FLIPPER -> external {
         id : string
       }
-        @description "Emits when a ball drains"
+        @description "Left flipper flick (KeyZ / ArrowLeft / Left Flipper button)"
+        @tier "domain"
+      RIGHT_FLIPPER -> external {
+        id : string
+      }
+        @description "Right flipper flick (KeySlash / ArrowRight / Right Flipper button)"
+        @tier "domain"
+      LAUNCH -> external {
+        id : string
+      }
+        @description "Launches the ball from the plunger lane (Space / Launch button)"
+        @tier "domain"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Emits when the last ball drains"
         @tier "domain"
       PLAY_AGAIN -> external {
         id : string
@@ -250,25 +229,85 @@ orbital PinballBoardOrbital {
         @label "Error"
         @description "Error state (UiError)"
         @tier "presentation"
-      tiles : [PinballBoardTilesItem] = [{ x: 0, y: 0, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 1, y: 0, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 2, y: 0, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 3, y: 0, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 4, y: 0, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 0, y: 1, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 1, y: 1, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 2, y: 1, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 3, y: 1, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 4, y: 1, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 0, y: 2, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 1, y: 2, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 2, y: 2, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 3, y: 2, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 4, y: 2, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 0, y: 3, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 1, y: 3, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 2, y: 3, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 3, y: 3, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 4, y: 3, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 0, y: 4, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 1, y: 4, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 2, y: 4, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 3, y: 4, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 4, y: 4, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 0, y: 5, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 1, y: 5, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 2, y: 5, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 3, y: 5, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 4, y: 5, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 0, y: 6, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 1, y: 6, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 2, y: 6, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 3, y: 6, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 4, y: 6, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 0, y: 7, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 1, y: 7, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 2, y: 7, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 3, y: 7, terrain: "playfield", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, { x: 4, y: 7, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 0, y: 8, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 1, y: 8, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 2, y: 8, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 3, y: 8, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, { x: 4, y: 8, terrain: "wall", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }]
-        @label "Tiles"
-        @description "Playfield tiles"
+      width : number = 480
+        @label "Width"
+        @description "Playfield width in pixels"
         @tier "presentation"
-      units : [PinballBoardUnitsItem] = [{ id: "ball1", position: { x: 2, y: 5 }, unitType: "ball", name: "Ball", team: player, health: 1, maxHealth: 1, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/units/ball.png", role: "npc", category: "ball", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "ball", thumbnailUrl: "" }, animation: "idle", frame: 0 }]
-        @label "Units"
-        @description "Ball units on the board"
+      height : number = 640
+        @label "Height"
+        @description "Playfield height in pixels; a ball past this drains"
         @tier "presentation"
-      features : [PinballBoardFeaturesItem] = [{ id: "bumper1", x: 2, y: 2, type: "bumper", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png", role: "decoration", category: "bumper", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "bumper", thumbnailUrl: "" } }, { id: "bumper2", x: 1, y: 3, type: "bumper", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png", role: "decoration", category: "bumper", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "bumper", thumbnailUrl: "" } }, { id: "bumper3", x: 3, y: 3, type: "bumper", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png", role: "decoration", category: "bumper", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "bumper", thumbnailUrl: "" } }, { id: "paddle_left", x: 1, y: 7, type: "paddle", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/paddle.png", role: "decoration", category: "paddle", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "paddle", thumbnailUrl: "" } }, { id: "paddle_right", x: 3, y: 7, type: "paddle", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/paddle.png", role: "decoration", category: "paddle", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "paddle", thumbnailUrl: "" } }]
-        @label "Features"
-        @description "Features (bumpers, paddles, etc.) on the board"
+      ballRadius : number = 12
+        @label "Ball Radius"
+        @description "Ball collision radius against the playfield walls"
         @tier "presentation"
-      assetManifest : PinballBoardAssetManifest = { terrains: { wall: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", role: "tile", category: "wall", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" }, playfield: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png", role: "tile", category: "playfield", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }, units: { ball: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/units/ball.png", role: "npc", category: "ball", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "ball", thumbnailUrl: "" } }, features: { bumper: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png", role: "decoration", category: "bumper", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "bumper", thumbnailUrl: "" }, paddle: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/paddle.png", role: "decoration", category: "paddle", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "paddle", thumbnailUrl: "" } }, effects: { spark: { url: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/spark_06.png", role: "effect", category: "spark", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "8:1", name: "spark", thumbnailUrl: "" } } }
+      gravity : number = 1.6
+        @label "Gravity"
+        @description "Downward velocity added to the ball each physics tick"
+        @tier "presentation"
+      launchSpeed : number = 40
+        @label "Launch Speed"
+        @description "Initial upward velocity when the ball is launched"
+        @tier "presentation"
+      launchVx : number = -3
+        @label "Launch Vx"
+        @description "Initial horizontal velocity when the ball is launched"
+        @tier "presentation"
+      launchX : number = 452
+        @label "Launch X"
+        @description "Plunger lane x position where the ball waits and respawns"
+        @tier "presentation"
+      launchY : number = 560
+        @label "Launch Y"
+        @description "Plunger lane y position where the ball waits and respawns"
+        @tier "presentation"
+      flipperPower : number = 36
+        @label "Flipper Power"
+        @description "Upward velocity a flipper flick gives the ball"
+        @tier "presentation"
+      flipperSideKick : number = 6
+        @label "Flipper Side Kick"
+        @description "Horizontal velocity a flipper adds toward the table center"
+        @tier "presentation"
+      flipperZoneY : number = 500
+        @label "Flipper Zone Y"
+        @description "Ball must be below this y for a flipper flick to connect"
+        @tier "presentation"
+      flipperY : number = 566
+        @label "Flipper Y"
+        @description "Y position where the flipper paddles are drawn"
+        @tier "presentation"
+      leftFlipperX : number = 150
+        @label "Left Flipper X"
+        @description "X position of the left flipper paddle"
+        @tier "presentation"
+      rightFlipperX : number = 330
+        @label "Right Flipper X"
+        @description "X position of the right flipper paddle"
+        @tier "presentation"
+      bumperRadius : number = 40
+        @label "Bumper Radius"
+        @description "Ball-to-bumper collision radius in pixels"
+        @tier "presentation"
+      bumperScore : number = 100
+        @label "Bumper Score"
+        @description "Points awarded per bumper hit"
+        @tier "presentation"
+      bumperKick : number = 0.8
+        @label "Bumper Kick"
+        @description "Velocity multiplier applied radially away from a hit bumper"
+        @tier "presentation"
+      startingBalls : number = 3
+        @label "Starting Balls"
+        @description "Balls per game; draining the last one ends the game"
+        @tier "presentation"
+      bumpers : [PinballBoardBumperItem] = [{ id: "bumper1", x: 140, y: 180 }, { id: "bumper2", x: 240, y: 110 }, { id: "bumper3", x: 340, y: 180 }]
+        @label "Bumpers"
+        @description "Bumper positions on the playfield in pixels"
+        @tier "presentation"
+      assetManifest : PinballBoardAssetManifest = { units: { ball: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_balls.json", sprite: "ballGrey_01.png", role: "npc", category: "ball", animations: ["static"], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "ball", thumbnailUrl: "" } }, features: { bumper: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets/features/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets/features/spritesheet_default.json", sprite: "element_red_polygon_glossy.png", role: "decoration", category: "bumper", animations: ["static"], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "bumper", thumbnailUrl: "" }, paddle: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_paddles.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_paddles.json", sprite: "paddle_01.png", role: "decoration", category: "paddle", animations: ["static"], style: "vector", variant: "", dimension: "2d", aspect: "4:1", name: "paddle", thumbnailUrl: "" }, paddleActive: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_paddles.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/features/spritesheet_paddles.json", sprite: "paddle_07.png", role: "decoration", category: "paddle", animations: ["static"], style: "vector", variant: "", dimension: "2d", aspect: "4:1", name: "paddle-active", thumbnailUrl: "" } }, effects: { spark: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/effects/spritesheet_particles.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-puzzle-assets-2/effects/spritesheet_particles.json", sprite: "particleYellow_1.png", role: "effect", category: "spark", animations: ["static"], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "spark", thumbnailUrl: "" } }, background: { url: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/kenney-rolling-ball-assets/features/rollingBall_sheet.json", sprite: "background_blue.png", role: "background", category: "background", animations: ["static"], style: "vector", variant: "", dimension: "2d", aspect: "1:1", name: "playfield", thumbnailUrl: "" } }
         @label "Asset Manifest"
-        @description "Asset sprite manifest"
-        @tier "presentation"
-      assetBaseUrl : string = "https://almadar-kflow-assets.web.app/shared/"
-        @label "Asset Base Url"
-        @description "Base URL prepended to manifest sprite paths"
+        @description "Ball/bumper/paddle/spark sprite maps + playfield background"
         @tier "presentation"
       scale : number = 1
         @label "Scale"
@@ -285,9 +324,5 @@ orbital PinballBoardOrbital {
     }
   }
 
-  trait PinballBoardAnimTick = AnimTick.traits.AnimTick -> PinballBoardItem {
-    config { frameCount: 8 }
-  }
-
-  page "/pinball-board" as PinballBoardPage -> PinballBoardRender, PinballBoardAnimTick
+  page "/pinball-board" as PinballBoardPage -> PinballBoardRender
 }

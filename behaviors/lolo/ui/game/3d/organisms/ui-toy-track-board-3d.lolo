@@ -1,5 +1,5 @@
 app ui-toy-track-board-3d "1.0.0"
-"ToyTrackBoard3D — toy car race on a 6x6 track loop; click to advance, rival ticks, lap completion wins."
+"ToyTrackBoard3D — throttled keyboard/d-pad toy race on a multi-lap 6x6 loop; collect coins, follow camera, ticking rival."
 orbital ToyTrackBoard3DOrbital {
   type ToyTrackBoard3DError = {
     message : string!
@@ -51,27 +51,31 @@ orbital ToyTrackBoard3DOrbital {
     type : string!
     assetUrl : Asset
   }
-  type ToyTrackBoard3DValidMovesItem = {
+  type ToyTrackBoard3DEffectItem = {
+    id : string!
+    type : string!
     x : number!
-    z : number!
-  }
-  type ToyTrackBoard3DAttackTargetsItem = {
-    x : number!
-    z : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
   }
 
   entity ToyTrackBoard3DItem [runtime] {
     id : string!
     units : [ToyTrackBoard3DUnitsItem]
-    validMoves : [ToyTrackBoard3DValidMovesItem]
-    attackTargets : [ToyTrackBoard3DAttackTargetsItem]
-    selectedUnitId : string = ""
+    features : [ToyTrackBoard3DFeaturesItem]
+    selectedUnitId : string = "player-car"
     playerProgress : number = 0
     rivalProgress : number = 0
     trackLength : number = 20
+    lap : number = 1
+    score : number = 0
+    canAdvance : boolean = true
     result : "none" | "victory" | "defeat" = "none"
     gridWidth : number = 6
     gridHeight : number = 6
+    fx : [ToyTrackBoard3DEffectItem] = []
   }
 
   trait ToyTrackBoard3DRender -> @rebindable ToyTrackBoard3DItem [interaction, instance] {
@@ -80,57 +84,113 @@ orbital ToyTrackBoard3DOrbital {
     state playing {
       INIT -> playing
         (set @entity.units @config.units)
+        (set @entity.features @config.features)
         (set @entity.playerProgress 0)
         (set @entity.rivalProgress 0)
         (set @entity.trackLength 20)
+        (set @entity.lap 1)
+        (set @entity.score 0)
+        (set @entity.canAdvance true)
         (set @entity.gridWidth 6)
         (set @entity.gridHeight 6)
         (set @entity.result "none")
-        (set @entity.selectedUnitId "")
-        (set @entity.attackTargets [])
-        (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (== (object/get @t order) (% (+ @entity.playerProgress 1) @entity.trackLength)))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+        (set @entity.selectedUnitId "player-car")
+        (set @entity.fx [])
         (render-ui main {
           type: game-shell
           backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel", thumbnailUrl: "" }
           hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beigeLight.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "hud-panel", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Progress", value: @entity.playerProgress }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "Score", value: @entity.score }, { label: "Result", value: @entity.result } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "ACCELERATE" } } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, cameraMode: "follow", keyMap: { ArrowUp: "ACCELERATE", KeyW: "ACCELERATE", Space: "ACCELERATE" } } ]
         })
 
-      TILE_CLICK -> playing when (and (== @entity.result "none") (let ((target (array/find @config.tiles (fn t (and (== (object/get @t x) ?x) (== (object/get @t y) ?z)))))) (and (!= @target null) (and (== (object/get @target passable) true) (== (object/get @target order) (% (+ @entity.playerProgress 1) @entity.trackLength))))))
-        (set @entity.playerProgress (+ @entity.playerProgress 1))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id "player-car") (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
-        (set @entity.result (if (>= @entity.playerProgress @entity.trackLength) "victory" @entity.result))
-        (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (== (object/get @t order) (% (+ @entity.playerProgress 1) @entity.trackLength)))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+      ACCELERATE -> playing when (and (== @entity.canAdvance true) (== @entity.result "none"))
+        (let ((nextOrder (% (+ @entity.playerProgress 1) @entity.trackLength))) (let ((target (array/find @config.tiles (fn t (== (object/get @t order) @nextOrder))))) (let ((coinHit (array/find @entity.features (fn f (and (== (object/get @f type) "coin") (and (== (object/get @f x) (object/get @target x)) (== (object/get @f y) (object/get @target y)))))))) (do
+          (set @entity.units (array/map @entity.units (fn u (if (== @u.id "player-car") (object/merge @u { position: { x: (object/get @target x), y: (object/get @target y) } }) @u))))
+          (set @entity.features (if (!= @coinHit null) (array/filter @entity.features (fn f (or (!= (object/get @f type) "coin") (or (!= (object/get @f x) (object/get @target x)) (!= (object/get @f y) (object/get @target y)))))) @entity.features))
+          (set @entity.score (if (!= @coinHit null) (+ @entity.score 5) @entity.score))
+          (set @entity.playerProgress (+ @entity.playerProgress 1))
+          (set @entity.canAdvance false)
+          (set @entity.lap (+ (math/floor (/ @entity.playerProgress @entity.trackLength)) 1))
+          (set @entity.fx (if (!= @coinHit null) (array/append @entity.fx { id: (str/concat "pickup-" @entity.playerProgress), type: "pickup", x: (object/get @target x), z: (object/get @target y), message: "+5", ttl: 5 }) @entity.fx))
+          (set @entity.fx (if (== (% @entity.playerProgress @entity.trackLength) 0) (array/append @entity.fx { id: (str/concat "lap-" @entity.playerProgress), type: "score", x: 0, z: 0, message: "Lap!", ttl: 5 }) @entity.fx))
+          (set @entity.result (if (>= @entity.playerProgress (* @config.totalLaps @entity.trackLength)) "victory" @entity.result))
+          (set @entity.fx (if (!= @entity.result "none") (array/append @entity.fx { id: "result-fx", type: (if (== @entity.result "victory") "win" "lose"), x: 0, z: 0, message: (if (== @entity.result "victory") "You Win!" "You Lose!"), ttl: 999 }) @entity.fx))
+        ))))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
         (render-ui main {
           type: game-shell
           backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel", thumbnailUrl: "" }
           hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beigeLight.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "hud-panel", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Progress", value: @entity.playerProgress }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "Score", value: @entity.score }, { label: "Result", value: @entity.result } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "ACCELERATE" } } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, cameraMode: "follow", keyMap: { ArrowUp: "ACCELERATE", KeyW: "ACCELERATE", Space: "ACCELERATE" } } ]
+        })
+
+      PLAY_AGAIN -> playing when (!= @entity.result "none")
+        (set @entity.units @config.units)
+        (set @entity.features @config.features)
+        (set @entity.playerProgress 0)
+        (set @entity.rivalProgress 0)
+        (set @entity.trackLength 20)
+        (set @entity.lap 1)
+        (set @entity.score 0)
+        (set @entity.canAdvance true)
+        (set @entity.gridWidth 6)
+        (set @entity.gridHeight 6)
+        (set @entity.result "none")
+        (set @entity.selectedUnitId "player-car")
+        (set @entity.fx [])
+        (render-ui main {
+          type: game-shell
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beigeLight.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "hud-panel", thumbnailUrl: "" }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "Score", value: @entity.score }, { label: "Result", value: @entity.result } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "ACCELERATE" } } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, cameraMode: "follow", keyMap: { ArrowUp: "ACCELERATE", KeyW: "ACCELERATE", Space: "ACCELERATE" } } ]
         })
     }
 
     ticks {
+      paceTick every 400ms
+        when (== @entity.result "none")
+        (set @entity.canAdvance true)
+        (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+
       rivalAdvanceTick every 1200ms
         when (== @entity.result "none")
-        (let ((nextOrder (% (+ @entity.rivalProgress 1) @entity.trackLength))) (let ((target (array/find @config.tiles (fn t (== (object/get @t order) @nextOrder))))) (do (set @entity.rivalProgress (+ @entity.rivalProgress 1)) (set @entity.units (array/map @entity.units (fn u (if (== @u.id "rival-car") (object/merge @u { position: { x: (object/get @target x), y: (object/get @target y) } }) @u)))) (set @entity.result (if (>= @entity.rivalProgress @entity.trackLength) "defeat" @entity.result)))))
+        (let ((nextOrder (% (+ @entity.rivalProgress 1) @entity.trackLength))) (let ((target (array/find @config.tiles (fn t (== (object/get @t order) @nextOrder))))) (do (set @entity.rivalProgress (+ @entity.rivalProgress 1)) (set @entity.units (array/map @entity.units (fn u (if (== @u.id "rival-car") (object/merge @u { position: { x: (object/get @target x), y: (object/get @target y) } }) @u)))) (set @entity.result (if (>= @entity.rivalProgress (* @config.totalLaps @entity.trackLength)) "defeat" @entity.result)) (set @entity.fx (if (!= @entity.result "none") (array/append @entity.fx { id: "result-fx", type: (if (== @entity.result "victory") "win" "lose"), x: 0, z: 0, message: (if (== @entity.result "victory") "You Win!" "You Lose!"), ttl: 999 }) @entity.fx)))))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
         (render-ui main {
           type: game-shell
           backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel", thumbnailUrl: "" }
           hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beigeLight.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "hud-panel", thumbnailUrl: "" }
-          hud: { type: game-hud, stats: [ { label: "Progress", value: @entity.playerProgress }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: (str/concat @entity.lap "/" @config.totalLaps) }, { label: "Score", value: @entity.score }, { label: "Result", value: @entity.result } ] }, { type: control-grid, kind: "dpad", directionEvents: { up: "ACCELERATE" } } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, cameraMode: "follow", keyMap: { ArrowUp: "ACCELERATE", KeyW: "ACCELERATE", Space: "ACCELERATE" } } ]
         })
     }
 
     emits {
-      TILE_CLICK -> external {
-        x : number!
-        z : number!
-        tileId : string
+      ACCELERATE -> external {
+        id : string
       }
-        @description "Player advances to the next track cell along the loop"
+        @description "Accelerate intent (keyboard keyMap or d-pad directionEvents) — advances one track cell when paced, collecting a coin if present"
+        @tier "domain"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when the lap race ends"
+        @tier "domain"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
         @tier "domain"
     }
 
@@ -147,6 +207,10 @@ orbital ToyTrackBoard3DOrbital {
         @label "Error"
         @description "Error state (UiError)"
         @tier "presentation"
+      totalLaps : number = 2
+        @label "Total Laps"
+        @description "Laps around the loop required to win"
+        @tier "presentation"
       tiles : [ToyTrackBoard3DTilesItem] = [{ id: "t20", x: 2, y: 0, terrain: "track", passable: true, order: 0, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t30", x: 3, y: 0, terrain: "track", passable: true, order: 1, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t40", x: 4, y: 0, terrain: "track", passable: true, order: 2, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t50", x: 5, y: 0, terrain: "track", passable: true, order: 3, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-corner-small.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-corner-small", thumbnailUrl: "" } }, { id: "t51", x: 5, y: 1, terrain: "track", passable: true, order: 4, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t52", x: 5, y: 2, terrain: "track", passable: true, order: 5, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t53", x: 5, y: 3, terrain: "track", passable: true, order: 6, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t54", x: 5, y: 4, terrain: "track", passable: true, order: 7, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t55", x: 5, y: 5, terrain: "track", passable: true, order: 8, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-corner-small.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-corner-small", thumbnailUrl: "" } }, { id: "t45", x: 4, y: 5, terrain: "track", passable: true, order: 9, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t35", x: 3, y: 5, terrain: "track", passable: true, order: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t25", x: 2, y: 5, terrain: "track", passable: true, order: 11, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t15", x: 1, y: 5, terrain: "track", passable: true, order: 12, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t05", x: 0, y: 5, terrain: "track", passable: true, order: 13, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-corner-small.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-corner-small", thumbnailUrl: "" } }, { id: "t04", x: 0, y: 4, terrain: "track", passable: true, order: 14, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t03", x: 0, y: 3, terrain: "track", passable: true, order: 15, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t02", x: 0, y: 2, terrain: "track", passable: true, order: 16, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "track", passable: true, order: 17, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t00", x: 0, y: 0, terrain: "track", passable: true, order: 18, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-corner-small.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-corner-small", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "track", passable: true, order: 19, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/track-striped-narrow-straight.glb", role: "tile", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "track-striped-narrow-straight", thumbnailUrl: "" } }, { id: "t11", x: 1, y: 1, terrain: "infield", passable: false, order: -1 }, { id: "t21", x: 2, y: 1, terrain: "infield", passable: false, order: -1 }, { id: "t31", x: 3, y: 1, terrain: "infield", passable: false, order: -1 }, { id: "t41", x: 4, y: 1, terrain: "infield", passable: false, order: -1 }, { id: "t12", x: 1, y: 2, terrain: "infield", passable: false, order: -1 }, { id: "t22", x: 2, y: 2, terrain: "infield", passable: false, order: -1 }, { id: "t32", x: 3, y: 2, terrain: "infield", passable: false, order: -1 }, { id: "t42", x: 4, y: 2, terrain: "infield", passable: false, order: -1 }, { id: "t13", x: 1, y: 3, terrain: "infield", passable: false, order: -1 }, { id: "t23", x: 2, y: 3, terrain: "infield", passable: false, order: -1 }, { id: "t33", x: 3, y: 3, terrain: "infield", passable: false, order: -1 }, { id: "t43", x: 4, y: 3, terrain: "infield", passable: false, order: -1 }, { id: "t14", x: 1, y: 4, terrain: "infield", passable: false, order: -1 }, { id: "t24", x: 2, y: 4, terrain: "infield", passable: false, order: -1 }, { id: "t34", x: 3, y: 4, terrain: "infield", passable: false, order: -1 }, { id: "t44", x: 4, y: 4, terrain: "infield", passable: false, order: -1 }]
         @label "Tiles"
         @description "6x6 track loop — 20 outer track cells (order 0-19) plus 16 impassable infield cells."
@@ -155,9 +219,9 @@ orbital ToyTrackBoard3DOrbital {
         @label "Units"
         @description "Player car (start/finish) and rival car, one cell behind."
         @tier "presentation"
-      features : [ToyTrackBoard3DFeaturesItem] = [{ id: "f-finish", x: 2, y: 0, type: "finish_gate", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/gate-finish.glb", role: "decoration", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "gate-finish", thumbnailUrl: "" } }, { id: "f-halfway", x: 3, y: 5, type: "gate", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/gate.glb", role: "decoration", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "gate", thumbnailUrl: "" } }, { id: "f-tree1", x: 1, y: 1, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/tree-pine.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tree-pine", thumbnailUrl: "" } }, { id: "f-tree2", x: 4, y: 1, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/tree.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tree", thumbnailUrl: "" } }, { id: "f-tree3", x: 2, y: 2, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-coaster-kit/features/tree.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tree", thumbnailUrl: "" } }, { id: "f-bench", x: 3, y: 2, type: "bench", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-coaster-kit/features/bench.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "bench", thumbnailUrl: "" } }, { id: "f-support1", x: 1, y: 3, type: "support", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/supports.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "supports", thumbnailUrl: "" } }, { id: "f-coin1", x: 2, y: 3, type: "coin", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/item-coin-gold.glb", role: "item", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "item-coin-gold", thumbnailUrl: "" } }, { id: "f-support2", x: 3, y: 3, type: "support", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/supports-wide.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "supports-wide", thumbnailUrl: "" } }, { id: "f-box", x: 4, y: 3, type: "item", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/item-box.glb", role: "item", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "item-box", thumbnailUrl: "" } }, { id: "f-cone", x: 1, y: 4, type: "cone", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/item-cone.glb", role: "item", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "item-cone", thumbnailUrl: "" } }, { id: "f-coin2", x: 4, y: 4, type: "coin", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/item-coin-silver.glb", role: "item", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "item-coin-silver", thumbnailUrl: "" } }]
+      features : [ToyTrackBoard3DFeaturesItem] = [{ id: "f-finish", x: 2, y: 0, type: "finish_gate", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/gate-finish.glb", role: "decoration", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "gate-finish", thumbnailUrl: "" } }, { id: "f-halfway", x: 3, y: 5, type: "gate", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/terrain/gate.glb", role: "decoration", category: "terrain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "gate", thumbnailUrl: "" } }, { id: "f-tree1", x: 1, y: 1, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/tree-pine.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tree-pine", thumbnailUrl: "" } }, { id: "f-tree2", x: 4, y: 1, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/tree.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tree", thumbnailUrl: "" } }, { id: "f-tree3", x: 2, y: 2, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-coaster-kit/features/tree.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tree", thumbnailUrl: "" } }, { id: "f-bench", x: 3, y: 2, type: "bench", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-coaster-kit/features/bench.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "bench", thumbnailUrl: "" } }, { id: "f-support1", x: 1, y: 3, type: "support", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/supports.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "supports", thumbnailUrl: "" } }, { id: "f-coin1", x: 5, y: 2, type: "coin", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/item-coin-gold.glb", role: "item", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "item-coin-gold", thumbnailUrl: "" } }, { id: "f-support2", x: 3, y: 3, type: "support", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/supports-wide.glb", role: "decoration", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "supports-wide", thumbnailUrl: "" } }, { id: "f-box", x: 4, y: 3, type: "item", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/item-box.glb", role: "item", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "item-box", thumbnailUrl: "" } }, { id: "f-cone", x: 1, y: 4, type: "cone", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/item-cone.glb", role: "item", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "item-cone", thumbnailUrl: "" } }, { id: "f-coin2", x: 0, y: 3, type: "coin", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-toy-track-board-3d/kenney-toy-car-kit/features/item-coin-silver.glb", role: "item", category: "features", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "item-coin-silver", thumbnailUrl: "" } }]
         @label "Features"
-        @description "Finish gate, halfway gate, and infield scenery."
+        @description "Finish gate, halfway gate, on-track coins (collectible), and infield scenery."
         @tier "presentation"
       scale : number = 0.45
         @label "Scale"

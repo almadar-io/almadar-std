@@ -140,6 +140,51 @@
             "type": "array"
           },
           {
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "fx",
+            "type": "array"
+          },
+          {
             "default": 0.0,
             "name": "claimed",
             "type": "number"
@@ -1425,18 +1470,6 @@
               "tier": "domain"
             },
             {
-              "description": "Starts the match from the menu state",
-              "event": "START",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ],
-              "scope": "external",
-              "tier": "domain"
-            },
-            {
               "description": "Initializes the board on first mount",
               "event": "INIT",
               "payloadSchema": [
@@ -1453,6 +1486,7 @@
             "provides": [
               "claimed",
               "claimedIds",
+              "fx",
               "gridHeight",
               "gridWidth",
               "movementRange",
@@ -1471,18 +1505,6 @@
           "scope": "instance",
           "stateMachine": {
             "events": [
-              {
-                "description": "Starts the match from the menu state",
-                "key": "START",
-                "name": "Start",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ],
-                "tier": "domain"
-              },
               {
                 "description": "Initializes the board on first mount",
                 "key": "INIT",
@@ -1580,9 +1602,6 @@
                 "name": "playing"
               },
               {
-                "name": "menu"
-              },
-              {
                 "name": "gameover"
               }
             ],
@@ -1606,103 +1625,7 @@
                   ],
                   [
                     "set",
-                    "@entity.claimed",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.claimedIds",
-                    []
-                  ],
-                  [
-                    "set",
-                    "@entity.totalBuildings",
-                    3.0
-                  ],
-                  [
-                    "set",
-                    "@entity.turnsLeft",
-                    "@config.startingTurns"
-                  ],
-                  [
-                    "set",
-                    "@entity.result",
-                    "none"
-                  ],
-                  [
-                    "if",
-                    [
-                      "!=",
-                      "@entity.result",
-                      "none"
-                    ],
-                    [
-                      "emit",
-                      "GAME_END",
-                      {
-                        "result": "@entity.result"
-                      }
-                    ],
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "features": "@config.features",
-                          "scale": "@config.scale",
-                          "selectedUnitId": "@entity.selectedUnitId",
-                          "tileClickEvent": "TILE_CLICK",
-                          "tiles": "@config.tiles",
-                          "type": "game-canvas-3d",
-                          "unitClickEvent": "UNIT_CLICK",
-                          "unitScale": "@config.unitScale",
-                          "units": "@entity.units",
-                          "validMoves": "@entity.validMoves"
-                        }
-                      ],
-                      "hud": {
-                        "stats": [
-                          {
-                            "label": "Claimed",
-                            "value": "@entity.claimed"
-                          },
-                          {
-                            "label": "Turns Left",
-                            "value": "@entity.turnsLeft"
-                          },
-                          {
-                            "label": "Result",
-                            "value": "@entity.result"
-                          }
-                        ],
-                        "type": "game-hud"
-                      },
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "START",
-                "from": "menu",
-                "to": "playing"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.units",
-                    "@config.units"
-                  ],
-                  [
-                    "set",
-                    "@entity.selectedUnitId",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.validMoves",
+                    "@entity.fx",
                     []
                   ],
                   [
@@ -1765,8 +1688,28 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -1949,8 +1892,28 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2097,12 +2060,10 @@
                       ]
                     ],
                     [
-                      "do",
+                      "let",
                       [
-                        "set",
-                        "@entity.claimedIds",
                         [
-                          "if",
+                          "isNewClaim",
                           [
                             "and",
                             [
@@ -2126,39 +2087,95 @@
                                 ]
                               ]
                             ]
-                          ],
-                          [
-                            "array/append",
-                            "@entity.claimedIds",
-                            [
-                              "object/get",
-                              "@tile",
-                              "id"
-                            ]
-                          ],
-                          "@entity.claimedIds"
+                          ]
                         ]
                       ],
                       [
-                        "set",
-                        "@entity.claimed",
+                        "do",
                         [
-                          "array/len",
-                          "@entity.claimedIds"
-                        ]
-                      ],
-                      [
-                        "set",
-                        "@entity.result",
+                          "set",
+                          "@entity.claimedIds",
+                          [
+                            "if",
+                            "@isNewClaim",
+                            [
+                              "array/append",
+                              "@entity.claimedIds",
+                              [
+                                "object/get",
+                                "@tile",
+                                "id"
+                              ]
+                            ],
+                            "@entity.claimedIds"
+                          ]
+                        ],
+                        [
+                          "set",
+                          "@entity.claimed",
+                          [
+                            "array/len",
+                            "@entity.claimedIds"
+                          ]
+                        ],
+                        [
+                          "set",
+                          "@entity.fx",
+                          [
+                            "if",
+                            "@isNewClaim",
+                            [
+                              "array/append",
+                              "@entity.fx",
+                              {
+                                "id": [
+                                  "str/concat",
+                                  "fx-claim-",
+                                  [
+                                    "object/get",
+                                    "@tile",
+                                    "id"
+                                  ]
+                                ],
+                                "message": "+1",
+                                "ttl": 3.0,
+                                "type": "score",
+                                "x": "@payload.x",
+                                "z": "@payload.z"
+                              }
+                            ],
+                            "@entity.fx"
+                          ]
+                        ],
+                        [
+                          "set",
+                          "@entity.result",
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@entity.claimed",
+                              "@entity.totalBuildings"
+                            ],
+                            "won",
+                            "@entity.result"
+                          ]
+                        ],
                         [
                           "if",
                           [
-                            "==",
-                            "@entity.claimed",
-                            "@entity.totalBuildings"
+                            "!=",
+                            "@entity.result",
+                            "none"
                           ],
-                          "won",
-                          "@entity.result"
+                          [
+                            "emit",
+                            "GAME_END",
+                            {
+                              "result": "@entity.result"
+                            }
+                          ],
+                          null
                         ]
                       ]
                     ]
@@ -2167,8 +2184,28 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2365,8 +2402,28 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2425,8 +2482,28 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2455,6 +2532,29 @@
                           }
                         ],
                         "type": "game-hud"
+                      },
+                      "overlay": {
+                        "align": "center",
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Play Again",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "md",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -2488,6 +2588,11 @@
                   ],
                   [
                     "set",
+                    "@entity.fx",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.claimed",
                     0.0
                   ],
@@ -2512,27 +2617,31 @@
                     "none"
                   ],
                   [
-                    "if",
-                    [
-                      "!=",
-                      "@entity.result",
-                      "none"
-                    ],
-                    [
-                      "emit",
-                      "GAME_END",
-                      {
-                        "result": "@entity.result"
-                      }
-                    ],
-                    null
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2568,13 +2677,56 @@
                 ],
                 "event": "PLAY_AGAIN",
                 "from": "gameover",
-                "to": "menu"
+                "to": "playing"
               }
             ]
           },
           "ticks": [
             {
               "effects": [
+                [
+                  "set",
+                  "@entity.fx",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.fx",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
                 [
                   "set",
                   "@entity.turnsLeft",
@@ -2622,8 +2774,28 @@
                   "render-ui",
                   "main",
                   {
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "CANCEL",
+                          "label": "Cancel",
+                          "type": "button",
+                          "variant": "secondary"
+                        },
+                        {
+                          "action": "PLAY_AGAIN",
+                          "label": "Restart",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
                     "children": [
                       {
+                        "events": "@entity.fx",
                         "features": "@config.features",
                         "scale": "@config.scale",
                         "selectedUnitId": "@entity.selectedUnitId",

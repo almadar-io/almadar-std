@@ -56,6 +56,15 @@ orbital PirateBoard3DOrbital {
     x : number!
     z : number!
   }
+  type PirateBoard3DFxItem = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
 
   entity PirateBoard3DItem [runtime] {
     id : string!
@@ -63,6 +72,7 @@ orbital PirateBoard3DOrbital {
     selectedUnitId : string
     validMoves : [PirateBoard3DValidMovesItem]
     attackTargets : [PirateBoard3DAttackTargetsItem]
+    fx : [PirateBoard3DFxItem] = []
     phase : "observation" | "selection" | "movement" | "action" | "enemy_turn" | "game_over" = "observation"
     turn : number = 0
     result : "none" | "victory" | "defeat" = none
@@ -76,30 +86,13 @@ orbital PirateBoard3DOrbital {
   trait PirateBoard3DRender -> @rebindable PirateBoard3DItem [interaction, instance] {
     initial: playing
 
-    state menu {
-      START -> playing
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.attackTargets [])
-        (set @entity.turn 0)
-        (set @entity.result "none")
-        (set @entity.phase "observation")
-        (set @entity.currentTeam "player")
-        (set @entity.enemyTurn false)
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
-        })
-    }
-
     state playing {
       INIT -> playing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
         (set @entity.attackTargets [])
+        (set @entity.fx [])
         (set @entity.turn 0)
         (set @entity.result "none")
         (set @entity.phase "observation")
@@ -111,7 +104,24 @@ orbital PirateBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.phase "action") (and (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "enemy") (and (> (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) health) 0) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position)) 1))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?unitId) (object/merge @u { health: (math/max 0 (- @u.health @config.attackDamage)) }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.phase "observation")
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none"))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (set @entity.fx (array/append @entity.fx { id: (str/concat "fx-atk-" @entity.turn), type: "hit", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) x), z: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) y), message: (str/concat "-" @config.attackDamage), ttl: 3 }))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx } ]
         })
 
       UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
@@ -120,7 +130,8 @@ orbital PirateBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx } ]
         })
 
       UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
@@ -131,7 +142,8 @@ orbital PirateBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx } ]
         })
 
       TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0))))
@@ -143,19 +155,8 @@ orbital PirateBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
-        })
-
-      ATTACK -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)) }) @u))))
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.attackTargets [])
-        (set @entity.phase "observation")
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx } ]
         })
 
       END_TURN -> playing when (== @entity.result "none")
@@ -169,7 +170,8 @@ orbital PirateBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx } ]
         })
 
       CANCEL -> playing when (!= @entity.selectedUnitId "")
@@ -180,7 +182,8 @@ orbital PirateBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx } ]
         })
 
       GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
@@ -193,16 +196,19 @@ orbital PirateBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: game-menu, title: (if (== @entity.result "victory") "VICTORY" "DEFEAT"), subtitle: (str/concat "Turn " @entity.turn), options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] } null)
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx } ]
         })
     }
 
     state gameover {
-      PLAY_AGAIN -> menu
+      PLAY_AGAIN -> playing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
         (set @entity.attackTargets [])
+        (set @entity.fx [])
         (set @entity.turn 0)
         (set @entity.result "none")
         (set @entity.phase "observation")
@@ -211,15 +217,18 @@ orbital PirateBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: game-menu, title: (if (== @entity.result "victory") "VICTORY" "DEFEAT"), subtitle: (str/concat "Turn " @entity.turn), options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] } null)
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx } ]
         })
     }
 
     ticks {
       enemyAiTick every 1s
         when (and (== @entity.enemyTurn true) (== @entity.result "none"))
+        (set @entity.fx (array/concat @entity.fx (array/map (array/filter @entity.units (fn u (and (and (== @u.team "player") (> @u.health 0)) (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0)))) (fn u { id: (str/concat "fx-ai-" @u.id), type: "hit", x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y), message: "-1", ttl: 3 }))))
         (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 1)) }) @u) @u))))
-        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (if (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.health 0)) (== (grid/manhattan-distance (object/get @u position) (object/get @p position)) 1))))) 0) (let ((target (array/first (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.health 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)) } })) @u) @u))))
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (if (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.health 0)) (== (grid/manhattan-distance (object/get @u position) (object/get @p position)) 1))))) 0) (let ((target (array/reduce (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.health 0)))) (fn nearest p (if (or (== @nearest null) (< (grid/manhattan-distance (object/get @p position) (object/get @u position)) (grid/manhattan-distance (object/get @nearest position) (object/get @u position)))) @p @nearest)) null))) (if (== @target null) @u (let ((nextX (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1))) (nextY (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)))) (if (and (grid/in-bounds { x: @nextX, y: @nextY } @entity.gridWidth @entity.gridHeight) (and (== (object/get (array/find @config.tiles (fn t (and (== (object/get @t x) @nextX) (== (object/get @t y) @nextY)))) passable) true) (== (array/len (array/filter @entity.units (fn o (and (!= @o.id @u.id) (and (> @o.health 0) (and (== (object/get (object/get @o position) x) @nextX) (== (object/get (object/get @o position) y) @nextY))))))) 0))) (object/merge @u { position: { x: @nextX, y: @nextY } }) @u)))) @u) @u))))
         (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
         (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
         (set @entity.enemyTurn false)
@@ -228,20 +237,23 @@ orbital PirateBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor } ]
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: game-menu, title: (if (== @entity.result "victory") "VICTORY" "DEFEAT"), subtitle: (str/concat "Turn " @entity.turn), options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] } null)
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx } ]
+        })
+
+      fxTick every 500ms
+        when (> (array/len @entity.fx) 0)
+        (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx } ]
         })
     }
 
     emits {
-      ATTACK -> external {
-        attacker : object
-        target : object
-        damage : number
-        attackerId : string!
-        targetId : string!
-      }
-        @description "Cannon fire between adjacent ships"
-        @tier "domain"
       GAME_END -> external {
         result : string
       }
@@ -296,6 +308,10 @@ orbital PirateBoard3DOrbital {
       error : PirateBoard3DError
         @label "Error"
         @description "Error state (UiError)"
+        @tier "presentation"
+      attackDamage : number = 4
+        @label "Attack Damage"
+        @description "Cannon damage a player ship deals to an adjacent enemy on attack"
         @tier "presentation"
       tiles : [PirateBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "island", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/patch-sand.glb", role: "tile", category: "sand", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "sand-island", thumbnailUrl: "" } }, { id: "t10", x: 1, y: 0, terrain: "water", type: "water", passable: true }, { id: "t20", x: 2, y: 0, terrain: "water", type: "water", passable: true }, { id: "t30", x: 3, y: 0, terrain: "water", type: "water", passable: true }, { id: "t40", x: 4, y: 0, terrain: "dock", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/structure-platform-dock.glb", role: "tile", category: "dock", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "dock", thumbnailUrl: "" } }, { id: "t50", x: 5, y: 0, terrain: "fort", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/structure-platform.glb", role: "tile", category: "fort-platform", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "fort-platform", thumbnailUrl: "" } }, { id: "t01", x: 0, y: 1, terrain: "water", type: "water", passable: true }, { id: "t11", x: 1, y: 1, terrain: "water", type: "water", passable: true }, { id: "t21", x: 2, y: 1, terrain: "water", type: "water", passable: true }, { id: "t31", x: 3, y: 1, terrain: "water", type: "water", passable: true }, { id: "t41", x: 4, y: 1, terrain: "water", type: "water", passable: true }, { id: "t51", x: 5, y: 1, terrain: "water", type: "water", passable: true }, { id: "t02", x: 0, y: 2, terrain: "water", type: "water", passable: true }, { id: "t12", x: 1, y: 2, terrain: "water", type: "water", passable: true }, { id: "t22", x: 2, y: 2, terrain: "water", type: "water", passable: true }, { id: "t32", x: 3, y: 2, terrain: "water", type: "water", passable: true }, { id: "t42", x: 4, y: 2, terrain: "water", type: "water", passable: true }, { id: "t52", x: 5, y: 2, terrain: "water", type: "water", passable: true }, { id: "t03", x: 0, y: 3, terrain: "water", type: "water", passable: true }, { id: "t13", x: 1, y: 3, terrain: "water", type: "water", passable: true }, { id: "t23", x: 2, y: 3, terrain: "reef", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/rocks-sand-b.glb", role: "tile", category: "reef", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "reef-rocks", thumbnailUrl: "" } }, { id: "t33", x: 3, y: 3, terrain: "water", type: "water", passable: true }, { id: "t43", x: 4, y: 3, terrain: "water", type: "water", passable: true }, { id: "t53", x: 5, y: 3, terrain: "water", type: "water", passable: true }, { id: "t04", x: 0, y: 4, terrain: "water", type: "water", passable: true }, { id: "t14", x: 1, y: 4, terrain: "water", type: "water", passable: true }, { id: "t24", x: 2, y: 4, terrain: "water", type: "water", passable: true }, { id: "t34", x: 3, y: 4, terrain: "water", type: "water", passable: true }, { id: "t44", x: 4, y: 4, terrain: "water", type: "water", passable: true }, { id: "t54", x: 5, y: 4, terrain: "water", type: "water", passable: true }, { id: "t05", x: 0, y: 5, terrain: "fort", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/structure-platform.glb", role: "tile", category: "fort-platform", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "fort-platform", thumbnailUrl: "" } }, { id: "t15", x: 1, y: 5, terrain: "dock", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/structure-platform-dock.glb", role: "tile", category: "dock", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "dock", thumbnailUrl: "" } }, { id: "t25", x: 2, y: 5, terrain: "water", type: "water", passable: true }, { id: "t35", x: 3, y: 5, terrain: "water", type: "water", passable: true }, { id: "t45", x: 4, y: 5, terrain: "water", type: "water", passable: true }, { id: "t55", x: 5, y: 5, terrain: "island", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/patch-sand.glb", role: "tile", category: "sand", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "sand-island", thumbnailUrl: "" } }]
         @label "Tiles"

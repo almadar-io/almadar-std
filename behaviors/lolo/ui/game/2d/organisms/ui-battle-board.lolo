@@ -220,13 +220,17 @@ orbital BattleBoardOrbital {
           children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
 
-      ATTACK -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)), animation: (if (<= (math/max 0 (- (object/get @u health) ?damage)) 0) "death" "hit") }) (if (== @u.id ?attackerId) (object/merge @u { animation: "attack" }) @u)))))
-        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 4 }))
-        (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 5 })) null)
+      UNIT_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "enemy") (let ((ap (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1)))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?unitId) (object/merge @u { health: (math/max 0 (- (object/get @u health) 3)), animation: (if (<= (math/max 0 (- (object/get @u health) 3)) 0) "death" "hit") }) (if (== @u.id @entity.selectedUnitId) (object/merge @u { animation: "attack" }) @u)))))
+        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) y), ttl: 4 }))
+        (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) health) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) y), ttl: 5 })) null)
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
+        (set @entity.xp (+ @entity.xp 25))
+        (if (>= @entity.xp @entity.xpToNext) (set @entity.units (array/map @entity.units (fn u (if (== @u.team "player") (object/merge @u { health: (math/min (object/get @u maxHealth) (+ (object/get @u health) 2)) }) @u)))) null)
+        (if (>= @entity.xp @entity.xpToNext) (set @entity.xpToNext (+ @entity.xpToNext 50)) null)
         (set @entity.phase "observation")
+        (emit GAME_END)
         (render-ui main {
           type: game-shell
           fontFamily: "future"
@@ -273,6 +277,7 @@ orbital BattleBoardOrbital {
         (render-ui main {
           type: game-shell
           fontFamily: "future"
+          overlay: { type: game-menu, title: (if (== @entity.result "victory") "VICTORY" "DEFEAT"), subtitle: "Battle complete", options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] }
           backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "adventure", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
           hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panel_beige.png", role: "ui", category: "ui", animations: [], style: "adventure", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-shape-characters/units/spritesheet_default.json", sprite: "tile_coin.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "coin", thumbnailUrl: "" } }, { label: "Result", value: @entity.result, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json", sprite: "emote_star.png", role: "ui", category: "ui", animations: [], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "star", thumbnailUrl: "" } } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: resource-bar, resources: [{ label: "XP", value: @entity.xp, max: @entity.xpToNext, assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "barBlue_horizontalBlue.png", role: "ui", category: "ui", animations: [], style: "adventure", variant: "", dimension: "2d", aspect: "1:1", name: "bar-fill-blue", thumbnailUrl: "" } }] } ] }
@@ -304,6 +309,7 @@ orbital BattleBoardOrbital {
 
     ticks {
       renderTick every 100ms
+        when (== @entity.result "none")
         (render-ui main {
           type: game-shell
           fontFamily: "future"
@@ -322,6 +328,7 @@ orbital BattleBoardOrbital {
         (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
         (set @entity.enemyTurn false)
         (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
+        (if (!= @entity.result "none") (emit GAME_END) null)
         (render-ui main {
           type: game-shell
           fontFamily: "future"
@@ -334,15 +341,6 @@ orbital BattleBoardOrbital {
     }
 
     emits {
-      ATTACK -> external {
-        attacker : object
-        target : object
-        damage : number
-        attackerId : string!
-        targetId : string!
-      }
-        @description "-- Callbacks --"
-        @tier "domain"
       GAME_END -> external {
         result : string
       }

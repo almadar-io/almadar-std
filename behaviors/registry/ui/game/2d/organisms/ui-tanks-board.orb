@@ -3001,36 +3001,6 @@
           },
           "emits": [
             {
-              "description": "Fired when a tank shoots at a target.",
-              "event": "FIRE",
-              "payloadSchema": [
-                {
-                  "name": "attacker",
-                  "type": "object"
-                },
-                {
-                  "name": "target",
-                  "type": "object"
-                },
-                {
-                  "name": "damage",
-                  "type": "number"
-                },
-                {
-                  "name": "attackerId",
-                  "required": true,
-                  "type": "string"
-                },
-                {
-                  "name": "targetId",
-                  "required": true,
-                  "type": "string"
-                }
-              ],
-              "scope": "external",
-              "tier": "domain"
-            },
-            {
               "description": "Called when the battle ends.",
               "event": "GAME_END",
               "payloadSchema": [
@@ -3169,36 +3139,6 @@
                     "name": "y",
                     "required": true,
                     "type": "number"
-                  }
-                ],
-                "tier": "domain"
-              },
-              {
-                "description": "Fired when a tank shoots at a target.",
-                "key": "FIRE",
-                "name": "Fire",
-                "payloadSchema": [
-                  {
-                    "name": "attacker",
-                    "type": "object"
-                  },
-                  {
-                    "name": "target",
-                    "type": "object"
-                  },
-                  {
-                    "name": "damage",
-                    "type": "number"
-                  },
-                  {
-                    "name": "attackerId",
-                    "required": true,
-                    "type": "string"
-                  },
-                  {
-                    "name": "targetId",
-                    "required": true,
-                    "type": "string"
                   }
                 ],
                 "tier": "domain"
@@ -4508,7 +4448,7 @@
                           [
                             "==",
                             "@u.id",
-                            "@payload.targetId"
+                            "@payload.unitId"
                           ],
                           [
                             "object/merge",
@@ -4528,7 +4468,7 @@
                                         "@u",
                                         "health"
                                       ],
-                                      "@payload.damage"
+                                      3.0
                                     ]
                                   ],
                                   0.0
@@ -4546,7 +4486,7 @@
                                     "@u",
                                     "health"
                                   ],
-                                  "@payload.damage"
+                                  3.0
                                 ]
                               ]
                             }
@@ -4556,7 +4496,7 @@
                             [
                               "==",
                               "@u.id",
-                              "@payload.attackerId"
+                              "@entity.selectedUnitId"
                             ],
                             [
                               "object/merge",
@@ -4593,7 +4533,7 @@
                                 [
                                   "==",
                                   "@u.id",
-                                  "@payload.targetId"
+                                  "@payload.unitId"
                                 ]
                               ]
                             ],
@@ -4614,7 +4554,7 @@
                                 [
                                   "==",
                                   "@u.id",
-                                  "@payload.targetId"
+                                  "@payload.unitId"
                                 ]
                               ]
                             ],
@@ -4640,7 +4580,7 @@
                             [
                               "==",
                               "@u.id",
-                              "@payload.targetId"
+                              "@payload.unitId"
                             ]
                           ]
                         ],
@@ -4670,7 +4610,7 @@
                                   [
                                     "==",
                                     "@u.id",
-                                    "@payload.targetId"
+                                    "@payload.unitId"
                                   ]
                                 ]
                               ],
@@ -4691,7 +4631,7 @@
                                   [
                                     "==",
                                     "@u.id",
-                                    "@payload.targetId"
+                                    "@payload.unitId"
                                   ]
                                 ]
                               ],
@@ -4722,7 +4662,7 @@
                               [
                                 "==",
                                 "@u.id",
-                                "@payload.targetId"
+                                "@payload.unitId"
                               ]
                             ]
                           ],
@@ -4756,6 +4696,10 @@
                     "set",
                     "@entity.phase",
                     "observation"
+                  ],
+                  [
+                    "emit",
+                    "GAME_END"
                   ],
                   [
                     "render-ui",
@@ -4898,67 +4842,78 @@
                     }
                   ]
                 ],
-                "event": "FIRE",
+                "event": "UNIT_CLICK",
                 "from": "playing",
                 "guard": [
-                  "let",
+                  "and",
                   [
-                    [
-                      "ap",
-                      [
-                        "object/get",
-                        [
-                          "array/find",
-                          "@entity.units",
-                          [
-                            "fn",
-                            "u",
-                            [
-                              "==",
-                              "@u.id",
-                              "@payload.attackerId"
-                            ]
-                          ]
-                        ],
-                        "position"
-                      ]
-                    ],
-                    [
-                      "tp",
-                      [
-                        "object/get",
-                        [
-                          "array/find",
-                          "@entity.units",
-                          [
-                            "fn",
-                            "u",
-                            [
-                              "==",
-                              "@u.id",
-                              "@payload.targetId"
-                            ]
-                          ]
-                        ],
-                        "position"
-                      ]
-                    ]
+                    "!=",
+                    "@entity.selectedUnitId",
+                    ""
                   ],
                   [
                     "and",
                     [
+                      "==",
+                      [
+                        "object/get",
+                        [
+                          "array/find",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "==",
+                              "@u.id",
+                              "@payload.unitId"
+                            ]
+                          ]
+                        ],
+                        "team"
+                      ],
+                      "enemy"
+                    ],
+                    [
                       "<=",
                       [
                         "grid/manhattan-distance",
-                        "@ap",
-                        "@tp"
+                        [
+                          "object/get",
+                          [
+                            "array/find",
+                            "@entity.units",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "==",
+                                "@u.id",
+                                "@entity.selectedUnitId"
+                              ]
+                            ]
+                          ],
+                          "position"
+                        ],
+                        [
+                          "object/get",
+                          [
+                            "array/find",
+                            "@entity.units",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "==",
+                                "@u.id",
+                                "@payload.unitId"
+                              ]
+                            ]
+                          ],
+                          "position"
+                        ]
                       ],
                       "@entity.firingRange"
-                    ],
-                    [
-                      "!=",
-                      "@ap",
-                      "@tp"
                     ]
                   ]
                 ],
@@ -5932,6 +5887,11 @@
                   }
                 ]
               ],
+              "guard": [
+                "==",
+                "@entity.result",
+                "none"
+              ],
               "interval": 100.0,
               "name": "renderTick"
             },
@@ -6432,6 +6392,19 @@
                     "game_over",
                     "observation"
                   ]
+                ],
+                [
+                  "if",
+                  [
+                    "!=",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "emit",
+                    "GAME_END"
+                  ],
+                  null
                 ],
                 [
                   "render-ui",

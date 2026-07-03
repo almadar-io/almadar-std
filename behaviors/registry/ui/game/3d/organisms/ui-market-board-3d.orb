@@ -168,6 +168,51 @@
             "type": "array"
           },
           {
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "fx",
+            "type": "array"
+          },
+          {
             "default": 0.0,
             "name": "score",
             "type": "number"
@@ -200,11 +245,6 @@
           {
             "default": 2.0,
             "name": "movementRange",
-            "type": "number"
-          },
-          {
-            "default": 8.0,
-            "name": "maxPatience",
             "type": "number"
           },
           {
@@ -646,13 +686,6 @@
               "label": "Is Loading",
               "tier": "presentation",
               "type": "boolean"
-            },
-            "maxPatience": {
-              "default": 8.0,
-              "description": "Starting/reset patience ticks for each customer",
-              "label": "Max Patience",
-              "tier": "presentation",
-              "type": "number"
             },
             "scale": {
               "default": 0.45,
@@ -1484,7 +1517,7 @@
                 },
                 {
                   "id": "c2",
-                  "maxPatience": 8.0,
+                  "maxPatience": 12.0,
                   "modelUrl": {
                     "animations": [
                       "static",
@@ -1530,7 +1563,7 @@
                     "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-male-a.glb"
                   },
                   "name": "Customer B",
-                  "patience": 8.0,
+                  "patience": 12.0,
                   "position": {
                     "x": 3.0,
                     "y": 4.0
@@ -1728,10 +1761,10 @@
           "entityContract": {
             "provides": [
               "attackTargets",
+              "fx",
               "gridHeight",
               "gridWidth",
               "lives",
-              "maxPatience",
               "movementRange",
               "result",
               "score",
@@ -1748,10 +1781,6 @@
           "scope": "instance",
           "stateMachine": {
             "events": [
-              {
-                "key": "START",
-                "name": "Start"
-              },
               {
                 "key": "INIT",
                 "name": "Initialize"
@@ -1830,9 +1859,6 @@
                 "name": "playing"
               },
               {
-                "name": "menu"
-              },
-              {
                 "name": "gameover"
               }
             ],
@@ -1866,17 +1892,17 @@
                   ],
                   [
                     "set",
-                    "@entity.maxPatience",
-                    "@config.maxPatience"
-                  ],
-                  [
-                    "set",
                     "@entity.scoreTarget",
                     "@config.scoreTarget"
                   ],
                   [
                     "set",
                     "@entity.attackTargets",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.fx",
                     []
                   ],
                   [
@@ -2032,244 +2058,23 @@
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "attackTargets": "@entity.attackTargets",
-                          "features": "@config.features",
-                          "scale": "@config.scale",
-                          "selectedUnitId": "@entity.selectedUnitId",
-                          "tileClickEvent": "TILE_CLICK",
-                          "tiles": "@config.tiles",
-                          "type": "game-canvas-3d",
-                          "unitClickEvent": "UNIT_CLICK",
-                          "unitScale": "@config.unitScale",
-                          "units": "@entity.units",
-                          "validMoves": "@entity.validMoves"
-                        }
-                      ],
-                      "hud": {
-                        "stats": [
+                      "addons": {
+                        "children": [
                           {
-                            "label": "Score",
-                            "value": "@entity.score"
-                          },
-                          {
-                            "label": "Lives",
-                            "value": "@entity.lives"
-                          },
-                          {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
                       },
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "START",
-                "from": "menu",
-                "to": "playing"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.units",
-                    "@config.units"
-                  ],
-                  [
-                    "set",
-                    "@entity.selectedUnitId",
-                    "u1"
-                  ],
-                  [
-                    "set",
-                    "@entity.gridWidth",
-                    5.0
-                  ],
-                  [
-                    "set",
-                    "@entity.gridHeight",
-                    6.0
-                  ],
-                  [
-                    "set",
-                    "@entity.movementRange",
-                    2.0
-                  ],
-                  [
-                    "set",
-                    "@entity.maxPatience",
-                    "@config.maxPatience"
-                  ],
-                  [
-                    "set",
-                    "@entity.scoreTarget",
-                    "@config.scoreTarget"
-                  ],
-                  [
-                    "set",
-                    "@entity.attackTargets",
-                    []
-                  ],
-                  [
-                    "set",
-                    "@entity.validMoves",
-                    [
-                      "array/map",
-                      [
-                        "array/filter",
-                        "@config.tiles",
-                        [
-                          "fn",
-                          "t",
-                          [
-                            "and",
-                            [
-                              "==",
-                              [
-                                "object/get",
-                                "@t",
-                                "passable"
-                              ],
-                              true
-                            ],
-                            [
-                              "and",
-                              [
-                                "<=",
-                                [
-                                  "grid/manhattan-distance",
-                                  [
-                                    "object/get",
-                                    [
-                                      "array/find",
-                                      "@entity.units",
-                                      [
-                                        "fn",
-                                        "u",
-                                        [
-                                          "==",
-                                          "@u.id",
-                                          "u1"
-                                        ]
-                                      ]
-                                    ],
-                                    "position"
-                                  ],
-                                  {
-                                    "x": [
-                                      "object/get",
-                                      "@t",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@t",
-                                      "y"
-                                    ]
-                                  }
-                                ],
-                                "@entity.movementRange"
-                              ],
-                              [
-                                "==",
-                                [
-                                  "array/len",
-                                  [
-                                    "array/filter",
-                                    "@entity.units",
-                                    [
-                                      "fn",
-                                      "u",
-                                      [
-                                        "and",
-                                        [
-                                          "==",
-                                          [
-                                            "object/get",
-                                            [
-                                              "object/get",
-                                              "@u",
-                                              "position"
-                                            ],
-                                            "x"
-                                          ],
-                                          [
-                                            "object/get",
-                                            "@t",
-                                            "x"
-                                          ]
-                                        ],
-                                        [
-                                          "==",
-                                          [
-                                            "object/get",
-                                            [
-                                              "object/get",
-                                              "@u",
-                                              "position"
-                                            ],
-                                            "y"
-                                          ],
-                                          [
-                                            "object/get",
-                                            "@t",
-                                            "y"
-                                          ]
-                                        ]
-                                      ]
-                                    ]
-                                  ]
-                                ],
-                                0.0
-                              ]
-                            ]
-                          ]
-                        ]
-                      ],
-                      [
-                        "fn",
-                        "t",
-                        {
-                          "x": [
-                            "object/get",
-                            "@t",
-                            "x"
-                          ],
-                          "z": [
-                            "object/get",
-                            "@t",
-                            "y"
-                          ]
-                        }
-                      ]
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.score",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.lives",
-                    3.0
-                  ],
-                  [
-                    "set",
-                    "@entity.result",
-                    "none"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2478,9 +2283,23 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2649,6 +2468,66 @@
                 "effects": [
                   [
                     "set",
+                    "@entity.fx",
+                    [
+                      "array/append",
+                      "@entity.fx",
+                      {
+                        "id": [
+                          "str/concat",
+                          "fx-serve-",
+                          "@payload.unitId"
+                        ],
+                        "message": "+1",
+                        "ttl": 3.0,
+                        "type": "score",
+                        "x": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.unitId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "x"
+                        ],
+                        "z": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.unitId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "y"
+                        ]
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
                     "@entity.units",
                     [
                       "array/map",
@@ -2667,7 +2546,7 @@
                             "object/merge",
                             "@u",
                             {
-                              "patience": "@entity.maxPatience"
+                              "patience": "@u.maxPatience"
                             }
                           ],
                           "@u"
@@ -2718,9 +2597,23 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2847,9 +2740,23 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2878,6 +2785,29 @@
                           }
                         ],
                         "type": "game-hud"
+                      },
+                      "overlay": {
+                        "align": "center",
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Play Again",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "md",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -2929,17 +2859,17 @@
                   ],
                   [
                     "set",
-                    "@entity.maxPatience",
-                    "@config.maxPatience"
-                  ],
-                  [
-                    "set",
                     "@entity.scoreTarget",
                     "@config.scoreTarget"
                   ],
                   [
                     "set",
                     "@entity.attackTargets",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.fx",
                     []
                   ],
                   [
@@ -3095,9 +3025,23 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3133,13 +3077,56 @@
                 ],
                 "event": "PLAY_AGAIN",
                 "from": "gameover",
-                "to": "menu"
+                "to": "playing"
               }
             ]
           },
           "ticks": [
             {
               "effects": [
+                [
+                  "set",
+                  "@entity.fx",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.fx",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
                 [
                   "set",
                   "@entity.units",
@@ -3168,7 +3155,7 @@
                                 1.0
                               ],
                               0.0,
-                              "@entity.maxPatience"
+                              "@u.maxPatience"
                             ]
                           }
                         ],
@@ -3178,35 +3165,95 @@
                   ]
                 ],
                 [
-                  "set",
-                  "@entity.lives",
+                  "let",
                   [
-                    "math/max",
-                    0.0,
                     [
-                      "-",
+                      "starved",
+                      [
+                        "array/filter",
+                        "@entity.units",
+                        [
+                          "fn",
+                          "u",
+                          [
+                            "and",
+                            [
+                              "==",
+                              "@u.team",
+                              "neutral"
+                            ],
+                            [
+                              "<=",
+                              "@u.patience",
+                              0.0
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "do",
+                    [
+                      "set",
+                      "@entity.fx",
+                      [
+                        "array/reduce",
+                        "@starved",
+                        [
+                          "fn",
+                          [
+                            "acc",
+                            "u"
+                          ],
+                          [
+                            "array/append",
+                            "@acc",
+                            {
+                              "id": [
+                                "str/concat",
+                                "fx-starve-",
+                                "@u.id"
+                              ],
+                              "message": "-1 life",
+                              "ttl": 3.0,
+                              "type": "damage",
+                              "x": [
+                                "object/get",
+                                [
+                                  "object/get",
+                                  "@u",
+                                  "position"
+                                ],
+                                "x"
+                              ],
+                              "z": [
+                                "object/get",
+                                [
+                                  "object/get",
+                                  "@u",
+                                  "position"
+                                ],
+                                "y"
+                              ]
+                            }
+                          ]
+                        ],
+                        "@entity.fx"
+                      ]
+                    ],
+                    [
+                      "set",
                       "@entity.lives",
                       [
-                        "array/len",
+                        "math/max",
+                        0.0,
                         [
-                          "array/filter",
-                          "@entity.units",
+                          "-",
+                          "@entity.lives",
                           [
-                            "fn",
-                            "u",
-                            [
-                              "and",
-                              [
-                                "==",
-                                "@u.team",
-                                "neutral"
-                              ],
-                              [
-                                "<=",
-                                "@u.patience",
-                                0.0
-                              ]
-                            ]
+                            "array/len",
+                            "@starved"
                           ]
                         ]
                       ]
@@ -3241,7 +3288,7 @@
                           "object/merge",
                           "@u",
                           {
-                            "patience": "@entity.maxPatience"
+                            "patience": "@u.maxPatience"
                           }
                         ],
                         "@u"
@@ -3283,9 +3330,23 @@
                   "render-ui",
                   "main",
                   {
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "PLAY_AGAIN",
+                          "label": "Restart",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
                     "children": [
                       {
                         "attackTargets": "@entity.attackTargets",
+                        "events": "@entity.fx",
                         "features": "@config.features",
                         "scale": "@config.scale",
                         "selectedUnitId": "@entity.selectedUnitId",
@@ -3373,81 +3434,219 @@
                               ]
                             ],
                             [
-                              "tx",
+                              "dir",
                               [
-                                "+",
-                                1.0,
+                                "math/floor",
                                 [
-                                  "math/floor",
+                                  "*",
                                   [
-                                    "*",
-                                    [
-                                      "math/random"
-                                    ],
-                                    3.0
-                                  ]
-                                ]
-                              ]
-                            ],
-                            [
-                              "ty",
-                              [
-                                "+",
-                                1.0,
-                                [
-                                  "math/floor",
-                                  [
-                                    "*",
-                                    [
-                                      "math/random"
-                                    ],
-                                    4.0
-                                  ]
+                                    "math/random"
+                                  ],
+                                  4.0
                                 ]
                               ]
                             ]
                           ],
                           [
-                            "object/merge",
-                            "@u",
-                            {
-                              "position": {
-                                "x": [
-                                  "math/clamp",
+                            "let",
+                            [
+                              [
+                                "nx",
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@dir",
+                                    0.0
+                                  ],
                                   [
                                     "+",
                                     "@cx",
-                                    [
-                                      "math/sign",
-                                      [
-                                        "-",
-                                        "@tx",
-                                        "@cx"
-                                      ]
-                                    ]
+                                    1.0
                                   ],
-                                  1.0,
-                                  3.0
-                                ],
-                                "y": [
-                                  "math/clamp",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@dir",
+                                      1.0
+                                    ],
+                                    [
+                                      "-",
+                                      "@cx",
+                                      1.0
+                                    ],
+                                    "@cx"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "ny",
+                                [
+                                  "if",
+                                  [
+                                    "==",
+                                    "@dir",
+                                    2.0
+                                  ],
                                   [
                                     "+",
                                     "@cy",
+                                    1.0
+                                  ],
+                                  [
+                                    "if",
                                     [
-                                      "math/sign",
+                                      "==",
+                                      "@dir",
+                                      3.0
+                                    ],
+                                    [
+                                      "-",
+                                      "@cy",
+                                      1.0
+                                    ],
+                                    "@cy"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "ntile",
+                                  [
+                                    "array/find",
+                                    "@config.tiles",
+                                    [
+                                      "fn",
+                                      "t",
                                       [
-                                        "-",
-                                        "@ty",
-                                        "@cy"
+                                        "and",
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "x"
+                                          ],
+                                          "@nx"
+                                        ],
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "y"
+                                          ],
+                                          "@ny"
+                                        ]
                                       ]
                                     ]
-                                  ],
-                                  1.0,
-                                  4.0
+                                  ]
+                                ],
+                                [
+                                  "occupied",
+                                  [
+                                    "array/find",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "o",
+                                      [
+                                        "and",
+                                        [
+                                          "!=",
+                                          "@o.id",
+                                          "@u.id"
+                                        ],
+                                        [
+                                          "and",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              [
+                                                "object/get",
+                                                "@o",
+                                                "position"
+                                              ],
+                                              "x"
+                                            ],
+                                            "@nx"
+                                          ],
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              [
+                                                "object/get",
+                                                "@o",
+                                                "position"
+                                              ],
+                                              "y"
+                                            ],
+                                            "@ny"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
                                 ]
-                              }
-                            }
+                              ],
+                              [
+                                "if",
+                                [
+                                  "and",
+                                  [
+                                    "grid/in-bounds",
+                                    {
+                                      "x": "@nx",
+                                      "y": "@ny"
+                                    },
+                                    "@entity.gridWidth",
+                                    "@entity.gridHeight"
+                                  ],
+                                  [
+                                    "and",
+                                    [
+                                      "!=",
+                                      "@ntile",
+                                      null
+                                    ],
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@ntile",
+                                          "passable"
+                                        ],
+                                        true
+                                      ],
+                                      [
+                                        "==",
+                                        "@occupied",
+                                        null
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "object/merge",
+                                  "@u",
+                                  {
+                                    "position": {
+                                      "x": "@nx",
+                                      "y": "@ny"
+                                    }
+                                  }
+                                ],
+                                "@u"
+                              ]
+                            ]
                           ]
                         ],
                         "@u"
@@ -3459,9 +3658,23 @@
                   "render-ui",
                   "main",
                   {
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "PLAY_AGAIN",
+                          "label": "Restart",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
                     "children": [
                       {
                         "attackTargets": "@entity.attackTargets",
+                        "events": "@entity.fx",
                         "features": "@config.features",
                         "scale": "@config.scale",
                         "selectedUnitId": "@entity.selectedUnitId",

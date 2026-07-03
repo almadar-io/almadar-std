@@ -58,13 +58,23 @@ orbital TowerDefenseBoard3DOrbital {
     x : number!
     y : number!
   }
+  type TowerDefenseBoard3DFxItem = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
 
   entity TowerDefenseBoard3DItem [runtime] {
     id : string!
     units : [TowerDefenseBoard3DUnitsItem] = []
     towers : [TowerDefenseBoard3DTowersItem] = []
+    fx : [TowerDefenseBoard3DFxItem] = []
     gold : number = 100
-    lives : number = 10
+    lives : number = 3
     wave : number = 0
     result : "none" | "victory" | "defeat" = none
   }
@@ -76,6 +86,7 @@ orbital TowerDefenseBoard3DOrbital {
       INIT -> playing
         (set @entity.units [])
         (set @entity.towers [])
+        (set @entity.fx [])
         (set @entity.gold @config.startingGold)
         (set @entity.lives @config.startingLives)
         (set @entity.wave 0)
@@ -83,23 +94,25 @@ orbital TowerDefenseBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), events: @entity.fx, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
         })
 
       TILE_CLICK -> playing when (and (== @entity.result "none") (>= @entity.gold @config.towerCost) (let ((tile (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))))) (and (!= @tile null) (== (object/get @tile passable) true) (== (array/len (array/filter @entity.towers (fn tw (and (== @tw.x ?x) (== @tw.y ?z))))) 0))))
         (set @entity.gold (- @entity.gold @config.towerCost))
         (set @entity.towers (array/append @entity.towers { id: (str/concat "tower-" (array/len @entity.towers)), x: ?x, y: ?z }))
+        (set @entity.fx (array/append @entity.fx { id: (str/concat "fx-build-" (array/len @entity.towers)), type: "pickup", x: ?x, z: ?z, message: "-40", ttl: 3 }))
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), events: @entity.fx, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
         })
 
       GAME_END -> gameover when (or (== @entity.result "victory") (== @entity.result "defeat"))
         (render-ui main {
           type: game-shell
+          overlay: { type: game-menu, title: (if (== @entity.result "victory") "VICTORY" "DEFEAT"), subtitle: (str/concat "Reached wave " (str/concat @entity.wave (str/concat " of " @config.maxWaves))), options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] }
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), events: @entity.fx, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
         })
     }
 
@@ -107,6 +120,7 @@ orbital TowerDefenseBoard3DOrbital {
       PLAY_AGAIN -> playing
         (set @entity.units [])
         (set @entity.towers [])
+        (set @entity.fx [])
         (set @entity.gold @config.startingGold)
         (set @entity.lives @config.startingLives)
         (set @entity.wave 0)
@@ -114,24 +128,25 @@ orbital TowerDefenseBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), events: @entity.fx, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
         })
     }
 
     ticks {
       enemySpawnTick every 1200ms
         when (and (== @entity.result "none") (< @entity.wave @config.maxWaves))
-        (set @entity.units (array/append @entity.units { id: (str/concat "enemy-" @entity.wave), position: { x: (object/get (array/first @config.path) x), y: (object/get (array/first @config.path) y) }, unitType: "ufo", name: "Invader", team: enemy, health: @config.enemyHealth, maxHealth: @config.enemyHealth, modelUrl: @config.enemyAsset, pathIndex: 0 }))
+        (set @entity.units (array/append @entity.units { id: (str/concat "enemy-" @entity.wave), position: { x: (object/get (array/first @config.path) x), y: (object/get (array/first @config.path) y) }, unitType: "ufo", name: "Invader", team: enemy, health: (+ @config.enemyHealth (* @entity.wave 2)), maxHealth: (+ @config.enemyHealth (* @entity.wave 2)), modelUrl: @config.enemyAsset, pathIndex: 0 }))
         (set @entity.wave (+ @entity.wave 1))
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), events: @entity.fx, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
         })
 
       enemyMoveTick every 900ms
         when (and (== @entity.result "none") (> (array/len @entity.units) 0))
         (set @entity.units (array/map @entity.units (fn u (let ((nextIndex (math/min (+ @u.pathIndex 1) (- (array/len @config.path) 1))) (nextWaypoint (array/nth @config.path (math/min (+ @u.pathIndex 1) (- (array/len @config.path) 1))))) (object/merge @u { position: { x: (object/get @nextWaypoint x), y: (object/get @nextWaypoint y) }, pathIndex: @nextIndex })))))
+        (set @entity.fx (array/concat @entity.fx (array/map (array/filter @entity.units (fn u (== @u.pathIndex (- (array/len @config.path) 1)))) (fn u { id: (str/concat "fx-leak-" @u.id), type: "damage", x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y), message: "-1 life", ttl: 3 }))))
         (set @entity.lives (math/max 0 (- @entity.lives (array/len (array/filter @entity.units (fn u (== @u.pathIndex (- (array/len @config.path) 1))))))))
         (set @entity.units (array/filter @entity.units (fn u (< @u.pathIndex (- (array/len @config.path) 1)))))
         (set @entity.result (if (<= @entity.lives 0) "defeat" @entity.result))
@@ -141,19 +156,22 @@ orbital TowerDefenseBoard3DOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), events: @entity.fx, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
         })
 
       towerFireTick every 900ms
         when (and (== @entity.result "none") (> (array/len @entity.units) 0))
         (set @entity.units (array/map @entity.units (fn u (if (and (> @u.health 0) (array/some @entity.towers (fn tw (<= (grid/manhattan-distance (object/get @u position) { x: @tw.x, y: @tw.y }) 1)))) (object/merge @u { health: (math/max 0 (- @u.health @config.towerDamage)) }) @u))))
+        (set @entity.gold (+ @entity.gold (* (array/len (array/filter @entity.units (fn u (<= @u.health 0)))) @config.killReward)))
+        (set @entity.fx (array/concat @entity.fx (array/map (array/filter @entity.units (fn u (<= @u.health 0))) (fn u { id: (str/concat "fx-kill-" @u.id), type: "score", x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y), message: "+15", ttl: 3 }))))
         (set @entity.units (array/filter @entity.units (fn u (> @u.health 0))))
+        (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- @e.ttl 1) }))) (fn e (> @e.ttl 0))))
         (set @entity.result (if (and (>= @entity.wave @config.maxWaves) (and (> @entity.lives 0) (== (array/len @entity.units) 0))) "victory" @entity.result))
         (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: (array/concat @config.features (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower", assetUrl: @config.towerAsset }))), events: @entity.fx, scale: @config.scale, unitScale: @config.unitScale, interpolateUnits: true, tileClickEvent: TILE_CLICK } ]
         })
     }
 
@@ -206,23 +224,27 @@ orbital TowerDefenseBoard3DOrbital {
         @label "Starting Gold"
         @description "Gold available at match start"
         @tier "presentation"
-      startingLives : number = 10
+      startingLives : number = 3
         @label "Starting Lives"
         @description "Lives before defeat"
         @tier "presentation"
       towerCost : number = 40
         @label "Tower Cost"
-        @description "Gold spent per tower build"
+        @description "Gold spent per tower build; earned back via killReward per enemy killed"
         @tier "presentation"
       towerDamage : number = 2
         @label "Tower Damage"
         @description "Damage dealt per tick to enemies within 1 cell of a tower"
         @tier "presentation"
+      killReward : number = 15
+        @label "Kill Reward"
+        @description "Gold earned per enemy killed by a tower"
+        @tier "presentation"
       enemyHealth : number = 6
         @label "Enemy Health"
-        @description "HP of each spawned enemy"
+        @description "Base HP of each spawned enemy, scaled up per wave"
         @tier "presentation"
-      maxWaves : number = 8
+      maxWaves : number = 12
         @label "Max Waves"
         @description "Total enemies to survive for victory"
         @tier "presentation"

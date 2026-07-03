@@ -1,5 +1,5 @@
 {
-  "description": "FantasyTownBoard3D — 3D grid-tactics board organism: town-square siege defense with game-shell + game-canvas-3d.",
+  "description": "FantasyTownBoard3D — 3D grid-tactics siege defense: soldier and guard repel goblin and troll raiders in the town square.",
   "name": "ui-fantasy-town-board-3d",
   "orbitals": [
     {
@@ -339,6 +339,51 @@
             "type": "array"
           },
           {
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "fx",
+            "type": "array"
+          },
+          {
             "default": "observation",
             "name": "phase",
             "type": "string",
@@ -376,12 +421,12 @@
             ]
           },
           {
-            "default": 5.0,
+            "default": 6.0,
             "name": "gridWidth",
             "type": "number"
           },
           {
-            "default": 5.0,
+            "default": 6.0,
             "name": "gridHeight",
             "type": "number"
           },
@@ -1041,6 +1086,13 @@
               "tier": "presentation",
               "type": "FantasyTownBoard3DAssetManifest"
             },
+            "attackDamage": {
+              "default": 3.0,
+              "description": "Damage dealt per melee attack",
+              "label": "Attack Damage",
+              "tier": "presentation",
+              "type": "number"
+            },
             "className": {
               "default": "",
               "description": "className prop",
@@ -1084,16 +1136,35 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "flagCheckers",
+                    "category": "fountain",
                     "dimension": "3d",
-                    "name": "flagCheckers",
+                    "name": "fountain-center",
                     "role": "decoration",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/flagCheckers.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/fountain-center.glb"
                   },
-                  "id": "startArch",
-                  "type": "start_arch",
+                  "id": "fountain",
+                  "type": "fountain",
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "tower",
+                    "dimension": "3d",
+                    "name": "tower-square",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/tower-square.glb"
+                  },
+                  "id": "tower",
+                  "type": "tower",
                   "x": 0.0,
                   "y": 0.0
                 },
@@ -1103,74 +1174,74 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grandStand",
+                    "category": "catapult",
                     "dimension": "3d",
-                    "name": "grandStand",
+                    "name": "siege-catapult",
                     "role": "decoration",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grandStand.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-catapult.glb"
                   },
-                  "id": "grandstandNorth",
-                  "type": "grandstand",
+                  "id": "catapult",
+                  "type": "catapult",
+                  "x": 5.0,
+                  "y": 0.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "trebuchet",
+                    "dimension": "3d",
+                    "name": "siege-trebuchet",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-trebuchet.glb"
+                  },
+                  "id": "trebuchet",
+                  "type": "trebuchet",
+                  "x": 0.0,
+                  "y": 5.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "windmill",
+                    "dimension": "3d",
+                    "name": "windmill",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/windmill.glb"
+                  },
+                  "id": "windmill",
+                  "type": "windmill",
+                  "x": 5.0,
+                  "y": 5.0
+                },
+                {
+                  "assetUrl": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "category": "cart",
+                    "dimension": "3d",
+                    "name": "cart",
+                    "role": "decoration",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/cart.glb"
+                  },
+                  "id": "cart",
+                  "type": "cart",
                   "x": 2.0,
-                  "y": 1.0
-                },
-                {
-                  "assetUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "grandStandCovered",
-                    "dimension": "3d",
-                    "name": "grandStandCovered",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grandStandCovered.glb"
-                  },
-                  "id": "grandstandSouth",
-                  "type": "grandstand",
-                  "x": 3.0,
-                  "y": 4.0
-                },
-                {
-                  "assetUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "pitsGarage",
-                    "dimension": "3d",
-                    "name": "pitsGarage",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/pitsGarage.glb"
-                  },
-                  "id": "pitGarage",
-                  "type": "pit",
-                  "x": 1.0,
-                  "y": 1.0
-                },
-                {
-                  "assetUrl": {
-                    "animations": [
-                      "static"
-                    ],
-                    "aspect": "1:1",
-                    "category": "pitsOffice",
-                    "dimension": "3d",
-                    "name": "pitsOffice",
-                    "role": "decoration",
-                    "style": "lowpoly-flat",
-                    "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/pitsOffice.glb"
-                  },
-                  "id": "pitOffice",
-                  "type": "pit",
-                  "x": 4.0,
                   "y": 4.0
                 }
               ],
@@ -1382,16 +1453,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStart",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStart",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStart.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "start",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 0.0,
                   "y": 0.0
                 },
@@ -1402,16 +1473,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 1.0,
                   "y": 0.0
                 },
@@ -1422,16 +1493,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 2.0,
                   "y": 0.0
                 },
@@ -1442,16 +1513,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 3.0,
                   "y": 0.0
                 },
@@ -1462,16 +1533,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 4.0,
                   "y": 0.0
                 },
@@ -1482,16 +1553,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 5.0,
                   "y": 0.0
                 },
@@ -1502,16 +1573,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 0.0,
                   "y": 1.0
                 },
@@ -1522,16 +1593,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "floor",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "floor",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "stone",
                   "x": 1.0,
                   "y": 1.0
                 },
@@ -1542,16 +1613,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "road",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "road",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "cobble",
                   "x": 2.0,
                   "y": 1.0
                 },
@@ -1562,16 +1633,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "floor",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "floor",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "stone",
                   "x": 3.0,
                   "y": 1.0
                 },
@@ -1582,16 +1653,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "road",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "road",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "cobble",
                   "x": 4.0,
                   "y": 1.0
                 },
@@ -1602,16 +1673,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 5.0,
                   "y": 1.0
                 },
@@ -1622,16 +1693,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 0.0,
                   "y": 2.0
                 },
@@ -1642,16 +1713,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "road",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "road",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "cobble",
                   "x": 1.0,
                   "y": 2.0
                 },
@@ -1662,16 +1733,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "floor",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "floor",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "stone",
                   "x": 2.0,
                   "y": 2.0
                 },
@@ -1682,16 +1753,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "road",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "road",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "cobble",
                   "x": 3.0,
                   "y": 2.0
                 },
@@ -1702,16 +1773,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "floor",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "floor",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "stone",
                   "x": 4.0,
                   "y": 2.0
                 },
@@ -1722,16 +1793,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 5.0,
                   "y": 2.0
                 },
@@ -1742,16 +1813,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 0.0,
                   "y": 3.0
                 },
@@ -1762,16 +1833,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "floor",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "floor",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "stone",
                   "x": 1.0,
                   "y": 3.0
                 },
@@ -1782,16 +1853,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "road",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "road",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "cobble",
                   "x": 2.0,
                   "y": 3.0
                 },
@@ -1802,16 +1873,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "floor",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "floor",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "stone",
                   "x": 3.0,
                   "y": 3.0
                 },
@@ -1822,16 +1893,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "road",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "road",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "cobble",
                   "x": 4.0,
                   "y": 3.0
                 },
@@ -1842,16 +1913,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 5.0,
                   "y": 3.0
                 },
@@ -1862,16 +1933,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 0.0,
                   "y": 4.0
                 },
@@ -1882,16 +1953,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "road",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "road",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "cobble",
                   "x": 1.0,
                   "y": 4.0
                 },
@@ -1902,16 +1973,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "floor",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "floor",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "stone",
                   "x": 2.0,
                   "y": 4.0
                 },
@@ -1922,16 +1993,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "road",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "road",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "cobble",
                   "x": 3.0,
                   "y": 4.0
                 },
@@ -1942,16 +2013,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "grass",
+                    "category": "floor",
                     "dimension": "3d",
-                    "name": "grass",
-                    "role": "decoration",
+                    "name": "floor",
+                    "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/features/grass.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb"
                   },
-                  "passable": false,
-                  "terrain": "grass",
+                  "passable": true,
+                  "terrain": "stone",
                   "x": 4.0,
                   "y": 4.0
                 },
@@ -1962,16 +2033,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 5.0,
                   "y": 4.0
                 },
@@ -1982,16 +2053,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 0.0,
                   "y": 5.0
                 },
@@ -2002,16 +2073,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 1.0,
                   "y": 5.0
                 },
@@ -2022,16 +2093,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 2.0,
                   "y": 5.0
                 },
@@ -2042,16 +2113,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 3.0,
                   "y": 5.0
                 },
@@ -2062,16 +2133,16 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 4.0,
                   "y": 5.0
                 },
@@ -2082,21 +2153,21 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "roadStraight",
+                    "category": "wall-block",
                     "dimension": "3d",
-                    "name": "roadStraight",
+                    "name": "wall-block",
                     "role": "tile",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-racing-kit/terrain/roadStraight.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb"
                   },
-                  "passable": true,
-                  "terrain": "track",
+                  "passable": false,
+                  "terrain": "wall",
                   "x": 5.0,
                   "y": 5.0
                 }
               ],
-              "description": "5x5 town-square grid — stone floor and cobbled road inside a walled perimeter.",
+              "description": "6x6 town-square grid — wall-block border, alternating stone-floor and cobbled-road interior.",
               "items": {
                 "properties": {
                   "elevation": {
@@ -2306,57 +2377,119 @@
             "units": {
               "default": [
                 {
-                  "health": 100.0,
-                  "id": "player",
-                  "maxHealth": 100.0,
+                  "health": 12.0,
+                  "id": "soldier",
+                  "maxHealth": 12.0,
                   "modelUrl": {
                     "animations": [
-                      "static"
+                      "idle",
+                      "walk",
+                      "attack-melee-right",
+                      "die"
                     ],
                     "aspect": "1:1",
-                    "category": "race",
+                    "category": "soldier",
                     "dimension": "3d",
-                    "name": "race",
+                    "name": "character-soldier",
                     "role": "player",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-car-kit/units/race.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/units/character-soldier.glb"
                   },
-                  "name": "Player Car",
+                  "name": "Soldier",
                   "position": {
-                    "x": 0.0,
-                    "y": 0.0
+                    "x": 1.0,
+                    "y": 1.0
                   },
                   "team": "player",
-                  "unitType": "racecar"
+                  "unitType": "soldier"
                 },
                 {
-                  "health": 100.0,
-                  "id": "rival",
-                  "maxHealth": 100.0,
+                  "health": 12.0,
+                  "id": "guard",
+                  "maxHealth": 12.0,
                   "modelUrl": {
                     "animations": [
-                      "static"
+                      "idle",
+                      "walk",
+                      "attack-melee-right",
+                      "die"
                     ],
                     "aspect": "1:1",
-                    "category": "race-future",
+                    "category": "guard",
                     "dimension": "3d",
-                    "name": "race-future",
+                    "name": "character-j",
+                    "role": "player",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb"
+                  },
+                  "name": "Guard",
+                  "position": {
+                    "x": 1.0,
+                    "y": 4.0
+                  },
+                  "team": "player",
+                  "unitType": "guard"
+                },
+                {
+                  "health": 10.0,
+                  "id": "goblin",
+                  "maxHealth": 10.0,
+                  "modelUrl": {
+                    "animations": [
+                      "idle",
+                      "walk",
+                      "attack-melee-right",
+                      "die"
+                    ],
+                    "aspect": "1:1",
+                    "category": "goblin",
+                    "dimension": "3d",
+                    "name": "character-l",
                     "role": "enemy",
                     "style": "lowpoly-flat",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board-3d/kenney-car-kit/units/race-future.glb"
+                    "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb"
                   },
-                  "name": "Rival Car",
+                  "name": "Goblin",
                   "position": {
-                    "x": 1.0,
-                    "y": 0.0
+                    "x": 4.0,
+                    "y": 4.0
                   },
                   "team": "enemy",
-                  "unitType": "racecar"
+                  "unitType": "goblin"
+                },
+                {
+                  "health": 14.0,
+                  "id": "troll",
+                  "maxHealth": 14.0,
+                  "modelUrl": {
+                    "animations": [
+                      "idle",
+                      "walk",
+                      "attack-melee-right",
+                      "die"
+                    ],
+                    "aspect": "1:1",
+                    "category": "troll",
+                    "dimension": "3d",
+                    "name": "character-o",
+                    "role": "enemy",
+                    "style": "lowpoly-flat",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-o.glb"
+                  },
+                  "name": "Troll",
+                  "position": {
+                    "x": 4.0,
+                    "y": 1.0
+                  },
+                  "team": "enemy",
+                  "unitType": "troll"
                 }
               ],
-              "description": "Initial unit roster (2 player defenders + 2 raiders) — takes priority over entity-derived units.",
+              "description": "Initial unit roster (Soldier + Guard defenders vs Goblin + Troll raiders) — takes priority over entity-derived units.",
               "items": {
                 "properties": {
                   "elevation": {
@@ -2646,36 +2779,6 @@
           },
           "emits": [
             {
-              "description": "Melee/ranged attack resolution between two units",
-              "event": "ATTACK",
-              "payloadSchema": [
-                {
-                  "name": "attacker",
-                  "type": "object"
-                },
-                {
-                  "name": "target",
-                  "type": "object"
-                },
-                {
-                  "name": "damage",
-                  "type": "number"
-                },
-                {
-                  "name": "attackerId",
-                  "required": true,
-                  "type": "string"
-                },
-                {
-                  "name": "targetId",
-                  "required": true,
-                  "type": "string"
-                }
-              ],
-              "scope": "external",
-              "tier": "domain"
-            },
-            {
               "description": "Called when the match ends",
               "event": "GAME_END",
               "payloadSchema": [
@@ -2800,6 +2903,7 @@
               "attackTargets",
               "currentTeam",
               "enemyTurn",
+              "fx",
               "gridHeight",
               "gridWidth",
               "movementRange",
@@ -2818,10 +2922,6 @@
           "scope": "instance",
           "stateMachine": {
             "events": [
-              {
-                "key": "START",
-                "name": "Start"
-              },
               {
                 "key": "INIT",
                 "name": "Initialize"
@@ -2864,36 +2964,6 @@
                   },
                   {
                     "name": "tileId",
-                    "type": "string"
-                  }
-                ],
-                "tier": "domain"
-              },
-              {
-                "description": "Melee/ranged attack resolution between two units",
-                "key": "ATTACK",
-                "name": "Attack",
-                "payloadSchema": [
-                  {
-                    "name": "attacker",
-                    "type": "object"
-                  },
-                  {
-                    "name": "target",
-                    "type": "object"
-                  },
-                  {
-                    "name": "damage",
-                    "type": "number"
-                  },
-                  {
-                    "name": "attackerId",
-                    "required": true,
-                    "type": "string"
-                  },
-                  {
-                    "name": "targetId",
-                    "required": true,
                     "type": "string"
                   }
                 ],
@@ -2982,9 +3052,6 @@
                 "name": "playing"
               },
               {
-                "name": "menu"
-              },
-              {
                 "name": "gameover"
               }
             ],
@@ -3013,93 +3080,7 @@
                   ],
                   [
                     "set",
-                    "@entity.turn",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.result",
-                    "none"
-                  ],
-                  [
-                    "set",
-                    "@entity.phase",
-                    "observation"
-                  ],
-                  [
-                    "set",
-                    "@entity.currentTeam",
-                    "player"
-                  ],
-                  [
-                    "set",
-                    "@entity.enemyTurn",
-                    false
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "attackTargets": "@entity.attackTargets",
-                          "features": "@config.features",
-                          "scale": "@config.scale",
-                          "selectedUnitId": "@entity.selectedUnitId",
-                          "tileClickEvent": "TILE_CLICK",
-                          "tiles": "@config.tiles",
-                          "type": "game-canvas-3d",
-                          "unitClickEvent": "UNIT_CLICK",
-                          "unitScale": "@config.unitScale",
-                          "units": "@entity.units",
-                          "validMoves": "@entity.validMoves"
-                        }
-                      ],
-                      "hud": {
-                        "stats": [
-                          {
-                            "label": "Turn",
-                            "value": "@entity.turn"
-                          },
-                          {
-                            "label": "Phase",
-                            "value": "@entity.phase"
-                          },
-                          {
-                            "label": "Result",
-                            "value": "@entity.result"
-                          }
-                        ],
-                        "type": "game-hud"
-                      },
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "START",
-                "from": "menu",
-                "to": "playing"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.units",
-                    "@config.units"
-                  ],
-                  [
-                    "set",
-                    "@entity.selectedUnitId",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.validMoves",
-                    []
-                  ],
-                  [
-                    "set",
-                    "@entity.attackTargets",
+                    "@entity.fx",
                     []
                   ],
                   [
@@ -3130,12 +3111,12 @@
                   [
                     "set",
                     "@entity.gridWidth",
-                    5.0
+                    6.0
                   ],
                   [
                     "set",
                     "@entity.gridHeight",
-                    5.0
+                    6.0
                   ],
                   [
                     "set",
@@ -3146,9 +3127,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3178,6 +3185,38 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -3278,9 +3317,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3310,6 +3375,38 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -3499,9 +3596,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3531,6 +3654,38 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -3557,6 +3712,370 @@
                     "team"
                   ],
                   "player"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "@payload.unitId"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "health": [
+                                "math/max",
+                                0.0,
+                                [
+                                  "-",
+                                  "@u.health",
+                                  "@config.attackDamage"
+                                ]
+                              ]
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.fx",
+                    [
+                      "let",
+                      [
+                        [
+                          "target",
+                          [
+                            "array/find",
+                            "@entity.units",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "==",
+                                "@u.id",
+                                "@payload.unitId"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "array/append",
+                        "@entity.fx",
+                        {
+                          "id": [
+                            "str/concat",
+                            "fx-",
+                            [
+                              "array/len",
+                              "@entity.fx"
+                            ]
+                          ],
+                          "message": [
+                            "str/concat",
+                            "-",
+                            "@config.attackDamage"
+                          ],
+                          "ttl": 3.0,
+                          "type": "hit",
+                          "x": [
+                            "object/get",
+                            [
+                              "object/get",
+                              "@target",
+                              "position"
+                            ],
+                            "x"
+                          ],
+                          "z": [
+                            "object/get",
+                            [
+                              "object/get",
+                              "@target",
+                              "position"
+                            ],
+                            "y"
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.attackTargets",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    [
+                      "if",
+                      [
+                        "==",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@entity.units",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "and",
+                                [
+                                  "==",
+                                  "@u.team",
+                                  "enemy"
+                                ],
+                                [
+                                  ">",
+                                  [
+                                    "object/get",
+                                    "@u",
+                                    "health"
+                                  ],
+                                  0.0
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ],
+                      "victory",
+                      "@entity.result"
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "!=",
+                      "@entity.result",
+                      "none"
+                    ],
+                    [
+                      "emit",
+                      "GAME_END",
+                      {
+                        "result": "@entity.result"
+                      }
+                    ],
+                    null
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    [
+                      "if",
+                      [
+                        "!=",
+                        "@entity.result",
+                        "none"
+                      ],
+                      "game_over",
+                      "observation"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
+                      "children": [
+                        {
+                          "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Phase",
+                            "value": "@entity.phase"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.phase",
+                    "action"
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "target",
+                        [
+                          "array/find",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "==",
+                              "@u.id",
+                              "@payload.unitId"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "attacker",
+                        [
+                          "array/find",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "s",
+                            [
+                              "==",
+                              "@s.id",
+                              "@entity.selectedUnitId"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "and",
+                      [
+                        "==",
+                        [
+                          "object/get",
+                          "@target",
+                          "team"
+                        ],
+                        "enemy"
+                      ],
+                      [
+                        "<=",
+                        [
+                          "grid/manhattan-distance",
+                          [
+                            "object/get",
+                            "@attacker",
+                            "position"
+                          ],
+                          [
+                            "object/get",
+                            "@target",
+                            "position"
+                          ]
+                        ],
+                        1.0
+                      ]
+                    ]
+                  ]
                 ],
                 "to": "playing"
               },
@@ -3617,9 +4136,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3649,6 +4194,38 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -3756,208 +4333,6 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.units",
-                    [
-                      "array/map",
-                      "@entity.units",
-                      [
-                        "fn",
-                        "u",
-                        [
-                          "if",
-                          [
-                            "==",
-                            "@u.id",
-                            "@payload.targetId"
-                          ],
-                          [
-                            "object/merge",
-                            "@u",
-                            {
-                              "health": [
-                                "math/max",
-                                0.0,
-                                [
-                                  "-",
-                                  [
-                                    "object/get",
-                                    "@u",
-                                    "health"
-                                  ],
-                                  "@payload.damage"
-                                ]
-                              ]
-                            }
-                          ],
-                          "@u"
-                        ]
-                      ]
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.selectedUnitId",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.validMoves",
-                    []
-                  ],
-                  [
-                    "set",
-                    "@entity.attackTargets",
-                    []
-                  ],
-                  [
-                    "set",
-                    "@entity.phase",
-                    "observation"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "attackTargets": "@entity.attackTargets",
-                          "features": "@config.features",
-                          "scale": "@config.scale",
-                          "selectedUnitId": "@entity.selectedUnitId",
-                          "tileClickEvent": "TILE_CLICK",
-                          "tiles": "@config.tiles",
-                          "type": "game-canvas-3d",
-                          "unitClickEvent": "UNIT_CLICK",
-                          "unitScale": "@config.unitScale",
-                          "units": "@entity.units",
-                          "validMoves": "@entity.validMoves"
-                        }
-                      ],
-                      "hud": {
-                        "stats": [
-                          {
-                            "label": "Turn",
-                            "value": "@entity.turn"
-                          },
-                          {
-                            "label": "Phase",
-                            "value": "@entity.phase"
-                          },
-                          {
-                            "label": "Result",
-                            "value": "@entity.result"
-                          }
-                        ],
-                        "type": "game-hud"
-                      },
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "ATTACK",
-                "from": "playing",
-                "guard": [
-                  "let",
-                  [
-                    [
-                      "ap",
-                      [
-                        "object/get",
-                        [
-                          "array/find",
-                          "@entity.units",
-                          [
-                            "fn",
-                            "u",
-                            [
-                              "==",
-                              "@u.id",
-                              "@payload.attackerId"
-                            ]
-                          ]
-                        ],
-                        "position"
-                      ]
-                    ],
-                    [
-                      "tp",
-                      [
-                        "object/get",
-                        [
-                          "array/find",
-                          "@entity.units",
-                          [
-                            "fn",
-                            "u",
-                            [
-                              "==",
-                              "@u.id",
-                              "@payload.targetId"
-                            ]
-                          ]
-                        ],
-                        "position"
-                      ]
-                    ]
-                  ],
-                  [
-                    "and",
-                    [
-                      "<=",
-                      [
-                        "math/abs",
-                        [
-                          "-",
-                          [
-                            "object/get",
-                            "@ap",
-                            "x"
-                          ],
-                          [
-                            "object/get",
-                            "@tp",
-                            "x"
-                          ]
-                        ]
-                      ],
-                      1.0
-                    ],
-                    [
-                      "and",
-                      [
-                        "<=",
-                        [
-                          "math/abs",
-                          [
-                            "-",
-                            [
-                              "object/get",
-                              "@ap",
-                              "y"
-                            ],
-                            [
-                              "object/get",
-                              "@tp",
-                              "y"
-                            ]
-                          ]
-                        ],
-                        1.0
-                      ],
-                      [
-                        "!=",
-                        "@ap",
-                        "@tp"
-                      ]
-                    ]
-                  ]
-                ],
-                "to": "playing"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
                     "@entity.turn",
                     [
                       "+",
@@ -3999,9 +4374,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -4031,6 +4432,38 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -4070,9 +4503,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -4102,6 +4561,38 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -4198,9 +4689,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -4230,6 +4747,38 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -4329,6 +4878,11 @@
                   ],
                   [
                     "set",
+                    "@entity.fx",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.turn",
                     0.0
                   ],
@@ -4353,12 +4907,48 @@
                     false
                   ],
                   [
+                    "set",
+                    "@entity.gridWidth",
+                    6.0
+                  ],
+                  [
+                    "set",
+                    "@entity.gridHeight",
+                    6.0
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -4388,13 +4978,45 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "stats": [
+                                {
+                                  "label": "Result",
+                                  "value": "@entity.result"
+                                }
+                              ],
+                              "type": "game-hud"
+                            },
+                            {
+                              "action": "PLAY_AGAIN",
+                              "label": "Play Again",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
                 ],
                 "event": "PLAY_AGAIN",
                 "from": "gameover",
-                "to": "menu"
+                "to": "playing"
               }
             ]
           },
@@ -4522,19 +5144,18 @@
                           ]
                         ],
                         [
-                          "if",
+                          "let",
                           [
-                            "==",
                             [
-                              "array/len",
+                              "target",
                               [
-                                "array/filter",
-                                "@entity.units",
+                                "array/reduce",
                                 [
-                                  "fn",
-                                  "p",
+                                  "array/filter",
+                                  "@entity.units",
                                   [
-                                    "and",
+                                    "fn",
+                                    "p",
                                     [
                                       "and",
                                       [
@@ -4547,161 +5168,292 @@
                                         "@p.health",
                                         0.0
                                       ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  [
+                                    "best",
+                                    "p"
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@best",
+                                      null
+                                    ],
+                                    "@p",
+                                    [
+                                      "if",
+                                      [
+                                        "<",
+                                        [
+                                          "grid/manhattan-distance",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "position"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@p",
+                                            "position"
+                                          ]
+                                        ],
+                                        [
+                                          "grid/manhattan-distance",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "position"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@best",
+                                            "position"
+                                          ]
+                                        ]
+                                      ],
+                                      "@p",
+                                      "@best"
+                                    ]
+                                  ]
+                                ],
+                                null
+                              ]
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@target",
+                              null
+                            ],
+                            "@u",
+                            [
+                              "if",
+                              [
+                                "==",
+                                [
+                                  "grid/manhattan-distance",
+                                  [
+                                    "object/get",
+                                    "@u",
+                                    "position"
+                                  ],
+                                  [
+                                    "object/get",
+                                    "@target",
+                                    "position"
+                                  ]
+                                ],
+                                1.0
+                              ],
+                              "@u",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "candX",
+                                    [
+                                      "math/clamp",
+                                      [
+                                        "+",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "position"
+                                          ],
+                                          "x"
+                                        ],
+                                        [
+                                          "math/sign",
+                                          [
+                                            "-",
+                                            [
+                                              "object/get",
+                                              [
+                                                "object/get",
+                                                "@target",
+                                                "position"
+                                              ],
+                                              "x"
+                                            ],
+                                            [
+                                              "object/get",
+                                              [
+                                                "object/get",
+                                                "@u",
+                                                "position"
+                                              ],
+                                              "x"
+                                            ]
+                                          ]
+                                        ]
+                                      ],
+                                      0.0,
+                                      [
+                                        "-",
+                                        "@entity.gridWidth",
+                                        1.0
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "candY",
+                                    [
+                                      "math/clamp",
+                                      [
+                                        "+",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "position"
+                                          ],
+                                          "y"
+                                        ],
+                                        [
+                                          "math/sign",
+                                          [
+                                            "-",
+                                            [
+                                              "object/get",
+                                              [
+                                                "object/get",
+                                                "@target",
+                                                "position"
+                                              ],
+                                              "y"
+                                            ],
+                                            [
+                                              "object/get",
+                                              [
+                                                "object/get",
+                                                "@u",
+                                                "position"
+                                              ],
+                                              "y"
+                                            ]
+                                          ]
+                                        ]
+                                      ],
+                                      0.0,
+                                      [
+                                        "-",
+                                        "@entity.gridHeight",
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "if",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/find",
+                                          "@config.tiles",
+                                          [
+                                            "fn",
+                                            "t",
+                                            [
+                                              "and",
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "@t",
+                                                  "x"
+                                                ],
+                                                "@candX"
+                                              ],
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "@t",
+                                                  "y"
+                                                ],
+                                                "@candY"
+                                              ]
+                                            ]
+                                          ]
+                                        ],
+                                        "passable"
+                                      ],
+                                      true
                                     ],
                                     [
                                       "==",
                                       [
-                                        "grid/manhattan-distance",
+                                        "array/len",
                                         [
-                                          "object/get",
-                                          "@u",
-                                          "position"
-                                        ],
-                                        [
-                                          "object/get",
-                                          "@p",
-                                          "position"
-                                        ]
-                                      ],
-                                      1.0
-                                    ]
-                                  ]
-                                ]
-                              ]
-                            ],
-                            0.0
-                          ],
-                          [
-                            "let",
-                            [
-                              [
-                                "target",
-                                [
-                                  "array/first",
-                                  [
-                                    "array/filter",
-                                    "@entity.units",
-                                    [
-                                      "fn",
-                                      "p",
-                                      [
-                                        "and",
-                                        [
-                                          "==",
-                                          "@p.team",
-                                          "player"
-                                        ],
-                                        [
-                                          ">",
-                                          "@p.health",
-                                          0.0
-                                        ]
-                                      ]
-                                    ]
-                                  ]
-                                ]
-                              ]
-                            ],
-                            [
-                              "object/merge",
-                              "@u",
-                              {
-                                "position": {
-                                  "x": [
-                                    "math/clamp",
-                                    [
-                                      "+",
-                                      [
-                                        "object/get",
-                                        [
-                                          "object/get",
-                                          "@u",
-                                          "position"
-                                        ],
-                                        "x"
-                                      ],
-                                      [
-                                        "math/sign",
-                                        [
-                                          "-",
+                                          "array/filter",
+                                          "@entity.units",
                                           [
-                                            "object/get",
+                                            "fn",
+                                            "o",
                                             [
-                                              "object/get",
-                                              "@target",
-                                              "position"
-                                            ],
-                                            "x"
-                                          ],
-                                          [
-                                            "object/get",
-                                            [
-                                              "object/get",
-                                              "@u",
-                                              "position"
-                                            ],
-                                            "x"
+                                              "and",
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  [
+                                                    "object/get",
+                                                    "@o",
+                                                    "position"
+                                                  ],
+                                                  "x"
+                                                ],
+                                                "@candX"
+                                              ],
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  [
+                                                    "object/get",
+                                                    "@o",
+                                                    "position"
+                                                  ],
+                                                  "y"
+                                                ],
+                                                "@candY"
+                                              ]
+                                            ]
                                           ]
                                         ]
-                                      ]
-                                    ],
-                                    0.0,
-                                    [
-                                      "-",
-                                      "@entity.gridWidth",
-                                      1.0
+                                      ],
+                                      0.0
                                     ]
                                   ],
-                                  "y": [
-                                    "math/clamp",
-                                    [
-                                      "+",
-                                      [
-                                        "object/get",
-                                        [
-                                          "object/get",
-                                          "@u",
-                                          "position"
-                                        ],
-                                        "y"
-                                      ],
-                                      [
-                                        "math/sign",
-                                        [
-                                          "-",
-                                          [
-                                            "object/get",
-                                            [
-                                              "object/get",
-                                              "@target",
-                                              "position"
-                                            ],
-                                            "y"
-                                          ],
-                                          [
-                                            "object/get",
-                                            [
-                                              "object/get",
-                                              "@u",
-                                              "position"
-                                            ],
-                                            "y"
-                                          ]
-                                        ]
-                                      ]
-                                    ],
-                                    0.0,
-                                    [
-                                      "-",
-                                      "@entity.gridHeight",
-                                      1.0
-                                    ]
-                                  ]
-                                }
-                              }
+                                  [
+                                    "object/merge",
+                                    "@u",
+                                    {
+                                      "position": {
+                                        "x": "@candX",
+                                        "y": "@candY"
+                                      }
+                                    }
+                                  ],
+                                  "@u"
+                                ]
+                              ]
                             ]
-                          ],
-                          "@u"
+                          ]
                         ],
                         "@u"
                       ]
@@ -4821,9 +5573,35 @@
                   "render-ui",
                   "main",
                   {
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "END_TURN",
+                          "label": "End Turn",
+                          "type": "button",
+                          "variant": "primary"
+                        },
+                        {
+                          "action": "CANCEL",
+                          "label": "Cancel",
+                          "type": "button",
+                          "variant": "secondary"
+                        },
+                        {
+                          "action": "PLAY_AGAIN",
+                          "label": "Restart",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
                     "children": [
                       {
                         "attackTargets": "@entity.attackTargets",
+                        "events": "@entity.fx",
                         "features": "@config.features",
                         "scale": "@config.scale",
                         "selectedUnitId": "@entity.selectedUnitId",
@@ -4853,6 +5631,38 @@
                       ],
                       "type": "game-hud"
                     },
+                    "overlay": [
+                      "if",
+                      [
+                        "!=",
+                        "@entity.result",
+                        "none"
+                      ],
+                      {
+                        "align": "center",
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Play Again",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "md",
+                        "type": "stack"
+                      },
+                      null
+                    ],
                     "type": "game-shell"
                   }
                 ]
@@ -4872,11 +5682,165 @@
               ],
               "interval": 1000.0,
               "name": "enemyAiTick"
+            },
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.fx",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.fx",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "END_TURN",
+                          "label": "End Turn",
+                          "type": "button",
+                          "variant": "primary"
+                        },
+                        {
+                          "action": "CANCEL",
+                          "label": "Cancel",
+                          "type": "button",
+                          "variant": "secondary"
+                        },
+                        {
+                          "action": "PLAY_AGAIN",
+                          "label": "Restart",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    "children": [
+                      {
+                        "attackTargets": "@entity.attackTargets",
+                        "events": "@entity.fx",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "selectedUnitId": "@entity.selectedUnitId",
+                        "tileClickEvent": "TILE_CLICK",
+                        "tiles": "@config.tiles",
+                        "type": "game-canvas-3d",
+                        "unitClickEvent": "UNIT_CLICK",
+                        "unitScale": "@config.unitScale",
+                        "units": "@entity.units",
+                        "validMoves": "@entity.validMoves"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Turn",
+                          "value": "@entity.turn"
+                        },
+                        {
+                          "label": "Phase",
+                          "value": "@entity.phase"
+                        },
+                        {
+                          "label": "Result",
+                          "value": "@entity.result"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "overlay": [
+                      "if",
+                      [
+                        "!=",
+                        "@entity.result",
+                        "none"
+                      ],
+                      {
+                        "align": "center",
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Play Again",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "md",
+                        "type": "stack"
+                      },
+                      null
+                    ],
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "guard": [
+                ">",
+                [
+                  "array/len",
+                  "@entity.fx"
+                ],
+                0.0
+              ],
+              "interval": 500.0,
+              "name": "fxDecayTick"
             }
           ]
         }
       ]
     }
   ],
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

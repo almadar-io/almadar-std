@@ -1,5 +1,5 @@
 {
-  "description": "PlatformerBoard3D — 3D twin of ui-platformer-board: same entity/events/physics, game-canvas-3d side view with follow camera and GLB clips.",
+  "description": "PlatformerBoard3D — side-view platformer: pit jump, hazard, coin pickups, GLB clips, follow camera, win/lose overlay.",
   "name": "ui-platformer-board-3d",
   "orbitals": [
     {
@@ -104,7 +104,7 @@
             "type": "object"
           },
           {
-            "default": 720.0,
+            "default": 700.0,
             "name": "goalX",
             "type": "number"
           },
@@ -122,15 +122,80 @@
             "default": [],
             "items": {
               "properties": {
-                "key": {
-                  "name": "key",
+                "id": {
+                  "name": "id",
                   "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
                   "type": "string"
                 },
                 "ttl": {
                   "name": "ttl",
                   "required": true,
                   "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "fx",
+            "type": "array"
+          },
+          {
+            "default": [
+              {
+                "id": "coin-1",
+                "taken": false,
+                "x": 200.0,
+                "y": 250.0
+              },
+              {
+                "id": "coin-2",
+                "taken": false,
+                "x": 350.0,
+                "y": 300.0
+              },
+              {
+                "id": "coin-3",
+                "taken": false,
+                "x": 390.0,
+                "y": 280.0
+              },
+              {
+                "id": "coin-4",
+                "taken": false,
+                "x": 470.0,
+                "y": 190.0
+              }
+            ],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "taken": {
+                  "name": "taken",
+                  "required": false,
+                  "type": "boolean"
                 },
                 "x": {
                   "name": "x",
@@ -145,7 +210,7 @@
               },
               "type": "object"
             },
-            "name": "effects",
+            "name": "coins",
             "type": "array"
           },
           {
@@ -254,8 +319,93 @@
               "tier": "presentation",
               "type": "string"
             },
+            "coinSprite": {
+              "default": {
+                "animations": [
+                  "static"
+                ],
+                "aspect": "1:1",
+                "category": "coin",
+                "dimension": "3d",
+                "name": "coin",
+                "role": "feature",
+                "style": "lowpoly-flat",
+                "thumbnailUrl": "",
+                "url": "https://almadar-kflow-assets.web.app/shared/ui-platformer-board-3d/kenney-platformer-kit/features/coin-gold.glb",
+                "variant": ""
+              },
+              "description": "Collectible coin GLB Asset rendered above platforms and over the pit",
+              "label": "Coin Model",
+              "properties": {
+                "animations": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "animations",
+                  "required": false,
+                  "type": "array"
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string"
+                },
+                "atlas": {
+                  "name": "atlas",
+                  "required": false,
+                  "type": "string"
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string"
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "Asset"
+            },
             "goalX": {
-              "default": 720.0,
+              "default": 700.0,
               "description": "X pixel of the goal tile (used for display)",
               "label": "Goal X",
               "tier": "presentation",
@@ -294,8 +444,15 @@
                 {
                   "height": 32.0,
                   "type": "ground",
-                  "width": 800.0,
+                  "width": 340.0,
                   "x": 0.0,
+                  "y": 368.0
+                },
+                {
+                  "height": 32.0,
+                  "type": "ground",
+                  "width": 360.0,
+                  "x": 440.0,
                   "y": 368.0
                 },
                 {
@@ -314,20 +471,27 @@
                 },
                 {
                   "height": 16.0,
+                  "type": "platform",
+                  "width": 120.0,
+                  "x": 680.0,
+                  "y": 280.0
+                },
+                {
+                  "height": 32.0,
                   "type": "hazard",
-                  "width": 80.0,
-                  "x": 580.0,
-                  "y": 300.0
+                  "width": 64.0,
+                  "x": 560.0,
+                  "y": 336.0
                 },
                 {
                   "height": 28.0,
                   "type": "goal",
                   "width": 64.0,
                   "x": 700.0,
-                  "y": 340.0
+                  "y": 252.0
                 }
               ],
-              "description": "Level geometry including hazard and goal tiles",
+              "description": "Level geometry: a pit between two ground segments, floating platforms, a hazard on the walking path, and a raised goal",
               "items": {
                 "properties": {
                   "height": {
@@ -723,7 +887,8 @@
           ],
           "entityContract": {
             "provides": [
-              "effects",
+              "coins",
+              "fx",
               "goalX",
               "level",
               "lives",
@@ -900,8 +1065,38 @@
                   ],
                   [
                     "set",
-                    "@entity.effects",
+                    "@entity.fx",
                     []
+                  ],
+                  [
+                    "set",
+                    "@entity.coins",
+                    [
+                      {
+                        "id": "coin-1",
+                        "taken": false,
+                        "x": 200.0,
+                        "y": 250.0
+                      },
+                      {
+                        "id": "coin-2",
+                        "taken": false,
+                        "x": 350.0,
+                        "y": 300.0
+                      },
+                      {
+                        "id": "coin-3",
+                        "taken": false,
+                        "x": 390.0,
+                        "y": 280.0
+                      },
+                      {
+                        "id": "coin-4",
+                        "taken": false,
+                        "x": 470.0,
+                        "y": 190.0
+                      }
+                    ]
                   ],
                   [
                     "set",
@@ -956,6 +1151,34 @@
                         {
                           "backgroundColor": "@config.bgColor",
                           "cameraMode": "follow",
+                          "events": "@entity.fx",
+                          "features": [
+                            "array/map",
+                            [
+                              "array/filter",
+                              "@entity.coins",
+                              [
+                                "fn",
+                                "c",
+                                [
+                                  "==",
+                                  "@c.taken",
+                                  false
+                                ]
+                              ]
+                            ],
+                            [
+                              "fn",
+                              "c",
+                              {
+                                "assetUrl": "@config.coinSprite",
+                                "id": "@c.id",
+                                "type": "coin",
+                                "x": "@c.x",
+                                "y": "@c.y"
+                              }
+                            ]
+                          ],
                           "interpolateUnits": true,
                           "keyMap": {
                             "ArrowLeft": "LEFT",
@@ -1059,6 +1282,7 @@
                               }
                             },
                             "directionEvents": {
+                              "down": "STOP",
                               "left": "LEFT",
                               "right": "RIGHT",
                               "up": "JUMP"
@@ -1254,6 +1478,219 @@
                 "to": "playing"
               },
               {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundAsset": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "panel",
+                        "role": "ui",
+                        "sprite": "panelInset_beige.png",
+                        "style": "vector-flat",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
+                        "variant": ""
+                      },
+                      "children": [
+                        {
+                          "backgroundColor": "@config.bgColor",
+                          "cameraMode": "follow",
+                          "events": "@entity.fx",
+                          "features": [
+                            "array/map",
+                            [
+                              "array/filter",
+                              "@entity.coins",
+                              [
+                                "fn",
+                                "c",
+                                [
+                                  "==",
+                                  "@c.taken",
+                                  false
+                                ]
+                              ]
+                            ],
+                            [
+                              "fn",
+                              "c",
+                              {
+                                "assetUrl": "@config.coinSprite",
+                                "id": "@c.id",
+                                "type": "coin",
+                                "x": "@c.x",
+                                "y": "@c.y"
+                              }
+                            ]
+                          ],
+                          "interpolateUnits": true,
+                          "keyMap": {
+                            "ArrowLeft": "LEFT",
+                            "ArrowRight": "RIGHT",
+                            "ArrowUp": "JUMP",
+                            "KeyA": "LEFT",
+                            "KeyD": "RIGHT",
+                            "KeyW": "JUMP",
+                            "Space": "JUMP"
+                          },
+                          "keyUpMap": {
+                            "ArrowLeft": "STOP",
+                            "ArrowRight": "STOP",
+                            "KeyA": "STOP",
+                            "KeyD": "STOP"
+                          },
+                          "pixelsPerUnit": 32.0,
+                          "platforms": "@config.platforms",
+                          "player": "@entity.player",
+                          "playerSprite": "@config.playerSprite",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tileSprites": "@config.tileSprites",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "worldHeight": "@entity.worldHeight",
+                          "worldWidth": "@entity.worldWidth"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "directionAssets": {
+                              "down": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "stick-down",
+                                "role": "ui",
+                                "sprite": "generic_stick_down",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                                "variant": ""
+                              },
+                              "left": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "stick-left",
+                                "role": "ui",
+                                "sprite": "generic_stick_left",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                                "variant": ""
+                              },
+                              "right": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "stick-right",
+                                "role": "ui",
+                                "sprite": "generic_stick_right",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                                "variant": ""
+                              },
+                              "up": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "stick-up",
+                                "role": "ui",
+                                "sprite": "generic_stick_up",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                                "variant": ""
+                              }
+                            },
+                            "directionEvents": {
+                              "down": "STOP",
+                              "left": "LEFT",
+                              "right": "RIGHT",
+                              "up": "JUMP"
+                            },
+                            "directionReleaseEvents": {
+                              "left": "STOP",
+                              "right": "STOP"
+                            },
+                            "kind": "dpad",
+                            "type": "control-grid"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "hudBackgroundAsset": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "hud-panel",
+                        "role": "ui",
+                        "sprite": "panelInset_beigeLight.png",
+                        "style": "vector-flat",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
+                        "variant": ""
+                      },
+                      "overlay": {
+                        "options": [
+                          {
+                            "event": "PLAY_AGAIN",
+                            "id": "again",
+                            "label": "Play Again",
+                            "variant": "primary"
+                          }
+                        ],
+                        "subtitle": [
+                          "str/concat",
+                          "Score: ",
+                          "@entity.score"
+                        ],
+                        "title": "YOU WIN!",
+                        "type": "game-menu"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
                 "event": "GAME_END",
                 "from": "playing",
                 "guard": [
@@ -1264,6 +1701,219 @@
                 "to": "won"
               },
               {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backgroundAsset": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "panel",
+                        "role": "ui",
+                        "sprite": "panelInset_beige.png",
+                        "style": "vector-flat",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
+                        "variant": ""
+                      },
+                      "children": [
+                        {
+                          "backgroundColor": "@config.bgColor",
+                          "cameraMode": "follow",
+                          "events": "@entity.fx",
+                          "features": [
+                            "array/map",
+                            [
+                              "array/filter",
+                              "@entity.coins",
+                              [
+                                "fn",
+                                "c",
+                                [
+                                  "==",
+                                  "@c.taken",
+                                  false
+                                ]
+                              ]
+                            ],
+                            [
+                              "fn",
+                              "c",
+                              {
+                                "assetUrl": "@config.coinSprite",
+                                "id": "@c.id",
+                                "type": "coin",
+                                "x": "@c.x",
+                                "y": "@c.y"
+                              }
+                            ]
+                          ],
+                          "interpolateUnits": true,
+                          "keyMap": {
+                            "ArrowLeft": "LEFT",
+                            "ArrowRight": "RIGHT",
+                            "ArrowUp": "JUMP",
+                            "KeyA": "LEFT",
+                            "KeyD": "RIGHT",
+                            "KeyW": "JUMP",
+                            "Space": "JUMP"
+                          },
+                          "keyUpMap": {
+                            "ArrowLeft": "STOP",
+                            "ArrowRight": "STOP",
+                            "KeyA": "STOP",
+                            "KeyD": "STOP"
+                          },
+                          "pixelsPerUnit": 32.0,
+                          "platforms": "@config.platforms",
+                          "player": "@entity.player",
+                          "playerSprite": "@config.playerSprite",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tileSprites": "@config.tileSprites",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "worldHeight": "@entity.worldHeight",
+                          "worldWidth": "@entity.worldWidth"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "directionAssets": {
+                              "down": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "stick-down",
+                                "role": "ui",
+                                "sprite": "generic_stick_down",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                                "variant": ""
+                              },
+                              "left": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "stick-left",
+                                "role": "ui",
+                                "sprite": "generic_stick_left",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                                "variant": ""
+                              },
+                              "right": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "stick-right",
+                                "role": "ui",
+                                "sprite": "generic_stick_right",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                                "variant": ""
+                              },
+                              "up": {
+                                "animations": [],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "stick-up",
+                                "role": "ui",
+                                "sprite": "generic_stick_up",
+                                "style": "vector-flat",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png",
+                                "variant": ""
+                              }
+                            },
+                            "directionEvents": {
+                              "down": "STOP",
+                              "left": "LEFT",
+                              "right": "RIGHT",
+                              "up": "JUMP"
+                            },
+                            "directionReleaseEvents": {
+                              "left": "STOP",
+                              "right": "STOP"
+                            },
+                            "kind": "dpad",
+                            "type": "control-grid"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "hudBackgroundAsset": {
+                        "animations": [],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "hud-panel",
+                        "role": "ui",
+                        "sprite": "panelInset_beigeLight.png",
+                        "style": "vector-flat",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
+                        "variant": ""
+                      },
+                      "overlay": {
+                        "options": [
+                          {
+                            "event": "PLAY_AGAIN",
+                            "id": "again",
+                            "label": "Play Again",
+                            "variant": "primary"
+                          }
+                        ],
+                        "subtitle": [
+                          "str/concat",
+                          "Score: ",
+                          "@entity.score"
+                        ],
+                        "title": "GAME OVER",
+                        "type": "game-menu"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
                 "event": "GAME_END",
                 "from": "playing",
                 "guard": [
@@ -1291,8 +1941,38 @@
                   ],
                   [
                     "set",
-                    "@entity.effects",
+                    "@entity.fx",
                     []
+                  ],
+                  [
+                    "set",
+                    "@entity.coins",
+                    [
+                      {
+                        "id": "coin-1",
+                        "taken": false,
+                        "x": 200.0,
+                        "y": 250.0
+                      },
+                      {
+                        "id": "coin-2",
+                        "taken": false,
+                        "x": 350.0,
+                        "y": 300.0
+                      },
+                      {
+                        "id": "coin-3",
+                        "taken": false,
+                        "x": 390.0,
+                        "y": 280.0
+                      },
+                      {
+                        "id": "coin-4",
+                        "taken": false,
+                        "x": 470.0,
+                        "y": 190.0
+                      }
+                    ]
                   ],
                   [
                     "set",
@@ -1339,8 +2019,38 @@
                   ],
                   [
                     "set",
-                    "@entity.effects",
+                    "@entity.fx",
                     []
+                  ],
+                  [
+                    "set",
+                    "@entity.coins",
+                    [
+                      {
+                        "id": "coin-1",
+                        "taken": false,
+                        "x": 200.0,
+                        "y": 250.0
+                      },
+                      {
+                        "id": "coin-2",
+                        "taken": false,
+                        "x": 350.0,
+                        "y": 300.0
+                      },
+                      {
+                        "id": "coin-3",
+                        "taken": false,
+                        "x": 390.0,
+                        "y": 280.0
+                      },
+                      {
+                        "id": "coin-4",
+                        "taken": false,
+                        "x": 470.0,
+                        "y": 190.0
+                      }
+                    ]
                   ],
                   [
                     "set",
@@ -1669,9 +2379,13 @@
                                         [
                                           "fell",
                                           [
-                                            ">",
-                                            "@py3",
-                                            "@entity.worldHeight"
+                                            "and",
+                                            "@atGround",
+                                            [
+                                              "==",
+                                              "@landed",
+                                              false
+                                            ]
                                           ]
                                         ]
                                       ],
@@ -1692,116 +2406,320 @@
                                           ]
                                         ],
                                         [
-                                          "do",
+                                          "let",
                                           [
-                                            "set",
-                                            "@entity.player",
                                             [
-                                              "object/merge",
-                                              "@entity.player",
-                                              {
-                                                "grounded": "@grounded",
-                                                "vy": "@vy3",
-                                                "x": "@px1",
-                                                "y": "@py3"
-                                              }
-                                            ]
-                                          ],
-                                          [
-                                            "set",
-                                            "@entity.result",
-                                            [
-                                              "if",
+                                              "coinHits",
                                               [
-                                                "!=",
-                                                "@goalHit",
-                                                null
-                                              ],
-                                              "won",
+                                                "array/filter",
+                                                "@entity.coins",
+                                                [
+                                                  "fn",
+                                                  "c",
+                                                  [
+                                                    "and",
+                                                    [
+                                                      "==",
+                                                      "@c.taken",
+                                                      false
+                                                    ],
+                                                    [
+                                                      "geo/aabb-overlap",
+                                                      "@playerRect",
+                                                      {
+                                                        "h": 24.0,
+                                                        "w": 24.0,
+                                                        "x": "@c.x",
+                                                        "y": "@c.y"
+                                                      }
+                                                    ]
+                                                  ]
+                                                ]
+                                              ]
+                                            ],
+                                            [
+                                              "updatedCoins",
+                                              [
+                                                "array/map",
+                                                "@entity.coins",
+                                                [
+                                                  "fn",
+                                                  "c",
+                                                  [
+                                                    "if",
+                                                    [
+                                                      "and",
+                                                      [
+                                                        "==",
+                                                        "@c.taken",
+                                                        false
+                                                      ],
+                                                      [
+                                                        "geo/aabb-overlap",
+                                                        "@playerRect",
+                                                        {
+                                                          "h": 24.0,
+                                                          "w": 24.0,
+                                                          "x": "@c.x",
+                                                          "y": "@c.y"
+                                                        }
+                                                      ]
+                                                    ],
+                                                    [
+                                                      "object/merge",
+                                                      "@c",
+                                                      {
+                                                        "taken": true
+                                                      }
+                                                    ],
+                                                    "@c"
+                                                  ]
+                                                ]
+                                              ]
+                                            ],
+                                            [
+                                              "newResult",
                                               [
                                                 "if",
                                                 [
-                                                  "and",
-                                                  "@damaged",
-                                                  [
-                                                    "<=",
-                                                    "@livesLeft",
-                                                    0.0
-                                                  ]
+                                                  "!=",
+                                                  "@goalHit",
+                                                  null
                                                 ],
-                                                "lost",
-                                                "none"
+                                                "won",
+                                                [
+                                                  "if",
+                                                  [
+                                                    "and",
+                                                    "@damaged",
+                                                    [
+                                                      "<=",
+                                                      "@livesLeft",
+                                                      0.0
+                                                    ]
+                                                  ],
+                                                  "lost",
+                                                  "none"
+                                                ]
                                               ]
                                             ]
                                           ],
                                           [
-                                            "set",
-                                            "@entity.score",
+                                            "let",
                                             [
-                                              "if",
                                               [
-                                                "!=",
-                                                "@goalHit",
-                                                null
-                                              ],
-                                              [
-                                                "+",
-                                                "@entity.score",
-                                                100.0
-                                              ],
-                                              "@entity.score"
-                                            ]
-                                          ],
-                                          [
-                                            "set",
-                                            "@entity.lives",
-                                            [
-                                              "if",
-                                              [
-                                                "and",
-                                                "@damaged",
+                                                "coinGain",
                                                 [
-                                                  ">",
-                                                  "@entity.lives",
-                                                  0.0
+                                                  "*",
+                                                  [
+                                                    "array/len",
+                                                    "@coinHits"
+                                                  ],
+                                                  10.0
+                                                ]
+                                              ],
+                                              [
+                                                "pickupFx",
+                                                [
+                                                  "array/map",
+                                                  "@coinHits",
+                                                  [
+                                                    "fn",
+                                                    "c",
+                                                    {
+                                                      "id": [
+                                                        "str/concat",
+                                                        "fx-coin-",
+                                                        "@c.id"
+                                                      ],
+                                                      "message": "+10",
+                                                      "ttl": 20.0,
+                                                      "type": "pickup",
+                                                      "x": "@c.x",
+                                                      "y": "@c.y"
+                                                    }
+                                                  ]
+                                                ]
+                                              ],
+                                              [
+                                                "damageFx",
+                                                [
+                                                  "if",
+                                                  [
+                                                    "and",
+                                                    "@damaged",
+                                                    [
+                                                      "==",
+                                                      "@newResult",
+                                                      "none"
+                                                    ]
+                                                  ],
+                                                  [
+                                                    {
+                                                      "id": [
+                                                        "str/concat",
+                                                        "fx-dmg-",
+                                                        "@entity.lives"
+                                                      ],
+                                                      "message": "-1",
+                                                      "ttl": 20.0,
+                                                      "type": "damage",
+                                                      "x": "@px1",
+                                                      "y": "@py3"
+                                                    }
+                                                  ],
+                                                  []
+                                                ]
+                                              ],
+                                              [
+                                                "winFx",
+                                                [
+                                                  "if",
+                                                  [
+                                                    "==",
+                                                    "@newResult",
+                                                    "won"
+                                                  ],
+                                                  [
+                                                    {
+                                                      "id": "fx-win",
+                                                      "message": "You Win!",
+                                                      "ttl": 40.0,
+                                                      "type": "win",
+                                                      "x": "@px1",
+                                                      "y": "@py3"
+                                                    }
+                                                  ],
+                                                  []
+                                                ]
+                                              ]
+                                            ],
+                                            [
+                                              "let",
+                                              [
+                                                [
+                                                  "newFx",
+                                                  [
+                                                    "array/concat",
+                                                    "@entity.fx",
+                                                    [
+                                                      "array/concat",
+                                                      "@pickupFx",
+                                                      [
+                                                        "array/concat",
+                                                        "@damageFx",
+                                                        "@winFx"
+                                                      ]
+                                                    ]
+                                                  ]
+                                                ]
+                                              ],
+                                              [
+                                                "do",
+                                                [
+                                                  "set",
+                                                  "@entity.player",
+                                                  [
+                                                    "object/merge",
+                                                    "@entity.player",
+                                                    {
+                                                      "grounded": "@grounded",
+                                                      "vy": "@vy3",
+                                                      "x": "@px1",
+                                                      "y": "@py3"
+                                                    }
+                                                  ]
                                                 ],
                                                 [
-                                                  "==",
+                                                  "set",
                                                   "@entity.result",
-                                                  "none"
-                                                ]
-                                              ],
-                                              "@livesLeft",
-                                              "@entity.lives"
-                                            ]
-                                          ],
-                                          [
-                                            "set",
-                                            "@entity.player",
-                                            [
-                                              "if",
-                                              [
-                                                "and",
-                                                "@damaged",
+                                                  "@newResult"
+                                                ],
                                                 [
-                                                  "==",
-                                                  "@entity.result",
-                                                  "none"
+                                                  "set",
+                                                  "@entity.score",
+                                                  [
+                                                    "+",
+                                                    [
+                                                      "+",
+                                                      "@entity.score",
+                                                      "@coinGain"
+                                                    ],
+                                                    [
+                                                      "if",
+                                                      [
+                                                        "!=",
+                                                        "@goalHit",
+                                                        null
+                                                      ],
+                                                      100.0,
+                                                      0.0
+                                                    ]
+                                                  ]
+                                                ],
+                                                [
+                                                  "set",
+                                                  "@entity.lives",
+                                                  [
+                                                    "if",
+                                                    [
+                                                      "and",
+                                                      "@damaged",
+                                                      [
+                                                        ">",
+                                                        "@entity.lives",
+                                                        0.0
+                                                      ],
+                                                      [
+                                                        "==",
+                                                        "@newResult",
+                                                        "none"
+                                                      ]
+                                                    ],
+                                                    "@livesLeft",
+                                                    "@entity.lives"
+                                                  ]
+                                                ],
+                                                [
+                                                  "set",
+                                                  "@entity.coins",
+                                                  "@updatedCoins"
+                                                ],
+                                                [
+                                                  "set",
+                                                  "@entity.fx",
+                                                  "@newFx"
+                                                ],
+                                                [
+                                                  "set",
+                                                  "@entity.player",
+                                                  [
+                                                    "if",
+                                                    [
+                                                      "and",
+                                                      "@damaged",
+                                                      [
+                                                        "==",
+                                                        "@newResult",
+                                                        "none"
+                                                      ]
+                                                    ],
+                                                    {
+                                                      "animation": "idle",
+                                                      "facingRight": true,
+                                                      "frame": 0.0,
+                                                      "grounded": false,
+                                                      "height": 48.0,
+                                                      "vx": 0.0,
+                                                      "vy": 0.0,
+                                                      "width": 32.0,
+                                                      "x": 80.0,
+                                                      "y": 320.0
+                                                    },
+                                                    "@entity.player"
+                                                  ]
                                                 ]
-                                              ],
-                                              {
-                                                "animation": "idle",
-                                                "facingRight": true,
-                                                "frame": 0.0,
-                                                "grounded": false,
-                                                "height": 48.0,
-                                                "vx": 0.0,
-                                                "vy": 0.0,
-                                                "width": 32.0,
-                                                "x": 80.0,
-                                                "y": 320.0
-                                              },
-                                              "@entity.player"
+                                              ]
                                             ]
                                           ]
                                         ]
@@ -1869,12 +2787,12 @@
                 ],
                 [
                   "set",
-                  "@entity.effects",
+                  "@entity.fx",
                   [
                     "array/filter",
                     [
                       "array/map",
-                      "@entity.effects",
+                      "@entity.fx",
                       [
                         "fn",
                         "e",
@@ -1932,6 +2850,34 @@
                       {
                         "backgroundColor": "@config.bgColor",
                         "cameraMode": "follow",
+                        "events": "@entity.fx",
+                        "features": [
+                          "array/map",
+                          [
+                            "array/filter",
+                            "@entity.coins",
+                            [
+                              "fn",
+                              "c",
+                              [
+                                "==",
+                                "@c.taken",
+                                false
+                              ]
+                            ]
+                          ],
+                          [
+                            "fn",
+                            "c",
+                            {
+                              "assetUrl": "@config.coinSprite",
+                              "id": "@c.id",
+                              "type": "coin",
+                              "x": "@c.x",
+                              "y": "@c.y"
+                            }
+                          ]
+                        ],
                         "interpolateUnits": true,
                         "keyMap": {
                           "ArrowLeft": "LEFT",
@@ -2035,6 +2981,7 @@
                             }
                           },
                           "directionEvents": {
+                            "down": "STOP",
                             "left": "LEFT",
                             "right": "RIGHT",
                             "up": "JUMP"
@@ -2075,6 +3022,11 @@
                     "type": "game-shell"
                   }
                 ]
+              ],
+              "guard": [
+                "==",
+                "@entity.result",
+                "none"
               ],
               "interval": 100.0,
               "name": "animTick"

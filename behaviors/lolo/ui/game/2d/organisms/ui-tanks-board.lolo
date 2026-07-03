@@ -211,14 +211,15 @@ orbital TanksBoardOrbital {
           children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
 
-      FIRE -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (grid/manhattan-distance @ap @tp) @entity.firingRange) (!= @ap @tp)))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)), animation: (if (<= (math/max 0 (- (object/get @u health) ?damage)) 0) "death" "hit") }) (if (== @u.id ?attackerId) (object/merge @u { animation: "attack" }) @u)))))
-        (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 4 }))
-        (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 6 })) null)
-        (set @entity.score (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (+ @entity.score 100) (+ @entity.score 10)))
+      UNIT_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "enemy") (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position)) @entity.firingRange)))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?unitId) (object/merge @u { health: (math/max 0 (- (object/get @u health) 3)), animation: (if (<= (math/max 0 (- (object/get @u health) 3)) 0) "death" "hit") }) (if (== @u.id @entity.selectedUnitId) (object/merge @u { animation: "attack" }) @u)))))
+        (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) y), ttl: 4 }))
+        (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) health) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) y), ttl: 6 })) null)
+        (set @entity.score (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) health) 0) (+ @entity.score 100) (+ @entity.score 10)))
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
         (set @entity.phase "observation")
+        (emit GAME_END)
         (render-ui main {
           type: game-shell
           fontFamily: "future"
@@ -298,6 +299,7 @@ orbital TanksBoardOrbital {
 
     ticks {
       renderTick every 100ms
+        when (== @entity.result "none")
         (render-ui main {
           type: game-shell
           fontFamily: "future"
@@ -316,6 +318,7 @@ orbital TanksBoardOrbital {
         (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
         (set @entity.enemyTurn false)
         (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
+        (if (!= @entity.result "none") (emit GAME_END) null)
         (render-ui main {
           type: game-shell
           fontFamily: "future"
@@ -328,15 +331,6 @@ orbital TanksBoardOrbital {
     }
 
     emits {
-      FIRE -> external {
-        attacker : object
-        target : object
-        damage : number
-        attackerId : string!
-        targetId : string!
-      }
-        @description "Fired when a tank shoots at a target."
-        @tier "domain"
       GAME_END -> external {
         result : string
       }

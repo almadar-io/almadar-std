@@ -1,5 +1,5 @@
 {
-  "description": "FishingBoard — game-shell composition with LOLO-driven sprite animation and catch effects.",
+  "description": "FishingBoard — cast/bite/reel fishing loop: hook drops, bites roll on a timer, reel within the window to land fish.",
   "name": "ui-fishing-board",
   "orbitals": [
     {
@@ -74,6 +74,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -91,6 +96,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -173,6 +183,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -190,6 +205,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -233,6 +253,11 @@
                       "required": false,
                       "type": "string"
                     },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
                     "category": {
                       "name": "category",
                       "required": false,
@@ -250,6 +275,11 @@
                     },
                     "role": {
                       "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
                       "required": false,
                       "type": "string"
                     },
@@ -347,11 +377,6 @@
             "type": "array"
           },
           {
-            "default": "",
-            "name": "selectedUnitId",
-            "type": "string"
-          },
-          {
             "default": 0.0,
             "name": "catchCount",
             "type": "number"
@@ -360,6 +385,25 @@
             "default": 0.0,
             "name": "score",
             "type": "number"
+          },
+          {
+            "default": "idle",
+            "name": "phase",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "reelWindow",
+            "type": "number"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string",
+            "values": [
+              "none",
+              "won"
+            ]
           },
           {
             "default": [],
@@ -414,28 +458,39 @@
         {
           "category": "interaction",
           "config": {
-            "activeFilters": {
-              "default": {},
-              "description": "Active filters",
-              "label": "Active Filters",
-              "tier": "presentation",
-              "type": "json"
-            },
             "assetManifest": {
               "default": {
                 "effects": {
+                  "bite": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                    "category": "bite",
+                    "dimension": "2d",
+                    "name": "bite",
+                    "role": "effect",
+                    "sprite": "emote_exclamation.png",
+                    "style": "vector",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                    "variant": ""
+                  },
                   "splash": {
                     "animations": [
                       "static"
                     ],
-                    "aspect": "8:1",
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_particles.json",
                     "category": "splash",
                     "dimension": "2d",
                     "name": "splash",
                     "role": "effect",
-                    "style": "",
+                    "sprite": "burst.png",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/spark_06.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_particles.png",
                     "variant": ""
                   }
                 },
@@ -445,13 +500,31 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "fish",
                     "dimension": "2d",
                     "name": "fish",
                     "role": "decoration",
-                    "style": "",
+                    "sprite": "fish_blue",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                    "variant": ""
+                  },
+                  "rock": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "rock",
+                    "dimension": "2d",
+                    "name": "rock",
+                    "role": "decoration",
+                    "sprite": "rock_a",
+                    "style": "vector",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "seaweed": {
@@ -459,13 +532,15 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "seaweed",
                     "dimension": "2d",
                     "name": "seaweed",
                     "role": "decoration",
-                    "style": "",
+                    "sprite": "seaweed_green_a",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   }
                 },
@@ -475,13 +550,31 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "seabed",
                     "dimension": "2d",
                     "name": "seabed",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "terrain_sand_top_a",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                    "variant": ""
+                  },
+                  "surface": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "surface",
+                    "dimension": "2d",
+                    "name": "surface",
+                    "role": "tile",
+                    "sprite": "background_terrain_top",
+                    "style": "vector",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "water": {
@@ -489,13 +582,15 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "water",
                     "dimension": "2d",
                     "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   }
                 },
@@ -509,13 +604,15 @@
                       "death"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-cartography-pack/ui/spritesheet_default.json",
                     "category": "boat",
                     "dimension": "2d",
                     "name": "boat",
                     "role": "npc",
-                    "style": "",
+                    "sprite": "ship.png",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-cartography-pack/ui/spritesheet_default.png",
                     "variant": ""
                   },
                   "hook": {
@@ -527,13 +624,15 @@
                       "death"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "hook",
                     "dimension": "2d",
                     "name": "hook",
                     "role": "npc",
-                    "style": "",
+                    "sprite": "bubble_a",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   }
                 }
@@ -557,6 +656,11 @@
                         "required": false,
                         "type": "string"
                       },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
                       "category": {
                         "name": "category",
                         "required": false,
@@ -574,6 +678,11 @@
                       },
                       "role": {
                         "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
                         "required": false,
                         "type": "string"
                       },
@@ -620,6 +729,11 @@
                         "required": false,
                         "type": "string"
                       },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
                       "category": {
                         "name": "category",
                         "required": false,
@@ -637,6 +751,11 @@
                       },
                       "role": {
                         "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
                         "required": false,
                         "type": "string"
                       },
@@ -683,6 +802,11 @@
                         "required": false,
                         "type": "string"
                       },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
                       "category": {
                         "name": "category",
                         "required": false,
@@ -700,6 +824,11 @@
                       },
                       "role": {
                         "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
                         "required": false,
                         "type": "string"
                       },
@@ -746,6 +875,11 @@
                         "required": false,
                         "type": "string"
                       },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
                       "category": {
                         "name": "category",
                         "required": false,
@@ -763,6 +897,11 @@
                       },
                       "role": {
                         "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
                         "required": false,
                         "type": "string"
                       },
@@ -796,6 +935,20 @@
               },
               "tier": "presentation",
               "type": "FishingBoardAssetManifest"
+            },
+            "biteChance": {
+              "default": 0.35,
+              "description": "Per-tick probability of a bite while waiting",
+              "label": "Bite Chance",
+              "tier": "domain",
+              "type": "number"
+            },
+            "catchTarget": {
+              "default": 5.0,
+              "description": "Fish landed to win the session",
+              "label": "Catch Target",
+              "tier": "domain",
+              "type": "number"
             },
             "className": {
               "default": "",
@@ -841,17 +994,19 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "seaweed",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "fish",
                     "dimension": "2d",
-                    "name": "seaweed",
+                    "name": "fish_blue",
                     "role": "decoration",
-                    "style": "",
+                    "sprite": "fish_blue",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
-                  "type": "seaweed",
-                  "x": 0.0,
+                  "type": "fish",
+                  "x": 1.0,
                   "y": 2.0
                 },
                 {
@@ -861,17 +1016,19 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "fish-blue",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "fish",
                     "dimension": "2d",
-                    "name": "fish-blue",
+                    "name": "fish_orange",
                     "role": "decoration",
-                    "style": "",
+                    "sprite": "fish_orange",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "type": "fish",
-                  "x": 1.0,
+                  "x": 5.0,
                   "y": 2.0
                 },
                 {
@@ -881,17 +1038,19 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "fish-orange",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "fish",
                     "dimension": "2d",
-                    "name": "fish-orange",
+                    "name": "fish_pink",
                     "role": "decoration",
-                    "style": "",
+                    "sprite": "fish_pink",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-orange.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "type": "fish",
-                  "x": 3.0,
+                  "x": 6.0,
                   "y": 2.0
                 },
                 {
@@ -901,18 +1060,20 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "seaweed",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "fish",
                     "dimension": "2d",
-                    "name": "seaweed",
+                    "name": "fish_green",
                     "role": "decoration",
-                    "style": "",
+                    "sprite": "fish_green",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
-                  "type": "seaweed",
-                  "x": 4.0,
-                  "y": 2.0
+                  "type": "fish",
+                  "x": 2.0,
+                  "y": 3.0
                 },
                 {
                   "id": "f5",
@@ -921,17 +1082,19 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "fish-green",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "fish",
                     "dimension": "2d",
-                    "name": "fish-green",
+                    "name": "fish_red",
                     "role": "decoration",
-                    "style": "",
+                    "sprite": "fish_red",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-green.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "type": "fish",
-                  "x": 0.0,
+                  "x": 4.0,
                   "y": 3.0
                 },
                 {
@@ -941,18 +1104,20 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "fish-blue",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "seaweed",
                     "dimension": "2d",
-                    "name": "fish-blue",
+                    "name": "seaweed_green_a",
                     "role": "decoration",
-                    "style": "",
+                    "sprite": "seaweed_green_a",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
-                  "type": "fish",
-                  "x": 2.0,
-                  "y": 3.0
+                  "type": "seaweed",
+                  "x": 0.0,
+                  "y": 4.0
                 },
                 {
                   "id": "f7",
@@ -961,18 +1126,20 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "fish-orange",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "seaweed",
                     "dimension": "2d",
-                    "name": "fish-orange",
+                    "name": "seaweed_pink_a",
                     "role": "decoration",
-                    "style": "",
+                    "sprite": "seaweed_pink_a",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-orange.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
-                  "type": "fish",
-                  "x": 4.0,
-                  "y": 3.0
+                  "type": "seaweed",
+                  "x": 2.0,
+                  "y": 4.0
                 },
                 {
                   "id": "f8",
@@ -981,17 +1148,19 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "seaweed",
                     "dimension": "2d",
-                    "name": "seaweed",
+                    "name": "seaweed_green_c",
                     "role": "decoration",
-                    "style": "",
+                    "sprite": "seaweed_green_c",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "type": "seaweed",
-                  "x": 1.0,
+                  "x": 5.0,
                   "y": 4.0
                 },
                 {
@@ -1001,17 +1170,19 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "fish-green",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "rock",
                     "dimension": "2d",
-                    "name": "fish-green",
+                    "name": "rock_a",
                     "role": "decoration",
-                    "style": "",
+                    "sprite": "rock_a",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-green.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
-                  "type": "fish",
-                  "x": 2.0,
+                  "type": "rock",
+                  "x": 3.0,
                   "y": 4.0
                 },
                 {
@@ -1021,21 +1192,23 @@
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "seaweed",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "rock",
                     "dimension": "2d",
-                    "name": "seaweed",
+                    "name": "rock_b",
                     "role": "decoration",
-                    "style": "",
+                    "sprite": "rock_b",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
-                  "type": "seaweed",
-                  "x": 3.0,
+                  "type": "rock",
+                  "x": 6.0,
                   "y": 4.0
                 }
               ],
-              "description": "Features on the board (fish spots, seaweed)",
+              "description": "Features on the board (fish, seaweed, rocks)",
               "items": {
                 "properties": {
                   "assetUrl": {
@@ -1051,6 +1224,11 @@
                       },
                       "aspect": {
                         "name": "aspect",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "atlas": {
+                        "name": "atlas",
                         "required": false,
                         "type": "string"
                       },
@@ -1071,6 +1249,11 @@
                       },
                       "role": {
                         "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
                         "required": false,
                         "type": "string"
                       },
@@ -1129,6 +1312,11 @@
                         "required": false,
                         "type": "string"
                       },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
                       "category": {
                         "name": "category",
                         "required": false,
@@ -1146,6 +1334,11 @@
                       },
                       "role": {
                         "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
                         "required": false,
                         "type": "string"
                       },
@@ -1207,80 +1400,39 @@
               "tier": "presentation",
               "type": "boolean"
             },
-            "pageProp": {
-              "default": 0.0,
-              "description": "Current page number",
-              "label": "Page",
-              "synonyms": "page",
-              "tier": "presentation",
-              "type": "number"
-            },
-            "pageSize": {
-              "default": 0.0,
-              "description": "Number of items per page",
-              "label": "Page Size",
-              "tier": "presentation",
+            "reelWindowTicks": {
+              "default": 4.0,
+              "description": "500ms ticks the player has to reel a hooked fish",
+              "label": "Reel Window Ticks",
+              "tier": "domain",
               "type": "number"
             },
             "scale": {
-              "default": 1.0,
+              "default": 0.5,
               "description": "Render scale",
               "label": "Scale",
               "tier": "presentation",
               "type": "number"
             },
-            "searchValue": {
-              "default": "Search Value",
-              "description": "Current search query value",
-              "label": "Search Value",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "selectedIds": {
-              "default": [],
-              "description": "Currently selected item IDs",
-              "items": {
-                "type": "string"
-              },
-              "label": "Selected Ids",
-              "tier": "presentation",
-              "type": "[string]"
-            },
-            "sortBy": {
-              "default": "Sort By",
-              "description": "Current sort field",
-              "label": "Sort By",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "sortDirection": {
-              "default": "asc",
-              "description": "Current sort direction",
-              "label": "Sort Direction",
-              "tier": "presentation",
-              "type": "string",
-              "values": [
-                "asc",
-                "desc"
-              ]
-            },
             "tiles": {
               "default": [
                 {
                   "passable": true,
-                  "terrain": "water",
+                  "terrain": "surface",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "water",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "surface",
                     "dimension": "2d",
-                    "name": "water",
+                    "name": "surface",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain_top",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 0.0,
@@ -1288,19 +1440,21 @@
                 },
                 {
                   "passable": true,
-                  "terrain": "water",
+                  "terrain": "surface",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "water",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "surface",
                     "dimension": "2d",
-                    "name": "water",
+                    "name": "surface",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain_top",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 1.0,
@@ -1308,19 +1462,21 @@
                 },
                 {
                   "passable": true,
-                  "terrain": "water",
+                  "terrain": "surface",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "water",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "surface",
                     "dimension": "2d",
-                    "name": "water",
+                    "name": "surface",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain_top",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 2.0,
@@ -1328,19 +1484,21 @@
                 },
                 {
                   "passable": true,
-                  "terrain": "water",
+                  "terrain": "surface",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "water",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "surface",
                     "dimension": "2d",
-                    "name": "water",
+                    "name": "surface",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain_top",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 3.0,
@@ -1348,22 +1506,68 @@
                 },
                 {
                   "passable": true,
-                  "terrain": "water",
+                  "terrain": "surface",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "water",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "surface",
                     "dimension": "2d",
-                    "name": "water",
+                    "name": "surface",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain_top",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 4.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "surface",
+                  "terrainSprite": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "surface",
+                    "dimension": "2d",
+                    "name": "surface",
+                    "role": "tile",
+                    "sprite": "background_terrain_top",
+                    "style": "vector",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                    "variant": ""
+                  },
+                  "x": 5.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "surface",
+                  "terrainSprite": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "surface",
+                    "dimension": "2d",
+                    "name": "surface",
+                    "role": "tile",
+                    "sprite": "background_terrain_top",
+                    "style": "vector",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                    "variant": ""
+                  },
+                  "x": 6.0,
                   "y": 0.0
                 },
                 {
@@ -1374,13 +1578,15 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "water",
                     "dimension": "2d",
                     "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 0.0,
@@ -1394,13 +1600,15 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "water",
                     "dimension": "2d",
                     "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 1.0,
@@ -1414,13 +1622,15 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "water",
                     "dimension": "2d",
                     "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 2.0,
@@ -1434,13 +1644,15 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "water",
                     "dimension": "2d",
                     "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 3.0,
@@ -1454,13 +1666,15 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "water",
                     "dimension": "2d",
                     "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 4.0,
@@ -1468,19 +1682,65 @@
                 },
                 {
                   "passable": true,
-                  "terrain": "seabed",
+                  "terrain": "water",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "seabed",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
                     "dimension": "2d",
-                    "name": "seabed",
+                    "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                    "variant": ""
+                  },
+                  "x": 5.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "water",
+                  "terrainSprite": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
+                    "dimension": "2d",
+                    "name": "water",
+                    "role": "tile",
+                    "sprite": "background_terrain",
+                    "style": "vector",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                    "variant": ""
+                  },
+                  "x": 6.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "water",
+                  "terrainSprite": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
+                    "dimension": "2d",
+                    "name": "water",
+                    "role": "tile",
+                    "sprite": "background_terrain",
+                    "style": "vector",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 0.0,
@@ -1488,19 +1748,21 @@
                 },
                 {
                   "passable": true,
-                  "terrain": "seabed",
+                  "terrain": "water",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "seabed",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
                     "dimension": "2d",
-                    "name": "seabed",
+                    "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 1.0,
@@ -1508,19 +1770,21 @@
                 },
                 {
                   "passable": true,
-                  "terrain": "seabed",
+                  "terrain": "water",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "seabed",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
                     "dimension": "2d",
-                    "name": "seabed",
+                    "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 2.0,
@@ -1528,19 +1792,21 @@
                 },
                 {
                   "passable": true,
-                  "terrain": "seabed",
+                  "terrain": "water",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "seabed",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
                     "dimension": "2d",
-                    "name": "seabed",
+                    "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 3.0,
@@ -1548,19 +1814,21 @@
                 },
                 {
                   "passable": true,
-                  "terrain": "seabed",
+                  "terrain": "water",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "seabed",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
                     "dimension": "2d",
-                    "name": "seabed",
+                    "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 4.0,
@@ -1568,19 +1836,65 @@
                 },
                 {
                   "passable": true,
-                  "terrain": "seabed",
+                  "terrain": "water",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "seabed",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
                     "dimension": "2d",
-                    "name": "seabed",
+                    "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                    "variant": ""
+                  },
+                  "x": 5.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "water",
+                  "terrainSprite": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
+                    "dimension": "2d",
+                    "name": "water",
+                    "role": "tile",
+                    "sprite": "background_terrain",
+                    "style": "vector",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                    "variant": ""
+                  },
+                  "x": 6.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "water",
+                  "terrainSprite": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
+                    "dimension": "2d",
+                    "name": "water",
+                    "role": "tile",
+                    "sprite": "background_terrain",
+                    "style": "vector",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 0.0,
@@ -1588,19 +1902,21 @@
                 },
                 {
                   "passable": true,
-                  "terrain": "seabed",
+                  "terrain": "water",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "seabed",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
                     "dimension": "2d",
-                    "name": "seabed",
+                    "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 1.0,
@@ -1608,19 +1924,21 @@
                 },
                 {
                   "passable": true,
-                  "terrain": "seabed",
+                  "terrain": "water",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "seabed",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
                     "dimension": "2d",
-                    "name": "seabed",
+                    "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 2.0,
@@ -1628,19 +1946,21 @@
                 },
                 {
                   "passable": true,
-                  "terrain": "seabed",
+                  "terrain": "water",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "seabed",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
                     "dimension": "2d",
-                    "name": "seabed",
+                    "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 3.0,
@@ -1648,22 +1968,68 @@
                 },
                 {
                   "passable": true,
-                  "terrain": "seabed",
+                  "terrain": "water",
                   "terrainSprite": {
                     "animations": [
                       "static"
                     ],
                     "aspect": "1:1",
-                    "category": "seabed",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
                     "dimension": "2d",
-                    "name": "seabed",
+                    "name": "water",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "background_terrain",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "water",
+                  "terrainSprite": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
+                    "dimension": "2d",
+                    "name": "water",
+                    "role": "tile",
+                    "sprite": "background_terrain",
+                    "style": "vector",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                    "variant": ""
+                  },
+                  "x": 5.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "water",
+                  "terrainSprite": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "water",
+                    "dimension": "2d",
+                    "name": "water",
+                    "role": "tile",
+                    "sprite": "background_terrain",
+                    "style": "vector",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                    "variant": ""
+                  },
+                  "x": 6.0,
                   "y": 3.0
                 },
                 {
@@ -1674,13 +2040,15 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "seabed",
                     "dimension": "2d",
                     "name": "seabed",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "terrain_sand_top_a",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 0.0,
@@ -1694,13 +2062,15 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "seabed",
                     "dimension": "2d",
                     "name": "seabed",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "terrain_sand_top_b",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 1.0,
@@ -1714,13 +2084,15 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "seabed",
                     "dimension": "2d",
                     "name": "seabed",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "terrain_sand_top_a",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 2.0,
@@ -1734,13 +2106,15 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "seabed",
                     "dimension": "2d",
                     "name": "seabed",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "terrain_sand_top_b",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 3.0,
@@ -1754,20 +2128,66 @@
                       "static"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "seabed",
                     "dimension": "2d",
                     "name": "seabed",
                     "role": "tile",
-                    "style": "",
+                    "sprite": "terrain_sand_top_a",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "x": 4.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "seabed",
+                  "terrainSprite": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "seabed",
+                    "dimension": "2d",
+                    "name": "seabed",
+                    "role": "tile",
+                    "sprite": "terrain_sand_top_b",
+                    "style": "vector",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                    "variant": ""
+                  },
+                  "x": 5.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "seabed",
+                  "terrainSprite": {
+                    "animations": [
+                      "static"
+                    ],
+                    "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                    "category": "seabed",
+                    "dimension": "2d",
+                    "name": "seabed",
+                    "role": "tile",
+                    "sprite": "terrain_sand_top_a",
+                    "style": "vector",
+                    "thumbnailUrl": "",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                    "variant": ""
+                  },
+                  "x": 6.0,
                   "y": 4.0
                 }
               ],
-              "description": "Flat top-down fishing scene tiles (water + seabed)",
+              "description": "Pond cross-section tiles (surface, open water, sandy seabed)",
               "items": {
                 "properties": {
                   "elevation": {
@@ -1796,6 +2216,11 @@
                         "required": false,
                         "type": "string"
                       },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
                       "category": {
                         "name": "category",
                         "required": false,
@@ -1813,6 +2238,11 @@
                       },
                       "role": {
                         "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
                         "required": false,
                         "type": "string"
                       },
@@ -1871,6 +2301,11 @@
                         "required": false,
                         "type": "string"
                       },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
                       "category": {
                         "name": "category",
                         "required": false,
@@ -1888,6 +2323,11 @@
                       },
                       "role": {
                         "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
                         "required": false,
                         "type": "string"
                       },
@@ -1947,24 +2387,17 @@
               "tier": "presentation",
               "type": "[FishingBoardTilesItem]"
             },
-            "totalCount": {
-              "default": 0.0,
-              "description": "Total number of items",
-              "label": "Total Count",
-              "tier": "presentation",
-              "type": "number"
-            },
             "units": {
               "default": [
                 {
                   "animation": "idle",
                   "frame": 0.0,
                   "health": 10.0,
-                  "id": "u1",
+                  "id": "boat",
                   "maxHealth": 10.0,
                   "name": "Fishing Boat",
                   "position": {
-                    "x": 2.0,
+                    "x": 3.0,
                     "y": 0.0
                   },
                   "sprite": {
@@ -1976,13 +2409,15 @@
                       "death"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-cartography-pack/ui/spritesheet_default.json",
                     "category": "boat",
                     "dimension": "2d",
                     "name": "boat",
                     "role": "npc",
-                    "style": "",
+                    "sprite": "ship.png",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-cartography-pack/ui/spritesheet_default.png",
                     "variant": ""
                   },
                   "team": "player",
@@ -1992,12 +2427,12 @@
                   "animation": "idle",
                   "frame": 0.0,
                   "health": 10.0,
-                  "id": "u2",
+                  "id": "hook",
                   "maxHealth": 10.0,
                   "name": "Hook",
                   "position": {
-                    "x": 2.0,
-                    "y": 2.0
+                    "x": 3.0,
+                    "y": 1.0
                   },
                   "sprite": {
                     "animations": [
@@ -2008,13 +2443,15 @@
                       "death"
                     ],
                     "aspect": "1:1",
+                    "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                     "category": "hook",
                     "dimension": "2d",
                     "name": "hook",
                     "role": "npc",
-                    "style": "",
+                    "sprite": "bubble_a",
+                    "style": "vector",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png",
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                     "variant": ""
                   },
                   "team": "player",
@@ -2085,6 +2522,11 @@
                         "required": false,
                         "type": "string"
                       },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
                       "category": {
                         "name": "category",
                         "required": false,
@@ -2102,6 +2544,11 @@
                       },
                       "role": {
                         "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
                         "required": false,
                         "type": "string"
                       },
@@ -2184,6 +2631,11 @@
                         "required": false,
                         "type": "string"
                       },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
                       "category": {
                         "name": "category",
                         "required": false,
@@ -2201,6 +2653,11 @@
                       },
                       "role": {
                         "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
                         "required": false,
                         "type": "string"
                       },
@@ -2244,6 +2701,11 @@
                         "required": false,
                         "type": "string"
                       },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
                       "category": {
                         "name": "category",
                         "required": false,
@@ -2261,6 +2723,11 @@
                       },
                       "role": {
                         "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
                         "required": false,
                         "type": "string"
                       },
@@ -2361,30 +2828,11 @@
           },
           "emits": [
             {
-              "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
-              "event": "TILE_CLICK",
+              "description": "Emitted when the catch target is reached and the session ends.",
+              "event": "GAME_END",
               "payloadSchema": [
                 {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                }
-              ],
-              "scope": "external",
-              "tier": "domain"
-            },
-            {
-              "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
-              "event": "UNIT_CLICK",
-              "payloadSchema": [
-                {
-                  "name": "unitId",
-                  "required": true,
+                  "name": "result",
                   "type": "string"
                 }
               ],
@@ -2392,31 +2840,36 @@
               "tier": "domain"
             },
             {
-              "description": "Emits when a cast action is triggered",
+              "description": "Emits UI:CAST when the cast button is pressed.",
               "event": "CAST",
               "payloadSchema": [
                 {
-                  "name": "unitId",
-                  "required": true,
+                  "name": "id",
                   "type": "string"
-                },
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Emits UI:REEL when the reel button is pressed.",
+              "event": "REEL",
+              "payloadSchema": [
                 {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Emits UI:PLAY_AGAIN from the gameover menu.",
+              "event": "PLAY_AGAIN",
+              "payloadSchema": [
                 {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                },
-                {
-                  "name": "hitFish",
-                  "type": "boolean"
-                },
-                {
-                  "name": "points",
-                  "type": "number"
+                  "name": "id",
+                  "type": "string"
                 }
               ],
               "scope": "external",
@@ -2427,8 +2880,10 @@
             "provides": [
               "catchCount",
               "effects",
+              "phase",
+              "reelWindow",
+              "result",
               "score",
-              "selectedUnitId",
               "units"
             ],
             "requires": []
@@ -2444,63 +2899,49 @@
                 "name": "Initialize"
               },
               {
-                "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
-                "key": "TILE_CLICK",
-                "name": "Tile Click",
-                "payloadSchema": [
-                  {
-                    "name": "x",
-                    "required": true,
-                    "type": "number"
-                  },
-                  {
-                    "name": "y",
-                    "required": true,
-                    "type": "number"
-                  }
-                ],
-                "tier": "domain"
-              },
-              {
-                "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
-                "key": "UNIT_CLICK",
-                "name": "Unit Click",
-                "payloadSchema": [
-                  {
-                    "name": "unitId",
-                    "required": true,
-                    "type": "string"
-                  }
-                ],
-                "tier": "domain"
-              },
-              {
-                "description": "Emits when a cast action is triggered",
+                "description": "Emits UI:CAST when the cast button is pressed.",
                 "key": "CAST",
                 "name": "Cast",
                 "payloadSchema": [
                   {
-                    "name": "unitId",
-                    "required": true,
+                    "name": "id",
                     "type": "string"
-                  },
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emits UI:REEL when the reel button is pressed.",
+                "key": "REEL",
+                "name": "Reel",
+                "payloadSchema": [
                   {
-                    "name": "x",
-                    "required": true,
-                    "type": "number"
-                  },
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emitted when the catch target is reached and the session ends.",
+                "key": "GAME_END",
+                "name": "Game End",
+                "payloadSchema": [
                   {
-                    "name": "y",
-                    "required": true,
-                    "type": "number"
-                  },
+                    "name": "result",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emits UI:PLAY_AGAIN from the gameover menu.",
+                "key": "PLAY_AGAIN",
+                "name": "Play Again",
+                "payloadSchema": [
                   {
-                    "name": "hitFish",
-                    "type": "boolean"
-                  },
-                  {
-                    "name": "points",
-                    "type": "number"
+                    "name": "id",
+                    "type": "string"
                   }
                 ],
                 "tier": "domain"
@@ -2510,6 +2951,9 @@
               {
                 "isInitial": true,
                 "name": "playing"
+              },
+              {
+                "name": "gameover"
               }
             ],
             "transitions": [
@@ -2522,8 +2966,13 @@
                   ],
                   [
                     "set",
-                    "@entity.selectedUnitId",
-                    ""
+                    "@entity.phase",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.reelWindow",
+                    0.0
                   ],
                   [
                     "set",
@@ -2537,6 +2986,11 @@
                   ],
                   [
                     "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
                     "@entity.effects",
                     []
                   ],
@@ -2544,17 +2998,56 @@
                     "render-ui",
                     "main",
                     {
-                      "backgroundAsset": {
-                        "animations": [],
-                        "aspect": "1:1",
-                        "category": "ui",
-                        "dimension": "2d",
-                        "name": "panel-frame",
-                        "role": "ui",
-                        "style": "adventure",
-                        "thumbnailUrl": "",
-                        "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/panel-frame.png",
-                        "variant": ""
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CAST",
+                            "iconAsset": {
+                              "animations": [
+                                "static"
+                              ],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-cast",
+                              "role": "ui",
+                              "sprite": "emote_drop.png",
+                              "style": "vector",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                              "variant": ""
+                            },
+                            "label": "Cast",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "REEL",
+                            "iconAsset": {
+                              "animations": [
+                                "static"
+                              ],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-reel",
+                              "role": "ui",
+                              "sprite": "rotate_cw.png",
+                              "style": "vector",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png",
+                              "variant": ""
+                            },
+                            "label": "Reel",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
                       },
                       "children": [
                         {
@@ -2563,31 +3056,32 @@
                           "features": "@config.features",
                           "projection": "flat",
                           "scale": "@config.scale",
-                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": false,
-                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "unitClickEvent": "UNIT_CLICK",
-                          "units": "@entity.units",
-                          "validMoves": []
+                          "units": "@entity.units"
                         }
                       ],
+                      "fontFamily": "future",
                       "hud": {
                         "children": [
                           {
                             "stats": [
                               {
                                 "iconUrl": {
-                                  "animations": [],
+                                  "animations": [
+                                    "static"
+                                  ],
                                   "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                                   "category": "ui",
                                   "dimension": "2d",
-                                  "name": "catch-count",
+                                  "name": "icon-catch",
                                   "role": "ui",
-                                  "style": "adventure",
+                                  "sprite": "fish_orange",
+                                  "style": "vector",
                                   "thumbnailUrl": "",
-                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/catch-count.png",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                                   "variant": ""
                                 },
                                 "label": "Catch",
@@ -2595,15 +3089,19 @@
                               },
                               {
                                 "iconUrl": {
-                                  "animations": [],
+                                  "animations": [
+                                    "static"
+                                  ],
                                   "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
                                   "category": "ui",
                                   "dimension": "2d",
-                                  "name": "score",
+                                  "name": "icon-score",
                                   "role": "ui",
-                                  "style": "adventure",
+                                  "sprite": "emote_star.png",
+                                  "style": "vector",
                                   "thumbnailUrl": "",
-                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/score.png",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
                                   "variant": ""
                                 },
                                 "label": "Score",
@@ -2611,23 +3109,6 @@
                               }
                             ],
                             "type": "game-hud"
-                          },
-                          {
-                            "action": "CAST",
-                            "iconAsset": {
-                              "animations": [],
-                              "aspect": "1:1",
-                              "category": "ui",
-                              "dimension": "2d",
-                              "name": "icon-cast",
-                              "role": "ui",
-                              "style": "adventure",
-                              "thumbnailUrl": "",
-                              "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/icon-cast.png",
-                              "variant": ""
-                            },
-                            "label": "Cast",
-                            "type": "action-button"
                           }
                         ],
                         "direction": "horizontal",
@@ -2636,15 +3117,19 @@
                         "type": "stack"
                       },
                       "hudBackgroundAsset": {
-                        "animations": [],
+                        "animations": [
+                          "static"
+                        ],
                         "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.json",
                         "category": "ui",
                         "dimension": "2d",
                         "name": "panel-frame",
                         "role": "ui",
-                        "style": "adventure",
+                        "sprite": "blue_panel.png",
+                        "style": "vector",
                         "thumbnailUrl": "",
-                        "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/panel-frame.png",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.png",
                         "variant": ""
                       },
                       "type": "game-shell"
@@ -2658,248 +3143,9 @@
               {
                 "effects": [
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "backgroundAsset": {
-                        "animations": [],
-                        "aspect": "1:1",
-                        "category": "ui",
-                        "dimension": "2d",
-                        "name": "panel-frame",
-                        "role": "ui",
-                        "style": "adventure",
-                        "thumbnailUrl": "",
-                        "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/panel-frame.png",
-                        "variant": ""
-                      },
-                      "children": [
-                        {
-                          "assetManifest": "@config.assetManifest",
-                          "effects": "@entity.effects",
-                          "features": "@config.features",
-                          "projection": "flat",
-                          "scale": "@config.scale",
-                          "selectedUnitId": "@entity.selectedUnitId",
-                          "showMinimap": false,
-                          "tileClickEvent": "TILE_CLICK",
-                          "tiles": "@config.tiles",
-                          "type": "canvas-2d",
-                          "unitClickEvent": "UNIT_CLICK",
-                          "units": "@entity.units",
-                          "validMoves": []
-                        }
-                      ],
-                      "hud": {
-                        "children": [
-                          {
-                            "stats": [
-                              {
-                                "iconUrl": {
-                                  "animations": [],
-                                  "aspect": "1:1",
-                                  "category": "ui",
-                                  "dimension": "2d",
-                                  "name": "catch-count",
-                                  "role": "ui",
-                                  "style": "adventure",
-                                  "thumbnailUrl": "",
-                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/catch-count.png",
-                                  "variant": ""
-                                },
-                                "label": "Catch",
-                                "value": "@entity.catchCount"
-                              },
-                              {
-                                "iconUrl": {
-                                  "animations": [],
-                                  "aspect": "1:1",
-                                  "category": "ui",
-                                  "dimension": "2d",
-                                  "name": "score",
-                                  "role": "ui",
-                                  "style": "adventure",
-                                  "thumbnailUrl": "",
-                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/score.png",
-                                  "variant": ""
-                                },
-                                "label": "Score",
-                                "value": "@entity.score"
-                              }
-                            ],
-                            "type": "game-hud"
-                          },
-                          {
-                            "action": "CAST",
-                            "iconAsset": {
-                              "animations": [],
-                              "aspect": "1:1",
-                              "category": "ui",
-                              "dimension": "2d",
-                              "name": "icon-cast",
-                              "role": "ui",
-                              "style": "adventure",
-                              "thumbnailUrl": "",
-                              "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/icon-cast.png",
-                              "variant": ""
-                            },
-                            "label": "Cast",
-                            "type": "action-button"
-                          }
-                        ],
-                        "direction": "horizontal",
-                        "gap": "md",
-                        "justify": "between",
-                        "type": "stack"
-                      },
-                      "hudBackgroundAsset": {
-                        "animations": [],
-                        "aspect": "1:1",
-                        "category": "ui",
-                        "dimension": "2d",
-                        "name": "panel-frame",
-                        "role": "ui",
-                        "style": "adventure",
-                        "thumbnailUrl": "",
-                        "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/panel-frame.png",
-                        "variant": ""
-                      },
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "TILE_CLICK",
-                "from": "playing",
-                "to": "playing"
-              },
-              {
-                "effects": [
-                  [
                     "set",
-                    "@entity.selectedUnitId",
-                    "@payload.unitId"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "backgroundAsset": {
-                        "animations": [],
-                        "aspect": "1:1",
-                        "category": "ui",
-                        "dimension": "2d",
-                        "name": "panel-frame",
-                        "role": "ui",
-                        "style": "adventure",
-                        "thumbnailUrl": "",
-                        "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/panel-frame.png",
-                        "variant": ""
-                      },
-                      "children": [
-                        {
-                          "assetManifest": "@config.assetManifest",
-                          "effects": "@entity.effects",
-                          "features": "@config.features",
-                          "projection": "flat",
-                          "scale": "@config.scale",
-                          "selectedUnitId": "@entity.selectedUnitId",
-                          "showMinimap": false,
-                          "tileClickEvent": "TILE_CLICK",
-                          "tiles": "@config.tiles",
-                          "type": "canvas-2d",
-                          "unitClickEvent": "UNIT_CLICK",
-                          "units": "@entity.units",
-                          "validMoves": []
-                        }
-                      ],
-                      "hud": {
-                        "children": [
-                          {
-                            "stats": [
-                              {
-                                "iconUrl": {
-                                  "animations": [],
-                                  "aspect": "1:1",
-                                  "category": "ui",
-                                  "dimension": "2d",
-                                  "name": "catch-count",
-                                  "role": "ui",
-                                  "style": "adventure",
-                                  "thumbnailUrl": "",
-                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/catch-count.png",
-                                  "variant": ""
-                                },
-                                "label": "Catch",
-                                "value": "@entity.catchCount"
-                              },
-                              {
-                                "iconUrl": {
-                                  "animations": [],
-                                  "aspect": "1:1",
-                                  "category": "ui",
-                                  "dimension": "2d",
-                                  "name": "score",
-                                  "role": "ui",
-                                  "style": "adventure",
-                                  "thumbnailUrl": "",
-                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/score.png",
-                                  "variant": ""
-                                },
-                                "label": "Score",
-                                "value": "@entity.score"
-                              }
-                            ],
-                            "type": "game-hud"
-                          },
-                          {
-                            "action": "CAST",
-                            "iconAsset": {
-                              "animations": [],
-                              "aspect": "1:1",
-                              "category": "ui",
-                              "dimension": "2d",
-                              "name": "icon-cast",
-                              "role": "ui",
-                              "style": "adventure",
-                              "thumbnailUrl": "",
-                              "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/icon-cast.png",
-                              "variant": ""
-                            },
-                            "label": "Cast",
-                            "type": "action-button"
-                          }
-                        ],
-                        "direction": "horizontal",
-                        "gap": "md",
-                        "justify": "between",
-                        "type": "stack"
-                      },
-                      "hudBackgroundAsset": {
-                        "animations": [],
-                        "aspect": "1:1",
-                        "category": "ui",
-                        "dimension": "2d",
-                        "name": "panel-frame",
-                        "role": "ui",
-                        "style": "adventure",
-                        "thumbnailUrl": "",
-                        "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/panel-frame.png",
-                        "variant": ""
-                      },
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "UNIT_CLICK",
-                "from": "playing",
-                "to": "playing"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.selectedUnitId",
-                    ""
+                    "@entity.phase",
+                    "waiting"
                   ],
                   [
                     "set",
@@ -2915,13 +3161,17 @@
                           [
                             "==",
                             "@u.id",
-                            "@payload.unitId"
+                            "hook"
                           ],
                           [
                             "object/merge",
                             "@u",
                             {
-                              "animation": "cast"
+                              "animation": "walk",
+                              "position": {
+                                "x": 3.0,
+                                "y": 2.0
+                              }
                             }
                           ],
                           "@u"
@@ -2930,79 +3180,73 @@
                     ]
                   ],
                   [
-                    "if",
+                    "set",
+                    "@entity.effects",
                     [
-                      "==",
-                      "@payload.hitFish",
-                      true
-                    ],
-                    [
-                      "set",
-                      "@entity.catchCount",
-                      [
-                        "+",
-                        "@entity.catchCount",
-                        1.0
-                      ]
-                    ],
-                    null
-                  ],
-                  [
-                    "if",
-                    [
-                      "==",
-                      "@payload.hitFish",
-                      true
-                    ],
-                    [
-                      "set",
-                      "@entity.score",
-                      [
-                        "+",
-                        "@entity.score",
-                        "@payload.points"
-                      ]
-                    ],
-                    null
-                  ],
-                  [
-                    "if",
-                    [
-                      "==",
-                      "@payload.hitFish",
-                      true
-                    ],
-                    [
-                      "set",
+                      "array/append",
                       "@entity.effects",
-                      [
-                        "array/append",
-                        "@entity.effects",
-                        {
-                          "key": "splash",
-                          "ttl": 4.0,
-                          "x": "@payload.x",
-                          "y": "@payload.y"
-                        }
-                      ]
-                    ],
-                    null
+                      {
+                        "key": "splash",
+                        "ttl": 6.0,
+                        "x": 3.0,
+                        "y": 1.0
+                      }
+                    ]
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "backgroundAsset": {
-                        "animations": [],
-                        "aspect": "1:1",
-                        "category": "ui",
-                        "dimension": "2d",
-                        "name": "panel-frame",
-                        "role": "ui",
-                        "style": "adventure",
-                        "thumbnailUrl": "",
-                        "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/panel-frame.png",
-                        "variant": ""
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CAST",
+                            "iconAsset": {
+                              "animations": [
+                                "static"
+                              ],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-cast",
+                              "role": "ui",
+                              "sprite": "emote_drop.png",
+                              "style": "vector",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                              "variant": ""
+                            },
+                            "label": "Cast",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "REEL",
+                            "iconAsset": {
+                              "animations": [
+                                "static"
+                              ],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-reel",
+                              "role": "ui",
+                              "sprite": "rotate_cw.png",
+                              "style": "vector",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png",
+                              "variant": ""
+                            },
+                            "label": "Reel",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
                       },
                       "children": [
                         {
@@ -3011,31 +3255,32 @@
                           "features": "@config.features",
                           "projection": "flat",
                           "scale": "@config.scale",
-                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": false,
-                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "unitClickEvent": "UNIT_CLICK",
-                          "units": "@entity.units",
-                          "validMoves": []
+                          "units": "@entity.units"
                         }
                       ],
+                      "fontFamily": "future",
                       "hud": {
                         "children": [
                           {
                             "stats": [
                               {
                                 "iconUrl": {
-                                  "animations": [],
+                                  "animations": [
+                                    "static"
+                                  ],
                                   "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                                   "category": "ui",
                                   "dimension": "2d",
-                                  "name": "catch-count",
+                                  "name": "icon-catch",
                                   "role": "ui",
-                                  "style": "adventure",
+                                  "sprite": "fish_orange",
+                                  "style": "vector",
                                   "thumbnailUrl": "",
-                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/catch-count.png",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                                   "variant": ""
                                 },
                                 "label": "Catch",
@@ -3043,15 +3288,19 @@
                               },
                               {
                                 "iconUrl": {
-                                  "animations": [],
+                                  "animations": [
+                                    "static"
+                                  ],
                                   "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
                                   "category": "ui",
                                   "dimension": "2d",
-                                  "name": "score",
+                                  "name": "icon-score",
                                   "role": "ui",
-                                  "style": "adventure",
+                                  "sprite": "emote_star.png",
+                                  "style": "vector",
                                   "thumbnailUrl": "",
-                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/score.png",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
                                   "variant": ""
                                 },
                                 "label": "Score",
@@ -3059,23 +3308,6 @@
                               }
                             ],
                             "type": "game-hud"
-                          },
-                          {
-                            "action": "CAST",
-                            "iconAsset": {
-                              "animations": [],
-                              "aspect": "1:1",
-                              "category": "ui",
-                              "dimension": "2d",
-                              "name": "icon-cast",
-                              "role": "ui",
-                              "style": "adventure",
-                              "thumbnailUrl": "",
-                              "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/icon-cast.png",
-                              "variant": ""
-                            },
-                            "label": "Cast",
-                            "type": "action-button"
                           }
                         ],
                         "direction": "horizontal",
@@ -3084,15 +3316,19 @@
                         "type": "stack"
                       },
                       "hudBackgroundAsset": {
-                        "animations": [],
+                        "animations": [
+                          "static"
+                        ],
                         "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.json",
                         "category": "ui",
                         "dimension": "2d",
                         "name": "panel-frame",
                         "role": "ui",
-                        "style": "adventure",
+                        "sprite": "blue_panel.png",
+                        "style": "vector",
                         "thumbnailUrl": "",
-                        "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/panel-frame.png",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.png",
                         "variant": ""
                       },
                       "type": "game-shell"
@@ -3101,6 +3337,695 @@
                 ],
                 "event": "CAST",
                 "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.phase",
+                    "idle"
+                  ],
+                  [
+                    "==",
+                    "@entity.result",
+                    "none"
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.phase",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.reelWindow",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    [
+                      "+",
+                      "@entity.score",
+                      [
+                        "let",
+                        [
+                          [
+                            "roll",
+                            [
+                              "math/random"
+                            ]
+                          ]
+                        ],
+                        [
+                          "if",
+                          [
+                            "<",
+                            "@roll",
+                            0.5
+                          ],
+                          10.0,
+                          [
+                            "if",
+                            [
+                              "<",
+                              "@roll",
+                              0.8
+                            ],
+                            20.0,
+                            30.0
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.catchCount",
+                    [
+                      "+",
+                      "@entity.catchCount",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    [
+                      "array/append",
+                      "@entity.effects",
+                      {
+                        "key": "splash",
+                        "ttl": 8.0,
+                        "x": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "hook"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "x"
+                        ],
+                        "y": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "hook"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "y"
+                        ]
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "hook"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": "idle",
+                              "position": {
+                                "x": 3.0,
+                                "y": 1.0
+                              }
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    [
+                      "if",
+                      [
+                        ">=",
+                        "@entity.catchCount",
+                        "@config.catchTarget"
+                      ],
+                      "won",
+                      "@entity.result"
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "!=",
+                      "@entity.result",
+                      "none"
+                    ],
+                    [
+                      "emit",
+                      "GAME_END"
+                    ],
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CAST",
+                            "iconAsset": {
+                              "animations": [
+                                "static"
+                              ],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-cast",
+                              "role": "ui",
+                              "sprite": "emote_drop.png",
+                              "style": "vector",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                              "variant": ""
+                            },
+                            "label": "Cast",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "REEL",
+                            "iconAsset": {
+                              "animations": [
+                                "static"
+                              ],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-reel",
+                              "role": "ui",
+                              "sprite": "rotate_cw.png",
+                              "style": "vector",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png",
+                              "variant": ""
+                            },
+                            "label": "Reel",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "projection": "flat",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tiles": "@config.tiles",
+                          "type": "canvas-2d",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "fontFamily": "future",
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "iconUrl": {
+                                  "animations": [
+                                    "static"
+                                  ],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-catch",
+                                  "role": "ui",
+                                  "sprite": "fish_orange",
+                                  "style": "vector",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                                  "variant": ""
+                                },
+                                "label": "Catch",
+                                "value": "@entity.catchCount"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [
+                                    "static"
+                                  ],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-score",
+                                  "role": "ui",
+                                  "sprite": "emote_star.png",
+                                  "style": "vector",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Score",
+                                "value": "@entity.score"
+                              }
+                            ],
+                            "type": "game-hud"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "hudBackgroundAsset": {
+                        "animations": [
+                          "static"
+                        ],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "panel-frame",
+                        "role": "ui",
+                        "sprite": "blue_panel.png",
+                        "style": "vector",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.png",
+                        "variant": ""
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "REEL",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.phase",
+                  "hooked"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CAST",
+                            "iconAsset": {
+                              "animations": [
+                                "static"
+                              ],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-cast",
+                              "role": "ui",
+                              "sprite": "emote_drop.png",
+                              "style": "vector",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                              "variant": ""
+                            },
+                            "label": "Cast",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "REEL",
+                            "iconAsset": {
+                              "animations": [
+                                "static"
+                              ],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-reel",
+                              "role": "ui",
+                              "sprite": "rotate_cw.png",
+                              "style": "vector",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png",
+                              "variant": ""
+                            },
+                            "label": "Reel",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "projection": "flat",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tiles": "@config.tiles",
+                          "type": "canvas-2d",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "fontFamily": "future",
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "iconUrl": {
+                                  "animations": [
+                                    "static"
+                                  ],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-catch",
+                                  "role": "ui",
+                                  "sprite": "fish_orange",
+                                  "style": "vector",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                                  "variant": ""
+                                },
+                                "label": "Catch",
+                                "value": "@entity.catchCount"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [
+                                    "static"
+                                  ],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-score",
+                                  "role": "ui",
+                                  "sprite": "emote_star.png",
+                                  "style": "vector",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Score",
+                                "value": "@entity.score"
+                              }
+                            ],
+                            "type": "game-hud"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "hudBackgroundAsset": {
+                        "animations": [
+                          "static"
+                        ],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "panel-frame",
+                        "role": "ui",
+                        "sprite": "blue_panel.png",
+                        "style": "vector",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.png",
+                        "variant": ""
+                      },
+                      "overlay": {
+                        "options": [
+                          {
+                            "event": "PLAY_AGAIN",
+                            "id": "again",
+                            "label": "Play Again",
+                            "variant": "primary"
+                          }
+                        ],
+                        "subtitle": [
+                          "str/concat",
+                          "Full net! Score: ",
+                          "@entity.score"
+                        ],
+                        "title": "VICTORY",
+                        "type": "game-menu"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "GAME_END",
+                "from": "playing",
+                "guard": [
+                  "!=",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "gameover"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.reelWindow",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.catchCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CAST",
+                            "iconAsset": {
+                              "animations": [
+                                "static"
+                              ],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-cast",
+                              "role": "ui",
+                              "sprite": "emote_drop.png",
+                              "style": "vector",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                              "variant": ""
+                            },
+                            "label": "Cast",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "REEL",
+                            "iconAsset": {
+                              "animations": [
+                                "static"
+                              ],
+                              "aspect": "1:1",
+                              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json",
+                              "category": "ui",
+                              "dimension": "2d",
+                              "name": "icon-reel",
+                              "role": "ui",
+                              "sprite": "rotate_cw.png",
+                              "style": "vector",
+                              "thumbnailUrl": "",
+                              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png",
+                              "variant": ""
+                            },
+                            "label": "Reel",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "projection": "flat",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tiles": "@config.tiles",
+                          "type": "canvas-2d",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "fontFamily": "future",
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "iconUrl": {
+                                  "animations": [
+                                    "static"
+                                  ],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-catch",
+                                  "role": "ui",
+                                  "sprite": "fish_orange",
+                                  "style": "vector",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                                  "variant": ""
+                                },
+                                "label": "Catch",
+                                "value": "@entity.catchCount"
+                              },
+                              {
+                                "iconUrl": {
+                                  "animations": [
+                                    "static"
+                                  ],
+                                  "aspect": "1:1",
+                                  "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                  "category": "ui",
+                                  "dimension": "2d",
+                                  "name": "icon-score",
+                                  "role": "ui",
+                                  "sprite": "emote_star.png",
+                                  "style": "vector",
+                                  "thumbnailUrl": "",
+                                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                  "variant": ""
+                                },
+                                "label": "Score",
+                                "value": "@entity.score"
+                              }
+                            ],
+                            "type": "game-hud"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "hudBackgroundAsset": {
+                        "animations": [
+                          "static"
+                        ],
+                        "aspect": "1:1",
+                        "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.json",
+                        "category": "ui",
+                        "dimension": "2d",
+                        "name": "panel-frame",
+                        "role": "ui",
+                        "sprite": "blue_panel.png",
+                        "style": "vector",
+                        "thumbnailUrl": "",
+                        "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.png",
+                        "variant": ""
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "gameover",
                 "to": "playing"
               }
             ]
@@ -3109,20 +4034,248 @@
             {
               "effects": [
                 [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "if",
+                        [
+                          "and",
+                          [
+                            "==",
+                            "@u.id",
+                            "hook"
+                          ],
+                          [
+                            "<",
+                            [
+                              "object/get",
+                              [
+                                "object/get",
+                                "@u",
+                                "position"
+                              ],
+                              "y"
+                            ],
+                            3.0
+                          ]
+                        ],
+                        [
+                          "object/merge",
+                          "@u",
+                          {
+                            "position": {
+                              "x": 3.0,
+                              "y": [
+                                "+",
+                                [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@u",
+                                    "position"
+                                  ],
+                                  "y"
+                                ],
+                                1.0
+                              ]
+                            }
+                          }
+                        ],
+                        "@u"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.reelWindow",
+                  [
+                    "if",
+                    [
+                      "<",
+                      [
+                        "math/random"
+                      ],
+                      "@config.biteChance"
+                    ],
+                    "@config.reelWindowTicks",
+                    0.0
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.phase",
+                  [
+                    "if",
+                    [
+                      ">",
+                      "@entity.reelWindow",
+                      0.0
+                    ],
+                    "hooked",
+                    "waiting"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@entity.phase",
+                      "hooked"
+                    ],
+                    [
+                      "array/append",
+                      "@entity.effects",
+                      {
+                        "key": "bite",
+                        "ttl": 20.0,
+                        "x": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "hook"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "x"
+                        ],
+                        "y": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "hook"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "y"
+                        ]
+                      }
+                    ],
+                    "@entity.effects"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@entity.phase",
+                      "hooked"
+                    ],
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "hook"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": "attack"
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ],
+                    "@entity.units"
+                  ]
+                ],
+                [
                   "render-ui",
                   "main",
                   {
-                    "backgroundAsset": {
-                      "animations": [],
-                      "aspect": "1:1",
-                      "category": "ui",
-                      "dimension": "2d",
-                      "name": "panel-frame",
-                      "role": "ui",
-                      "style": "adventure",
-                      "thumbnailUrl": "",
-                      "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/panel-frame.png",
-                      "variant": ""
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "CAST",
+                          "iconAsset": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                            "category": "ui",
+                            "dimension": "2d",
+                            "name": "icon-cast",
+                            "role": "ui",
+                            "sprite": "emote_drop.png",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                            "variant": ""
+                          },
+                          "label": "Cast",
+                          "type": "button",
+                          "variant": "primary"
+                        },
+                        {
+                          "action": "REEL",
+                          "iconAsset": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json",
+                            "category": "ui",
+                            "dimension": "2d",
+                            "name": "icon-reel",
+                            "role": "ui",
+                            "sprite": "rotate_cw.png",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png",
+                            "variant": ""
+                          },
+                          "label": "Reel",
+                          "type": "button",
+                          "variant": "primary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
                     },
                     "children": [
                       {
@@ -3131,31 +4284,32 @@
                         "features": "@config.features",
                         "projection": "flat",
                         "scale": "@config.scale",
-                        "selectedUnitId": "@entity.selectedUnitId",
                         "showMinimap": false,
-                        "tileClickEvent": "TILE_CLICK",
                         "tiles": "@config.tiles",
                         "type": "canvas-2d",
-                        "unitClickEvent": "UNIT_CLICK",
-                        "units": "@entity.units",
-                        "validMoves": []
+                        "units": "@entity.units"
                       }
                     ],
+                    "fontFamily": "future",
                     "hud": {
                       "children": [
                         {
                           "stats": [
                             {
                               "iconUrl": {
-                                "animations": [],
+                                "animations": [
+                                  "static"
+                                ],
                                 "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
                                 "category": "ui",
                                 "dimension": "2d",
-                                "name": "catch-count",
+                                "name": "icon-catch",
                                 "role": "ui",
-                                "style": "adventure",
+                                "sprite": "fish_orange",
+                                "style": "vector",
                                 "thumbnailUrl": "",
-                                "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/catch-count.png",
+                                "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
                                 "variant": ""
                               },
                               "label": "Catch",
@@ -3163,15 +4317,19 @@
                             },
                             {
                               "iconUrl": {
-                                "animations": [],
+                                "animations": [
+                                  "static"
+                                ],
                                 "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
                                 "category": "ui",
                                 "dimension": "2d",
-                                "name": "score",
+                                "name": "icon-score",
                                 "role": "ui",
-                                "style": "adventure",
+                                "sprite": "emote_star.png",
+                                "style": "vector",
                                 "thumbnailUrl": "",
-                                "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/score.png",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
                                 "variant": ""
                               },
                               "label": "Score",
@@ -3179,23 +4337,6 @@
                             }
                           ],
                           "type": "game-hud"
-                        },
-                        {
-                          "action": "CAST",
-                          "iconAsset": {
-                            "animations": [],
-                            "aspect": "1:1",
-                            "category": "ui",
-                            "dimension": "2d",
-                            "name": "icon-cast",
-                            "role": "ui",
-                            "style": "adventure",
-                            "thumbnailUrl": "",
-                            "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/icon-cast.png",
-                            "variant": ""
-                          },
-                          "label": "Cast",
-                          "type": "action-button"
                         }
                       ],
                       "direction": "horizontal",
@@ -3204,20 +4345,476 @@
                       "type": "stack"
                     },
                     "hudBackgroundAsset": {
-                      "animations": [],
+                      "animations": [
+                        "static"
+                      ],
                       "aspect": "1:1",
+                      "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.json",
                       "category": "ui",
                       "dimension": "2d",
                       "name": "panel-frame",
                       "role": "ui",
-                      "style": "adventure",
+                      "sprite": "blue_panel.png",
+                      "style": "vector",
                       "thumbnailUrl": "",
-                      "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/ui/panel-frame.png",
+                      "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.png",
                       "variant": ""
                     },
                     "type": "game-shell"
                   }
                 ]
+              ],
+              "guard": [
+                "and",
+                [
+                  "==",
+                  "@entity.phase",
+                  "waiting"
+                ],
+                [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ]
+              ],
+              "interval": 500.0,
+              "name": "biteTick"
+            },
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.reelWindow",
+                  [
+                    "-",
+                    "@entity.reelWindow",
+                    1.0
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.phase",
+                  [
+                    "if",
+                    [
+                      "<=",
+                      "@entity.reelWindow",
+                      0.0
+                    ],
+                    "idle",
+                    "hooked"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@entity.phase",
+                      "idle"
+                    ],
+                    [
+                      "array/append",
+                      "@entity.effects",
+                      {
+                        "key": "splash",
+                        "ttl": 6.0,
+                        "x": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "hook"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "x"
+                        ],
+                        "y": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "hook"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "y"
+                        ]
+                      }
+                    ],
+                    "@entity.effects"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@entity.phase",
+                      "idle"
+                    ],
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "hook"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": "idle",
+                              "position": {
+                                "x": 3.0,
+                                "y": 1.0
+                              }
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ],
+                    "@entity.units"
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "CAST",
+                          "iconAsset": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                            "category": "ui",
+                            "dimension": "2d",
+                            "name": "icon-cast",
+                            "role": "ui",
+                            "sprite": "emote_drop.png",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                            "variant": ""
+                          },
+                          "label": "Cast",
+                          "type": "button",
+                          "variant": "primary"
+                        },
+                        {
+                          "action": "REEL",
+                          "iconAsset": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json",
+                            "category": "ui",
+                            "dimension": "2d",
+                            "name": "icon-reel",
+                            "role": "ui",
+                            "sprite": "rotate_cw.png",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png",
+                            "variant": ""
+                          },
+                          "label": "Reel",
+                          "type": "button",
+                          "variant": "primary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "projection": "flat",
+                        "scale": "@config.scale",
+                        "showMinimap": false,
+                        "tiles": "@config.tiles",
+                        "type": "canvas-2d",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "fontFamily": "future",
+                    "hud": {
+                      "children": [
+                        {
+                          "stats": [
+                            {
+                              "iconUrl": {
+                                "animations": [
+                                  "static"
+                                ],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-catch",
+                                "role": "ui",
+                                "sprite": "fish_orange",
+                                "style": "vector",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                                "variant": ""
+                              },
+                              "label": "Catch",
+                              "value": "@entity.catchCount"
+                            },
+                            {
+                              "iconUrl": {
+                                "animations": [
+                                  "static"
+                                ],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-score",
+                                "role": "ui",
+                                "sprite": "emote_star.png",
+                                "style": "vector",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                "variant": ""
+                              },
+                              "label": "Score",
+                              "value": "@entity.score"
+                            }
+                          ],
+                          "type": "game-hud"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
+                    },
+                    "hudBackgroundAsset": {
+                      "animations": [
+                        "static"
+                      ],
+                      "aspect": "1:1",
+                      "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.json",
+                      "category": "ui",
+                      "dimension": "2d",
+                      "name": "panel-frame",
+                      "role": "ui",
+                      "sprite": "blue_panel.png",
+                      "style": "vector",
+                      "thumbnailUrl": "",
+                      "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.png",
+                      "variant": ""
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                [
+                  "==",
+                  "@entity.phase",
+                  "hooked"
+                ],
+                [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ]
+              ],
+              "interval": 500.0,
+              "name": "reelTick"
+            },
+            {
+              "effects": [
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "CAST",
+                          "iconAsset": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                            "category": "ui",
+                            "dimension": "2d",
+                            "name": "icon-cast",
+                            "role": "ui",
+                            "sprite": "emote_drop.png",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                            "variant": ""
+                          },
+                          "label": "Cast",
+                          "type": "button",
+                          "variant": "primary"
+                        },
+                        {
+                          "action": "REEL",
+                          "iconAsset": {
+                            "animations": [
+                              "static"
+                            ],
+                            "aspect": "1:1",
+                            "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.json",
+                            "category": "ui",
+                            "dimension": "2d",
+                            "name": "icon-reel",
+                            "role": "ui",
+                            "sprite": "rotate_cw.png",
+                            "style": "vector",
+                            "thumbnailUrl": "",
+                            "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cursor-pack/ui/kenney-cursor-pack.generated.png",
+                            "variant": ""
+                          },
+                          "label": "Reel",
+                          "type": "button",
+                          "variant": "primary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "projection": "flat",
+                        "scale": "@config.scale",
+                        "showMinimap": false,
+                        "tiles": "@config.tiles",
+                        "type": "canvas-2d",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "fontFamily": "future",
+                    "hud": {
+                      "children": [
+                        {
+                          "stats": [
+                            {
+                              "iconUrl": {
+                                "animations": [
+                                  "static"
+                                ],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-catch",
+                                "role": "ui",
+                                "sprite": "fish_orange",
+                                "style": "vector",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/kenney-fish-pack/terrain/spritesheet.png",
+                                "variant": ""
+                              },
+                              "label": "Catch",
+                              "value": "@entity.catchCount"
+                            },
+                            {
+                              "iconUrl": {
+                                "animations": [
+                                  "static"
+                                ],
+                                "aspect": "1:1",
+                                "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.json",
+                                "category": "ui",
+                                "dimension": "2d",
+                                "name": "icon-score",
+                                "role": "ui",
+                                "sprite": "emote_star.png",
+                                "style": "vector",
+                                "thumbnailUrl": "",
+                                "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-emote-pack/ui/vector_style1.png",
+                                "variant": ""
+                              },
+                              "label": "Score",
+                              "value": "@entity.score"
+                            }
+                          ],
+                          "type": "game-hud"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
+                    },
+                    "hudBackgroundAsset": {
+                      "animations": [
+                        "static"
+                      ],
+                      "aspect": "1:1",
+                      "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.json",
+                      "category": "ui",
+                      "dimension": "2d",
+                      "name": "panel-frame",
+                      "role": "ui",
+                      "sprite": "blue_panel.png",
+                      "style": "vector",
+                      "thumbnailUrl": "",
+                      "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack/ui/blueSheet.png",
+                      "variant": ""
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "guard": [
+                "==",
+                "@entity.result",
+                "none"
               ],
               "interval": 100.0,
               "name": "renderTick"

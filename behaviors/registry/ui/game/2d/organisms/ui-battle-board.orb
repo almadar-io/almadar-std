@@ -7480,36 +7480,6 @@
           },
           "emits": [
             {
-              "description": "-- Callbacks --",
-              "event": "ATTACK",
-              "payloadSchema": [
-                {
-                  "name": "attacker",
-                  "type": "object"
-                },
-                {
-                  "name": "target",
-                  "type": "object"
-                },
-                {
-                  "name": "damage",
-                  "type": "number"
-                },
-                {
-                  "name": "attackerId",
-                  "required": true,
-                  "type": "string"
-                },
-                {
-                  "name": "targetId",
-                  "required": true,
-                  "type": "string"
-                }
-              ],
-              "scope": "external",
-              "tier": "domain"
-            },
-            {
               "description": "Called when battle ends",
               "event": "GAME_END",
               "payloadSchema": [
@@ -7678,36 +7648,6 @@
                     "name": "y",
                     "required": true,
                     "type": "number"
-                  }
-                ],
-                "tier": "domain"
-              },
-              {
-                "description": "-- Callbacks --",
-                "key": "ATTACK",
-                "name": "Attack",
-                "payloadSchema": [
-                  {
-                    "name": "attacker",
-                    "type": "object"
-                  },
-                  {
-                    "name": "target",
-                    "type": "object"
-                  },
-                  {
-                    "name": "damage",
-                    "type": "number"
-                  },
-                  {
-                    "name": "attackerId",
-                    "required": true,
-                    "type": "string"
-                  },
-                  {
-                    "name": "targetId",
-                    "required": true,
-                    "type": "string"
                   }
                 ],
                 "tier": "domain"
@@ -9185,7 +9125,7 @@
                           [
                             "==",
                             "@u.id",
-                            "@payload.targetId"
+                            "@payload.unitId"
                           ],
                           [
                             "object/merge",
@@ -9205,7 +9145,7 @@
                                         "@u",
                                         "health"
                                       ],
-                                      "@payload.damage"
+                                      3.0
                                     ]
                                   ],
                                   0.0
@@ -9223,7 +9163,7 @@
                                     "@u",
                                     "health"
                                   ],
-                                  "@payload.damage"
+                                  3.0
                                 ]
                               ]
                             }
@@ -9233,7 +9173,7 @@
                             [
                               "==",
                               "@u.id",
-                              "@payload.attackerId"
+                              "@entity.selectedUnitId"
                             ],
                             [
                               "object/merge",
@@ -9270,7 +9210,7 @@
                                 [
                                   "==",
                                   "@u.id",
-                                  "@payload.targetId"
+                                  "@payload.unitId"
                                 ]
                               ]
                             ],
@@ -9291,7 +9231,7 @@
                                 [
                                   "==",
                                   "@u.id",
-                                  "@payload.targetId"
+                                  "@payload.unitId"
                                 ]
                               ]
                             ],
@@ -9317,7 +9257,7 @@
                             [
                               "==",
                               "@u.id",
-                              "@payload.targetId"
+                              "@payload.unitId"
                             ]
                           ]
                         ],
@@ -9347,7 +9287,7 @@
                                   [
                                     "==",
                                     "@u.id",
-                                    "@payload.targetId"
+                                    "@payload.unitId"
                                   ]
                                 ]
                               ],
@@ -9368,7 +9308,7 @@
                                   [
                                     "==",
                                     "@u.id",
-                                    "@payload.targetId"
+                                    "@payload.unitId"
                                   ]
                                 ]
                               ],
@@ -9393,8 +9333,92 @@
                   ],
                   [
                     "set",
+                    "@entity.xp",
+                    [
+                      "+",
+                      "@entity.xp",
+                      25.0
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      ">=",
+                      "@entity.xp",
+                      "@entity.xpToNext"
+                    ],
+                    [
+                      "set",
+                      "@entity.units",
+                      [
+                        "array/map",
+                        "@entity.units",
+                        [
+                          "fn",
+                          "u",
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@u.team",
+                              "player"
+                            ],
+                            [
+                              "object/merge",
+                              "@u",
+                              {
+                                "health": [
+                                  "math/min",
+                                  [
+                                    "object/get",
+                                    "@u",
+                                    "maxHealth"
+                                  ],
+                                  [
+                                    "+",
+                                    [
+                                      "object/get",
+                                      "@u",
+                                      "health"
+                                    ],
+                                    2.0
+                                  ]
+                                ]
+                              }
+                            ],
+                            "@u"
+                          ]
+                        ]
+                      ]
+                    ],
+                    null
+                  ],
+                  [
+                    "if",
+                    [
+                      ">=",
+                      "@entity.xp",
+                      "@entity.xpToNext"
+                    ],
+                    [
+                      "set",
+                      "@entity.xpToNext",
+                      [
+                        "+",
+                        "@entity.xpToNext",
+                        50.0
+                      ]
+                    ],
+                    null
+                  ],
+                  [
+                    "set",
                     "@entity.phase",
                     "observation"
+                  ],
+                  [
+                    "emit",
+                    "GAME_END"
                   ],
                   [
                     "render-ui",
@@ -9564,100 +9588,124 @@
                     }
                   ]
                 ],
-                "event": "ATTACK",
+                "event": "UNIT_CLICK",
                 "from": "playing",
                 "guard": [
-                  "let",
+                  "and",
                   [
-                    [
-                      "ap",
-                      [
-                        "object/get",
-                        [
-                          "array/find",
-                          "@entity.units",
-                          [
-                            "fn",
-                            "u",
-                            [
-                              "==",
-                              "@u.id",
-                              "@payload.attackerId"
-                            ]
-                          ]
-                        ],
-                        "position"
-                      ]
-                    ],
-                    [
-                      "tp",
-                      [
-                        "object/get",
-                        [
-                          "array/find",
-                          "@entity.units",
-                          [
-                            "fn",
-                            "u",
-                            [
-                              "==",
-                              "@u.id",
-                              "@payload.targetId"
-                            ]
-                          ]
-                        ],
-                        "position"
-                      ]
-                    ]
+                    "!=",
+                    "@entity.selectedUnitId",
+                    ""
                   ],
                   [
                     "and",
                     [
-                      "<=",
+                      "==",
                       [
-                        "math/abs",
+                        "object/get",
                         [
-                          "-",
+                          "array/find",
+                          "@entity.units",
                           [
-                            "object/get",
-                            "@ap",
-                            "x"
-                          ],
-                          [
-                            "object/get",
-                            "@tp",
-                            "x"
-                          ]
-                        ]
-                      ],
-                      1.0
-                    ],
-                    [
-                      "and",
-                      [
-                        "<=",
-                        [
-                          "math/abs",
-                          [
-                            "-",
+                            "fn",
+                            "u",
                             [
-                              "object/get",
-                              "@ap",
-                              "y"
-                            ],
-                            [
-                              "object/get",
-                              "@tp",
-                              "y"
+                              "==",
+                              "@u.id",
+                              "@payload.unitId"
                             ]
                           ]
                         ],
-                        1.0
+                        "team"
+                      ],
+                      "enemy"
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "ap",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@entity.selectedUnitId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ]
+                        ],
+                        [
+                          "tp",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.unitId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ]
+                        ]
                       ],
                       [
-                        "!=",
-                        "@ap",
-                        "@tp"
+                        "and",
+                        [
+                          "<=",
+                          [
+                            "math/abs",
+                            [
+                              "-",
+                              [
+                                "object/get",
+                                "@ap",
+                                "x"
+                              ],
+                              [
+                                "object/get",
+                                "@tp",
+                                "x"
+                              ]
+                            ]
+                          ],
+                          1.0
+                        ],
+                        [
+                          "<=",
+                          [
+                            "math/abs",
+                            [
+                              "-",
+                              [
+                                "object/get",
+                                "@ap",
+                                "y"
+                              ],
+                              [
+                                "object/get",
+                                "@tp",
+                                "y"
+                              ]
+                            ]
+                          ],
+                          1.0
+                        ]
                       ]
                     ]
                   ]
@@ -10278,6 +10326,28 @@
                         "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png",
                         "variant": ""
                       },
+                      "overlay": {
+                        "options": [
+                          {
+                            "event": "PLAY_AGAIN",
+                            "id": "again",
+                            "label": "Play Again",
+                            "variant": "primary"
+                          }
+                        ],
+                        "subtitle": "Battle complete",
+                        "title": [
+                          "if",
+                          [
+                            "==",
+                            "@entity.result",
+                            "victory"
+                          ],
+                          "VICTORY",
+                          "DEFEAT"
+                        ],
+                        "type": "game-menu"
+                      },
                       "type": "game-shell"
                     }
                   ]
@@ -10739,6 +10809,11 @@
                     "type": "game-shell"
                   }
                 ]
+              ],
+              "guard": [
+                "==",
+                "@entity.result",
+                "none"
               ],
               "interval": 100.0,
               "name": "renderTick"
@@ -11233,6 +11308,19 @@
                     "game_over",
                     "observation"
                   ]
+                ],
+                [
+                  "if",
+                  [
+                    "!=",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "emit",
+                    "GAME_END"
+                  ],
+                  null
                 ],
                 [
                   "render-ui",

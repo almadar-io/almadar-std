@@ -1,5 +1,5 @@
 app ui-nature-survival-board-3d "1.0.0"
-"NatureSurvivalBoard3D — 3D wilderness gather-and-craft board: move a survivor, harvest wood/stone, build a camp to win."
+"NatureSurvivalBoard3D — gather wood/stone before energy runs out; build a camp to win or run out and lose."
 orbital NatureSurvivalBoard3DOrbital {
   type NatureSurvivalBoard3DError = {
     message : string!
@@ -56,6 +56,15 @@ orbital NatureSurvivalBoard3DOrbital {
     x : number!
     z : number!
   }
+  type NatureSurvivalBoard3DFxEvent = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
 
   entity NatureSurvivalBoard3DItem [runtime] {
     id : string!
@@ -64,11 +73,13 @@ orbital NatureSurvivalBoard3DOrbital {
     selectedUnitId : string
     validMoves : [NatureSurvivalBoard3DValidMovesItem]
     attackTargets : [NatureSurvivalBoard3DAttackTargetsItem]
+    fx : [NatureSurvivalBoard3DFxEvent] = []
     wood : number = 0
     stone : number = 0
     woodGoal : number = 3
     stoneGoal : number = 3
-    result : "none" | "victory" = "none"
+    result : "none" | "victory" | "defeat" = "none"
+    energyLeft : number = 40
     gridWidth : number = 6
     gridHeight : number = 6
     movementRange : number = 2
@@ -84,18 +95,22 @@ orbital NatureSurvivalBoard3DOrbital {
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
         (set @entity.attackTargets [])
+        (set @entity.fx [])
         (set @entity.wood 0)
         (set @entity.stone 0)
         (set @entity.woodGoal 3)
         (set @entity.stoneGoal 3)
         (set @entity.result "none")
+        (set @entity.energyLeft @config.turnBudget)
         (set @entity.gridWidth 6)
         (set @entity.gridHeight 6)
         (set @entity.movementRange 2)
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
@@ -103,21 +118,29 @@ orbital NatureSurvivalBoard3DOrbital {
         (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== @t.passable true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: @t.x, y: @t.y }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) @t.x) (== (object/get (object/get @u position) y) @t.y))))) 0))))) (fn t { x: @t.x, z: @t.y })))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (!= (array/find @entity.features (fn f (and (== @f.x ?x) (== @f.y ?z)))) null) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) 1)))
-        (set @entity.wood (if (== (object/get (array/find @entity.features (fn f (and (== @f.x ?x) (== @f.y ?z)))) type) "tree") (+ @entity.wood 1) @entity.wood))
-        (set @entity.stone (if (== (object/get (array/find @entity.features (fn f (and (== @f.x ?x) (== @f.y ?z)))) type) "rock") (+ @entity.stone 1) @entity.stone))
+        (let ((hitType (object/get (array/find @entity.features (fn f (and (== @f.x ?x) (== @f.y ?z)))) type)))
+        (do
+        (set @entity.wood (if (== @hitType "tree") (+ @entity.wood 1) @entity.wood))
+        (set @entity.stone (if (== @hitType "rock") (+ @entity.stone 1) @entity.stone))
         (set @entity.features (array/filter @entity.features (fn f (or (!= @f.x ?x) (!= @f.y ?z)))))
+        (set @entity.fx (array/append @entity.fx { id: (str/concat "fx-" (str/concat ?x ?z)), type: "pickup", x: ?x, z: ?z, message: (if (== @hitType "tree") "+1 wood" "+1 stone"), ttl: 3 }))
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
+        ))
 
       TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (== (array/find @entity.features (fn f (and (== @f.x ?x) (== @f.y ?z)))) null) (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (== (object/get (array/find @config.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0))))))
         (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
@@ -125,8 +148,10 @@ orbital NatureSurvivalBoard3DOrbital {
         (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       CANCEL -> playing when (!= @entity.selectedUnitId "")
@@ -134,8 +159,10 @@ orbital NatureSurvivalBoard3DOrbital {
         (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       BUILD_CAMP -> gameover when (and (>= @entity.wood @entity.woodGoal) (>= @entity.stone @entity.stoneGoal))
@@ -144,10 +171,24 @@ orbital NatureSurvivalBoard3DOrbital {
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
         (set @entity.result "victory")
+        (set @entity.fx (array/append @entity.fx { id: "fx-camp", type: "win", x: 0, z: 5, message: "Camp built!", ttl: 6 }))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+        })
+
+      GAME_END -> gameover when (!= @entity.result "none")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
     }
 
@@ -158,24 +199,44 @@ orbital NatureSurvivalBoard3DOrbital {
         (set @entity.selectedUnitId "")
         (set @entity.validMoves [])
         (set @entity.attackTargets [])
+        (set @entity.fx [])
         (set @entity.wood 0)
         (set @entity.stone 0)
         (set @entity.result "none")
+        (set @entity.energyLeft @config.turnBudget)
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
     }
 
     ticks {
       animalWanderTick every 1200ms
         when (== @entity.result "none")
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "neutral") (let ((nx (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (math/floor (+ @config.roamMinX (* (math/random) (+ (- @config.roamMaxX @config.roamMinX) 1)))) (object/get (object/get @u position) x)))) @config.roamMinX @config.roamMaxX)) (ny (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (math/floor (+ @config.roamMinY (* (math/random) (+ (- @config.roamMaxY @config.roamMinY) 1)))) (object/get (object/get @u position) y)))) @config.roamMinY @config.roamMaxY))) (object/merge @u { position: { x: @nx, y: @ny } })) @u))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "neutral") (let ((nx (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (math/floor (+ @config.roamMinX (* (math/random) (+ (- @config.roamMaxX @config.roamMinX) 1)))) (object/get (object/get @u position) x)))) @config.roamMinX @config.roamMaxX)) (ny (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (math/floor (+ @config.roamMinY (* (math/random) (+ (- @config.roamMaxY @config.roamMinY) 1)))) (object/get (object/get @u position) y)))) @config.roamMinY @config.roamMaxY))) (let ((valid (and (== (object/get (array/find @config.tiles (fn t (and (== (object/get t x) @nx) (== (object/get t y) @ny)))) passable) true) (== (array/len (array/filter @entity.units (fn o (and (== (object/get (object/get o position) x) @nx) (== (object/get (object/get o position) y) @ny))))) 0)))) (if @valid (object/merge @u { position: { x: @nx, y: @ny } }) @u))) @u))))
+        (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
+        })
+
+      energyTick every 1500ms
+        when (== @entity.result "none")
+        (set @entity.energyLeft (math/max 0 (- @entity.energyLeft 1)))
+        (set @entity.result (if (<= @entity.energyLeft 0) "defeat" @entity.result))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @config.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
     }
 
@@ -204,10 +265,15 @@ orbital NatureSurvivalBoard3DOrbital {
       }
         @description "Builds the camp (campfire + tent) once wood/stone goals are met"
         @tier "domain"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when the match ends in victory or defeat"
+        @tier "domain"
       PLAY_AGAIN -> external {
         id : string
       }
-        @description "Resets the board after victory"
+        @description "Resets the board after victory or defeat"
         @tier "domain"
     }
 
@@ -259,6 +325,10 @@ orbital NatureSurvivalBoard3DOrbital {
       unitScale : number = 1
         @label "Unit Scale"
         @description "Unit draw-size multiplier"
+        @tier "presentation"
+      turnBudget : number = 40
+        @label "Turn Budget"
+        @description "Energy ticks allowed before defeat if the camp is not yet built"
         @tier "presentation"
     }
   }

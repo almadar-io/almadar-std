@@ -1,5 +1,5 @@
 app ui-skatepark-board-3d "1.0.0"
-"SkateparkBoard3D — 3D side-view skate run: player/platforms pixel physics, keyMap/d-pad, follow camera, GLB skater clips."
+"SkateparkBoard3D — 3D side-view skate run: jump the pit, dodge the rail hazard, grab-trick in the air for score, reach the deck."
 orbital SkateparkBoard3DOrbital {
   type SkateparkBoard3DPlayer = {
     x : number!
@@ -34,11 +34,19 @@ orbital SkateparkBoard3DOrbital {
     height : number!
     type : "ground" | "platform" | "hazard" | "goal"
   }
-  type SkateparkBoard3DEffectItem = {
-    key : string!
+  type SkateparkBoard3DFxEvent = {
+    id : string!
+    type : string!
+    x : number!
+    y : number
+    message : string
+    ttl : number!
+  }
+  type SkateparkBoard3DCoinItem = {
+    id : string!
     x : number!
     y : number!
-    ttl : number!
+    taken : boolean
   }
 
   entity SkateparkBoard3DItem [runtime] {
@@ -48,10 +56,11 @@ orbital SkateparkBoard3DOrbital {
     lives : number = 3
     result : "none" | "won" | "lost" = none
     player : SkateparkBoard3DPlayer = { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "skate-stand", frame: 0 }
-    goalX : number = 720
+    goalX : number = 700
     worldWidth : number = 800
     worldHeight : number = 400
-    effects : [SkateparkBoard3DEffectItem] = []
+    fx : [SkateparkBoard3DFxEvent] = []
+    coins : [SkateparkBoard3DCoinItem] = [{ id: "coin-1", x: 200, y: 250, taken: false }, { id: "coin-2", x: 350, y: 300, taken: false }, { id: "coin-3", x: 390, y: 280, taken: false }, { id: "coin-4", x: 470, y: 190, taken: false }]
     selectedUnitId : string = ""
     validMoves : [SkateparkBoard3DPlayer] = []
   }
@@ -65,7 +74,8 @@ orbital SkateparkBoard3DOrbital {
         (set @entity.score 0)
         (set @entity.lives 3)
         (set @entity.result "none")
-        (set @entity.effects [])
+        (set @entity.fx [])
+        (set @entity.coins [{ id: "coin-1", x: 200, y: 250, taken: false }, { id: "coin-2", x: 350, y: 300, taken: false }, { id: "coin-3", x: 390, y: 280, taken: false }, { id: "coin-4", x: 470, y: 190, taken: false }])
         (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "skate-stand", frame: 0 })
         (set @entity.goalX @config.goalX)
         (set @entity.worldWidth @config.worldWidth)
@@ -74,8 +84,8 @@ orbital SkateparkBoard3DOrbital {
           type: game-shell
           backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel", thumbnailUrl: "" }
           hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beigeLight.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "hud-panel", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: control-grid, kind: "dpad", directionEvents: { left: "LEFT", right: "RIGHT", up: "JUMP" }, directionReleaseEvents: { left: "STOP", right: "STOP" }, directionAssets: { up: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_up", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-up", thumbnailUrl: "" }, down: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_down", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-down", thumbnailUrl: "" }, left: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_left", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-left", thumbnailUrl: "" }, right: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_right", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-right", thumbnailUrl: "" } } }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, cameraMode: "follow", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, pixelsPerUnit: 32, interpolateUnits: true, backgroundColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, keyMap: { ArrowLeft: "LEFT", KeyA: "LEFT", ArrowRight: "RIGHT", KeyD: "RIGHT", ArrowUp: "JUMP", KeyW: "JUMP", Space: "JUMP" }, keyUpMap: { ArrowLeft: "STOP", KeyA: "STOP", ArrowRight: "STOP", KeyD: "STOP" } } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: control-grid, kind: "dpad", directionEvents: { left: "LEFT", right: "RIGHT", up: "JUMP", down: "STOP" }, directionReleaseEvents: { left: "STOP", right: "STOP" }, directionAssets: { up: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_up", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-up", thumbnailUrl: "" }, down: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_down", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-down", thumbnailUrl: "" }, left: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_left", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-left", thumbnailUrl: "" }, right: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_right", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-right", thumbnailUrl: "" } } }, { type: button, action: TRICK, label: "Trick", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, cameraMode: "follow", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, pixelsPerUnit: 32, interpolateUnits: true, backgroundColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, keyMap: { ArrowLeft: "LEFT", KeyA: "LEFT", ArrowRight: "RIGHT", KeyD: "RIGHT", ArrowUp: "JUMP", KeyW: "JUMP", Space: "JUMP", KeyJ: "TRICK", KeyK: "TRICK" }, keyUpMap: { ArrowLeft: "STOP", KeyA: "STOP", ArrowRight: "STOP", KeyD: "STOP" }, features: (array/map (array/filter @entity.coins (fn c (== @c.taken false))) (fn c { id: @c.id, x: @c.x, y: @c.y, type: "coin", assetUrl: @config.coinSprite })), events: @entity.fx } ]
         })
 
       LEFT -> playing when (== @entity.result "none")
@@ -86,6 +96,11 @@ orbital SkateparkBoard3DOrbital {
 
       JUMP -> playing when (and (== @entity.result "none") (== @entity.player.grounded true))
         (set @entity.player (object/merge @entity.player { vy: (- 0 @config.jumpStrength), grounded: false, animation: "skate-air" }))
+
+      TRICK -> playing when (and (== @entity.result "none") (== @entity.player.grounded false))
+        (set @entity.player (object/merge @entity.player { animation: "skate-grab" }))
+        (set @entity.score (+ @entity.score @config.trickScore))
+        (set @entity.fx (array/append @entity.fx { id: (str/concat "fx-trick-" @entity.score), type: "score", x: @entity.player.x, y: @entity.player.y, message: (str/concat "+" @config.trickScore), ttl: 25 }))
 
       STOP -> playing when (== @entity.result "none")
         (set @entity.player (object/merge @entity.player { vx: 0, animation: "skate-stand" }))
@@ -99,15 +114,32 @@ orbital SkateparkBoard3DOrbital {
         (set @entity.validMoves [])
 
       GAME_END -> won when (== @entity.result "won")
+        (render-ui main {
+          type: game-shell
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beigeLight.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "hud-panel", thumbnailUrl: "" }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: control-grid, kind: "dpad", directionEvents: { left: "LEFT", right: "RIGHT", up: "JUMP", down: "STOP" }, directionReleaseEvents: { left: "STOP", right: "STOP" }, directionAssets: { up: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_up", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-up", thumbnailUrl: "" }, down: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_down", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-down", thumbnailUrl: "" }, left: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_left", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-left", thumbnailUrl: "" }, right: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_right", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-right", thumbnailUrl: "" } } }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: { type: game-menu, title: "RUN LANDED!", subtitle: (str/concat "Score: " @entity.score), options: [ { id: "again", label: "Skate Again", event: "PLAY_AGAIN", variant: "primary" } ] }
+          children: [ { type: game-canvas-3d, cameraMode: "follow", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, pixelsPerUnit: 32, interpolateUnits: true, backgroundColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, keyMap: { ArrowLeft: "LEFT", KeyA: "LEFT", ArrowRight: "RIGHT", KeyD: "RIGHT", ArrowUp: "JUMP", KeyW: "JUMP", Space: "JUMP", KeyJ: "TRICK", KeyK: "TRICK" }, keyUpMap: { ArrowLeft: "STOP", KeyA: "STOP", ArrowRight: "STOP", KeyD: "STOP" }, features: (array/map (array/filter @entity.coins (fn c (== @c.taken false))) (fn c { id: @c.id, x: @c.x, y: @c.y, type: "coin", assetUrl: @config.coinSprite })), events: @entity.fx } ]
+        })
 
       GAME_END -> lost when (== @entity.result "lost")
+        (render-ui main {
+          type: game-shell
+          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel", thumbnailUrl: "" }
+          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beigeLight.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "hud-panel", thumbnailUrl: "" }
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: control-grid, kind: "dpad", directionEvents: { left: "LEFT", right: "RIGHT", up: "JUMP", down: "STOP" }, directionReleaseEvents: { left: "STOP", right: "STOP" }, directionAssets: { up: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_up", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-up", thumbnailUrl: "" }, down: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_down", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-down", thumbnailUrl: "" }, left: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_left", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-left", thumbnailUrl: "" }, right: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_right", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-right", thumbnailUrl: "" } } }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: { type: game-menu, title: "WIPEOUT!", subtitle: (str/concat "Score: " @entity.score), options: [ { id: "again", label: "Skate Again", event: "PLAY_AGAIN", variant: "primary" } ] }
+          children: [ { type: game-canvas-3d, cameraMode: "follow", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, pixelsPerUnit: 32, interpolateUnits: true, backgroundColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, keyMap: { ArrowLeft: "LEFT", KeyA: "LEFT", ArrowRight: "RIGHT", KeyD: "RIGHT", ArrowUp: "JUMP", KeyW: "JUMP", Space: "JUMP", KeyJ: "TRICK", KeyK: "TRICK" }, keyUpMap: { ArrowLeft: "STOP", KeyA: "STOP", ArrowRight: "STOP", KeyD: "STOP" }, features: (array/map (array/filter @entity.coins (fn c (== @c.taken false))) (fn c { id: @c.id, x: @c.x, y: @c.y, type: "coin", assetUrl: @config.coinSprite })), events: @entity.fx } ]
+        })
     }
 
     state won {
       PLAY_AGAIN -> playing
         (set @entity.level (+ @entity.level 1))
         (set @entity.result "none")
-        (set @entity.effects [])
+        (set @entity.fx [])
+        (set @entity.coins [{ id: "coin-1", x: 200, y: 250, taken: false }, { id: "coin-2", x: 350, y: 300, taken: false }, { id: "coin-3", x: 390, y: 280, taken: false }, { id: "coin-4", x: 470, y: 190, taken: false }])
         (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "skate-stand", frame: 0 })
     }
 
@@ -117,25 +149,27 @@ orbital SkateparkBoard3DOrbital {
         (set @entity.score 0)
         (set @entity.lives 3)
         (set @entity.result "none")
-        (set @entity.effects [])
+        (set @entity.fx [])
+        (set @entity.coins [{ id: "coin-1", x: 200, y: 250, taken: false }, { id: "coin-2", x: 350, y: 300, taken: false }, { id: "coin-3", x: 390, y: 280, taken: false }, { id: "coin-4", x: 470, y: 190, taken: false }])
         (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "skate-stand", frame: 0 })
     }
 
     ticks {
       gameflowTick every 33ms
         when (== @entity.result "none")
-        (let ((vy1 (math/clamp (+ @entity.player.vy @config.gravity) (- 0 @config.jumpStrength) @config.maxFallSpeed)) (px1 (math/clamp (+ @entity.player.x @entity.player.vx) 0 (- @entity.worldWidth @entity.player.width))) (pw @entity.player.width) (ph @entity.player.height) (livesLeft (- @entity.lives 1))) (let ((py1 (+ @entity.player.y @vy1))) (let ((playerRect { x: @px1, y: @py1, w: @pw, h: @ph })) (let ((hit (array/find @config.platforms (fn p (and (!= (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((hazardHit (array/find @config.platforms (fn p (and (== (object/get @p type) "hazard") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((goalHit (array/find @config.platforms (fn p (and (== (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((hitY (object/get @hit "y" @entity.worldHeight)) (landed (and (!= @hit null) (> @vy1 0)))) (let ((py2 (if @landed (- @hitY @ph) @py1)) (vy2 (if @landed 0 @vy1))) (let ((atGround (>= (+ @py2 @ph) @entity.worldHeight))) (let ((py3 (if @atGround (- @entity.worldHeight @ph) @py2)) (vy3 (if @atGround 0 @vy2)) (grounded (or @landed @atGround))) (let ((fell (> @py3 @entity.worldHeight))) (let ((damaged (or (!= @hazardHit null) @fell))) (do (set @entity.player (object/merge @entity.player { x: @px1, y: @py3, vy: @vy3, grounded: @grounded })) (set @entity.result (if (!= @goalHit null) "won" (if (and @damaged (<= @livesLeft 0)) "lost" "none"))) (set @entity.score (if (!= @goalHit null) (+ @entity.score 100) @entity.score)) (set @entity.lives (if (and @damaged (> @entity.lives 0) (== @entity.result "none")) @livesLeft @entity.lives)) (set @entity.player (if (and @damaged (== @entity.result "none")) { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "skate-stand", frame: 0 } @entity.player)))))))))))))))
+        (let ((vy1 (math/clamp (+ @entity.player.vy @config.gravity) (- 0 @config.jumpStrength) @config.maxFallSpeed)) (px1 (math/clamp (+ @entity.player.x @entity.player.vx) 0 (- @entity.worldWidth @entity.player.width))) (pw @entity.player.width) (ph @entity.player.height) (livesLeft (- @entity.lives 1))) (let ((py1 (+ @entity.player.y @vy1))) (let ((playerRect { x: @px1, y: @py1, w: @pw, h: @ph })) (let ((hit (array/find @config.platforms (fn p (and (!= (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((hazardHit (array/find @config.platforms (fn p (and (== (object/get @p type) "hazard") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((goalHit (array/find @config.platforms (fn p (and (== (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((hitY (object/get @hit "y" @entity.worldHeight)) (landed (and (!= @hit null) (> @vy1 0)))) (let ((py2 (if @landed (- @hitY @ph) @py1)) (vy2 (if @landed 0 @vy1))) (let ((atGround (>= (+ @py2 @ph) @entity.worldHeight))) (let ((py3 (if @atGround (- @entity.worldHeight @ph) @py2)) (vy3 (if @atGround 0 @vy2)) (grounded (or @landed @atGround))) (let ((fell (and @atGround (== @landed false)))) (let ((damaged (or (!= @hazardHit null) @fell))) (let ((coinHits (array/filter @entity.coins (fn c (and (== @c.taken false) (geo/aabb-overlap @playerRect { x: @c.x, y: @c.y, w: 24, h: 24 }))))) (updatedCoins (array/map @entity.coins (fn c (if (and (== @c.taken false) (geo/aabb-overlap @playerRect { x: @c.x, y: @c.y, w: 24, h: 24 })) (object/merge @c { taken: true }) @c)))) (newResult (if (!= @goalHit null) "won" (if (and @damaged (<= @livesLeft 0)) "lost" "none")))) (let ((coinGain (* (array/len @coinHits) 10)) (pickupFx (array/map @coinHits (fn c { id: (str/concat "fx-coin-" @c.id), type: "pickup", x: @c.x, y: @c.y, message: "+10", ttl: 20 }))) (damageFx (if (and @damaged (== @newResult "none")) [{ id: (str/concat "fx-dmg-" @entity.lives), type: "damage", x: @px1, y: @py3, message: "-1", ttl: 20 }] [])) (winFx (if (== @newResult "won") [{ id: "fx-win", type: "win", x: @px1, y: @py3, message: "Landed!", ttl: 40 }] []))) (let ((newFx (array/concat @entity.fx (array/concat @pickupFx (array/concat @damageFx @winFx))))) (do (set @entity.player (object/merge @entity.player { x: @px1, y: @py3, vy: @vy3, grounded: @grounded })) (set @entity.result @newResult) (set @entity.score (+ (+ @entity.score @coinGain) (if (!= @goalHit null) 100 0))) (set @entity.lives (if (and @damaged (> @entity.lives 0) (== @newResult "none")) @livesLeft @entity.lives)) (set @entity.coins @updatedCoins) (set @entity.fx @newFx) (set @entity.player (if (and @damaged (== @newResult "none")) { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "skate-stand", frame: 0 } @entity.player))))))))))))))))))
         (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
 
       animTick every 100ms
+        when (== @entity.result "none")
         (set @entity.player (object/merge @entity.player { frame: (% (+ (object/get @entity.player frame) 1) 8) }))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
         (render-ui main {
           type: game-shell
           backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beige.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "panel", thumbnailUrl: "" }
           hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json", sprite: "panelInset_beigeLight.png", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "hud-panel", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: control-grid, kind: "dpad", directionEvents: { left: "LEFT", right: "RIGHT", up: "JUMP" }, directionReleaseEvents: { left: "STOP", right: "STOP" }, directionAssets: { up: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_up", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-up", thumbnailUrl: "" }, down: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_down", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-down", thumbnailUrl: "" }, left: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_left", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-left", thumbnailUrl: "" }, right: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_right", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-right", thumbnailUrl: "" } } }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, cameraMode: "follow", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, pixelsPerUnit: 32, interpolateUnits: true, backgroundColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, keyMap: { ArrowLeft: "LEFT", KeyA: "LEFT", ArrowRight: "RIGHT", KeyD: "RIGHT", ArrowUp: "JUMP", KeyW: "JUMP", Space: "JUMP" }, keyUpMap: { ArrowLeft: "STOP", KeyA: "STOP", ArrowRight: "STOP", KeyD: "STOP" } } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: control-grid, kind: "dpad", directionEvents: { left: "LEFT", right: "RIGHT", up: "JUMP", down: "STOP" }, directionReleaseEvents: { left: "STOP", right: "STOP" }, directionAssets: { up: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_up", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-up", thumbnailUrl: "" }, down: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_down", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-down", thumbnailUrl: "" }, left: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_left", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-left", thumbnailUrl: "" }, right: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.png", atlas: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-input-prompts/ui/generic_sheet_default.json", sprite: "generic_stick_right", role: "ui", category: "ui", animations: [], style: "vector-flat", variant: "", dimension: "2d", aspect: "1:1", name: "stick-right", thumbnailUrl: "" } } }, { type: button, action: TRICK, label: "Trick", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, cameraMode: "follow", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, pixelsPerUnit: 32, interpolateUnits: true, backgroundColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, keyMap: { ArrowLeft: "LEFT", KeyA: "LEFT", ArrowRight: "RIGHT", KeyD: "RIGHT", ArrowUp: "JUMP", KeyW: "JUMP", Space: "JUMP", KeyJ: "TRICK", KeyK: "TRICK" }, keyUpMap: { ArrowLeft: "STOP", KeyA: "STOP", ArrowRight: "STOP", KeyD: "STOP" }, features: (array/map (array/filter @entity.coins (fn c (== @c.taken false))) (fn c { id: @c.id, x: @c.x, y: @c.y, type: "coin", assetUrl: @config.coinSprite })), events: @entity.fx } ]
         })
 
     }
@@ -175,6 +209,11 @@ orbital SkateparkBoard3DOrbital {
       }
         @description "Jump intent (keyboard keyMap or d-pad directionEvents)"
         @tier "domain"
+      TRICK -> external {
+        id : string
+      }
+        @description "Grab-trick intent while airborne (keyboard KeyJ/KeyK or d-pad Trick button) — awards score + fx"
+        @tier "domain"
       STOP -> external {
         id : string
       }
@@ -192,11 +231,11 @@ orbital SkateparkBoard3DOrbital {
         @label "Class Name"
         @description "className prop"
         @tier "presentation"
-      platforms : [SkateparkBoard3DPlatformsItem] = [{ x: 0, y: 368, width: 800, height: 32, type: ground }, { x: 150, y: 280, width: 160, height: 16, type: platform }, { x: 420, y: 220, width: 160, height: 16, type: platform }, { x: 580, y: 300, width: 80, height: 16, type: hazard }, { x: 700, y: 340, width: 64, height: 28, type: goal }]
+      platforms : [SkateparkBoard3DPlatformsItem] = [{ x: 0, y: 368, width: 340, height: 32, type: ground }, { x: 440, y: 368, width: 360, height: 32, type: ground }, { x: 150, y: 280, width: 160, height: 16, type: platform }, { x: 420, y: 220, width: 160, height: 16, type: platform }, { x: 680, y: 280, width: 120, height: 16, type: platform }, { x: 560, y: 336, width: 64, height: 32, type: hazard }, { x: 700, y: 252, width: 64, height: 28, type: goal }]
         @label "Platforms"
-        @description "Level geometry including hazard and goal tiles"
+        @description "Skate level: a pit between two floors to jump, ledges to grind, a rail hazard on the path, and a raised goal deck"
         @tier "presentation"
-      goalX : number = 720
+      goalX : number = 700
         @label "Goal X"
         @description "X pixel of the goal tile (used for display)"
         @tier "presentation"
@@ -224,13 +263,21 @@ orbital SkateparkBoard3DOrbital {
         @label "Move Speed"
         @description "Horizontal vx magnitude"
         @tier "presentation"
-      playerSprite : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/units/character-skate-boy.glb", role: "player", category: "player", animations: ["skate-stand","skate","skate-air","idle","jump","fall"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "player", thumbnailUrl: "" }
+      trickScore : number = 50
+        @label "Trick Score"
+        @description "Points awarded per airborne grab-trick"
+        @tier "presentation"
+      playerSprite : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/units/character-skate-boy.glb", role: "player", category: "player", animations: ["skate-stand","skate","skate-air","skate-grab","idle","jump","fall"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "player", thumbnailUrl: "" }
         @label "Player Model"
         @description "Player GLB Asset — named clips driven by the entity's animation field"
         @tier "presentation"
       tileSprites : Map string Asset = { ground: { url: "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/terrain/floor-wood.glb", role: "tile", category: "ground", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "ground", thumbnailUrl: "" }, platform: { url: "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/obstacle-box.glb", role: "tile", category: "platform", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "platform", thumbnailUrl: "" }, hazard: { url: "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/structure-wood.glb", role: "tile", category: "hazard", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "hazard", thumbnailUrl: "" }, goal: { url: "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/skateboard.glb", role: "tile", category: "goal", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "goal", thumbnailUrl: "" } }
         @label "Tile Models"
         @description "Map of platform type to GLB Asset"
+        @tier "presentation"
+      coinSprite : Asset = { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-prototype-kit/features/coin.glb", role: "feature", category: "coin", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "coin", thumbnailUrl: "" }
+        @label "Coin Model"
+        @description "Collectible coin GLB Asset rendered above ledges and over the pit"
         @tier "presentation"
       assetBaseUrl : string = "https://almadar-kflow-assets.web.app/shared/"
         @label "Asset Base Url"

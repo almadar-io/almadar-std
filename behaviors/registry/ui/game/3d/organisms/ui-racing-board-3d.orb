@@ -1,5 +1,5 @@
 {
-  "description": "RacingBoard3D — 3D lap race on a 6x6 ring track; player clicks forward, rival advances on ticks, first to lap wins.",
+  "description": "RacingBoard3D — throttled keyboard/d-pad racing on a multi-lap 6x6 ring track with a follow camera and a ticking rival.",
   "name": "ui-racing-board-3d",
   "orbitals": [
     {
@@ -132,44 +132,6 @@
             "type": "string"
           },
           {
-            "items": {
-              "properties": {
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": true,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            },
-            "name": "validMoves",
-            "type": "array"
-          },
-          {
-            "items": {
-              "properties": {
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": true,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            },
-            "name": "attackTargets",
-            "type": "array"
-          },
-          {
             "default": "racing",
             "name": "phase",
             "type": "string",
@@ -189,6 +151,11 @@
             "type": "number"
           },
           {
+            "default": 1.0,
+            "name": "lap",
+            "type": "number"
+          },
+          {
             "default": "none",
             "name": "result",
             "type": "string",
@@ -199,6 +166,11 @@
             ]
           },
           {
+            "default": true,
+            "name": "canAdvance",
+            "type": "boolean"
+          },
+          {
             "default": 6.0,
             "name": "gridWidth",
             "type": "number"
@@ -207,6 +179,51 @@
             "default": 6.0,
             "name": "gridHeight",
             "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "fx",
+            "type": "array"
           }
         ],
         "name": "RacingBoard3DItem",
@@ -1273,6 +1290,13 @@
               "tier": "presentation",
               "type": "[RacingBoard3DTilesItem]"
             },
+            "totalLaps": {
+              "default": 2.0,
+              "description": "Laps around the loop required to win",
+              "label": "Total Laps",
+              "tier": "presentation",
+              "type": "number"
+            },
             "trackOrder": {
               "default": [
                 {
@@ -1606,21 +1630,11 @@
           },
           "emits": [
             {
-              "description": "Player advances to the clicked next track cell",
-              "event": "TILE_CLICK",
+              "description": "Accelerate intent (keyboard keyMap or d-pad directionEvents) — advances one track cell when paced",
+              "event": "ACCELERATE",
               "payloadSchema": [
                 {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                {
-                  "name": "z",
-                  "required": true,
-                  "type": "number"
-                },
-                {
-                  "name": "tileId",
+                  "name": "id",
                   "type": "string"
                 }
               ],
@@ -1654,16 +1668,17 @@
           ],
           "entityContract": {
             "provides": [
-              "attackTargets",
+              "canAdvance",
+              "fx",
               "gridHeight",
               "gridWidth",
+              "lap",
               "phase",
               "playerProgress",
               "result",
               "rivalProgress",
               "selectedUnitId",
-              "units",
-              "validMoves"
+              "units"
             ],
             "requires": []
           },
@@ -1678,22 +1693,12 @@
                 "name": "Initialize"
               },
               {
-                "description": "Player advances to the clicked next track cell",
-                "key": "TILE_CLICK",
-                "name": "Tile Click",
+                "description": "Accelerate intent (keyboard keyMap or d-pad directionEvents) — advances one track cell when paced",
+                "key": "ACCELERATE",
+                "name": "Accelerate",
                 "payloadSchema": [
                   {
-                    "name": "x",
-                    "required": true,
-                    "type": "number"
-                  },
-                  {
-                    "name": "z",
-                    "required": true,
-                    "type": "number"
-                  },
-                  {
-                    "name": "tileId",
+                    "name": "id",
                     "type": "string"
                   }
                 ],
@@ -1748,108 +1753,6 @@
                   ],
                   [
                     "set",
-                    "@entity.validMoves",
-                    [
-                      "let",
-                      [
-                        [
-                          "playerUnit",
-                          [
-                            "array/find",
-                            "@config.units",
-                            [
-                              "fn",
-                              "u",
-                              [
-                                "==",
-                                "@u.id",
-                                "player"
-                              ]
-                            ]
-                          ]
-                        ]
-                      ],
-                      [
-                        "let",
-                        [
-                          [
-                            "pos",
-                            [
-                              "object/get",
-                              "@playerUnit",
-                              "position"
-                            ]
-                          ]
-                        ],
-                        [
-                          "let",
-                          [
-                            [
-                              "cur",
-                              [
-                                "array/find",
-                                "@config.trackOrder",
-                                [
-                                  "fn",
-                                  "t",
-                                  [
-                                    "and",
-                                    [
-                                      "==",
-                                      [
-                                        "object/get",
-                                        "@t",
-                                        "x"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@pos",
-                                        "x"
-                                      ]
-                                    ],
-                                    [
-                                      "==",
-                                      [
-                                        "object/get",
-                                        "@t",
-                                        "y"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@pos",
-                                        "y"
-                                      ]
-                                    ]
-                                  ]
-                                ]
-                              ]
-                            ]
-                          ],
-                          [
-                            {
-                              "x": [
-                                "object/get",
-                                "@cur",
-                                "nextX"
-                              ],
-                              "z": [
-                                "object/get",
-                                "@cur",
-                                "nextY"
-                              ]
-                            }
-                          ]
-                        ]
-                      ]
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.attackTargets",
-                    []
-                  ],
-                  [
-                    "set",
                     "@entity.playerProgress",
                     0.0
                   ],
@@ -1857,6 +1760,16 @@
                     "set",
                     "@entity.rivalProgress",
                     0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lap",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.canAdvance",
+                    true
                   ],
                   [
                     "set",
@@ -1879,36 +1792,78 @@
                     6.0
                   ],
                   [
+                    "set",
+                    "@entity.fx",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
-                          "attackTargets": "@entity.attackTargets",
+                          "cameraMode": "follow",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "interpolateUnits": true,
+                          "keyMap": {
+                            "ArrowUp": "ACCELERATE",
+                            "KeyW": "ACCELERATE",
+                            "Space": "ACCELERATE"
+                          },
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
-                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "game-canvas-3d",
                           "unitScale": "@config.unitScale",
-                          "units": "@entity.units",
-                          "validMoves": "@entity.validMoves"
+                          "units": "@entity.units"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Lap",
-                            "value": "@entity.playerProgress"
+                            "stats": [
+                              {
+                                "label": "Lap",
+                                "value": [
+                                  "str/concat",
+                                  "@entity.lap",
+                                  "/",
+                                  "@config.totalLaps"
+                                ]
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "directionEvents": {
+                              "up": "ACCELERATE"
+                            },
+                            "kind": "dpad",
+                            "type": "control-grid"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -1937,14 +1892,67 @@
                             "player"
                           ],
                           [
-                            "object/merge",
-                            "@u",
-                            {
-                              "position": {
-                                "x": "@payload.x",
-                                "y": "@payload.z"
+                            "let",
+                            [
+                              [
+                                "cur",
+                                [
+                                  "array/find",
+                                  "@config.trackOrder",
+                                  [
+                                    "fn",
+                                    "t",
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@t",
+                                          "x"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u.position",
+                                          "x"
+                                        ]
+                                      ],
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@t",
+                                          "y"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u.position",
+                                          "y"
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "object/merge",
+                              "@u",
+                              {
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@cur",
+                                    "nextX"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@cur",
+                                    "nextY"
+                                  ]
+                                }
                               }
-                            }
+                            ]
                           ],
                           "@u"
                         ]
@@ -1962,57 +1970,62 @@
                   ],
                   [
                     "set",
-                    "@entity.validMoves",
+                    "@entity.canAdvance",
+                    false
+                  ],
+                  [
+                    "set",
+                    "@entity.lap",
                     [
-                      "let",
+                      "+",
                       [
+                        "math/floor",
                         [
-                          "cur",
+                          "/",
+                          "@entity.playerProgress",
                           [
-                            "array/find",
-                            "@config.trackOrder",
-                            [
-                              "fn",
-                              "t",
-                              [
-                                "and",
-                                [
-                                  "==",
-                                  [
-                                    "object/get",
-                                    "@t",
-                                    "x"
-                                  ],
-                                  "@payload.x"
-                                ],
-                                [
-                                  "==",
-                                  [
-                                    "object/get",
-                                    "@t",
-                                    "y"
-                                  ],
-                                  "@payload.z"
-                                ]
-                              ]
-                            ]
+                            "array/len",
+                            "@config.trackOrder"
                           ]
                         ]
                       ],
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.fx",
+                    [
+                      "if",
                       [
-                        {
-                          "x": [
-                            "object/get",
-                            "@cur",
-                            "nextX"
-                          ],
-                          "z": [
-                            "object/get",
-                            "@cur",
-                            "nextY"
+                        "==",
+                        [
+                          "%",
+                          "@entity.playerProgress",
+                          [
+                            "array/len",
+                            "@config.trackOrder"
                           ]
+                        ],
+                        0.0
+                      ],
+                      [
+                        "array/append",
+                        "@entity.fx",
+                        {
+                          "id": [
+                            "str/concat",
+                            "lap-",
+                            "@entity.playerProgress"
+                          ],
+                          "message": "Lap!",
+                          "ttl": 5.0,
+                          "type": "score",
+                          "x": 0.0,
+                          "z": 0.0
                         }
-                      ]
+                      ],
+                      "@entity.fx"
                     ]
                   ],
                   [
@@ -2023,7 +2036,14 @@
                       [
                         ">=",
                         "@entity.playerProgress",
-                        20.0
+                        [
+                          "*",
+                          "@config.totalLaps",
+                          [
+                            "array/len",
+                            "@config.trackOrder"
+                          ]
+                        ]
                       ],
                       "won",
                       "@entity.result"
@@ -2049,151 +2069,88 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
-                          "attackTargets": "@entity.attackTargets",
+                          "cameraMode": "follow",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "interpolateUnits": true,
+                          "keyMap": {
+                            "ArrowUp": "ACCELERATE",
+                            "KeyW": "ACCELERATE",
+                            "Space": "ACCELERATE"
+                          },
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
-                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "game-canvas-3d",
                           "unitScale": "@config.unitScale",
-                          "units": "@entity.units",
-                          "validMoves": "@entity.validMoves"
+                          "units": "@entity.units"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Lap",
-                            "value": "@entity.playerProgress"
+                            "stats": [
+                              {
+                                "label": "Lap",
+                                "value": [
+                                  "str/concat",
+                                  "@entity.lap",
+                                  "/",
+                                  "@config.totalLaps"
+                                ]
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "directionEvents": {
+                              "up": "ACCELERATE"
+                            },
+                            "kind": "dpad",
+                            "type": "control-grid"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
                   ]
                 ],
-                "event": "TILE_CLICK",
+                "event": "ACCELERATE",
                 "from": "racing",
                 "guard": [
                   "and",
                   [
                     "==",
-                    "@entity.result",
-                    "none"
+                    "@entity.canAdvance",
+                    true
                   ],
                   [
-                    "let",
-                    [
-                      [
-                        "playerUnit",
-                        [
-                          "array/find",
-                          "@entity.units",
-                          [
-                            "fn",
-                            "u",
-                            [
-                              "==",
-                              "@u.id",
-                              "player"
-                            ]
-                          ]
-                        ]
-                      ]
-                    ],
-                    [
-                      "let",
-                      [
-                        [
-                          "pos",
-                          [
-                            "object/get",
-                            "@playerUnit",
-                            "position"
-                          ]
-                        ]
-                      ],
-                      [
-                        "let",
-                        [
-                          [
-                            "cur",
-                            [
-                              "array/find",
-                              "@config.trackOrder",
-                              [
-                                "fn",
-                                "t",
-                                [
-                                  "and",
-                                  [
-                                    "==",
-                                    [
-                                      "object/get",
-                                      "@t",
-                                      "x"
-                                    ],
-                                    [
-                                      "object/get",
-                                      "@pos",
-                                      "x"
-                                    ]
-                                  ],
-                                  [
-                                    "==",
-                                    [
-                                      "object/get",
-                                      "@t",
-                                      "y"
-                                    ],
-                                    [
-                                      "object/get",
-                                      "@pos",
-                                      "y"
-                                    ]
-                                  ]
-                                ]
-                              ]
-                            ]
-                          ]
-                        ],
-                        [
-                          "and",
-                          [
-                            "!=",
-                            "@cur",
-                            null
-                          ],
-                          [
-                            "==",
-                            [
-                              "object/get",
-                              "@cur",
-                              "nextX"
-                            ],
-                            "@payload.x"
-                          ],
-                          [
-                            "==",
-                            [
-                              "object/get",
-                              "@cur",
-                              "nextY"
-                            ],
-                            "@payload.z"
-                          ]
-                        ]
-                      ]
-                    ]
+                    "==",
+                    "@entity.result",
+                    "none"
                   ]
                 ],
                 "to": "racing"
@@ -2206,36 +2163,130 @@
                     "finished"
                   ],
                   [
+                    "set",
+                    "@entity.fx",
+                    [
+                      "array/append",
+                      "@entity.fx",
+                      {
+                        "id": "result-fx",
+                        "message": [
+                          "if",
+                          [
+                            "==",
+                            "@entity.result",
+                            "won"
+                          ],
+                          "You Win!",
+                          "You Lose!"
+                        ],
+                        "ttl": 999.0,
+                        "type": [
+                          "if",
+                          [
+                            "==",
+                            "@entity.result",
+                            "won"
+                          ],
+                          "win",
+                          "lose"
+                        ],
+                        "x": 0.0,
+                        "z": 0.0
+                      }
+                    ]
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
-                          "attackTargets": "@entity.attackTargets",
+                          "cameraMode": "follow",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "interpolateUnits": true,
+                          "keyMap": {
+                            "ArrowUp": "ACCELERATE",
+                            "KeyW": "ACCELERATE",
+                            "Space": "ACCELERATE"
+                          },
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
-                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "game-canvas-3d",
                           "unitScale": "@config.unitScale",
-                          "units": "@entity.units",
-                          "validMoves": "@entity.validMoves"
+                          "units": "@entity.units"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Lap",
-                            "value": "@entity.playerProgress"
+                            "stats": [
+                              {
+                                "label": "Lap",
+                                "value": [
+                                  "str/concat",
+                                  "@entity.lap",
+                                  "/",
+                                  "@config.totalLaps"
+                                ]
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "directionEvents": {
+                              "up": "ACCELERATE"
+                            },
+                            "kind": "dpad",
+                            "type": "control-grid"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "overlay": {
+                        "align": "center",
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Play Again",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "md",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -2272,38 +2323,195 @@
                   ],
                   [
                     "set",
-                    "@entity.validMoves",
-                    [
-                      "let",
-                      [
-                        [
-                          "playerUnit",
-                          [
-                            "array/find",
-                            "@config.units",
-                            [
-                              "fn",
-                              "u",
-                              [
-                                "==",
-                                "@u.id",
-                                "player"
-                              ]
-                            ]
-                          ]
-                        ]
+                    "@entity.playerProgress",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.rivalProgress",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lap",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.canAdvance",
+                    true
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "racing"
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.fx",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
+                      "children": [
+                        {
+                          "cameraMode": "follow",
+                          "events": "@entity.fx",
+                          "features": "@config.features",
+                          "interpolateUnits": true,
+                          "keyMap": {
+                            "ArrowUp": "ACCELERATE",
+                            "KeyW": "ACCELERATE",
+                            "Space": "ACCELERATE"
+                          },
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units"
+                        }
                       ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Lap",
+                                "value": [
+                                  "str/concat",
+                                  "@entity.lap",
+                                  "/",
+                                  "@config.totalLaps"
+                                ]
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "directionEvents": {
+                              "up": "ACCELERATE"
+                            },
+                            "kind": "dpad",
+                            "type": "control-grid"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "finished",
+                "to": "racing"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.canAdvance",
+                  true
+                ],
+                [
+                  "set",
+                  "@entity.fx",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.fx",
                       [
-                        "let",
+                        "fn",
+                        "e",
                         [
-                          [
-                            "pos",
-                            [
-                              "object/get",
-                              "@playerUnit",
-                              "position"
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
                             ]
-                          ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              "guard": [
+                "==",
+                "@entity.result",
+                "none"
+              ],
+              "interval": 400.0,
+              "name": "paceTick"
+            },
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "if",
+                        [
+                          "==",
+                          "@u.id",
+                          "rival"
                         ],
                         [
                           "let",
@@ -2327,7 +2535,7 @@
                                       ],
                                       [
                                         "object/get",
-                                        "@pos",
+                                        "@u.position",
                                         "x"
                                       ]
                                     ],
@@ -2340,7 +2548,7 @@
                                       ],
                                       [
                                         "object/get",
-                                        "@pos",
+                                        "@u.position",
                                         "y"
                                       ]
                                     ]
@@ -2350,183 +2558,22 @@
                             ]
                           ],
                           [
+                            "object/merge",
+                            "@u",
                             {
-                              "x": [
-                                "object/get",
-                                "@cur",
-                                "nextX"
-                              ],
-                              "z": [
-                                "object/get",
-                                "@cur",
-                                "nextY"
-                              ]
-                            }
-                          ]
-                        ]
-                      ]
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.attackTargets",
-                    []
-                  ],
-                  [
-                    "set",
-                    "@entity.playerProgress",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.rivalProgress",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.phase",
-                    "racing"
-                  ],
-                  [
-                    "set",
-                    "@entity.result",
-                    "none"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "attackTargets": "@entity.attackTargets",
-                          "features": "@config.features",
-                          "interpolateUnits": true,
-                          "scale": "@config.scale",
-                          "selectedUnitId": "@entity.selectedUnitId",
-                          "tileClickEvent": "TILE_CLICK",
-                          "tiles": "@config.tiles",
-                          "type": "game-canvas-3d",
-                          "unitScale": "@config.unitScale",
-                          "units": "@entity.units",
-                          "validMoves": "@entity.validMoves"
-                        }
-                      ],
-                      "hud": {
-                        "stats": [
-                          {
-                            "label": "Lap",
-                            "value": "@entity.playerProgress"
-                          },
-                          {
-                            "label": "Result",
-                            "value": "@entity.result"
-                          }
-                        ],
-                        "type": "game-hud"
-                      },
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "PLAY_AGAIN",
-                "from": "finished",
-                "to": "racing"
-              }
-            ]
-          },
-          "ticks": [
-            {
-              "effects": [
-                [
-                  "set",
-                  "@entity.units",
-                  [
-                    "array/map",
-                    "@entity.units",
-                    [
-                      "fn",
-                      "u",
-                      [
-                        "if",
-                        [
-                          "==",
-                          "@u.id",
-                          "rival"
-                        ],
-                        [
-                          "let",
-                          [
-                            [
-                              "pos",
-                              [
-                                "object/get",
-                                "@u",
-                                "position"
-                              ]
-                            ]
-                          ],
-                          [
-                            "let",
-                            [
-                              [
-                                "cur",
-                                [
-                                  "array/find",
-                                  "@config.trackOrder",
-                                  [
-                                    "fn",
-                                    "t",
-                                    [
-                                      "and",
-                                      [
-                                        "==",
-                                        [
-                                          "object/get",
-                                          "@t",
-                                          "x"
-                                        ],
-                                        [
-                                          "object/get",
-                                          "@pos",
-                                          "x"
-                                        ]
-                                      ],
-                                      [
-                                        "==",
-                                        [
-                                          "object/get",
-                                          "@t",
-                                          "y"
-                                        ],
-                                        [
-                                          "object/get",
-                                          "@pos",
-                                          "y"
-                                        ]
-                                      ]
-                                    ]
-                                  ]
+                              "position": {
+                                "x": [
+                                  "object/get",
+                                  "@cur",
+                                  "nextX"
+                                ],
+                                "y": [
+                                  "object/get",
+                                  "@cur",
+                                  "nextY"
                                 ]
-                              ]
-                            ],
-                            [
-                              "object/merge",
-                              "@u",
-                              {
-                                "position": {
-                                  "x": [
-                                    "object/get",
-                                    "@cur",
-                                    "nextX"
-                                  ],
-                                  "y": [
-                                    "object/get",
-                                    "@cur",
-                                    "nextY"
-                                  ]
-                                }
                               }
-                            ]
+                            }
                           ]
                         ],
                         "@u"
@@ -2551,7 +2598,14 @@
                     [
                       ">=",
                       "@entity.rivalProgress",
-                      20.0
+                      [
+                        "*",
+                        "@config.totalLaps",
+                        [
+                          "array/len",
+                          "@config.trackOrder"
+                        ]
+                      ]
                     ],
                     "lost",
                     "@entity.result"
@@ -2577,33 +2631,70 @@
                   "render-ui",
                   "main",
                   {
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "PLAY_AGAIN",
+                          "label": "Restart",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
                     "children": [
                       {
-                        "attackTargets": "@entity.attackTargets",
+                        "cameraMode": "follow",
+                        "events": "@entity.fx",
                         "features": "@config.features",
                         "interpolateUnits": true,
+                        "keyMap": {
+                          "ArrowUp": "ACCELERATE",
+                          "KeyW": "ACCELERATE",
+                          "Space": "ACCELERATE"
+                        },
                         "scale": "@config.scale",
                         "selectedUnitId": "@entity.selectedUnitId",
-                        "tileClickEvent": "TILE_CLICK",
                         "tiles": "@config.tiles",
                         "type": "game-canvas-3d",
                         "unitScale": "@config.unitScale",
-                        "units": "@entity.units",
-                        "validMoves": "@entity.validMoves"
+                        "units": "@entity.units"
                       }
                     ],
                     "hud": {
-                      "stats": [
+                      "children": [
                         {
-                          "label": "Lap",
-                          "value": "@entity.playerProgress"
+                          "stats": [
+                            {
+                              "label": "Lap",
+                              "value": [
+                                "str/concat",
+                                "@entity.lap",
+                                "/",
+                                "@config.totalLaps"
+                              ]
+                            },
+                            {
+                              "label": "Result",
+                              "value": "@entity.result"
+                            }
+                          ],
+                          "type": "game-hud"
                         },
                         {
-                          "label": "Result",
-                          "value": "@entity.result"
+                          "directionEvents": {
+                            "up": "ACCELERATE"
+                          },
+                          "kind": "dpad",
+                          "type": "control-grid"
                         }
                       ],
-                      "type": "game-hud"
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
                     },
                     "type": "game-shell"
                   }

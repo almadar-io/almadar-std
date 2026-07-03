@@ -1,5 +1,5 @@
 {
-  "description": "CityBoard3D — 3D delivery board organism; courier car drives city roads delivering to shops via game-canvas-3d.",
+  "description": "CityBoard3D — courier car follows city roads to deliver to every shop within a move budget or the run is lost.",
   "name": "ui-city-board-3d",
   "orbitals": [
     {
@@ -237,6 +237,51 @@
             "type": "array"
           },
           {
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "fx",
+            "type": "array"
+          },
+          {
             "default": 0.0,
             "name": "deliveries",
             "type": "number"
@@ -247,12 +292,18 @@
             "type": "number"
           },
           {
+            "default": 16.0,
+            "name": "movesLeft",
+            "type": "number"
+          },
+          {
             "default": "none",
             "name": "result",
             "type": "string",
             "values": [
               "none",
-              "won"
+              "won",
+              "lost"
             ]
           },
           {
@@ -266,7 +317,7 @@
             "type": "number"
           },
           {
-            "default": 6.0,
+            "default": 1.0,
             "name": "movementRange",
             "type": "number"
           }
@@ -514,6 +565,13 @@
               "label": "Is Loading",
               "tier": "presentation",
               "type": "boolean"
+            },
+            "moveBudget": {
+              "default": 16.0,
+              "description": "Delivery moves allowed before the run is lost with shops unfilled",
+              "label": "Move Budget",
+              "tier": "presentation",
+              "type": "number"
             },
             "scale": {
               "default": 0.4,
@@ -1727,9 +1785,11 @@
             "provides": [
               "attackTargets",
               "deliveries",
+              "fx",
               "gridHeight",
               "gridWidth",
               "movementRange",
+              "movesLeft",
               "result",
               "selectedUnitId",
               "targets",
@@ -1856,6 +1916,11 @@
                   ],
                   [
                     "set",
+                    "@entity.fx",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.deliveries",
                     0.0
                   ],
@@ -1863,6 +1928,11 @@
                     "set",
                     "@entity.totalTargets",
                     3.0
+                  ],
+                  [
+                    "set",
+                    "@entity.movesLeft",
+                    "@config.moveBudget"
                   ],
                   [
                     "set",
@@ -1882,15 +1952,35 @@
                   [
                     "set",
                     "@entity.movementRange",
-                    6.0
+                    1.0
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "interpolateUnits": true,
                           "scale": "@config.scale",
@@ -1907,6 +1997,10 @@
                           {
                             "label": "Deliveries",
                             "value": "@entity.deliveries"
+                          },
+                          {
+                            "label": "Moves",
+                            "value": "@entity.movesLeft"
                           },
                           {
                             "label": "Result",
@@ -1939,9 +2033,29 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "interpolateUnits": true,
                           "scale": "@config.scale",
@@ -1958,6 +2072,10 @@
                           {
                             "label": "Deliveries",
                             "value": "@entity.deliveries"
+                          },
+                          {
+                            "label": "Moves",
+                            "value": "@entity.movesLeft"
                           },
                           {
                             "label": "Result",
@@ -2124,9 +2242,29 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "interpolateUnits": true,
                           "scale": "@config.scale",
@@ -2143,6 +2281,10 @@
                           {
                             "label": "Deliveries",
                             "value": "@entity.deliveries"
+                          },
+                          {
+                            "label": "Moves",
+                            "value": "@entity.movesLeft"
                           },
                           {
                             "label": "Result",
@@ -2183,165 +2325,334 @@
               {
                 "effects": [
                   [
-                    "set",
-                    "@entity.units",
+                    "let",
                     [
-                      "array/map",
-                      "@entity.units",
                       [
-                        "fn",
-                        "u",
+                        "newlyDelivered",
                         [
-                          "if",
+                          "array/filter",
+                          "@entity.targets",
                           [
-                            "==",
-                            "@u.id",
-                            "@entity.selectedUnitId"
-                          ],
-                          [
-                            "object/merge",
-                            "@u",
-                            {
-                              "position": {
-                                "x": "@payload.x",
-                                "y": "@payload.z"
-                              }
-                            }
-                          ],
-                          "@u"
-                        ]
-                      ]
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.targets",
-                    [
-                      "array/map",
-                      "@entity.targets",
-                      [
-                        "fn",
-                        "t",
-                        [
-                          "if",
-                          [
-                            "and",
-                            [
-                              "==",
-                              [
-                                "object/get",
-                                "t",
-                                "delivered"
-                              ],
-                              false
-                            ],
-                            [
-                              "<=",
-                              [
-                                "grid/manhattan-distance",
-                                {
-                                  "x": "@payload.x",
-                                  "y": "@payload.z"
-                                },
-                                {
-                                  "x": [
-                                    "object/get",
-                                    "t",
-                                    "x"
-                                  ],
-                                  "y": [
-                                    "object/get",
-                                    "t",
-                                    "y"
-                                  ]
-                                }
-                              ],
-                              1.0
-                            ]
-                          ],
-                          [
-                            "object/merge",
+                            "fn",
                             "t",
-                            {
-                              "delivered": true
-                            }
-                          ],
-                          "t"
-                        ]
-                      ]
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.deliveries",
-                    [
-                      "array/len",
-                      [
-                        "array/filter",
-                        "@entity.targets",
-                        [
-                          "fn",
-                          "t",
-                          [
-                            "==",
                             [
-                              "object/get",
-                              "t",
-                              "delivered"
-                            ],
-                            true
+                              "and",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@t",
+                                  "delivered"
+                                ],
+                                false
+                              ],
+                              [
+                                "<=",
+                                [
+                                  "grid/manhattan-distance",
+                                  {
+                                    "x": "@payload.x",
+                                    "y": "@payload.z"
+                                  },
+                                  {
+                                    "x": [
+                                      "object/get",
+                                      "@t",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@t",
+                                      "y"
+                                    ]
+                                  }
+                                ],
+                                1.0
+                              ]
+                            ]
                           ]
                         ]
                       ]
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.result",
+                    ],
                     [
-                      "if",
+                      "do",
                       [
-                        "==",
-                        "@entity.deliveries",
-                        "@entity.totalTargets"
+                        "set",
+                        "@entity.units",
+                        [
+                          "array/map",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "if",
+                              [
+                                "==",
+                                "@u.id",
+                                "@entity.selectedUnitId"
+                              ],
+                              [
+                                "object/merge",
+                                "@u",
+                                {
+                                  "position": {
+                                    "x": "@payload.x",
+                                    "y": "@payload.z"
+                                  }
+                                }
+                              ],
+                              "@u"
+                            ]
+                          ]
+                        ]
                       ],
-                      "won",
-                      "none"
+                      [
+                        "set",
+                        "@entity.targets",
+                        [
+                          "array/map",
+                          "@entity.targets",
+                          [
+                            "fn",
+                            "t",
+                            [
+                              "if",
+                              [
+                                "and",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    "@t",
+                                    "delivered"
+                                  ],
+                                  false
+                                ],
+                                [
+                                  "<=",
+                                  [
+                                    "grid/manhattan-distance",
+                                    {
+                                      "x": "@payload.x",
+                                      "y": "@payload.z"
+                                    },
+                                    {
+                                      "x": [
+                                        "object/get",
+                                        "@t",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@t",
+                                        "y"
+                                      ]
+                                    }
+                                  ],
+                                  1.0
+                                ]
+                              ],
+                              [
+                                "object/merge",
+                                "@t",
+                                {
+                                  "delivered": true
+                                }
+                              ],
+                              "@t"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.deliveries",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@entity.targets",
+                            [
+                              "fn",
+                              "t",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@t",
+                                  "delivered"
+                                ],
+                                true
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.movesLeft",
+                        [
+                          "math/max",
+                          0.0,
+                          [
+                            "-",
+                            "@entity.movesLeft",
+                            1.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.fx",
+                        [
+                          "array/reduce",
+                          "@newlyDelivered",
+                          [
+                            "fn",
+                            [
+                              "acc",
+                              "t"
+                            ],
+                            [
+                              "array/append",
+                              "@acc",
+                              {
+                                "id": [
+                                  "str/concat",
+                                  "fx-deliver-",
+                                  [
+                                    "object/get",
+                                    "@t",
+                                    "id"
+                                  ]
+                                ],
+                                "message": "Delivered",
+                                "ttl": 3.0,
+                                "type": "pickup",
+                                "x": [
+                                  "object/get",
+                                  "@t",
+                                  "x"
+                                ],
+                                "z": [
+                                  "object/get",
+                                  "@t",
+                                  "y"
+                                ]
+                              }
+                            ]
+                          ],
+                          "@entity.fx"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.result",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.deliveries",
+                            "@entity.totalTargets"
+                          ],
+                          "won",
+                          [
+                            "if",
+                            [
+                              "<=",
+                              "@entity.movesLeft",
+                              0.0
+                            ],
+                            "lost",
+                            "none"
+                          ]
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.fx",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@entity.result",
+                            "lost"
+                          ],
+                          [
+                            "array/append",
+                            "@entity.fx",
+                            {
+                              "id": [
+                                "str/concat",
+                                "fx-fail-",
+                                "@payload.x"
+                              ],
+                              "message": "Out of moves",
+                              "ttl": 3.0,
+                              "type": "lose",
+                              "x": "@payload.x",
+                              "z": "@payload.z"
+                            }
+                          ],
+                          "@entity.fx"
+                        ]
+                      ],
+                      [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        [
+                          "emit",
+                          "GAME_END",
+                          {
+                            "result": "@entity.result"
+                          }
+                        ],
+                        null
+                      ],
+                      [
+                        "set",
+                        "@entity.selectedUnitId",
+                        ""
+                      ],
+                      [
+                        "set",
+                        "@entity.validMoves",
+                        []
+                      ]
                     ]
-                  ],
-                  [
-                    "if",
-                    [
-                      "!=",
-                      "@entity.result",
-                      "none"
-                    ],
-                    [
-                      "emit",
-                      "GAME_END",
-                      {
-                        "result": "@entity.result"
-                      }
-                    ],
-                    null
-                  ],
-                  [
-                    "set",
-                    "@entity.selectedUnitId",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.validMoves",
-                    []
                   ],
                   [
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "interpolateUnits": true,
                           "scale": "@config.scale",
@@ -2358,6 +2669,10 @@
                           {
                             "label": "Deliveries",
                             "value": "@entity.deliveries"
+                          },
+                          {
+                            "label": "Moves",
+                            "value": "@entity.movesLeft"
                           },
                           {
                             "label": "Result",
@@ -2525,9 +2840,29 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "interpolateUnits": true,
                           "scale": "@config.scale",
@@ -2544,6 +2879,10 @@
                           {
                             "label": "Deliveries",
                             "value": "@entity.deliveries"
+                          },
+                          {
+                            "label": "Moves",
+                            "value": "@entity.movesLeft"
                           },
                           {
                             "label": "Result",
@@ -2581,9 +2920,29 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "interpolateUnits": true,
                           "scale": "@config.scale",
@@ -2602,11 +2961,38 @@
                             "value": "@entity.deliveries"
                           },
                           {
+                            "label": "Moves",
+                            "value": "@entity.movesLeft"
+                          },
+                          {
                             "label": "Result",
                             "value": "@entity.result"
                           }
                         ],
                         "type": "game-hud"
+                      },
+                      "overlay": {
+                        "align": "center",
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Play Again",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "md",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -2650,8 +3036,18 @@
                   ],
                   [
                     "set",
+                    "@entity.fx",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.deliveries",
                     0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.movesLeft",
+                    "@config.moveBudget"
                   ],
                   [
                     "set",
@@ -2662,9 +3058,29 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "interpolateUnits": true,
                           "scale": "@config.scale",
@@ -2681,6 +3097,10 @@
                           {
                             "label": "Deliveries",
                             "value": "@entity.deliveries"
+                          },
+                          {
+                            "label": "Moves",
+                            "value": "@entity.movesLeft"
                           },
                           {
                             "label": "Result",
@@ -2702,6 +3122,49 @@
           "ticks": [
             {
               "effects": [
+                [
+                  "set",
+                  "@entity.fx",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.fx",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
                 [
                   "set",
                   "@entity.units",
@@ -2818,79 +3281,224 @@
                                   ]
                                 ],
                                 [
-                                  "object/merge",
-                                  "@u",
-                                  {
-                                    "headingToB": "@nextHeading",
-                                    "position": {
-                                      "x": [
-                                        "math/clamp",
-                                        [
-                                          "+",
+                                  "let",
+                                  [
+                                    [
+                                      "step",
+                                      {
+                                        "x": [
+                                          "math/clamp",
                                           [
-                                            "object/get",
-                                            "@cur",
-                                            "x"
-                                          ],
-                                          [
-                                            "math/sign",
+                                            "+",
                                             [
-                                              "-",
+                                              "object/get",
+                                              "@cur",
+                                              "x"
+                                            ],
+                                            [
+                                              "math/sign",
                                               [
-                                                "object/get",
-                                                "@tgt",
-                                                "x"
+                                                "-",
+                                                [
+                                                  "object/get",
+                                                  "@tgt",
+                                                  "x"
+                                                ],
+                                                [
+                                                  "object/get",
+                                                  "@cur",
+                                                  "x"
+                                                ]
+                                              ]
+                                            ]
+                                          ],
+                                          0.0,
+                                          [
+                                            "-",
+                                            "@entity.gridWidth",
+                                            1.0
+                                          ]
+                                        ],
+                                        "y": [
+                                          "math/clamp",
+                                          [
+                                            "+",
+                                            [
+                                              "object/get",
+                                              "@cur",
+                                              "y"
+                                            ],
+                                            [
+                                              "math/sign",
+                                              [
+                                                "-",
+                                                [
+                                                  "object/get",
+                                                  "@tgt",
+                                                  "y"
+                                                ],
+                                                [
+                                                  "object/get",
+                                                  "@cur",
+                                                  "y"
+                                                ]
+                                              ]
+                                            ]
+                                          ],
+                                          0.0,
+                                          [
+                                            "-",
+                                            "@entity.gridHeight",
+                                            1.0
+                                          ]
+                                        ]
+                                      }
+                                    ]
+                                  ],
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "ntile",
+                                        [
+                                          "array/find",
+                                          "@config.tiles",
+                                          [
+                                            "fn",
+                                            "t",
+                                            [
+                                              "and",
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "@t",
+                                                  "x"
+                                                ],
+                                                [
+                                                  "object/get",
+                                                  "@step",
+                                                  "x"
+                                                ]
                                               ],
                                               [
-                                                "object/get",
-                                                "@cur",
-                                                "x"
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "@t",
+                                                  "y"
+                                                ],
+                                                [
+                                                  "object/get",
+                                                  "@step",
+                                                  "y"
+                                                ]
                                               ]
                                             ]
                                           ]
-                                        ],
-                                        0.0,
-                                        [
-                                          "-",
-                                          "@entity.gridWidth",
-                                          1.0
                                         ]
                                       ],
-                                      "y": [
-                                        "math/clamp",
+                                      [
+                                        "occupied",
                                         [
-                                          "+",
+                                          "array/find",
+                                          "@entity.units",
                                           [
-                                            "object/get",
-                                            "@cur",
-                                            "y"
-                                          ],
-                                          [
-                                            "math/sign",
+                                            "fn",
+                                            "o",
                                             [
-                                              "-",
+                                              "and",
                                               [
-                                                "object/get",
-                                                "@tgt",
-                                                "y"
+                                                "!=",
+                                                "@o.id",
+                                                "@u.id"
                                               ],
                                               [
-                                                "object/get",
-                                                "@cur",
-                                                "y"
+                                                "and",
+                                                [
+                                                  "==",
+                                                  [
+                                                    "object/get",
+                                                    [
+                                                      "object/get",
+                                                      "@o",
+                                                      "position"
+                                                    ],
+                                                    "x"
+                                                  ],
+                                                  [
+                                                    "object/get",
+                                                    "@step",
+                                                    "x"
+                                                  ]
+                                                ],
+                                                [
+                                                  "==",
+                                                  [
+                                                    "object/get",
+                                                    [
+                                                      "object/get",
+                                                      "@o",
+                                                      "position"
+                                                    ],
+                                                    "y"
+                                                  ],
+                                                  [
+                                                    "object/get",
+                                                    "@step",
+                                                    "y"
+                                                  ]
+                                                ]
                                               ]
                                             ]
                                           ]
-                                        ],
-                                        0.0,
-                                        [
-                                          "-",
-                                          "@entity.gridHeight",
-                                          1.0
                                         ]
                                       ]
-                                    }
-                                  }
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "and",
+                                        [
+                                          "!=",
+                                          "@ntile",
+                                          null
+                                        ],
+                                        [
+                                          "and",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@ntile",
+                                              "passable"
+                                            ],
+                                            true
+                                          ],
+                                          [
+                                            "==",
+                                            "@occupied",
+                                            null
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "object/merge",
+                                        "@u",
+                                        {
+                                          "headingToB": "@nextHeading",
+                                          "position": "@step"
+                                        }
+                                      ],
+                                      [
+                                        "object/merge",
+                                        "@u",
+                                        {
+                                          "headingToB": "@nextHeading"
+                                        }
+                                      ]
+                                    ]
+                                  ]
                                 ]
                               ]
                             ]
@@ -2905,9 +3513,29 @@
                   "render-ui",
                   "main",
                   {
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "CANCEL",
+                          "label": "Cancel",
+                          "type": "button",
+                          "variant": "secondary"
+                        },
+                        {
+                          "action": "PLAY_AGAIN",
+                          "label": "Restart",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
                     "children": [
                       {
                         "attackTargets": "@entity.attackTargets",
+                        "events": "@entity.fx",
                         "features": "@config.features",
                         "interpolateUnits": true,
                         "scale": "@config.scale",
@@ -2924,6 +3552,10 @@
                         {
                           "label": "Deliveries",
                           "value": "@entity.deliveries"
+                        },
+                        {
+                          "label": "Moves",
+                          "value": "@entity.movesLeft"
                         },
                         {
                           "label": "Result",

@@ -1,5 +1,5 @@
 {
-  "description": "GameBoard3D — 3D tactics board organism composing game-shell + game-canvas-3d; owns full gameplay state (phase/selection/validMoves/attackTargets/result).",
+  "description": "GameBoard3D — 3D tactics board: select, move, attack, end turn, AI turn, restart loop.",
   "name": "ui-game-board-3d",
   "orbitals": [
     {
@@ -306,6 +306,51 @@
               "type": "object"
             },
             "name": "attackTargets",
+            "type": "array"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "fx",
             "type": "array"
           },
           {
@@ -871,6 +916,13 @@
               },
               "tier": "presentation",
               "type": "GameBoard3DAssetManifest"
+            },
+            "attackDamage": {
+              "default": 3.0,
+              "description": "Damage dealt when a selected unit attacks an adjacent enemy",
+              "label": "Attack Damage",
+              "tier": "presentation",
+              "type": "number"
             },
             "className": {
               "default": "",
@@ -2160,36 +2212,6 @@
           },
           "emits": [
             {
-              "description": "-- Callbacks --",
-              "event": "ATTACK",
-              "payloadSchema": [
-                {
-                  "name": "attacker",
-                  "type": "object"
-                },
-                {
-                  "name": "target",
-                  "type": "object"
-                },
-                {
-                  "name": "damage",
-                  "type": "number"
-                },
-                {
-                  "name": "attackerId",
-                  "required": true,
-                  "type": "string"
-                },
-                {
-                  "name": "targetId",
-                  "required": true,
-                  "type": "string"
-                }
-              ],
-              "scope": "external",
-              "tier": "domain"
-            },
-            {
               "description": "Called when the match ends",
               "event": "GAME_END",
               "payloadSchema": [
@@ -2314,6 +2336,7 @@
               "attackTargets",
               "currentTeam",
               "enemyTurn",
+              "fx",
               "gridHeight",
               "gridWidth",
               "movementRange",
@@ -2332,10 +2355,6 @@
           "scope": "instance",
           "stateMachine": {
             "events": [
-              {
-                "key": "START",
-                "name": "Start"
-              },
               {
                 "key": "INIT",
                 "name": "Initialize"
@@ -2378,36 +2397,6 @@
                   },
                   {
                     "name": "tileId",
-                    "type": "string"
-                  }
-                ],
-                "tier": "domain"
-              },
-              {
-                "description": "-- Callbacks --",
-                "key": "ATTACK",
-                "name": "Attack",
-                "payloadSchema": [
-                  {
-                    "name": "attacker",
-                    "type": "object"
-                  },
-                  {
-                    "name": "target",
-                    "type": "object"
-                  },
-                  {
-                    "name": "damage",
-                    "type": "number"
-                  },
-                  {
-                    "name": "attackerId",
-                    "required": true,
-                    "type": "string"
-                  },
-                  {
-                    "name": "targetId",
-                    "required": true,
                     "type": "string"
                   }
                 ],
@@ -2496,9 +2485,6 @@
                 "name": "playing"
               },
               {
-                "name": "menu"
-              },
-              {
                 "name": "gameover"
               }
             ],
@@ -2527,93 +2513,7 @@
                   ],
                   [
                     "set",
-                    "@entity.turn",
-                    0.0
-                  ],
-                  [
-                    "set",
-                    "@entity.result",
-                    "none"
-                  ],
-                  [
-                    "set",
-                    "@entity.phase",
-                    "observation"
-                  ],
-                  [
-                    "set",
-                    "@entity.currentTeam",
-                    "player"
-                  ],
-                  [
-                    "set",
-                    "@entity.enemyTurn",
-                    false
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "attackTargets": "@entity.attackTargets",
-                          "features": "@config.features",
-                          "scale": "@config.scale",
-                          "selectedUnitId": "@entity.selectedUnitId",
-                          "tileClickEvent": "TILE_CLICK",
-                          "tiles": "@config.tiles",
-                          "type": "game-canvas-3d",
-                          "unitClickEvent": "UNIT_CLICK",
-                          "unitScale": "@config.unitScale",
-                          "units": "@entity.units",
-                          "validMoves": "@entity.validMoves"
-                        }
-                      ],
-                      "hud": {
-                        "stats": [
-                          {
-                            "label": "Turn",
-                            "value": "@entity.turn"
-                          },
-                          {
-                            "label": "Phase",
-                            "value": "@entity.phase"
-                          },
-                          {
-                            "label": "Result",
-                            "value": "@entity.result"
-                          }
-                        ],
-                        "type": "game-hud"
-                      },
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "START",
-                "from": "menu",
-                "to": "playing"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
-                    "@entity.units",
-                    "@config.units"
-                  ],
-                  [
-                    "set",
-                    "@entity.selectedUnitId",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.validMoves",
-                    []
-                  ],
-                  [
-                    "set",
-                    "@entity.attackTargets",
+                    "@entity.fx",
                     []
                   ],
                   [
@@ -2660,9 +2560,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2698,6 +2624,348 @@
                 ],
                 "event": "INIT",
                 "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "@payload.unitId"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "health": [
+                                "math/max",
+                                0.0,
+                                [
+                                  "-",
+                                  "@u.health",
+                                  "@config.attackDamage"
+                                ]
+                              ]
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.attackTargets",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "observation"
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    [
+                      "if",
+                      [
+                        "==",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@entity.units",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "and",
+                                [
+                                  "==",
+                                  "@u.team",
+                                  "enemy"
+                                ],
+                                [
+                                  ">",
+                                  "@u.health",
+                                  0.0
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ],
+                      "victory",
+                      "none"
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "!=",
+                      "@entity.result",
+                      "none"
+                    ],
+                    [
+                      "emit",
+                      "GAME_END",
+                      {
+                        "result": "@entity.result"
+                      }
+                    ],
+                    null
+                  ],
+                  [
+                    "set",
+                    "@entity.fx",
+                    [
+                      "array/append",
+                      "@entity.fx",
+                      {
+                        "id": [
+                          "str/concat",
+                          "fx-atk-",
+                          "@entity.turn"
+                        ],
+                        "message": [
+                          "str/concat",
+                          "-",
+                          "@config.attackDamage"
+                        ],
+                        "ttl": 3.0,
+                        "type": "hit",
+                        "x": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.unitId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "x"
+                        ],
+                        "z": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.unitId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "y"
+                        ]
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
+                      "children": [
+                        {
+                          "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Phase",
+                            "value": "@entity.phase"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.phase",
+                    "action"
+                  ],
+                  [
+                    "and",
+                    [
+                      "==",
+                      [
+                        "object/get",
+                        [
+                          "array/find",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "==",
+                              "@u.id",
+                              "@payload.unitId"
+                            ]
+                          ]
+                        ],
+                        "team"
+                      ],
+                      "enemy"
+                    ],
+                    [
+                      "and",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          [
+                            "array/find",
+                            "@entity.units",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "==",
+                                "@u.id",
+                                "@payload.unitId"
+                              ]
+                            ]
+                          ],
+                          "health"
+                        ],
+                        0.0
+                      ],
+                      [
+                        "<=",
+                        [
+                          "grid/manhattan-distance",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@entity.selectedUnitId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.unitId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ]
+                        ],
+                        1.0
+                      ]
+                    ]
+                  ]
+                ],
                 "to": "playing"
               },
               {
@@ -2792,9 +3060,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3013,9 +3307,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3131,9 +3451,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3270,208 +3616,6 @@
                 "effects": [
                   [
                     "set",
-                    "@entity.units",
-                    [
-                      "array/map",
-                      "@entity.units",
-                      [
-                        "fn",
-                        "u",
-                        [
-                          "if",
-                          [
-                            "==",
-                            "@u.id",
-                            "@payload.targetId"
-                          ],
-                          [
-                            "object/merge",
-                            "@u",
-                            {
-                              "health": [
-                                "math/max",
-                                0.0,
-                                [
-                                  "-",
-                                  [
-                                    "object/get",
-                                    "@u",
-                                    "health"
-                                  ],
-                                  "@payload.damage"
-                                ]
-                              ]
-                            }
-                          ],
-                          "@u"
-                        ]
-                      ]
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.selectedUnitId",
-                    ""
-                  ],
-                  [
-                    "set",
-                    "@entity.validMoves",
-                    []
-                  ],
-                  [
-                    "set",
-                    "@entity.attackTargets",
-                    []
-                  ],
-                  [
-                    "set",
-                    "@entity.phase",
-                    "observation"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "attackTargets": "@entity.attackTargets",
-                          "features": "@config.features",
-                          "scale": "@config.scale",
-                          "selectedUnitId": "@entity.selectedUnitId",
-                          "tileClickEvent": "TILE_CLICK",
-                          "tiles": "@config.tiles",
-                          "type": "game-canvas-3d",
-                          "unitClickEvent": "UNIT_CLICK",
-                          "unitScale": "@config.unitScale",
-                          "units": "@entity.units",
-                          "validMoves": "@entity.validMoves"
-                        }
-                      ],
-                      "hud": {
-                        "stats": [
-                          {
-                            "label": "Turn",
-                            "value": "@entity.turn"
-                          },
-                          {
-                            "label": "Phase",
-                            "value": "@entity.phase"
-                          },
-                          {
-                            "label": "Result",
-                            "value": "@entity.result"
-                          }
-                        ],
-                        "type": "game-hud"
-                      },
-                      "type": "game-shell"
-                    }
-                  ]
-                ],
-                "event": "ATTACK",
-                "from": "playing",
-                "guard": [
-                  "let",
-                  [
-                    [
-                      "ap",
-                      [
-                        "object/get",
-                        [
-                          "array/find",
-                          "@entity.units",
-                          [
-                            "fn",
-                            "u",
-                            [
-                              "==",
-                              "@u.id",
-                              "@payload.attackerId"
-                            ]
-                          ]
-                        ],
-                        "position"
-                      ]
-                    ],
-                    [
-                      "tp",
-                      [
-                        "object/get",
-                        [
-                          "array/find",
-                          "@entity.units",
-                          [
-                            "fn",
-                            "u",
-                            [
-                              "==",
-                              "@u.id",
-                              "@payload.targetId"
-                            ]
-                          ]
-                        ],
-                        "position"
-                      ]
-                    ]
-                  ],
-                  [
-                    "and",
-                    [
-                      "<=",
-                      [
-                        "math/abs",
-                        [
-                          "-",
-                          [
-                            "object/get",
-                            "@ap",
-                            "x"
-                          ],
-                          [
-                            "object/get",
-                            "@tp",
-                            "x"
-                          ]
-                        ]
-                      ],
-                      1.0
-                    ],
-                    [
-                      "and",
-                      [
-                        "<=",
-                        [
-                          "math/abs",
-                          [
-                            "-",
-                            [
-                              "object/get",
-                              "@ap",
-                              "y"
-                            ],
-                            [
-                              "object/get",
-                              "@tp",
-                              "y"
-                            ]
-                          ]
-                        ],
-                        1.0
-                      ],
-                      [
-                        "!=",
-                        "@ap",
-                        "@tp"
-                      ]
-                    ]
-                  ]
-                ],
-                "to": "playing"
-              },
-              {
-                "effects": [
-                  [
-                    "set",
                     "@entity.turn",
                     [
                       "+",
@@ -3513,9 +3657,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3584,9 +3754,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3712,9 +3908,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3744,6 +3966,41 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "options": [
+                            {
+                              "event": "PLAY_AGAIN",
+                              "id": "again",
+                              "label": "Play Again",
+                              "variant": "primary"
+                            }
+                          ],
+                          "subtitle": [
+                            "str/concat",
+                            "Turn ",
+                            "@entity.turn"
+                          ],
+                          "title": [
+                            "if",
+                            [
+                              "==",
+                              "@entity.result",
+                              "victory"
+                            ],
+                            "VICTORY",
+                            "DEFEAT"
+                          ],
+                          "type": "game-menu"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
@@ -3843,6 +4100,11 @@
                   ],
                   [
                     "set",
+                    "@entity.fx",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.turn",
                     0.0
                   ],
@@ -3870,9 +4132,35 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "children": [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
                       "children": [
                         {
                           "attackTargets": "@entity.attackTargets",
+                          "events": "@entity.fx",
                           "features": "@config.features",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3902,19 +4190,169 @@
                         ],
                         "type": "game-hud"
                       },
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "options": [
+                            {
+                              "event": "PLAY_AGAIN",
+                              "id": "again",
+                              "label": "Play Again",
+                              "variant": "primary"
+                            }
+                          ],
+                          "subtitle": [
+                            "str/concat",
+                            "Turn ",
+                            "@entity.turn"
+                          ],
+                          "title": [
+                            "if",
+                            [
+                              "==",
+                              "@entity.result",
+                              "victory"
+                            ],
+                            "VICTORY",
+                            "DEFEAT"
+                          ],
+                          "type": "game-menu"
+                        },
+                        null
+                      ],
                       "type": "game-shell"
                     }
                   ]
                 ],
                 "event": "PLAY_AGAIN",
                 "from": "gameover",
-                "to": "menu"
+                "to": "playing"
               }
             ]
           },
           "ticks": [
             {
               "effects": [
+                [
+                  "set",
+                  "@entity.fx",
+                  [
+                    "array/concat",
+                    "@entity.fx",
+                    [
+                      "array/map",
+                      [
+                        "array/filter",
+                        "@entity.units",
+                        [
+                          "fn",
+                          "u",
+                          [
+                            "and",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@u.team",
+                                "player"
+                              ],
+                              [
+                                ">",
+                                "@u.health",
+                                0.0
+                              ]
+                            ],
+                            [
+                              ">",
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@entity.units",
+                                  [
+                                    "fn",
+                                    "e",
+                                    [
+                                      "and",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@e.team",
+                                          "enemy"
+                                        ],
+                                        [
+                                          ">",
+                                          "@e.health",
+                                          0.0
+                                        ]
+                                      ],
+                                      [
+                                        "==",
+                                        [
+                                          "grid/manhattan-distance",
+                                          [
+                                            "object/get",
+                                            "@e",
+                                            "position"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "position"
+                                          ]
+                                        ],
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              0.0
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "u",
+                        {
+                          "id": [
+                            "str/concat",
+                            "fx-ai-",
+                            "@u.id"
+                          ],
+                          "message": "-1",
+                          "ttl": 3.0,
+                          "type": "hit",
+                          "x": [
+                            "object/get",
+                            [
+                              "object/get",
+                              "@u",
+                              "position"
+                            ],
+                            "x"
+                          ],
+                          "z": [
+                            "object/get",
+                            [
+                              "object/get",
+                              "@u",
+                              "position"
+                            ],
+                            "y"
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
                 [
                   "set",
                   "@entity.units",
@@ -4091,7 +4529,7 @@
                               [
                                 "target",
                                 [
-                                  "array/first",
+                                  "array/reduce",
                                   [
                                     "array/filter",
                                     "@entity.units",
@@ -4112,107 +4550,295 @@
                                         ]
                                       ]
                                     ]
-                                  ]
+                                  ],
+                                  [
+                                    "fn",
+                                    [
+                                      "nearest",
+                                      "p"
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "or",
+                                        [
+                                          "==",
+                                          "@nearest",
+                                          null
+                                        ],
+                                        [
+                                          "<",
+                                          [
+                                            "grid/manhattan-distance",
+                                            [
+                                              "object/get",
+                                              "@p",
+                                              "position"
+                                            ],
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ]
+                                          ],
+                                          [
+                                            "grid/manhattan-distance",
+                                            [
+                                              "object/get",
+                                              "@nearest",
+                                              "position"
+                                            ],
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ]
+                                          ]
+                                        ]
+                                      ],
+                                      "@p",
+                                      "@nearest"
+                                    ]
+                                  ],
+                                  null
                                 ]
                               ]
                             ],
                             [
-                              "object/merge",
+                              "if",
+                              [
+                                "==",
+                                "@target",
+                                null
+                              ],
                               "@u",
-                              {
-                                "position": {
-                                  "x": [
-                                    "math/clamp",
+                              [
+                                "let",
+                                [
+                                  [
+                                    "nextX",
                                     [
-                                      "+",
+                                      "math/clamp",
                                       [
-                                        "object/get",
+                                        "+",
                                         [
                                           "object/get",
-                                          "@u",
-                                          "position"
-                                        ],
-                                        "x"
-                                      ],
-                                      [
-                                        "math/sign",
-                                        [
-                                          "-",
                                           [
                                             "object/get",
-                                            [
-                                              "object/get",
-                                              "@target",
-                                              "position"
-                                            ],
-                                            "x"
+                                            "@u",
+                                            "position"
                                           ],
+                                          "x"
+                                        ],
+                                        [
+                                          "math/sign",
                                           [
-                                            "object/get",
+                                            "-",
                                             [
                                               "object/get",
-                                              "@u",
-                                              "position"
+                                              [
+                                                "object/get",
+                                                "@target",
+                                                "position"
+                                              ],
+                                              "x"
                                             ],
-                                            "x"
+                                            [
+                                              "object/get",
+                                              [
+                                                "object/get",
+                                                "@u",
+                                                "position"
+                                              ],
+                                              "x"
+                                            ]
                                           ]
                                         ]
+                                      ],
+                                      0.0,
+                                      [
+                                        "-",
+                                        "@entity.gridWidth",
+                                        1.0
                                       ]
-                                    ],
-                                    0.0,
-                                    [
-                                      "-",
-                                      "@entity.gridWidth",
-                                      1.0
                                     ]
                                   ],
-                                  "y": [
-                                    "math/clamp",
+                                  [
+                                    "nextY",
                                     [
-                                      "+",
+                                      "math/clamp",
                                       [
-                                        "object/get",
+                                        "+",
                                         [
                                           "object/get",
-                                          "@u",
-                                          "position"
-                                        ],
-                                        "y"
-                                      ],
-                                      [
-                                        "math/sign",
-                                        [
-                                          "-",
                                           [
                                             "object/get",
-                                            [
-                                              "object/get",
-                                              "@target",
-                                              "position"
-                                            ],
-                                            "y"
+                                            "@u",
+                                            "position"
                                           ],
+                                          "y"
+                                        ],
+                                        [
+                                          "math/sign",
                                           [
-                                            "object/get",
+                                            "-",
                                             [
                                               "object/get",
-                                              "@u",
-                                              "position"
+                                              [
+                                                "object/get",
+                                                "@target",
+                                                "position"
+                                              ],
+                                              "y"
                                             ],
-                                            "y"
+                                            [
+                                              "object/get",
+                                              [
+                                                "object/get",
+                                                "@u",
+                                                "position"
+                                              ],
+                                              "y"
+                                            ]
                                           ]
                                         ]
+                                      ],
+                                      0.0,
+                                      [
+                                        "-",
+                                        "@entity.gridHeight",
+                                        1.0
                                       ]
-                                    ],
-                                    0.0,
-                                    [
-                                      "-",
-                                      "@entity.gridHeight",
-                                      1.0
                                     ]
                                   ]
-                                }
-                              }
+                                ],
+                                [
+                                  "if",
+                                  [
+                                    "and",
+                                    [
+                                      "grid/in-bounds",
+                                      {
+                                        "x": "@nextX",
+                                        "y": "@nextY"
+                                      },
+                                      "@entity.gridWidth",
+                                      "@entity.gridHeight"
+                                    ],
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          [
+                                            "array/find",
+                                            "@config.tiles",
+                                            [
+                                              "fn",
+                                              "t",
+                                              [
+                                                "and",
+                                                [
+                                                  "==",
+                                                  [
+                                                    "object/get",
+                                                    "@t",
+                                                    "x"
+                                                  ],
+                                                  "@nextX"
+                                                ],
+                                                [
+                                                  "==",
+                                                  [
+                                                    "object/get",
+                                                    "@t",
+                                                    "y"
+                                                  ],
+                                                  "@nextY"
+                                                ]
+                                              ]
+                                            ]
+                                          ],
+                                          "passable"
+                                        ],
+                                        true
+                                      ],
+                                      [
+                                        "==",
+                                        [
+                                          "array/len",
+                                          [
+                                            "array/filter",
+                                            "@entity.units",
+                                            [
+                                              "fn",
+                                              "o",
+                                              [
+                                                "and",
+                                                [
+                                                  "!=",
+                                                  "@o.id",
+                                                  "@u.id"
+                                                ],
+                                                [
+                                                  "and",
+                                                  [
+                                                    ">",
+                                                    "@o.health",
+                                                    0.0
+                                                  ],
+                                                  [
+                                                    "and",
+                                                    [
+                                                      "==",
+                                                      [
+                                                        "object/get",
+                                                        [
+                                                          "object/get",
+                                                          "@o",
+                                                          "position"
+                                                        ],
+                                                        "x"
+                                                      ],
+                                                      "@nextX"
+                                                    ],
+                                                    [
+                                                      "==",
+                                                      [
+                                                        "object/get",
+                                                        [
+                                                          "object/get",
+                                                          "@o",
+                                                          "position"
+                                                        ],
+                                                        "y"
+                                                      ],
+                                                      "@nextY"
+                                                    ]
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ],
+                                        0.0
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "object/merge",
+                                    "@u",
+                                    {
+                                      "position": {
+                                        "x": "@nextX",
+                                        "y": "@nextY"
+                                      }
+                                    }
+                                  ],
+                                  "@u"
+                                ]
+                              ]
                             ]
                           ],
                           "@u"
@@ -4335,9 +4961,197 @@
                   "render-ui",
                   "main",
                   {
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "END_TURN",
+                          "label": "End Turn",
+                          "type": "button",
+                          "variant": "primary"
+                        },
+                        {
+                          "action": "CANCEL",
+                          "label": "Cancel",
+                          "type": "button",
+                          "variant": "secondary"
+                        },
+                        {
+                          "action": "PLAY_AGAIN",
+                          "label": "Restart",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
                     "children": [
                       {
                         "attackTargets": "@entity.attackTargets",
+                        "events": "@entity.fx",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "selectedUnitId": "@entity.selectedUnitId",
+                        "tileClickEvent": "TILE_CLICK",
+                        "tiles": "@config.tiles",
+                        "type": "game-canvas-3d",
+                        "unitClickEvent": "UNIT_CLICK",
+                        "unitScale": "@config.unitScale",
+                        "units": "@entity.units",
+                        "validMoves": "@entity.validMoves"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Turn",
+                          "value": "@entity.turn"
+                        },
+                        {
+                          "label": "Phase",
+                          "value": "@entity.phase"
+                        },
+                        {
+                          "label": "Result",
+                          "value": "@entity.result"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "overlay": [
+                      "if",
+                      [
+                        "!=",
+                        "@entity.result",
+                        "none"
+                      ],
+                      {
+                        "options": [
+                          {
+                            "event": "PLAY_AGAIN",
+                            "id": "again",
+                            "label": "Play Again",
+                            "variant": "primary"
+                          }
+                        ],
+                        "subtitle": [
+                          "str/concat",
+                          "Turn ",
+                          "@entity.turn"
+                        ],
+                        "title": [
+                          "if",
+                          [
+                            "==",
+                            "@entity.result",
+                            "victory"
+                          ],
+                          "VICTORY",
+                          "DEFEAT"
+                        ],
+                        "type": "game-menu"
+                      },
+                      null
+                    ],
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                [
+                  "==",
+                  "@entity.enemyTurn",
+                  true
+                ],
+                [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ]
+              ],
+              "interval": 1000.0,
+              "name": "enemyAiTick"
+            },
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.fx",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.fx",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "addons": {
+                      "children": [
+                        {
+                          "action": "END_TURN",
+                          "label": "End Turn",
+                          "type": "button",
+                          "variant": "primary"
+                        },
+                        {
+                          "action": "CANCEL",
+                          "label": "Cancel",
+                          "type": "button",
+                          "variant": "secondary"
+                        },
+                        {
+                          "action": "PLAY_AGAIN",
+                          "label": "Restart",
+                          "type": "button",
+                          "variant": "secondary"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    "children": [
+                      {
+                        "attackTargets": "@entity.attackTargets",
+                        "events": "@entity.fx",
                         "features": "@config.features",
                         "scale": "@config.scale",
                         "selectedUnitId": "@entity.selectedUnitId",
@@ -4372,20 +5186,15 @@
                 ]
               ],
               "guard": [
-                "and",
+                ">",
                 [
-                  "==",
-                  "@entity.enemyTurn",
-                  true
+                  "array/len",
+                  "@entity.fx"
                 ],
-                [
-                  "==",
-                  "@entity.result",
-                  "none"
-                ]
+                0.0
               ],
-              "interval": 1000.0,
-              "name": "enemyAiTick"
+              "interval": 500.0,
+              "name": "fxTick"
             }
           ]
         }

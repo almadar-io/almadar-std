@@ -155,7 +155,52 @@
             "type": "array"
           },
           {
-            "default": 8.0,
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "fx",
+            "type": "array"
+          },
+          {
+            "default": 14.0,
             "name": "tokens",
             "type": "number"
           },
@@ -586,7 +631,7 @@
               "type": "number"
             },
             "startingTokens": {
-              "default": 8.0,
+              "default": 14.0,
               "description": "Tokens the player starts with",
               "label": "Starting Tokens",
               "tier": "presentation",
@@ -1629,6 +1674,7 @@
           ],
           "entityContract": {
             "provides": [
+              "fx",
               "gridHeight",
               "gridWidth",
               "npcTick",
@@ -1789,6 +1835,11 @@
                   ],
                   [
                     "set",
+                    "@entity.fx",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.tokens",
                     "@config.startingTokens"
                   ],
@@ -1831,8 +1882,15 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "action": "CANCEL",
+                        "label": "Cancel",
+                        "type": "button",
+                        "variant": "secondary"
+                      },
                       "children": [
                         {
+                          "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
                           "scale": "@config.scale",
@@ -2030,8 +2088,15 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "action": "CANCEL",
+                        "label": "Cancel",
+                        "type": "button",
+                        "variant": "secondary"
+                      },
                       "children": [
                         {
+                          "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
                           "scale": "@config.scale",
@@ -2160,8 +2225,15 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "action": "CANCEL",
+                        "label": "Cancel",
+                        "type": "button",
+                        "variant": "secondary"
+                      },
                       "children": [
                         {
+                          "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
                           "scale": "@config.scale",
@@ -2333,8 +2405,15 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "action": "CANCEL",
+                        "label": "Cancel",
+                        "type": "button",
+                        "variant": "secondary"
+                      },
                       "children": [
                         {
+                          "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
                           "scale": "@config.scale",
@@ -2400,6 +2479,26 @@
                     "won"
                   ],
                   [
+                    "set",
+                    "@entity.fx",
+                    [
+                      "array/append",
+                      "@entity.fx",
+                      {
+                        "id": [
+                          "str/concat",
+                          "fx-win-",
+                          "@entity.playCount"
+                        ],
+                        "message": "Prize claimed!",
+                        "ttl": 3.0,
+                        "type": "win",
+                        "x": "@payload.x",
+                        "z": "@payload.z"
+                      }
+                    ]
+                  ],
+                  [
                     "if",
                     [
                       "!=",
@@ -2419,8 +2518,15 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "action": "CANCEL",
+                        "label": "Cancel",
+                        "type": "button",
+                        "variant": "secondary"
+                      },
                       "children": [
                         {
+                          "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
                           "scale": "@config.scale",
@@ -2569,6 +2675,50 @@
                   ],
                   [
                     "set",
+                    "@entity.fx",
+                    [
+                      "array/append",
+                      "@entity.fx",
+                      [
+                        "if",
+                        [
+                          "==",
+                          [
+                            "%",
+                            "@entity.playCount",
+                            2.0
+                          ],
+                          0.0
+                        ],
+                        {
+                          "id": [
+                            "str/concat",
+                            "fx-ticket-",
+                            "@entity.playCount"
+                          ],
+                          "message": "+1 ticket",
+                          "ttl": 3.0,
+                          "type": "score",
+                          "x": "@payload.x",
+                          "z": "@payload.z"
+                        },
+                        {
+                          "id": [
+                            "str/concat",
+                            "fx-dud-",
+                            "@entity.playCount"
+                          ],
+                          "message": "no luck",
+                          "ttl": 3.0,
+                          "type": "info",
+                          "x": "@payload.x",
+                          "z": "@payload.z"
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
                     "@entity.result",
                     [
                       "if",
@@ -2609,8 +2759,15 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "action": "CANCEL",
+                        "label": "Cancel",
+                        "type": "button",
+                        "variant": "secondary"
+                      },
                       "children": [
                         {
+                          "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
                           "scale": "@config.scale",
@@ -2716,6 +2873,85 @@
                 "to": "playing"
               },
               {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "addons": {
+                        "action": "CANCEL",
+                        "label": "Cancel",
+                        "type": "button",
+                        "variant": "secondary"
+                      },
+                      "children": [
+                        {
+                          "events": "@entity.fx",
+                          "featureClickEvent": "FEATURE_CLICK",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Tokens",
+                                "value": "@entity.tokens"
+                              },
+                              {
+                                "label": "Tickets",
+                                "value": "@entity.tickets"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "overlay": {
+                        "options": [
+                          {
+                            "event": "PLAY_AGAIN",
+                            "id": "again",
+                            "label": "Play Again",
+                            "variant": "primary"
+                          }
+                        ],
+                        "subtitle": [
+                          "str/concat",
+                          "Tickets earned: ",
+                          "@entity.tickets"
+                        ],
+                        "title": "YOU WIN!",
+                        "type": "game-menu"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
                 "event": "GAME_END",
                 "from": "playing",
                 "guard": [
@@ -2726,6 +2962,81 @@
                 "to": "won"
               },
               {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "addons": {
+                        "action": "CANCEL",
+                        "label": "Cancel",
+                        "type": "button",
+                        "variant": "secondary"
+                      },
+                      "children": [
+                        {
+                          "events": "@entity.fx",
+                          "featureClickEvent": "FEATURE_CLICK",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "game-canvas-3d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "unitScale": "@config.unitScale",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Tokens",
+                                "value": "@entity.tokens"
+                              },
+                              {
+                                "label": "Tickets",
+                                "value": "@entity.tickets"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "overlay": {
+                        "options": [
+                          {
+                            "event": "PLAY_AGAIN",
+                            "id": "again",
+                            "label": "Play Again",
+                            "variant": "primary"
+                          }
+                        ],
+                        "subtitle": "No luck this time — try again!",
+                        "title": "OUT OF TOKENS",
+                        "type": "game-menu"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
                 "event": "GAME_END",
                 "from": "playing",
                 "guard": [
@@ -2750,6 +3061,11 @@
                   [
                     "set",
                     "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.fx",
                     []
                   ],
                   [
@@ -2781,8 +3097,15 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "action": "CANCEL",
+                        "label": "Cancel",
+                        "type": "button",
+                        "variant": "secondary"
+                      },
                       "children": [
                         {
+                          "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
                           "scale": "@config.scale",
@@ -2854,6 +3177,11 @@
                   ],
                   [
                     "set",
+                    "@entity.fx",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.tokens",
                     "@config.startingTokens"
                   ],
@@ -2881,8 +3209,15 @@
                     "render-ui",
                     "main",
                     {
+                      "addons": {
+                        "action": "CANCEL",
+                        "label": "Cancel",
+                        "type": "button",
+                        "variant": "secondary"
+                      },
                       "children": [
                         {
+                          "events": "@entity.fx",
                           "featureClickEvent": "FEATURE_CLICK",
                           "features": "@config.features",
                           "scale": "@config.scale",
@@ -3004,11 +3339,53 @@
                   ]
                 ],
                 [
+                  "set",
+                  "@entity.fx",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.fx",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              "@e.ttl",
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        "@e.ttl",
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
                   "render-ui",
                   "main",
                   {
+                    "addons": {
+                      "action": "CANCEL",
+                      "label": "Cancel",
+                      "type": "button",
+                      "variant": "secondary"
+                    },
                     "children": [
                       {
+                        "events": "@entity.fx",
                         "featureClickEvent": "FEATURE_CLICK",
                         "features": "@config.features",
                         "scale": "@config.scale",
