@@ -2,6 +2,7 @@ app ui-tanks-board "1.0.0"
 "Sci-fi tank grid-tactics game: thin organism composing the std-tactics-board-2d frame with a tank theme (Kenney topdown-tanks assets, sci-fi UI panels) supplied entirely via config."
 orbital TanksBoardOrbital {
   uses Frame from "std/behaviors/std-tactics-board-2d"
+  uses Score from "std/behaviors/std-score"
 
   type Asset = {
     url : asset
@@ -76,6 +77,8 @@ orbital TanksBoardOrbital {
     attackTargets : [ValidMove] = []
     uiPhase : string = "observation"
     turn : number = 0
+    score : number = 0
+    scoreBaseline : number = 0
   }
 
   trait Authority = Frame.traits.TacticsAuthority -> GameState {
@@ -97,6 +100,10 @@ orbital TanksBoardOrbital {
     config { running: true }
   }
 
+  trait ScoreKeeper = Score.traits.ScoreKeeper -> GameState {
+    config { running: true, pointsPerKill: 10, startScore: 0, initialEnemies: 2 }
+  }
+
   trait Player = Frame.traits.PlayerIntent -> GameState {
     config {
       gridWidth: 8
@@ -112,5 +119,5 @@ orbital TanksBoardOrbital {
     }
   }
 
-  page "/tanks-board" as TanksBoardPage -> Authority, FxDecay, RoundLogic, Player
+  page "/tanks-board" as TanksBoardPage -> Authority, FxDecay, RoundLogic, ScoreKeeper, Player
 }

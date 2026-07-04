@@ -4,6 +4,7 @@ orbital TacticsBoard2DOrbital {
   uses Tactics from "std/behaviors/std-grid-tactics"
   uses Particles from "std/behaviors/std-fx-particles"
   uses Round from "std/behaviors/std-round-flow"
+  uses Score from "std/behaviors/std-score"
 
   type Asset = {
     url : asset
@@ -78,6 +79,8 @@ orbital TacticsBoard2DOrbital {
     attackTargets : [ValidMove] = []
     uiPhase : string = "observation"
     turn : number = 0
+    score : number = 0
+    scoreBaseline : number = 0
   }
 
   trait TacticsAuthority = Tactics.traits.GridTactics -> GameState {
@@ -98,6 +101,10 @@ orbital TacticsBoard2DOrbital {
     config { running: true }
   }
 
+  trait ScoreKeeper = Score.traits.ScoreKeeper -> GameState {
+    config { running: true, pointsPerKill: 10, startScore: 0, initialEnemies: 0 }
+  }
+
   trait PlayerIntent -> GameState [interaction, instance] {
     initial: playing
 
@@ -112,7 +119,7 @@ orbital TacticsBoard2DOrbital {
           type: game-shell
           backgroundAsset: @config.backgroundAsset
           hudBackgroundAsset: @config.hudBackgroundAsset
-          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.uiPhase }, { label: "Turn", value: @entity.turn } ] }
+          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.uiPhase }, { label: "Turn", value: @entity.turn }, { label: "Score", value: @entity.score } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] }
           children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, effects: @entity.fx, features: @config.features, assetManifest: @config.assetManifest, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, projection: @config.projection, showMinimap: @config.showMinimap, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
@@ -159,7 +166,7 @@ orbital TacticsBoard2DOrbital {
           type: game-shell
           backgroundAsset: @config.backgroundAsset
           hudBackgroundAsset: @config.hudBackgroundAsset
-          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.uiPhase }, { label: "Turn", value: @entity.turn } ] }
+          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.uiPhase }, { label: "Turn", value: @entity.turn }, { label: "Score", value: @entity.score } ] }
           addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] }
           children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, effects: @entity.fx, features: @config.features, assetManifest: @config.assetManifest, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, projection: @config.projection, showMinimap: @config.showMinimap, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
@@ -245,5 +252,5 @@ orbital TacticsBoard2DOrbital {
     }
   }
 
-  page "/tactics-board-2d" as TacticsBoard2DPage -> TacticsAuthority, FxDecay, RoundLogic, PlayerIntent
+  page "/tactics-board-2d" as TacticsBoard2DPage -> TacticsAuthority, FxDecay, RoundLogic, ScoreKeeper, PlayerIntent
 }
