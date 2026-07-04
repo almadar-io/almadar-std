@@ -1,0 +1,238 @@
+app std-crew-board-2d "1.0.0"
+"2D multi-unit crew-management board FRAME: composes hero-nav (unit-by-id move authority, no combat) + fx-particles onto one shared GameState with a canvas-2d render and select/deselect/move intent. Games consume this molecule and supply only theme/assets/units/tiles via config."
+orbital CrewBoard2DOrbital {
+  uses Nav from "std/behaviors/std-hero-nav"
+  uses Particles from "std/behaviors/std-fx-particles"
+
+  type Asset = {
+    url : asset
+    atlas : asset
+    sprite : string
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    team : string
+    health : number
+    maxHealth : number
+    unitType : string
+    name : string
+    modelUrl : Asset
+  }
+  type Tile = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    passable : boolean
+    terrainSprite : Asset
+  }
+  type Fx = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
+  type ValidMove = { x : number!  z : number! }
+  type Feature = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string
+    assetUrl : Asset
+    color : string
+    elevation : number
+  }
+  type AssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
+  }
+
+  entity GameState [runtime, shared] {
+    id : string!
+    units : [Unit] = []
+    tiles : [Tile] = []
+    movesLeft : number = 0
+    fx : [Fx] = []
+    selectedUnitId : string = ""
+    validMoves : [ValidMove] = []
+    phase : string = "idle"
+    oxygen : number = 100
+    crewCount : number = 3
+  }
+
+  trait CrewAuthority = Nav.traits.HeroNav -> GameState {
+    config {
+      running: true
+      gridWidth: 7
+      gridHeight: 7
+      moveBudget: 999999
+      units: [ { id: "c1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "crew" } ]
+    }
+  }
+
+  trait FxDecay = Particles.traits.FxParticles -> GameState {
+    config { running: true }
+  }
+
+  trait CrewIntent -> GameState [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.phase "idle")
+        (set @entity.oxygen @config.oxygen)
+        (set @entity.crewCount @config.crewCount)
+        (render-ui main {
+          type: game-shell
+          backgroundAsset: @config.backgroundAsset
+          hudBackgroundAsset: @config.hudBackgroundAsset
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Crew", value: @entity.crewCount, iconUrl: @config.crewIcon }, { label: "Oxygen", value: @entity.oxygen, iconUrl: @config.oxygenIcon } ] }, { type: state-indicator, value: @entity.phase, label: "Status" }, { type: timer-display, value: @entity.oxygen, label: "O2" }, { type: button, action: CANCEL, label: "Cancel", iconAsset: @config.cancelIcon, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @config.features, effects: @entity.fx, assetManifest: @config.assetManifest, projection: @config.projection, showMinimap: @config.showMinimap, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.phase "idle")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+
+      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.validMoves (array/map (array/filter @entity.tiles (fn t (and (grid/in-bounds { x: (object/get @t x), y: (object/get @t y) } @config.gridWidth @config.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @config.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+        (set @entity.phase "movement")
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?y } @config.gridWidth @config.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?y }) @config.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))
+        (emit MOVE { unitId: @entity.selectedUnitId, x: ?x, y: ?y })
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.phase "idle")
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.phase "idle")
+    }
+
+    ticks {
+      renderTick every 100ms
+        (render-ui main {
+          type: game-shell
+          backgroundAsset: @config.backgroundAsset
+          hudBackgroundAsset: @config.hudBackgroundAsset
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Crew", value: @entity.crewCount, iconUrl: @config.crewIcon }, { label: "Oxygen", value: @entity.oxygen, iconUrl: @config.oxygenIcon } ] }, { type: state-indicator, value: @entity.phase, label: "Status" }, { type: timer-display, value: @entity.oxygen, label: "O2" }, { type: button, action: CANCEL, label: "Cancel", iconAsset: @config.cancelIcon, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @config.features, effects: @entity.fx, assetManifest: @config.assetManifest, projection: @config.projection, showMinimap: @config.showMinimap, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+    }
+
+    emits {
+      MOVE -> external {
+        unitId : string!
+        x : number!
+        y : number!
+      }
+        @description "Crew move intent applied by the hero-nav authority"
+        @tier "domain"
+      TILE_CLICK -> external {
+        x : number!
+        y : number!
+      }
+        @description "Emits UI:{tileClickEvent} with { x, y } on tile click"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+      }
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "domain"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Emits UI:{cancelEvent} with {} on cancel"
+        @tier "domain"
+    }
+
+    config {
+      gridWidth : number = 7
+        @label "Grid Width"
+        @description "Grid column count (matches CrewAuthority.gridWidth)."
+        @tier "domain"
+      gridHeight : number = 7
+        @label "Grid Height"
+        @description "Grid row count (matches CrewAuthority.gridHeight)."
+        @tier "domain"
+      movementRange : number = 2
+        @label "Movement Range"
+        @description "Max manhattan distance a selected crew unit may move."
+        @tier "domain"
+      oxygen : number = 100
+        @label "Oxygen"
+        @description "Initial HUD oxygen display value. Cosmetic only: the source board never depletes it, so no atom writes it after INIT."
+        @tier "domain"
+      crewCount : number = 3
+        @label "Crew Count"
+        @description "Initial HUD crew-count display value. Cosmetic only: the source board never changes it after INIT."
+        @tier "domain"
+      features : [Feature] = []
+        @label "Features"
+        @description "Decorative environment features (e.g. consoles) drawn on the board."
+        @tier "presentation"
+      assetManifest : AssetManifest = { terrains: {}, units: {}, features: {}, effects: {} }
+        @label "Asset Manifest"
+        @description "Terrain/unit/feature/effect sprite manifest."
+        @tier "presentation"
+      projection : string = "flat"
+        @label "Projection"
+        @description "canvas-2d projection: flat or isometric."
+        @tier "presentation"
+      showMinimap : boolean = false
+        @label "Show Minimap"
+        @description "Whether the canvas draws a minimap."
+        @tier "presentation"
+      scale : number = 1
+        @label "Scale"
+        @description "Canvas render scale."
+        @tier "presentation"
+      backgroundAsset : Asset = {}
+        @label "Background Asset"
+        @description "Game-shell background panel sprite (theme chrome)."
+        @tier "presentation"
+      hudBackgroundAsset : Asset = {}
+        @label "HUD Background Asset"
+        @description "HUD panel background sprite (theme chrome)."
+        @tier "presentation"
+      crewIcon : Asset = {}
+        @label "Crew Icon"
+        @description "Icon asset for the Crew HUD stat."
+        @tier "presentation"
+      oxygenIcon : Asset = {}
+        @label "Oxygen Icon"
+        @description "Icon asset for the Oxygen HUD stat."
+        @tier "presentation"
+      cancelIcon : Asset = {}
+        @label "Cancel Icon"
+        @description "Icon asset for the Cancel button."
+        @tier "presentation"
+    }
+  }
+
+  page "/crew-board-2d" as CrewBoard2DPage -> CrewAuthority, FxDecay, CrewIntent
+}
