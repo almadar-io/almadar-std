@@ -1,0 +1,142 @@
+app ui-grid-tactics-demo-board "1.0.0"
+"Phase-9 candidate: player-controlled grid-tactics board where std-grid-tactics is the SOLE units writer. The player trait emits MOVE/ATTACK/AI_TURN intents (never mutates units); fx-particles + round-flow listen. Proves Option 3 resolves the two-writer conflict — no shipped board migrated."
+orbital GridTacticsDemoOrbital {
+  uses Tactics from "std/behaviors/std-grid-tactics"
+  uses Particles from "std/behaviors/std-fx-particles"
+  uses Round from "std/behaviors/std-round-flow"
+
+  type Unit = { id : string!  position : { x : number!  y : number! }  x : number  y : number  z : number  team : string  health : number  maxHealth : number  unitType : string }
+  type Tile = { id : string  x : number!  y : number!  passable : boolean }
+  type Fx   = { id : string!  type : string!  x : number!  z : number  y : number  message : string  ttl : number! }
+  type ValidMove = { x : number!  z : number! }
+
+  entity GameState [runtime, shared] {
+    id : string!
+    units : [Unit] = []
+    fx : [Fx] = []
+    result : string = "none"
+    phase : string = "observation"
+    turn : number = 0
+    selectedUnitId : string = ""
+    validMoves : [ValidMove] = []
+    uiPhase : string = "observation"
+  }
+
+  trait TacticsAuthority = Tactics.traits.GridTactics -> GameState {
+    config {
+      running: true
+      gridWidth: 6
+      gridHeight: 6
+      attackDamage: 1
+      units: [ { id: "p1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "marine" }, { id: "p2", position: { x: 1, y: 4 }, x: 1, y: 4, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "marine" }, { id: "e1", position: { x: 4, y: 1 }, x: 4, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "raider" }, { id: "e2", position: { x: 4, y: 4 }, x: 4, y: 4, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "raider" } ]
+      tiles: [ { id: "t-0-0", x: 0, y: 0, passable: true }, { id: "t-1-0", x: 1, y: 0, passable: true }, { id: "t-2-0", x: 2, y: 0, passable: true }, { id: "t-3-0", x: 3, y: 0, passable: true }, { id: "t-4-0", x: 4, y: 0, passable: true }, { id: "t-5-0", x: 5, y: 0, passable: true }, { id: "t-0-1", x: 0, y: 1, passable: true }, { id: "t-1-1", x: 1, y: 1, passable: true }, { id: "t-2-1", x: 2, y: 1, passable: true }, { id: "t-3-1", x: 3, y: 1, passable: true }, { id: "t-4-1", x: 4, y: 1, passable: true }, { id: "t-5-1", x: 5, y: 1, passable: true }, { id: "t-0-2", x: 0, y: 2, passable: true }, { id: "t-1-2", x: 1, y: 2, passable: true }, { id: "t-2-2", x: 2, y: 2, passable: true }, { id: "t-3-2", x: 3, y: 2, passable: true }, { id: "t-4-2", x: 4, y: 2, passable: true }, { id: "t-5-2", x: 5, y: 2, passable: true }, { id: "t-0-3", x: 0, y: 3, passable: true }, { id: "t-1-3", x: 1, y: 3, passable: true }, { id: "t-2-3", x: 2, y: 3, passable: true }, { id: "t-3-3", x: 3, y: 3, passable: true }, { id: "t-4-3", x: 4, y: 3, passable: true }, { id: "t-5-3", x: 5, y: 3, passable: true }, { id: "t-0-4", x: 0, y: 4, passable: true }, { id: "t-1-4", x: 1, y: 4, passable: true }, { id: "t-2-4", x: 2, y: 4, passable: true }, { id: "t-3-4", x: 3, y: 4, passable: true }, { id: "t-4-4", x: 4, y: 4, passable: true }, { id: "t-5-4", x: 5, y: 4, passable: true }, { id: "t-0-5", x: 0, y: 5, passable: true }, { id: "t-1-5", x: 1, y: 5, passable: true }, { id: "t-2-5", x: 2, y: 5, passable: true }, { id: "t-3-5", x: 3, y: 5, passable: true }, { id: "t-4-5", x: 4, y: 5, passable: true }, { id: "t-5-5", x: 5, y: 5, passable: true } ]
+    }
+  }
+
+  trait FxDecay = Particles.traits.FxParticles -> GameState {
+    config { running: true }
+  }
+
+  trait RoundLogic = Round.traits.RoundFlow -> GameState {
+    config { running: true }
+  }
+
+  trait PlayerIntent -> GameState [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.uiPhase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.uiPhase }, { label: "Selected", value: @entity.selectedUnitId } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, effects: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, projection: "flat", showMinimap: false, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.uiPhase "action") (and (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "enemy") (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position)) 1)))
+        (emit ATTACK { targetId: ?unitId })
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.uiPhase "observation")
+
+      UNIT_CLICK -> playing when (== @entity.selectedUnitId ?unitId)
+        (set @entity.uiPhase "action")
+        (set @entity.validMoves [])
+
+      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.uiPhase "selection")
+        (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @config.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?y } 6 6) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?y }) @config.movementRange)))
+        (emit MOVE { unitId: @entity.selectedUnitId, x: ?x, y: ?y })
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.uiPhase "observation")
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.uiPhase "observation")
+
+      END_TURN -> playing when (== @entity.result "none")
+        (emit AI_TURN { turn: @entity.turn })
+    }
+
+    ticks {
+      renderTick every 100ms
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.uiPhase }, { label: "Selected", value: @entity.selectedUnitId } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, effects: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, projection: "flat", showMinimap: false, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
+        })
+    }
+
+    emits {
+      MOVE -> external {
+        unitId : string!
+        x : number!
+        y : number!
+      }
+        @description "Player move intent applied by the grid-tactics authority"
+        @tier "domain"
+      ATTACK -> external {
+        targetId : string!
+      }
+        @description "Player attack intent applied by the grid-tactics authority"
+        @tier "domain"
+      AI_TURN -> external {
+        turn : number!
+      }
+        @description "Ends the player turn; the grid-tactics authority runs the enemy AI pipeline"
+        @tier "domain"
+      TILE_CLICK -> external {
+        x : number!
+        y : number!
+      }
+        @description "tileClickEvent prop"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+      }
+        @description "unitClickEvent prop"
+        @tier "domain"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Clears the current selection"
+        @tier "domain"
+    }
+
+    config {
+      tiles : [Tile] = [ { id: "t-0-0", x: 0, y: 0, passable: true }, { id: "t-1-0", x: 1, y: 0, passable: true }, { id: "t-2-0", x: 2, y: 0, passable: true }, { id: "t-3-0", x: 3, y: 0, passable: true }, { id: "t-4-0", x: 4, y: 0, passable: true }, { id: "t-5-0", x: 5, y: 0, passable: true }, { id: "t-0-1", x: 0, y: 1, passable: true }, { id: "t-1-1", x: 1, y: 1, passable: true }, { id: "t-2-1", x: 2, y: 1, passable: true }, { id: "t-3-1", x: 3, y: 1, passable: true }, { id: "t-4-1", x: 4, y: 1, passable: true }, { id: "t-5-1", x: 5, y: 1, passable: true }, { id: "t-0-2", x: 0, y: 2, passable: true }, { id: "t-1-2", x: 1, y: 2, passable: true }, { id: "t-2-2", x: 2, y: 2, passable: true }, { id: "t-3-2", x: 3, y: 2, passable: true }, { id: "t-4-2", x: 4, y: 2, passable: true }, { id: "t-5-2", x: 5, y: 2, passable: true }, { id: "t-0-3", x: 0, y: 3, passable: true }, { id: "t-1-3", x: 1, y: 3, passable: true }, { id: "t-2-3", x: 2, y: 3, passable: true }, { id: "t-3-3", x: 3, y: 3, passable: true }, { id: "t-4-3", x: 4, y: 3, passable: true }, { id: "t-5-3", x: 5, y: 3, passable: true }, { id: "t-0-4", x: 0, y: 4, passable: true }, { id: "t-1-4", x: 1, y: 4, passable: true }, { id: "t-2-4", x: 2, y: 4, passable: true }, { id: "t-3-4", x: 3, y: 4, passable: true }, { id: "t-4-4", x: 4, y: 4, passable: true }, { id: "t-5-4", x: 5, y: 4, passable: true }, { id: "t-0-5", x: 0, y: 5, passable: true }, { id: "t-1-5", x: 1, y: 5, passable: true }, { id: "t-2-5", x: 2, y: 5, passable: true }, { id: "t-3-5", x: 3, y: 5, passable: true }, { id: "t-4-5", x: 4, y: 5, passable: true }, { id: "t-5-5", x: 5, y: 5, passable: true } ]
+      movementRange : number = 3
+    }
+  }
+
+  page "/grid-tactics-demo" as GridTacticsDemoPage -> TacticsAuthority, FxDecay, RoundLogic, PlayerIntent
+}

@@ -1,0 +1,66 @@
+app ui-arena-board "1.0.0"
+"2D grid-tactics arena composing headless std mechanic atoms (chase-ai, fx-particles, round-flow) on one [runtime, shared] GameState with a single canvas-2d render authority — the Phase-9 exemplar."
+orbital ArenaBoardOrbital {
+  uses Chase from "std/behaviors/std-chase-ai"
+  uses Particles from "std/behaviors/std-fx-particles"
+  uses Round from "std/behaviors/std-round-flow"
+
+  type Unit = { id : string!  position : { x : number!  y : number! }  x : number  y : number  z : number  team : string  health : number  maxHealth : number  unitType : string }
+  type Tile = { id : string  x : number!  y : number!  passable : boolean }
+  type Fx   = { id : string!  type : string!  x : number!  z : number  y : number  message : string  ttl : number! }
+
+  entity GameState [runtime, shared] {
+    id : string!
+    units : [Unit] = []
+    fx : [Fx] = []
+    result : string = "none"
+    phase : string = "observation"
+    turn : number = 0
+  }
+
+  trait ChaseAI = Chase.traits.ChaseAi -> GameState {
+    config {
+      running: true
+      gridWidth: 8
+      gridHeight: 8
+      units: [ { id: "p1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "marine" }, { id: "p2", position: { x: 4, y: 4 }, x: 4, y: 4, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "marine" }, { id: "e1", position: { x: 6, y: 6 }, x: 6, y: 6, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "raider" }, { id: "e2", position: { x: 2, y: 1 }, x: 2, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "raider" } ]
+      tiles: [ { id: "t-0-0", x: 0, y: 0, passable: true }, { id: "t-1-0", x: 1, y: 0, passable: true }, { id: "t-2-0", x: 2, y: 0, passable: true }, { id: "t-3-0", x: 3, y: 0, passable: true }, { id: "t-4-0", x: 4, y: 0, passable: true }, { id: "t-5-0", x: 5, y: 0, passable: true }, { id: "t-6-0", x: 6, y: 0, passable: true }, { id: "t-7-0", x: 7, y: 0, passable: true }, { id: "t-0-1", x: 0, y: 1, passable: true }, { id: "t-1-1", x: 1, y: 1, passable: true }, { id: "t-2-1", x: 2, y: 1, passable: true }, { id: "t-3-1", x: 3, y: 1, passable: true }, { id: "t-4-1", x: 4, y: 1, passable: true }, { id: "t-5-1", x: 5, y: 1, passable: true }, { id: "t-6-1", x: 6, y: 1, passable: true }, { id: "t-7-1", x: 7, y: 1, passable: true }, { id: "t-0-2", x: 0, y: 2, passable: true }, { id: "t-1-2", x: 1, y: 2, passable: true }, { id: "t-2-2", x: 2, y: 2, passable: true }, { id: "t-3-2", x: 3, y: 2, passable: true }, { id: "t-4-2", x: 4, y: 2, passable: true }, { id: "t-5-2", x: 5, y: 2, passable: true }, { id: "t-6-2", x: 6, y: 2, passable: true }, { id: "t-7-2", x: 7, y: 2, passable: true }, { id: "t-0-3", x: 0, y: 3, passable: true }, { id: "t-1-3", x: 1, y: 3, passable: true }, { id: "t-2-3", x: 2, y: 3, passable: true }, { id: "t-3-3", x: 3, y: 3, passable: true }, { id: "t-4-3", x: 4, y: 3, passable: true }, { id: "t-5-3", x: 5, y: 3, passable: true }, { id: "t-6-3", x: 6, y: 3, passable: true }, { id: "t-7-3", x: 7, y: 3, passable: true }, { id: "t-0-4", x: 0, y: 4, passable: true }, { id: "t-1-4", x: 1, y: 4, passable: true }, { id: "t-2-4", x: 2, y: 4, passable: true }, { id: "t-3-4", x: 3, y: 4, passable: true }, { id: "t-4-4", x: 4, y: 4, passable: true }, { id: "t-5-4", x: 5, y: 4, passable: true }, { id: "t-6-4", x: 6, y: 4, passable: true }, { id: "t-7-4", x: 7, y: 4, passable: true }, { id: "t-0-5", x: 0, y: 5, passable: true }, { id: "t-1-5", x: 1, y: 5, passable: true }, { id: "t-2-5", x: 2, y: 5, passable: true }, { id: "t-3-5", x: 3, y: 5, passable: true }, { id: "t-4-5", x: 4, y: 5, passable: true }, { id: "t-5-5", x: 5, y: 5, passable: true }, { id: "t-6-5", x: 6, y: 5, passable: true }, { id: "t-7-5", x: 7, y: 5, passable: true }, { id: "t-0-6", x: 0, y: 6, passable: true }, { id: "t-1-6", x: 1, y: 6, passable: true }, { id: "t-2-6", x: 2, y: 6, passable: true }, { id: "t-3-6", x: 3, y: 6, passable: true }, { id: "t-4-6", x: 4, y: 6, passable: true }, { id: "t-5-6", x: 5, y: 6, passable: true }, { id: "t-6-6", x: 6, y: 6, passable: true }, { id: "t-7-6", x: 7, y: 6, passable: true }, { id: "t-0-7", x: 0, y: 7, passable: true }, { id: "t-1-7", x: 1, y: 7, passable: true }, { id: "t-2-7", x: 2, y: 7, passable: true }, { id: "t-3-7", x: 3, y: 7, passable: true }, { id: "t-4-7", x: 4, y: 7, passable: true }, { id: "t-5-7", x: 5, y: 7, passable: true }, { id: "t-6-7", x: 6, y: 7, passable: true }, { id: "t-7-7", x: 7, y: 7, passable: true } ]
+    }
+  }
+
+  trait FxDecay = Particles.traits.FxParticles -> GameState {
+    config { running: true }
+  }
+
+  trait RoundLogic = Round.traits.RoundFlow -> GameState {
+    config { running: true }
+  }
+
+  trait ArenaView -> GameState [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.phase } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, effects: @entity.fx, projection: "flat", showMinimap: false } ]
+        })
+    }
+
+    ticks {
+      renderTick every 100ms
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.phase } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, effects: @entity.fx, projection: "flat", showMinimap: false } ]
+        })
+    }
+
+    config {
+      tiles : [Tile] = [ { id: "t-0-0", x: 0, y: 0, passable: true }, { id: "t-1-0", x: 1, y: 0, passable: true }, { id: "t-2-0", x: 2, y: 0, passable: true }, { id: "t-3-0", x: 3, y: 0, passable: true }, { id: "t-4-0", x: 4, y: 0, passable: true }, { id: "t-5-0", x: 5, y: 0, passable: true }, { id: "t-6-0", x: 6, y: 0, passable: true }, { id: "t-7-0", x: 7, y: 0, passable: true }, { id: "t-0-1", x: 0, y: 1, passable: true }, { id: "t-1-1", x: 1, y: 1, passable: true }, { id: "t-2-1", x: 2, y: 1, passable: true }, { id: "t-3-1", x: 3, y: 1, passable: true }, { id: "t-4-1", x: 4, y: 1, passable: true }, { id: "t-5-1", x: 5, y: 1, passable: true }, { id: "t-6-1", x: 6, y: 1, passable: true }, { id: "t-7-1", x: 7, y: 1, passable: true }, { id: "t-0-2", x: 0, y: 2, passable: true }, { id: "t-1-2", x: 1, y: 2, passable: true }, { id: "t-2-2", x: 2, y: 2, passable: true }, { id: "t-3-2", x: 3, y: 2, passable: true }, { id: "t-4-2", x: 4, y: 2, passable: true }, { id: "t-5-2", x: 5, y: 2, passable: true }, { id: "t-6-2", x: 6, y: 2, passable: true }, { id: "t-7-2", x: 7, y: 2, passable: true }, { id: "t-0-3", x: 0, y: 3, passable: true }, { id: "t-1-3", x: 1, y: 3, passable: true }, { id: "t-2-3", x: 2, y: 3, passable: true }, { id: "t-3-3", x: 3, y: 3, passable: true }, { id: "t-4-3", x: 4, y: 3, passable: true }, { id: "t-5-3", x: 5, y: 3, passable: true }, { id: "t-6-3", x: 6, y: 3, passable: true }, { id: "t-7-3", x: 7, y: 3, passable: true }, { id: "t-0-4", x: 0, y: 4, passable: true }, { id: "t-1-4", x: 1, y: 4, passable: true }, { id: "t-2-4", x: 2, y: 4, passable: true }, { id: "t-3-4", x: 3, y: 4, passable: true }, { id: "t-4-4", x: 4, y: 4, passable: true }, { id: "t-5-4", x: 5, y: 4, passable: true }, { id: "t-6-4", x: 6, y: 4, passable: true }, { id: "t-7-4", x: 7, y: 4, passable: true }, { id: "t-0-5", x: 0, y: 5, passable: true }, { id: "t-1-5", x: 1, y: 5, passable: true }, { id: "t-2-5", x: 2, y: 5, passable: true }, { id: "t-3-5", x: 3, y: 5, passable: true }, { id: "t-4-5", x: 4, y: 5, passable: true }, { id: "t-5-5", x: 5, y: 5, passable: true }, { id: "t-6-5", x: 6, y: 5, passable: true }, { id: "t-7-5", x: 7, y: 5, passable: true }, { id: "t-0-6", x: 0, y: 6, passable: true }, { id: "t-1-6", x: 1, y: 6, passable: true }, { id: "t-2-6", x: 2, y: 6, passable: true }, { id: "t-3-6", x: 3, y: 6, passable: true }, { id: "t-4-6", x: 4, y: 6, passable: true }, { id: "t-5-6", x: 5, y: 6, passable: true }, { id: "t-6-6", x: 6, y: 6, passable: true }, { id: "t-7-6", x: 7, y: 6, passable: true }, { id: "t-0-7", x: 0, y: 7, passable: true }, { id: "t-1-7", x: 1, y: 7, passable: true }, { id: "t-2-7", x: 2, y: 7, passable: true }, { id: "t-3-7", x: 3, y: 7, passable: true }, { id: "t-4-7", x: 4, y: 7, passable: true }, { id: "t-5-7", x: 5, y: 7, passable: true }, { id: "t-6-7", x: 6, y: 7, passable: true }, { id: "t-7-7", x: 7, y: 7, passable: true } ]
+    }
+  }
+
+  page "/arena" as ArenaPage -> ChaseAI, FxDecay, RoundLogic, ArenaView
+}

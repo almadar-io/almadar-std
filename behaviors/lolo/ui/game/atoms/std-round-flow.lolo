@@ -1,0 +1,46 @@
+app std-round-flow "1.0.0"
+"Headless win/lose round-resolution mechanic: derives result from team survivor counts on each UNITS_CHANGED signal, flips phase to game_over, and emits GAME_END. Renders nothing."
+orbital RoundFlowOrbital {
+  entity RoundState [runtime, shared] {
+    id : string!
+    result : string = "none"
+    phase : string = "observation"
+    turn : number = 0
+  }
+
+  trait RoundFlow -> @rebindable RoundState [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.turn 0)
+      UNITS_CHANGED -> active when @config.running
+        (set @entity.result (if (== @payload.playersAlive 0) "defeat" (if (== @payload.enemiesAlive 0) "victory" "none")))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+        (set @entity.phase (if (!= @entity.result "none") "game_over" @entity.phase))
+    }
+
+    emits {
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when the round resolves to a win or loss"
+        @tier "domain"
+    }
+
+    listens {
+      UNITS_CHANGED { playersAlive : number, enemiesAlive : number }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, incoming unit-count changes are evaluated for win/lose; toggle to freeze."
+        @tier "domain"
+    }
+  }
+
+  page "/round-flow" as RoundFlowPage -> RoundFlow
+}

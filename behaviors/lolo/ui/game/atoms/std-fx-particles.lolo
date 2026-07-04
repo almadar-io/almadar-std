@@ -1,0 +1,58 @@
+app std-fx-particles "1.0.0"
+"Headless floating-text/particle mechanic: decays each fx entry's ttl every tick and drops the dead ones, and appends spawned particles on BURST. Composed onto a [runtime, shared] game entity; renders nothing (the board owns the single render authority)."
+orbital FxParticlesOrbital {
+  type Fx = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
+
+  entity FxState [runtime, shared] {
+    id : string!
+    fx : [Fx] = []
+  }
+
+  trait FxParticles -> @rebindable FxState [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.fx @config.fx)
+      BURST -> active
+        (set @entity.fx (array/concat @entity.fx @payload.particles))
+    }
+
+    ticks {
+      fxTick every 500ms
+        when (and @config.running (> (array/len @entity.fx) 0))
+        (set @entity.fx (array/filter
+          (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) @config.decayRate) })))
+          (fn e (> (object/get @e ttl) 0))))
+    }
+
+    listens {
+      BURST { particles : [Fx] }
+    }
+
+    config {
+      decayRate : number = 1
+        @label "Decay Rate"
+        @description "Ttl units removed from every fx entry each tick; higher fades particles faster."
+        @tier "domain"
+      running : boolean = true
+        @label "Running"
+        @description "When true the decay tick runs; toggle to freeze effects."
+        @tier "domain"
+      fx : [Fx] = []
+        @label "Initial Fx"
+        @description "Seed particles rendered before the first BURST; usually empty."
+        @tier "domain"
+    }
+  }
+
+  page "/fx-particles" as FxParticlesPage -> FxParticles
+}
