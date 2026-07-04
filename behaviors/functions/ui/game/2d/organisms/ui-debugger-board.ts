@@ -629,7 +629,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                           {
                             'entity': '@entity.lines',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'l',
@@ -763,7 +763,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                           {
                             'entity': '@entity.lines',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'l',
@@ -906,7 +906,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                           {
                             'entity': '@entity.lines',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'l',
@@ -1024,7 +1024,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                           {
                             'entity': '@entity.lines',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'l',
@@ -1202,7 +1202,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                           {
                             'entity': '@entity.lines',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'l',
@@ -1401,7 +1401,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                           {
                             'entity': '@entity.lines',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'l',

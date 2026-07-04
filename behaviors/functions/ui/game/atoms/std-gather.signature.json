@@ -1,0 +1,247 @@
+[
+  {
+    "organism": "std-gather",
+    "orbital": "GatherOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/2d/atoms/std-gather.ts",
+    "entities": [
+      {
+        "name": "GatherData",
+        "fields": [
+          {
+            "name": "features",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "wood",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "stone",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "Gather",
+        "emittedEvents": [
+          "BURST",
+          "RESOURCES"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BURST",
+            "direction": "emit",
+            "description": "Pickup particle produced when a resource node is gathered; a fx-particles listener spawns it",
+            "tier": "domain"
+          },
+          {
+            "name": "RESOURCES",
+            "direction": "emit",
+            "description": "Wood/stone totals and moves remaining after this step; a survival-flow listener decides loss",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "HERO_STEPPED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "features",
+            "type": "[Feature]",
+            "default": [],
+            "label": "Features",
+            "description": "Board features — resource nodes (matched by woodType/stoneType) plus decorations",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "assetUrl": {
+                  "name": "assetUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, hero steps onto resource nodes are gathered; toggle to freeze",
+            "tier": "domain"
+          },
+          {
+            "key": "startStone",
+            "type": "number",
+            "default": 0,
+            "label": "Start Stone",
+            "description": "Stone set on INIT",
+            "tier": "domain"
+          },
+          {
+            "key": "startWood",
+            "type": "number",
+            "default": 0,
+            "label": "Start Wood",
+            "description": "Wood set on INIT",
+            "tier": "domain"
+          },
+          {
+            "key": "stoneType",
+            "type": "string",
+            "default": "rock",
+            "label": "Stone Type",
+            "description": "Feature type counted as a stone resource node",
+            "tier": "domain"
+          },
+          {
+            "key": "woodType",
+            "type": "string",
+            "default": "tree",
+            "label": "Wood Type",
+            "description": "Feature type counted as a wood resource node",
+            "tier": "domain"
+          },
+          {
+            "key": "yieldPerNode",
+            "type": "number",
+            "default": 1,
+            "label": "Yield Per Node",
+            "description": "Wood or stone gained per node gathered",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "features",
+            "stone",
+            "wood"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "GatherPage",
+        "defaultPath": "/gather",
+        "primaryEntity": "GatherData"
+      }
+    ],
+    "emittedEvents": [
+      "BURST",
+      "RESOURCES"
+    ],
+    "listenedEvents": []
+  }
+]

@@ -1,0 +1,236 @@
+[
+  {
+    "organism": "std-patience",
+    "orbital": "PatienceOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/2d/atoms/std-patience.ts",
+    "entities": [
+      {
+        "name": "PatienceData",
+        "fields": [
+          {
+            "name": "customers",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "served",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "pending",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lost",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "Patience",
+        "emittedEvents": [
+          "BURST",
+          "SERVICE_CHANGED",
+          "CUSTOMER_LOST"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BURST",
+            "direction": "emit",
+            "description": "Serve or starve particle burst; a fx-particles listener spawns it",
+            "tier": "domain"
+          },
+          {
+            "name": "SERVICE_CHANGED",
+            "direction": "emit",
+            "description": "Served/pending/lost counts after this step; a market-flow listener decides win/lose",
+            "tier": "domain"
+          },
+          {
+            "name": "CUSTOMER_LOST",
+            "direction": "emit",
+            "description": "Emitted when one or more customers' patience expires in the same tick",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "HERO_STEPPED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "customers",
+            "type": "[Customer]",
+            "default": [],
+            "label": "Customers",
+            "description": "Seed roster of stationary customers, each with their own position + patience/maxPatience",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxPatience": {
+                  "name": "maxPatience",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "patience": {
+                  "name": "patience",
+                  "required": false,
+                  "type": "number"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, patience ticks down and HERO_STEPPED serves nearby customers; toggle to freeze",
+            "tier": "domain"
+          },
+          {
+            "key": "serveRadius",
+            "type": "number",
+            "default": 1,
+            "label": "Serve Radius",
+            "description": "Manhattan distance at which a customer counts as served by the hero's last step: 0 = step onto tile, 1 = adjacent",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "customers",
+            "lost",
+            "pending",
+            "served"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "PatiencePage",
+        "defaultPath": "/patience",
+        "primaryEntity": "PatienceData"
+      }
+    ],
+    "emittedEvents": [
+      "BURST",
+      "CUSTOMER_LOST",
+      "SERVICE_CHANGED"
+    ],
+    "listenedEvents": []
+  }
+]

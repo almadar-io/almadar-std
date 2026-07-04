@@ -1,0 +1,176 @@
+{
+  "description": "Headless win/lose round-resolution mechanic: derives result (victory/defeat/none) from team survivor counts on each UNITS_CHANGED signal and emits GAME_END. Owns only result; boards own their own phase/turn. Renders nothing.",
+  "name": "std-round-flow",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string"
+          }
+        ],
+        "name": "RoundState",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "RoundFlowOrbital",
+      "pages": [
+        {
+          "name": "RoundFlowPage",
+          "path": "/round-flow",
+          "traits": [
+            {
+              "ref": "RoundFlow"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "running": {
+              "default": true,
+              "description": "When true, incoming unit-count changes are evaluated for win/lose; toggle to freeze.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            }
+          },
+          "emits": [
+            {
+              "description": "Called when the round resolves to a win or loss",
+              "event": "GAME_END",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "result"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "RoundState",
+          "name": "RoundFlow",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "UNITS_CHANGED",
+                "name": "Units Changed",
+                "payloadSchema": [
+                  {
+                    "name": "playersAlive",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enemiesAlive",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "description": "Called when the round resolves to a win or loss",
+                "key": "GAME_END",
+                "name": "Game End",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    [
+                      "if",
+                      [
+                        "==",
+                        "@payload.playersAlive",
+                        0.0
+                      ],
+                      "defeat",
+                      [
+                        "if",
+                        [
+                          "==",
+                          "@payload.enemiesAlive",
+                          0.0
+                        ],
+                        "victory",
+                        "none"
+                      ]
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "!=",
+                      "@entity.result",
+                      "none"
+                    ],
+                    [
+                      "emit",
+                      "GAME_END",
+                      {
+                        "result": "@entity.result"
+                      }
+                    ],
+                    null
+                  ]
+                ],
+                "event": "UNITS_CHANGED",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

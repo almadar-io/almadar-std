@@ -328,6 +328,67 @@ export const TRAIN_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["train/computeAdvantages", "@episode.rewards", "@episode.values", { "gamma": 0.99, "lambda": 0.95 }]',
   },
+
+  // ============================================================================
+  // ML lifecycle effects (bare aliases invoked by std ML behaviors)
+  // ============================================================================
+
+  'train': {
+    module: 'train',
+    category: 'ml-effect',
+    minArity: 1,
+    maxArity: 3,
+    description: 'Train a model over a dataset (ML effect)',
+    hasSideEffects: true,
+    returnType: 'object',
+    params: [
+      { name: 'model', type: 'nn/module', description: 'The neural network module' },
+      { name: 'data', type: 'array', description: 'Training data (optional)' },
+      { name: 'config', type: 'object', description: 'Training config (optional)' },
+    ],
+    example: '["train", "@entity.model", "@entity.data", { "epochs": 100 }]',
+  },
+  'evaluate': {
+    module: 'train',
+    category: 'ml-effect',
+    minArity: 1,
+    maxArity: 2,
+    description: 'Evaluate a model against test cases (ML effect)',
+    hasSideEffects: false,
+    returnType: 'object',
+    params: [
+      { name: 'model', type: 'nn/module', description: 'The neural network module' },
+      { name: 'testCases', type: 'array', description: 'Test cases (optional)' },
+    ],
+    example: '["evaluate", "@entity.model", "@entity.testCases"]',
+  },
+  'checkpoint/save': {
+    module: 'train',
+    category: 'ml-effect',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Save a model checkpoint (ML effect)',
+    hasSideEffects: true,
+    returnType: 'void',
+    params: [
+      { name: 'model', type: 'nn/module', description: 'The neural network module' },
+      { name: 'key', type: 'string', description: 'Checkpoint identifier' },
+    ],
+    example: '["checkpoint/save", "@entity.model", "@entity.checkpointKey"]',
+  },
+  'checkpoint/load': {
+    module: 'train',
+    category: 'ml-effect',
+    minArity: 1,
+    maxArity: 1,
+    description: 'Load a model checkpoint (ML effect)',
+    hasSideEffects: false,
+    returnType: 'object',
+    params: [
+      { name: 'key', type: 'string', description: 'Checkpoint identifier' },
+    ],
+    example: '["checkpoint/load", "@entity.checkpointKey"]',
+  },
 };
 
 /**

@@ -1,0 +1,168 @@
+[
+  {
+    "organism": "std-arcade-play",
+    "orbital": "ArcadePlayOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/2d/atoms/std-arcade-play.ts",
+    "entities": [
+      {
+        "name": "ArcadePlayData",
+        "fields": [
+          {
+            "name": "tokens",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "tickets",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "machines",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "lastRoll",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "playCount",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ArcadePlay",
+        "emittedEvents": [
+          "BURST",
+          "SCORE_CHANGED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BURST",
+            "direction": "emit",
+            "description": "Payout (or dud) particle spawned at the played machine's tile; a fx-particles listener spawns it",
+            "tier": "domain"
+          },
+          {
+            "name": "SCORE_CHANGED",
+            "direction": "emit",
+            "description": "Tickets + tokens after this play; a flow listener decides win/lose",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "PLAY_MACHINE",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "machines",
+            "type": "[Machine]",
+            "default": [],
+            "label": "Machines",
+            "description": "Playable machine ids the PLAY_MACHINE intent is validated against",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "maxPayout",
+            "type": "number",
+            "default": 1,
+            "label": "Max Payout",
+            "description": "Highest ticket payout a single play can award",
+            "tier": "domain"
+          },
+          {
+            "key": "minPayout",
+            "type": "number",
+            "default": 0,
+            "label": "Min Payout",
+            "description": "Lowest ticket payout a single play can award",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, PLAY_MACHINE intents are applied; toggle to freeze the economy",
+            "tier": "domain"
+          },
+          {
+            "key": "startTokens",
+            "type": "number",
+            "default": 14,
+            "label": "Start Tokens",
+            "description": "Tokens the player starts with",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "lastRoll",
+            "machines",
+            "playCount",
+            "tickets",
+            "tokens"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ArcadePlayPage",
+        "defaultPath": "/arcade-play",
+        "primaryEntity": "ArcadePlayData"
+      }
+    ],
+    "emittedEvents": [
+      "BURST",
+      "SCORE_CHANGED"
+    ],
+    "listenedEvents": []
+  }
+]

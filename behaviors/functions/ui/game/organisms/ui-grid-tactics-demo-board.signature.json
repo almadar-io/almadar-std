@@ -1,0 +1,259 @@
+[
+  {
+    "organism": "ui-grid-tactics-demo-board",
+    "orbital": "GridTacticsDemoOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/2d/organisms/ui-grid-tactics-demo-board.ts",
+    "entities": [
+      {
+        "name": "GameState",
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "tiles",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "turn",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validMoves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "uiPhase",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "TacticsAuthority",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "attackDamage",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 6
+          },
+          {
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 6
+          },
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "units",
+            "type": "unknown",
+            "default": [
+              {
+                "health": 3,
+                "id": "p1",
+                "maxHealth": 3,
+                "position": {
+                  "x": 1,
+                  "y": 1
+                },
+                "team": "player",
+                "unitType": "marine",
+                "x": 1,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "health": 3,
+                "id": "p2",
+                "maxHealth": 3,
+                "position": {
+                  "x": 1,
+                  "y": 4
+                },
+                "team": "player",
+                "unitType": "marine",
+                "x": 1,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "health": 2,
+                "id": "e1",
+                "maxHealth": 2,
+                "position": {
+                  "x": 4,
+                  "y": 1
+                },
+                "team": "enemy",
+                "unitType": "raider",
+                "x": 4,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "health": 2,
+                "id": "e2",
+                "maxHealth": 2,
+                "position": {
+                  "x": 4,
+                  "y": 4
+                },
+                "team": "enemy",
+                "unitType": "raider",
+                "x": 4,
+                "y": 4,
+                "z": 0
+              }
+            ]
+          }
+        ],
+        "capabilities": [],
+        "ref": "Tactics.traits.GridTactics"
+      },
+      {
+        "name": "FxDecay",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Particles.traits.FxParticles"
+      },
+      {
+        "name": "RoundLogic",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Round.traits.RoundFlow"
+      },
+      {
+        "name": "PlayerIntent",
+        "emittedEvents": [
+          "MOVE",
+          "ATTACK",
+          "AI_TURN",
+          "TILE_CLICK",
+          "UNIT_CLICK",
+          "CANCEL"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "MOVE",
+            "direction": "emit",
+            "description": "Player move intent applied by the grid-tactics authority",
+            "tier": "domain"
+          },
+          {
+            "name": "ATTACK",
+            "direction": "emit",
+            "description": "Player attack intent applied by the grid-tactics authority",
+            "tier": "domain"
+          },
+          {
+            "name": "AI_TURN",
+            "direction": "emit",
+            "description": "Ends the player turn; the grid-tactics authority runs the enemy AI pipeline",
+            "tier": "domain"
+          },
+          {
+            "name": "TILE_CLICK",
+            "direction": "emit",
+            "description": "tileClickEvent prop",
+            "tier": "domain"
+          },
+          {
+            "name": "UNIT_CLICK",
+            "direction": "emit",
+            "description": "unitClickEvent prop",
+            "tier": "domain"
+          },
+          {
+            "name": "CANCEL",
+            "direction": "emit",
+            "description": "Clears the current selection",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "END_TURN",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "movementRange",
+            "type": "number",
+            "default": 3
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "GridTacticsDemoPage",
+        "defaultPath": "/grid-tactics-demo",
+        "primaryEntity": "GameState"
+      }
+    ],
+    "emittedEvents": [
+      "AI_TURN",
+      "ATTACK",
+      "CANCEL",
+      "MOVE",
+      "TILE_CLICK",
+      "UNIT_CLICK"
+    ],
+    "listenedEvents": []
+  }
+]

@@ -6,11 +6,26 @@
     "factoryPath": "behaviors/functions/ui/game/2d/organisms/ui-hex-strategy-board.ts",
     "entities": [
       {
-        "name": "HexStrategyBoardItem",
+        "name": "GameState",
         "fields": [
           {
             "name": "units",
             "type": "array",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "tiles",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
             "required": false
           },
           {
@@ -24,53 +39,28 @@
             "required": false
           },
           {
+            "name": "attackTargets",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "uiPhase",
+            "type": "string",
+            "required": false
+          },
+          {
             "name": "turn",
             "type": "number",
             "required": false
           },
           {
-            "name": "result",
-            "type": "string",
-            "required": false
-          },
-          {
-            "name": "phase",
-            "type": "string",
-            "required": false
-          },
-          {
-            "name": "territory",
+            "name": "score",
             "type": "number",
             "required": false
           },
           {
-            "name": "gridWidth",
+            "name": "scoreBaseline",
             "type": "number",
-            "required": false
-          },
-          {
-            "name": "gridHeight",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "movementRange",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "enemyTurn",
-            "type": "boolean",
-            "required": false
-          },
-          {
-            "name": "effects",
-            "type": "array",
-            "required": false
-          },
-          {
-            "name": "unitEffects",
-            "type": "array",
             "required": false
           }
         ],
@@ -79,167 +69,994 @@
     ],
     "traits": [
       {
-        "name": "HexStrategyBoardRender",
-        "emittedEvents": [
-          "ATTACK",
-          "GAME_END",
-          "UNIT_MOVE",
-          "TILE_CLICK",
-          "UNIT_CLICK",
-          "END_TURN",
-          "CANCEL",
-          "PLAY_AGAIN"
-        ],
+        "name": "Authority",
+        "emittedEvents": [],
         "listenedEvents": [],
-        "events": [
-          {
-            "name": "ATTACK",
-            "direction": "emit",
-            "description": "-- Callbacks --",
-            "tier": "domain"
-          },
-          {
-            "name": "GAME_END",
-            "direction": "emit",
-            "description": "Called when strategy game ends",
-            "tier": "domain"
-          },
-          {
-            "name": "UNIT_MOVE",
-            "direction": "emit",
-            "description": "Called after a unit moves to a new hex",
-            "tier": "domain"
-          },
-          {
-            "name": "TILE_CLICK",
-            "direction": "emit",
-            "description": "-- Declarative event props --",
-            "tier": "domain"
-          },
-          {
-            "name": "UNIT_CLICK",
-            "direction": "emit",
-            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
-            "tier": "domain"
-          },
-          {
-            "name": "END_TURN",
-            "direction": "emit",
-            "description": "Emits UI:{endTurnEvent} with {} on end turn",
-            "tier": "domain"
-          },
-          {
-            "name": "CANCEL",
-            "direction": "emit",
-            "description": "Emits UI:{cancelEvent} with {} on cancel",
-            "tier": "domain"
-          },
-          {
-            "name": "PLAY_AGAIN",
-            "direction": "emit",
-            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
-            "tier": "domain"
-          },
-          {
-            "name": "START",
-            "direction": "listen"
-          },
-          {
-            "name": "INIT",
-            "direction": "listen"
-          }
-        ],
         "overridableConfigKeys": [
           {
-            "key": "activeFilters",
-            "type": "json",
-            "label": "Active Filters",
-            "description": "Active filters",
-            "tier": "presentation"
+            "key": "attackDamage",
+            "type": "unknown",
+            "default": 3
           },
           {
-            "key": "assetBaseUrl",
-            "type": "Asset",
-            "default": "https://almadar-kflow-assets.web.app/shared/",
-            "label": "Asset Base Url",
-            "description": "Base URL prepended to manifest sprite paths",
-            "tier": "presentation",
-            "properties": {
-              "animations": {
-                "name": "animations",
-                "required": false,
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "aspect": {
-                "name": "aspect",
-                "required": false,
-                "type": "string"
-              },
-              "category": {
-                "name": "category",
-                "required": false,
-                "type": "string"
-              },
-              "dimension": {
-                "name": "dimension",
-                "required": false,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "role": {
-                "name": "role",
-                "required": false,
-                "type": "string"
-              },
-              "style": {
-                "name": "style",
-                "required": false,
-                "type": "string"
-              },
-              "thumbnailUrl": {
-                "name": "thumbnailUrl",
-                "required": false,
-                "type": "string"
-              },
-              "url": {
-                "name": "url",
-                "required": false,
-                "type": "string"
-              },
-              "variant": {
-                "name": "variant",
-                "required": false,
-                "type": "string"
-              }
-            }
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 6
           },
           {
-            "key": "assetManifest",
-            "type": "HexStrategyBoardAssetManifest",
-            "default": {
-              "effects": {
-                "explosion": {
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 6
+          },
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "tiles",
+            "type": "unknown",
+            "default": [
+              {
+                "id": "t-0-0",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
                   "animations": [
                     "static"
                   ],
-                  "aspect": "8:1",
-                  "category": "explosion",
+                  "aspect": "1:1",
+                  "category": "stone",
                   "dimension": "2d",
-                  "name": "explosion",
-                  "role": "effect",
+                  "name": "stone",
+                  "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
                 },
-                "slash": {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "id": "t-1-0",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 1,
+                "y": 0
+              },
+              {
+                "id": "t-2-0",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 2,
+                "y": 0
+              },
+              {
+                "id": "t-3-0",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 3,
+                "y": 0
+              },
+              {
+                "id": "t-4-0",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 4,
+                "y": 0
+              },
+              {
+                "id": "t-5-0",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 5,
+                "y": 0
+              },
+              {
+                "id": "t-0-1",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 0,
+                "y": 1
+              },
+              {
+                "id": "t-1-1",
+                "passable": true,
+                "terrain": "grass",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"
+                },
+                "x": 1,
+                "y": 1
+              },
+              {
+                "id": "t-2-1",
+                "passable": true,
+                "terrain": "dirt",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "dirt",
+                  "dimension": "2d",
+                  "name": "dirt",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png"
+                },
+                "x": 2,
+                "y": 1
+              },
+              {
+                "id": "t-3-1",
+                "passable": true,
+                "terrain": "grass",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"
+                },
+                "x": 3,
+                "y": 1
+              },
+              {
+                "id": "t-4-1",
+                "passable": true,
+                "terrain": "grass",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"
+                },
+                "x": 4,
+                "y": 1
+              },
+              {
+                "id": "t-5-1",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 5,
+                "y": 1
+              },
+              {
+                "id": "t-0-2",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 0,
+                "y": 2
+              },
+              {
+                "id": "t-1-2",
+                "passable": true,
+                "terrain": "grass",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"
+                },
+                "x": 1,
+                "y": 2
+              },
+              {
+                "id": "t-2-2",
+                "passable": true,
+                "terrain": "grass",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"
+                },
+                "x": 2,
+                "y": 2
+              },
+              {
+                "id": "t-3-2",
+                "passable": true,
+                "terrain": "dirt",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "dirt",
+                  "dimension": "2d",
+                  "name": "dirt",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png"
+                },
+                "x": 3,
+                "y": 2
+              },
+              {
+                "id": "t-4-2",
+                "passable": true,
+                "terrain": "sand",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "sand",
+                  "dimension": "2d",
+                  "name": "sand",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png"
+                },
+                "x": 4,
+                "y": 2
+              },
+              {
+                "id": "t-5-2",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 5,
+                "y": 2
+              },
+              {
+                "id": "t-0-3",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 0,
+                "y": 3
+              },
+              {
+                "id": "t-1-3",
+                "passable": true,
+                "terrain": "dirt",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "dirt",
+                  "dimension": "2d",
+                  "name": "dirt",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png"
+                },
+                "x": 1,
+                "y": 3
+              },
+              {
+                "id": "t-2-3",
+                "passable": true,
+                "terrain": "grass",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"
+                },
+                "x": 2,
+                "y": 3
+              },
+              {
+                "id": "t-3-3",
+                "passable": true,
+                "terrain": "grass",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"
+                },
+                "x": 3,
+                "y": 3
+              },
+              {
+                "id": "t-4-3",
+                "passable": true,
+                "terrain": "sand",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "sand",
+                  "dimension": "2d",
+                  "name": "sand",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png"
+                },
+                "x": 4,
+                "y": 3
+              },
+              {
+                "id": "t-5-3",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 5,
+                "y": 3
+              },
+              {
+                "id": "t-0-4",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 0,
+                "y": 4
+              },
+              {
+                "id": "t-1-4",
+                "passable": true,
+                "terrain": "grass",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"
+                },
+                "x": 1,
+                "y": 4
+              },
+              {
+                "id": "t-2-4",
+                "passable": true,
+                "terrain": "grass",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"
+                },
+                "x": 2,
+                "y": 4
+              },
+              {
+                "id": "t-3-4",
+                "passable": true,
+                "terrain": "sand",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "sand",
+                  "dimension": "2d",
+                  "name": "sand",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png"
+                },
+                "x": 3,
+                "y": 4
+              },
+              {
+                "id": "t-4-4",
+                "passable": true,
+                "terrain": "sand",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "sand",
+                  "dimension": "2d",
+                  "name": "sand",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png"
+                },
+                "x": 4,
+                "y": 4
+              },
+              {
+                "id": "t-5-4",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 5,
+                "y": 4
+              },
+              {
+                "id": "t-0-5",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 0,
+                "y": 5
+              },
+              {
+                "id": "t-1-5",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 1,
+                "y": 5
+              },
+              {
+                "id": "t-2-5",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 2,
+                "y": 5
+              },
+              {
+                "id": "t-3-5",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 3,
+                "y": 5
+              },
+              {
+                "id": "t-4-5",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 4,
+                "y": 5
+              },
+              {
+                "id": "t-5-5",
+                "passable": false,
+                "terrain": "stone",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
+                },
+                "x": 5,
+                "y": 5
+              }
+            ]
+          },
+          {
+            "key": "units",
+            "type": "unknown",
+            "default": [
+              {
+                "health": 10,
+                "id": "u1",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "worker",
+                  "dimension": "2d",
+                  "name": "worker",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png"
+                },
+                "name": "Miner",
+                "position": {
+                  "x": 3,
+                  "y": 2
+                },
+                "team": "player",
+                "unitType": "worker",
+                "x": 3,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "health": 8,
+                "id": "u2",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ranger",
+                  "dimension": "2d",
+                  "name": "ranger",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png"
+                },
+                "name": "Thornbow",
+                "position": {
+                  "x": 2,
+                  "y": 3
+                },
+                "team": "player",
+                "unitType": "ranger",
+                "x": 2,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "health": 12,
+                "id": "u3",
+                "maxHealth": 12,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "guardian",
+                  "dimension": "2d",
+                  "name": "guardian",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png"
+                },
+                "name": "Ironwall",
+                "position": {
+                  "x": 2,
+                  "y": 4
+                },
+                "team": "player",
+                "unitType": "guardian",
+                "x": 2,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "health": 8,
+                "id": "e1",
+                "maxHealth": 8,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ranger",
+                  "dimension": "2d",
+                  "name": "ranger",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png"
+                },
+                "name": "Foe",
+                "position": {
+                  "x": 4,
+                  "y": 1
+                },
+                "team": "enemy",
+                "unitType": "ranger",
+                "x": 4,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "health": 10,
+                "id": "e2",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "guardian",
+                  "dimension": "2d",
+                  "name": "guardian",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png"
+                },
+                "name": "Foe",
+                "position": {
+                  "x": 3,
+                  "y": 1
+                },
+                "team": "enemy",
+                "unitType": "guardian",
+                "x": 3,
+                "y": 1,
+                "z": 0
+              }
+            ]
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.TacticsAuthority"
+      },
+      {
+        "name": "FxDecay",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.FxDecay"
+      },
+      {
+        "name": "RoundLogic",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.RoundLogic"
+      },
+      {
+        "name": "ScoreKeeper",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "initialEnemies",
+            "type": "unknown",
+            "default": 2
+          },
+          {
+            "key": "pointsPerKill",
+            "type": "unknown",
+            "default": 10
+          },
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "startScore",
+            "type": "unknown",
+            "default": 0
+          }
+        ],
+        "capabilities": [],
+        "ref": "Score.traits.ScoreKeeper"
+      },
+      {
+        "name": "Player",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "assetManifest",
+            "type": "unknown",
+            "default": {
+              "effects": {
+                "hit": {
                   "animations": [
                     "static"
                   ],
@@ -250,8 +1067,7 @@
                   "role": "effect",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/slash_03.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/slash_03.png"
                 }
               },
               "features": {
@@ -266,8 +1082,7 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png"
                 },
                 "resource": {
                   "animations": [
@@ -280,8 +1095,7 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png"
                 }
               },
               "terrains": {
@@ -296,8 +1110,7 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png"
                 },
                 "grass": {
                   "animations": [
@@ -310,8 +1123,7 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"
                 },
                 "sand": {
                   "animations": [
@@ -324,8 +1136,7 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png"
                 },
                 "stone": {
                   "animations": [
@@ -338,8 +1149,7 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"
                 }
               },
               "units": {
@@ -358,8 +1168,7 @@
                   "role": "npc",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png"
                 },
                 "ranger": {
                   "animations": [
@@ -376,8 +1185,7 @@
                   "role": "npc",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png"
                 },
                 "worker": {
                   "animations": [
@@ -394,321 +1202,32 @@
                   "role": "npc",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png",
-                  "variant": ""
-                }
-              }
-            },
-            "label": "Asset Manifest",
-            "description": "Asset sprite manifest",
-            "tier": "presentation",
-            "properties": {
-              "effects": {
-                "name": "effects",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "features": {
-                "name": "features",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "terrains": {
-                "name": "terrains",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "units": {
-                "name": "units",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png"
                 }
               }
             }
           },
           {
-            "key": "className",
-            "type": "string",
-            "default": "",
-            "label": "Class Name",
-            "description": "Additional CSS classes",
-            "tier": "presentation"
-          },
-          {
-            "key": "enableCamera",
-            "type": "boolean",
-            "default": true,
-            "label": "Enable Camera",
-            "description": "Enable camera pan/zoom controls",
-            "tier": "presentation"
-          },
-          {
-            "key": "error",
-            "type": "HexStrategyBoardError",
-            "label": "Error",
-            "description": "Error state (UiError)",
-            "tier": "presentation",
-            "properties": {
-              "code": {
-                "name": "code",
-                "required": false,
-                "type": "string"
-              },
-              "message": {
-                "name": "message",
-                "required": true,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "stack": {
-                "name": "stack",
-                "required": false,
-                "type": "string"
-              }
+            "key": "backgroundAsset",
+            "type": "unknown",
+            "default": {
+              "animations": [],
+              "aspect": "1:1",
+              "category": "ui",
+              "dimension": "2d",
+              "name": "panel-frame",
+              "role": "ui",
+              "style": "fantasy-border",
+              "thumbnailUrl": "",
+              "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png"
             }
           },
           {
             "key": "features",
-            "type": "[HexStrategyBoardFeaturesItem]",
+            "type": "unknown",
             "default": [
               {
-                "id": "f1",
-                "sprite": {
+                "assetUrl": {
                   "animations": [
                     "static"
                   ],
@@ -719,16 +1238,16 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png"
                 },
+                "id": "f1",
                 "type": "resource",
                 "x": 3,
-                "y": 1
+                "y": 1,
+                "z": 0
               },
               {
-                "id": "f2",
-                "sprite": {
+                "assetUrl": {
                   "animations": [
                     "static"
                   ],
@@ -739,1716 +1258,74 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png"
                 },
+                "id": "f2",
                 "type": "outpost",
                 "x": 1,
-                "y": 3
+                "y": 3,
+                "z": 0
               }
-            ],
-            "label": "Features",
-            "description": "Features (resources, structures, etc.) on the board",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "assetUrl": {
-                  "name": "assetUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "sprite": {
-                  "name": "sprite",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "type": {
-                  "name": "type",
-                  "required": true,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
-          },
-          {
-            "key": "isLoading",
-            "type": "boolean",
-            "default": false,
-            "label": "Is Loading",
-            "description": "Loading state indicator",
-            "tier": "presentation"
-          },
-          {
-            "key": "pageProp",
-            "type": "number",
-            "default": 0,
-            "label": "Page",
-            "description": "Current page number",
-            "synonyms": "page",
-            "tier": "presentation"
-          },
-          {
-            "key": "pageSize",
-            "type": "number",
-            "default": 0,
-            "label": "Page Size",
-            "description": "Number of items per page",
-            "tier": "presentation"
-          },
-          {
-            "key": "scale",
-            "type": "number",
-            "default": 0.45,
-            "label": "Scale",
-            "description": "Render scale",
-            "tier": "presentation"
-          },
-          {
-            "key": "searchValue",
-            "type": "string",
-            "default": "Search Value",
-            "label": "Search Value",
-            "description": "Current search query value",
-            "tier": "presentation"
-          },
-          {
-            "key": "selectedIds",
-            "type": "[string]",
-            "default": [],
-            "label": "Selected Ids",
-            "description": "Currently selected item IDs",
-            "tier": "presentation",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "key": "showMinimap",
-            "type": "boolean",
-            "default": true,
-            "label": "Show Minimap",
-            "description": "Show minimap overlay",
-            "tier": "presentation"
-          },
-          {
-            "key": "sortBy",
-            "type": "string",
-            "default": "Sort By",
-            "label": "Sort By",
-            "description": "Current sort field",
-            "tier": "presentation"
-          },
-          {
-            "key": "sortDirection",
-            "type": "string",
-            "default": "asc",
-            "label": "Sort Direction",
-            "description": "Current sort direction",
-            "tier": "presentation",
-            "enumValues": [
-              "asc",
-              "desc"
             ]
           },
           {
-            "key": "tiles",
-            "type": "[HexStrategyBoardTilesItem]",
-            "default": [
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 0
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 0
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 0
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 0
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 0
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 5,
-                "y": 0
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "grass",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "grass",
-                  "dimension": "2d",
-                  "name": "grass",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "dirt",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "dirt",
-                  "dimension": "2d",
-                  "name": "dirt",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "grass",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "grass",
-                  "dimension": "2d",
-                  "name": "grass",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "grass",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "grass",
-                  "dimension": "2d",
-                  "name": "grass",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 1
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 5,
-                "y": 1
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "grass",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "grass",
-                  "dimension": "2d",
-                  "name": "grass",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "grass",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "grass",
-                  "dimension": "2d",
-                  "name": "grass",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "dirt",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "dirt",
-                  "dimension": "2d",
-                  "name": "dirt",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "sand",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "sand",
-                  "dimension": "2d",
-                  "name": "sand",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 2
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 5,
-                "y": 2
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "dirt",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "dirt",
-                  "dimension": "2d",
-                  "name": "dirt",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "grass",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "grass",
-                  "dimension": "2d",
-                  "name": "grass",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "grass",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "grass",
-                  "dimension": "2d",
-                  "name": "grass",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "sand",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "sand",
-                  "dimension": "2d",
-                  "name": "sand",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 3
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 5,
-                "y": 3
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "grass",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "grass",
-                  "dimension": "2d",
-                  "name": "grass",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "grass",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "grass",
-                  "dimension": "2d",
-                  "name": "grass",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "sand",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "sand",
-                  "dimension": "2d",
-                  "name": "sand",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "sand",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "sand",
-                  "dimension": "2d",
-                  "name": "sand",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 4
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 5,
-                "y": 4
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 5
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 5
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 5
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 5
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 5
-              },
-              {
-                "passable": false,
-                "terrain": "stone",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "stone",
-                  "dimension": "2d",
-                  "name": "stone",
-                  "role": "tile",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png",
-                  "variant": ""
-                },
-                "x": 5,
-                "y": 5
-              }
-            ],
-            "label": "Tiles",
-            "description": "Hex grid tiles",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "movementCost": {
-                  "name": "movementCost",
-                  "required": false,
-                  "type": "number"
-                },
-                "passable": {
-                  "name": "passable",
-                  "required": false,
-                  "type": "boolean"
-                },
-                "terrain": {
-                  "name": "terrain",
-                  "required": false,
-                  "type": "string"
-                },
-                "terrainSprite": {
-                  "name": "terrainSprite",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "tileType": {
-                  "name": "tileType",
-                  "required": false,
-                  "type": "string"
-                },
-                "type": {
-                  "name": "type",
-                  "required": false,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 6
+          },
+          {
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 6
+          },
+          {
+            "key": "hudBackgroundAsset",
+            "type": "unknown",
+            "default": {
+              "animations": [],
+              "aspect": "1:1",
+              "category": "ui",
+              "dimension": "2d",
+              "name": "panel-frame",
+              "role": "ui",
+              "style": "fantasy-border",
+              "thumbnailUrl": "",
+              "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png"
             }
           },
           {
-            "key": "totalCount",
-            "type": "number",
-            "default": 0,
-            "label": "Total Count",
-            "description": "Total number of items",
-            "tier": "presentation"
+            "key": "movementRange",
+            "type": "unknown",
+            "default": 2
           },
           {
-            "key": "units",
-            "type": "[HexStrategyBoardUnitsItem]",
-            "default": [
-              {
-                "animation": "idle",
-                "faction": "player",
-                "frame": 0,
-                "health": 10,
-                "id": "u1",
-                "maxHealth": 10,
-                "name": "Miner",
-                "position": {
-                  "x": 3,
-                  "y": 2
-                },
-                "sprite": {
-                  "animations": [
-                    "idle",
-                    "walk",
-                    "attack",
-                    "hit",
-                    "death"
-                  ],
-                  "aspect": "1:1",
-                  "category": "worker",
-                  "dimension": "2d",
-                  "name": "worker",
-                  "role": "npc",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png",
-                  "variant": ""
-                },
-                "team": "player",
-                "unitType": "worker"
-              },
-              {
-                "animation": "idle",
-                "faction": "player",
-                "frame": 0,
-                "health": 8,
-                "id": "u2",
-                "maxHealth": 10,
-                "name": "Thornbow",
-                "position": {
-                  "x": 2,
-                  "y": 3
-                },
-                "sprite": {
-                  "animations": [
-                    "idle",
-                    "walk",
-                    "attack",
-                    "hit",
-                    "death"
-                  ],
-                  "aspect": "1:1",
-                  "category": "ranger",
-                  "dimension": "2d",
-                  "name": "ranger",
-                  "role": "npc",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png",
-                  "variant": ""
-                },
-                "team": "player",
-                "unitType": "ranger"
-              },
-              {
-                "animation": "idle",
-                "faction": "player",
-                "frame": 0,
-                "health": 12,
-                "id": "u3",
-                "maxHealth": 12,
-                "name": "Ironwall",
-                "position": {
-                  "x": 2,
-                  "y": 4
-                },
-                "sprite": {
-                  "animations": [
-                    "idle",
-                    "walk",
-                    "attack",
-                    "hit",
-                    "death"
-                  ],
-                  "aspect": "1:1",
-                  "category": "guardian",
-                  "dimension": "2d",
-                  "name": "guardian",
-                  "role": "npc",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png",
-                  "variant": ""
-                },
-                "team": "player",
-                "unitType": "guardian"
-              },
-              {
-                "animation": "idle",
-                "faction": "enemy",
-                "frame": 0,
-                "health": 8,
-                "id": "e1",
-                "maxHealth": 8,
-                "name": "Foe",
-                "position": {
-                  "x": 4,
-                  "y": 1
-                },
-                "sprite": {
-                  "animations": [
-                    "idle",
-                    "walk",
-                    "attack",
-                    "hit",
-                    "death"
-                  ],
-                  "aspect": "1:1",
-                  "category": "ranger",
-                  "dimension": "2d",
-                  "name": "ranger",
-                  "role": "npc",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png",
-                  "variant": ""
-                },
-                "team": "enemy",
-                "unitType": "ranger"
-              },
-              {
-                "animation": "idle",
-                "faction": "enemy",
-                "frame": 0,
-                "health": 10,
-                "id": "e2",
-                "maxHealth": 10,
-                "name": "Foe",
-                "position": {
-                  "x": 3,
-                  "y": 1
-                },
-                "sprite": {
-                  "animations": [
-                    "idle",
-                    "walk",
-                    "attack",
-                    "hit",
-                    "death"
-                  ],
-                  "aspect": "1:1",
-                  "category": "guardian",
-                  "dimension": "2d",
-                  "name": "guardian",
-                  "role": "npc",
-                  "style": "",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png",
-                  "variant": ""
-                },
-                "team": "enemy",
-                "unitType": "guardian"
-              }
-            ],
-            "label": "Units",
-            "description": "Units on the board",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "animation": {
-                  "name": "animation",
-                  "required": false,
-                  "type": "string"
-                },
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "faction": {
-                  "name": "faction",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
-                },
-                "frame": {
-                  "name": "frame",
-                  "required": false,
-                  "type": "number"
-                },
-                "health": {
-                  "name": "health",
-                  "required": false,
-                  "type": "number"
-                },
-                "heroId": {
-                  "name": "heroId",
-                  "required": false,
-                  "type": "string"
-                },
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
-                "maxHealth": {
-                  "name": "maxHealth",
-                  "required": false,
-                  "type": "number"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "name": {
-                  "name": "name",
-                  "required": false,
-                  "type": "string"
-                },
-                "position": {
-                  "name": "position",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "previousPosition": {
-                  "name": "previousPosition",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "sprite": {
-                  "name": "sprite",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "spriteSheet": {
-                  "name": "spriteSheet",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "team": {
-                  "name": "team",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
-                },
-                "traits": {
-                  "name": "traits",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "properties": {
-                      "cooldown": {
-                        "name": "cooldown",
-                        "required": true,
-                        "type": "number"
-                      },
-                      "currentState": {
-                        "name": "currentState",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "name": {
-                        "name": "name",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "states": {
-                        "name": "states",
-                        "required": true,
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "type": "object"
-                  }
-                },
-                "unitType": {
-                  "name": "unitType",
-                  "required": false,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": false,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": false,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
+            "key": "projection",
+            "type": "unknown",
+            "default": "hex"
+          },
+          {
+            "key": "scale",
+            "type": "unknown",
+            "default": 0.45
+          },
+          {
+            "key": "showMinimap",
+            "type": "unknown",
+            "default": true
           }
         ],
         "capabilities": [],
-        "entityRebindable": true,
-        "entityContract": {
-          "requires": [],
-          "provides": [
-            "effects",
-            "enemyTurn",
-            "gridHeight",
-            "gridWidth",
-            "movementRange",
-            "phase",
-            "result",
-            "selectedUnitId",
-            "territory",
-            "turn",
-            "unitEffects",
-            "units",
-            "validMoves"
-          ]
-        }
+        "ref": "Frame.traits.PlayerIntent"
       }
     ],
     "pages": [
       {
         "name": "HexStrategyBoardPage",
         "defaultPath": "/hex-strategy-board",
-        "primaryEntity": "HexStrategyBoardItem"
+        "primaryEntity": "GameState"
       }
     ],
-    "emittedEvents": [
-      "ATTACK",
-      "CANCEL",
-      "END_TURN",
-      "GAME_END",
-      "PLAY_AGAIN",
-      "TILE_CLICK",
-      "UNIT_CLICK",
-      "UNIT_MOVE"
-    ],
+    "emittedEvents": [],
     "listenedEvents": []
   }
 ]

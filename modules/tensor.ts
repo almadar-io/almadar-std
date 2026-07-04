@@ -443,6 +443,81 @@ export const TENSOR_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["tensor/toList", "@entity.output"]',
   },
+
+  // ============================================================================
+  // Concatenation / stacking / shape manipulation
+  // ============================================================================
+
+  'tensor/cat': {
+    module: 'tensor',
+    category: 'ml-tensor',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Concatenate two tensors along the last dimension',
+    hasSideEffects: false,
+    returnType: 'tensor',
+    params: [
+      { name: 'a', type: 'tensor', description: 'First tensor' },
+      { name: 'b', type: 'tensor', description: 'Second tensor' },
+    ],
+    example: '["tensor/cat", "@entity.a", "@entity.b"]',
+  },
+  'tensor/stack': {
+    module: 'tensor',
+    category: 'ml-tensor',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Stack two tensors along a new leading dimension',
+    hasSideEffects: false,
+    returnType: 'tensor',
+    params: [
+      { name: 'a', type: 'tensor', description: 'First tensor' },
+      { name: 'b', type: 'tensor', description: 'Second tensor' },
+    ],
+    example: '["tensor/stack", "@entity.a", "@entity.b"]',
+  },
+  'tensor/transpose': {
+    module: 'tensor',
+    category: 'ml-tensor',
+    minArity: 1,
+    maxArity: 3,
+    description: 'Transpose a tensor (optionally swapping two named dimensions)',
+    hasSideEffects: false,
+    returnType: 'tensor',
+    params: [
+      { name: 'tensor', type: 'tensor', description: 'The tensor to transpose' },
+      { name: 'dim0', type: 'number', description: 'First dimension to swap (optional)' },
+      { name: 'dim1', type: 'number', description: 'Second dimension to swap (optional)' },
+    ],
+    example: '["tensor/transpose", "@entity.matrix", 0, 1]',
+  },
+  'tensor/unsqueeze': {
+    module: 'tensor',
+    category: 'ml-tensor',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Insert a dimension of size one at the given position',
+    hasSideEffects: false,
+    returnType: 'tensor',
+    params: [
+      { name: 'tensor', type: 'tensor', description: 'The tensor' },
+      { name: 'dim', type: 'number', description: 'Position to insert the new dimension' },
+    ],
+    example: '["tensor/unsqueeze", "@entity.vector", 0]',
+  },
+  'tensor/squeeze': {
+    module: 'tensor',
+    category: 'ml-tensor',
+    minArity: 1,
+    maxArity: 1,
+    description: 'Remove all dimensions of size one',
+    hasSideEffects: false,
+    returnType: 'tensor',
+    params: [
+      { name: 'tensor', type: 'tensor', description: 'The tensor' },
+    ],
+    example: '["tensor/squeeze", "@entity.output"]',
+  },
 };
 
 /**

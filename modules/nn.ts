@@ -194,6 +194,25 @@ export const NN_OPERATORS: Record<string, StdOperatorMeta> = {
     ],
     example: '["nn/clone", "@entity.architecture"]',
   },
+
+  // ============================================================================
+  // ML lifecycle effect (bare alias invoked by std ML behaviors)
+  // ============================================================================
+
+  'forward': {
+    module: 'nn',
+    category: 'ml-effect',
+    minArity: 2,
+    maxArity: 2,
+    description: 'Run a forward pass through a model (ML effect)',
+    hasSideEffects: false,
+    returnType: 'tensor',
+    params: [
+      { name: 'model', type: 'nn/module', description: 'The neural network module' },
+      { name: 'input', type: 'tensor', description: 'Input tensor' },
+    ],
+    example: '["forward", "@entity.model", "@entity.input"]',
+  },
 };
 
 /**

@@ -335,6 +335,16 @@ import {
   isStdUiArcadeBoard3dArcadeBoard3DOrbitalParams,
 } from './ui/game/3d/organisms/ui-arcade-board-3d.js';
 import {
+  stdUiArenaBoardArenaBoardOrbital,
+  StdUiArenaBoardArenaBoardOrbitalManifest,
+  isStdUiArenaBoardArenaBoardOrbitalParams,
+} from './ui/game/2d/organisms/ui-arena-board.js';
+import {
+  stdUiArenaBoard3dArenaBoard3DOrbital,
+  StdUiArenaBoard3dArenaBoard3DOrbitalManifest,
+  isStdUiArenaBoard3dArenaBoard3DOrbitalParams,
+} from './ui/game/3d/organisms/ui-arena-board-3d.js';
+import {
   stdUiBattleBoardBattleBoardOrbital,
   StdUiBattleBoardBattleBoardOrbitalManifest,
   isStdUiBattleBoardBattleBoardOrbitalParams,
@@ -494,6 +504,11 @@ import {
   StdUiGraveyardBoard3dGraveyardBoard3DOrbitalManifest,
   isStdUiGraveyardBoard3dGraveyardBoard3DOrbitalParams,
 } from './ui/game/3d/organisms/ui-graveyard-board-3d.js';
+import {
+  stdUiGridTacticsDemoBoardGridTacticsDemoOrbital,
+  StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalManifest,
+  isStdUiGridTacticsDemoBoardGridTacticsDemoOrbitalParams,
+} from './ui/game/2d/organisms/ui-grid-tactics-demo-board.js';
 import {
   stdUiHeroOrganismHeroOrganismOrbital,
   StdUiHeroOrganismHeroOrganismOrbitalManifest,
@@ -714,6 +729,16 @@ import {
   StdUiTabbedContainerTabbedContainerOrbitalManifest,
   isStdUiTabbedContainerTabbedContainerOrbitalParams,
 } from './ui/core/organisms/ui-tabbed-container.js';
+import {
+  stdUiTacticsDemo2dTacticsDemo2DOrbital,
+  StdUiTacticsDemo2dTacticsDemo2DOrbitalManifest,
+  isStdUiTacticsDemo2dTacticsDemo2DOrbitalParams,
+} from './ui/game/2d/organisms/ui-tactics-demo-2d.js';
+import {
+  stdUiTacticsDemo3dTacticsDemo3DOrbital,
+  StdUiTacticsDemo3dTacticsDemo3DOrbitalManifest,
+  isStdUiTacticsDemo3dTacticsDemo3DOrbitalParams,
+} from './ui/game/3d/organisms/ui-tactics-demo-3d.js';
 import {
   stdUiTanksBoardTanksBoardOrbital,
   StdUiTanksBoardTanksBoardOrbitalManifest,
@@ -1644,6 +1669,24 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiArcadeBoard3dArcadeBoard3DOrbitalManifest,
   }],
+  ['ui-arena-board::ArenaBoardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiArenaBoardArenaBoardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-arena-board::ArenaBoardOrbital');
+      }
+      return stdUiArenaBoardArenaBoardOrbital(p);
+    },
+    manifest: StdUiArenaBoardArenaBoardOrbitalManifest,
+  }],
+  ['ui-arena-board-3d::ArenaBoard3DOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiArenaBoard3dArenaBoard3DOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-arena-board-3d::ArenaBoard3DOrbital');
+      }
+      return stdUiArenaBoard3dArenaBoard3DOrbital(p);
+    },
+    manifest: StdUiArenaBoard3dArenaBoard3DOrbitalManifest,
+  }],
   ['ui-battle-board::BattleBoardOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiBattleBoardBattleBoardOrbitalParams(p)) {
@@ -1931,6 +1974,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiGraveyardBoard3dGraveyardBoard3DOrbital(p);
     },
     manifest: StdUiGraveyardBoard3dGraveyardBoard3DOrbitalManifest,
+  }],
+  ['ui-grid-tactics-demo-board::GridTacticsDemoOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiGridTacticsDemoBoardGridTacticsDemoOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-grid-tactics-demo-board::GridTacticsDemoOrbital');
+      }
+      return stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(p);
+    },
+    manifest: StdUiGridTacticsDemoBoardGridTacticsDemoOrbitalManifest,
   }],
   ['ui-hero-organism::HeroOrganismOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -2327,6 +2379,24 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiTabbedContainerTabbedContainerOrbital(p);
     },
     manifest: StdUiTabbedContainerTabbedContainerOrbitalManifest,
+  }],
+  ['ui-tactics-demo-2d::TacticsDemo2DOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiTacticsDemo2dTacticsDemo2DOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-tactics-demo-2d::TacticsDemo2DOrbital');
+      }
+      return stdUiTacticsDemo2dTacticsDemo2DOrbital(p);
+    },
+    manifest: StdUiTacticsDemo2dTacticsDemo2DOrbitalManifest,
+  }],
+  ['ui-tactics-demo-3d::TacticsDemo3DOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiTacticsDemo3dTacticsDemo3DOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-tactics-demo-3d::TacticsDemo3DOrbital');
+      }
+      return stdUiTacticsDemo3dTacticsDemo3DOrbital(p);
+    },
+    manifest: StdUiTacticsDemo3dTacticsDemo3DOrbitalManifest,
   }],
   ['ui-tanks-board::TanksBoardOrbital', {
     factory: (p: object): OrbitalDefinition => {

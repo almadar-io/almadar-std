@@ -31,7 +31,7 @@ export interface StdEvaluateParams {
   /** Event emitted when evaluation completes (default: "EVAL_DONE") */
   doneEvent?: string;
   /** Persistence mode */
-  persistence?: 'runtime' | 'singleton';
+  persistence?: 'runtime' | 'persistent';
 
   // Page
   /** Page name (defaults to "{Entity}EvalPage") */
@@ -53,7 +53,7 @@ interface EvaluateConfig {
   metrics: string[];
   evaluateEvent: string;
   doneEvent: string;
-  persistence: 'runtime' | 'singleton';
+  persistence: 'runtime' | 'persistent';
   traitName: string;
   pluralName: string;
   pageName: string;

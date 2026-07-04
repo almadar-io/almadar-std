@@ -1,0 +1,149 @@
+[
+  {
+    "organism": "std-production",
+    "orbital": "ProductionOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/2d/atoms/std-production.ts",
+    "entities": [
+      {
+        "name": "ProductionState",
+        "fields": [
+          {
+            "name": "productionPoints",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "spawnCount",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "Producer",
+        "emittedEvents": [
+          "SPAWN"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "SPAWN",
+            "direction": "emit",
+            "description": "New-unit intent applied by the grid-tactics authority (the sole units writer)",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "AI_TURN",
+            "direction": "listen"
+          },
+          {
+            "name": "PRODUCE",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "pointsPerTurn",
+            "type": "number",
+            "default": 2,
+            "label": "Points Per Turn",
+            "description": "Points accrued each AI_TURN (turn advance).",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, turns accrue points and PRODUCE spends them; toggle to freeze production.",
+            "tier": "domain"
+          },
+          {
+            "key": "spawnCost",
+            "type": "number",
+            "default": 3,
+            "label": "Spawn Cost",
+            "description": "Points spent per produced unit; PRODUCE only fires when affordable.",
+            "tier": "domain"
+          },
+          {
+            "key": "spawnHealth",
+            "type": "number",
+            "default": 3,
+            "label": "Spawn Health",
+            "description": "Health/maxHealth of produced units.",
+            "tier": "domain"
+          },
+          {
+            "key": "spawnTeam",
+            "type": "string",
+            "default": "player",
+            "label": "Spawn Team",
+            "description": "Team of produced units.",
+            "tier": "domain"
+          },
+          {
+            "key": "spawnUnitType",
+            "type": "string",
+            "default": "unit",
+            "label": "Spawn Unit Type",
+            "description": "unitType of produced units (drives the asset-manifest sprite).",
+            "tier": "domain"
+          },
+          {
+            "key": "spawnX",
+            "type": "number",
+            "default": 0,
+            "label": "Spawn X",
+            "description": "Grid column where produced units appear (rally point).",
+            "tier": "domain"
+          },
+          {
+            "key": "spawnY",
+            "type": "number",
+            "default": 0,
+            "label": "Spawn Y",
+            "description": "Grid row where produced units appear (rally point).",
+            "tier": "domain"
+          },
+          {
+            "key": "startPoints",
+            "type": "number",
+            "default": 0,
+            "label": "Start Points",
+            "description": "Production points set on INIT.",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "productionPoints",
+            "spawnCount"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ProductionPage",
+        "defaultPath": "/production",
+        "primaryEntity": "ProductionState"
+      }
+    ],
+    "emittedEvents": [
+      "SPAWN"
+    ],
+    "listenedEvents": []
+  }
+]

@@ -1,0 +1,252 @@
+[
+  {
+    "organism": "std-objective-reach",
+    "orbital": "ObjectiveReachOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/2d/atoms/std-objective-reach.ts",
+    "entities": [
+      {
+        "name": "ObjectiveState",
+        "fields": [
+          {
+            "name": "features",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "objectivesLeft",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ObjectiveReach",
+        "emittedEvents": [
+          "BURST",
+          "PROGRESS"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BURST",
+            "direction": "emit",
+            "description": "Pickup particle produced when a target is reached; a fx-particles listener spawns it",
+            "tier": "domain"
+          },
+          {
+            "name": "PROGRESS",
+            "direction": "emit",
+            "description": "Objectives remaining + moves remaining after this step; a round-flow listener decides win/lose",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "HERO_STEPPED",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "features",
+            "type": "[Feature]",
+            "default": [],
+            "label": "Features",
+            "description": "Board features — collectible targets (matched by targetType) plus decorations",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "assetUrl": {
+                  "name": "assetUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "done": {
+                  "name": "done",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "pointsPerTarget",
+            "type": "number",
+            "default": 1,
+            "label": "Points Per Target",
+            "description": "Score awarded per objective reached",
+            "tier": "domain"
+          },
+          {
+            "key": "reachRadius",
+            "type": "number",
+            "default": 0,
+            "label": "Reach Radius",
+            "description": "Manhattan distance at which a target counts as reached: 0 = step onto the tile (collect), 1 = adjacent (deliver)",
+            "tier": "domain"
+          },
+          {
+            "key": "removeOnReach",
+            "type": "boolean",
+            "default": true,
+            "label": "Remove On Reach",
+            "description": "When true the target model is removed once reached (collect); when false it is flagged done and stays (visit/deliver)",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, hero steps onto targets are scored; toggle to freeze",
+            "tier": "domain"
+          },
+          {
+            "key": "startScore",
+            "type": "number",
+            "default": 0,
+            "label": "Start Score",
+            "description": "Score set on INIT",
+            "tier": "domain"
+          },
+          {
+            "key": "targetType",
+            "type": "string",
+            "default": "gift",
+            "label": "Target Type",
+            "description": "Feature type counted as a collectible objective",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "features",
+            "objectivesLeft",
+            "score"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "ObjectiveReachPage",
+        "defaultPath": "/objective-reach",
+        "primaryEntity": "ObjectiveState"
+      }
+    ],
+    "emittedEvents": [
+      "BURST",
+      "PROGRESS"
+    ],
+    "listenedEvents": []
+  }
+]

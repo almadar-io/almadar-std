@@ -1,0 +1,272 @@
+{
+  "description": "Headless floating-text/particle mechanic: decays each fx entry's ttl every tick and drops the dead ones, and appends spawned particles on BURST. Composed onto a [runtime, shared] game entity; renders nothing (the board owns the single render authority).",
+  "name": "std-fx-particles",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "fx",
+            "type": "array"
+          }
+        ],
+        "name": "FxState",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "FxParticlesOrbital",
+      "pages": [
+        {
+          "name": "FxParticlesPage",
+          "path": "/fx-particles",
+          "traits": [
+            {
+              "ref": "FxParticles"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "decayRate": {
+              "default": 1.0,
+              "description": "Ttl units removed from every fx entry each tick; higher fades particles faster.",
+              "label": "Decay Rate",
+              "tier": "domain",
+              "type": "number"
+            },
+            "fx": {
+              "default": [],
+              "description": "Seed particles rendered before the first BURST; usually empty.",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "message": {
+                    "name": "message",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "ttl": {
+                    "name": "ttl",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "z": {
+                    "name": "z",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Initial Fx",
+              "tier": "domain",
+              "type": "[Fx]"
+            },
+            "running": {
+              "default": true,
+              "description": "When true the decay tick runs; toggle to freeze effects.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            }
+          },
+          "entityContract": {
+            "provides": [
+              "fx"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "FxState",
+          "name": "FxParticles",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "BURST",
+                "name": "Burst",
+                "payloadSchema": [
+                  {
+                    "name": "particles",
+                    "type": "[Fx]"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.fx",
+                    "@config.fx"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.fx",
+                    [
+                      "array/concat",
+                      "@entity.fx",
+                      "@payload.particles"
+                    ]
+                  ]
+                ],
+                "event": "BURST",
+                "from": "active",
+                "to": "active"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.fx",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.fx",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              "@config.decayRate"
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              "guard": [
+                "and",
+                "@config.running",
+                [
+                  ">",
+                  [
+                    "array/len",
+                    "@entity.fx"
+                  ],
+                  0.0
+                ]
+              ],
+              "interval": 500.0,
+              "name": "fxTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

@@ -1,0 +1,222 @@
+[
+  {
+    "organism": "std-hero-nav",
+    "orbital": "HeroNavOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/2d/atoms/std-hero-nav.ts",
+    "entities": [
+      {
+        "name": "HeroNavData",
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "tiles",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "movesLeft",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "HeroNav",
+        "emittedEvents": [
+          "HERO_STEPPED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "HERO_STEPPED",
+            "direction": "emit",
+            "description": "Hero moved onto tile (x,z) with movesLeft remaining; objective mechanics listen to score progress and round-flow to decide win/lose",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MOVE",
+            "direction": "listen"
+          },
+          {
+            "name": "WANDER",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "gridHeight",
+            "type": "number",
+            "default": 12,
+            "label": "Grid Height",
+            "description": "Grid row count clamping move + wander bounds",
+            "tier": "domain"
+          },
+          {
+            "key": "gridWidth",
+            "type": "number",
+            "default": 12,
+            "label": "Grid Width",
+            "description": "Grid column count clamping move + wander bounds",
+            "tier": "domain"
+          },
+          {
+            "key": "moveBudget",
+            "type": "number",
+            "default": 45,
+            "label": "Move Budget",
+            "description": "Moves the hero may spend before the round is lost if objectives remain",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, MOVE/WANDER intents are applied; toggle to freeze the board",
+            "tier": "domain"
+          },
+          {
+            "key": "tiles",
+            "type": "[Tile]",
+            "default": [],
+            "label": "Tiles",
+            "description": "Grid tiles used for passability checks (auto-generated all-passable when empty)",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "units",
+            "type": "[Unit]",
+            "default": [],
+            "label": "Initial Units",
+            "description": "Seed roster: the player hero plus any neutral NPCs",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "movesLeft",
+            "tiles",
+            "units"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "HeroNavPage",
+        "defaultPath": "/hero-nav",
+        "primaryEntity": "HeroNavData"
+      }
+    ],
+    "emittedEvents": [
+      "HERO_STEPPED"
+    ],
+    "listenedEvents": []
+  }
+]

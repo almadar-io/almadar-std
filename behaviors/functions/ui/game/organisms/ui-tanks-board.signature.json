@@ -6,11 +6,26 @@
     "factoryPath": "behaviors/functions/ui/game/2d/organisms/ui-tanks-board.ts",
     "entities": [
       {
-        "name": "TanksBoardItem",
+        "name": "GameState",
         "fields": [
           {
             "name": "units",
             "type": "array",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "tiles",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
             "required": false
           },
           {
@@ -24,13 +39,13 @@
             "required": false
           },
           {
-            "name": "score",
-            "type": "number",
+            "name": "attackTargets",
+            "type": "array",
             "required": false
           },
           {
-            "name": "lives",
-            "type": "number",
+            "name": "uiPhase",
+            "type": "string",
             "required": false
           },
           {
@@ -39,38 +54,13 @@
             "required": false
           },
           {
-            "name": "result",
-            "type": "string",
-            "required": false
-          },
-          {
-            "name": "phase",
-            "type": "string",
-            "required": false
-          },
-          {
-            "name": "gridWidth",
+            "name": "score",
             "type": "number",
             "required": false
           },
           {
-            "name": "gridHeight",
+            "name": "scoreBaseline",
             "type": "number",
-            "required": false
-          },
-          {
-            "name": "firingRange",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "enemyTurn",
-            "type": "boolean",
-            "required": false
-          },
-          {
-            "name": "effects",
-            "type": "array",
             "required": false
           }
         ],
@@ -79,62 +69,549 @@
     ],
     "traits": [
       {
-        "name": "TanksBoardRender",
-        "emittedEvents": [
-          "GAME_END",
-          "TILE_CLICK",
-          "UNIT_CLICK",
-          "END_TURN",
-          "CANCEL",
-          "PLAY_AGAIN"
-        ],
+        "name": "Authority",
+        "emittedEvents": [],
         "listenedEvents": [],
-        "events": [
+        "overridableConfigKeys": [
           {
-            "name": "GAME_END",
-            "direction": "emit",
-            "description": "Called when the battle ends.",
-            "tier": "domain"
+            "key": "attackDamage",
+            "type": "unknown",
+            "default": 3
           },
           {
-            "name": "TILE_CLICK",
-            "direction": "emit",
-            "description": "Emits UI:{tileClickEvent} with { x, y } on tile click.",
-            "tier": "domain"
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 6
           },
           {
-            "name": "UNIT_CLICK",
-            "direction": "emit",
-            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click.",
-            "tier": "domain"
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 8
           },
           {
-            "name": "END_TURN",
-            "direction": "emit",
-            "description": "Emits UI:{endTurnEvent} with {} on end turn.",
-            "tier": "domain"
+            "key": "running",
+            "type": "unknown",
+            "default": true
           },
           {
-            "name": "CANCEL",
-            "direction": "emit",
-            "description": "Emits UI:{cancelEvent} with {} on cancel.",
-            "tier": "domain"
+            "key": "tiles",
+            "type": "unknown",
+            "default": [
+              {
+                "id": "t-0-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "id": "t-1-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 0
+              },
+              {
+                "id": "t-2-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "id": "t-3-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 3,
+                "y": 0
+              },
+              {
+                "id": "t-4-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "id": "t-5-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 5,
+                "y": 0
+              },
+              {
+                "id": "t-6-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 6,
+                "y": 0
+              },
+              {
+                "id": "t-7-0",
+                "passable": true,
+                "terrain": "ground",
+                "x": 7,
+                "y": 0
+              },
+              {
+                "id": "t-0-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "id": "t-1-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "id": "t-2-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "id": "t-3-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "id": "t-4-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 4,
+                "y": 1
+              },
+              {
+                "id": "t-5-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 5,
+                "y": 1
+              },
+              {
+                "id": "t-6-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 6,
+                "y": 1
+              },
+              {
+                "id": "t-7-1",
+                "passable": true,
+                "terrain": "ground",
+                "x": 7,
+                "y": 1
+              },
+              {
+                "id": "t-0-2",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 2
+              },
+              {
+                "id": "t-1-2",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "id": "t-2-2",
+                "passable": true,
+                "terrain": "ground",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "id": "t-3-2",
+                "passable": true,
+                "terrain": "sand",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "id": "t-4-2",
+                "passable": true,
+                "terrain": "sand",
+                "x": 4,
+                "y": 2
+              },
+              {
+                "id": "t-5-2",
+                "passable": true,
+                "terrain": "sand",
+                "x": 5,
+                "y": 2
+              },
+              {
+                "id": "t-6-2",
+                "passable": true,
+                "terrain": "ground",
+                "x": 6,
+                "y": 2
+              },
+              {
+                "id": "t-7-2",
+                "passable": true,
+                "terrain": "ground",
+                "x": 7,
+                "y": 2
+              },
+              {
+                "id": "t-0-3",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 3
+              },
+              {
+                "id": "t-1-3",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "id": "t-2-3",
+                "passable": true,
+                "terrain": "sand",
+                "x": 2,
+                "y": 3
+              },
+              {
+                "id": "t-3-3",
+                "passable": true,
+                "terrain": "sand",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "id": "t-4-3",
+                "passable": true,
+                "terrain": "sand",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "id": "t-5-3",
+                "passable": true,
+                "terrain": "sand",
+                "x": 5,
+                "y": 3
+              },
+              {
+                "id": "t-6-3",
+                "passable": true,
+                "terrain": "ground",
+                "x": 6,
+                "y": 3
+              },
+              {
+                "id": "t-7-3",
+                "passable": true,
+                "terrain": "ground",
+                "x": 7,
+                "y": 3
+              },
+              {
+                "id": "t-0-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 4
+              },
+              {
+                "id": "t-1-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "id": "t-2-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "id": "t-3-4",
+                "passable": true,
+                "terrain": "sand",
+                "x": 3,
+                "y": 4
+              },
+              {
+                "id": "t-4-4",
+                "passable": true,
+                "terrain": "sand",
+                "x": 4,
+                "y": 4
+              },
+              {
+                "id": "t-5-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 5,
+                "y": 4
+              },
+              {
+                "id": "t-6-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 6,
+                "y": 4
+              },
+              {
+                "id": "t-7-4",
+                "passable": true,
+                "terrain": "ground",
+                "x": 7,
+                "y": 4
+              },
+              {
+                "id": "t-0-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 5
+              },
+              {
+                "id": "t-1-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 5
+              },
+              {
+                "id": "t-2-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 2,
+                "y": 5
+              },
+              {
+                "id": "t-3-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 3,
+                "y": 5
+              },
+              {
+                "id": "t-4-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 4,
+                "y": 5
+              },
+              {
+                "id": "t-5-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 5,
+                "y": 5
+              },
+              {
+                "id": "t-6-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 6,
+                "y": 5
+              },
+              {
+                "id": "t-7-5",
+                "passable": true,
+                "terrain": "ground",
+                "x": 7,
+                "y": 5
+              }
+            ]
           },
           {
-            "name": "PLAY_AGAIN",
-            "direction": "emit",
-            "description": "Emits UI:{playAgainEvent} with {} on play again / reset.",
-            "tier": "domain"
-          },
-          {
-            "name": "INIT",
-            "direction": "listen"
+            "key": "units",
+            "type": "unknown",
+            "default": [
+              {
+                "health": 10,
+                "id": "t1",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json",
+                  "category": "tankBody_green",
+                  "dimension": "2d",
+                  "name": "tankBody_green",
+                  "role": "npc",
+                  "sprite": "tankBody_green.png",
+                  "style": "sci-fi",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png"
+                },
+                "name": "Alpha",
+                "position": {
+                  "x": 1,
+                  "y": 1
+                },
+                "team": "player",
+                "unitType": "tank",
+                "x": 1,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "health": 10,
+                "id": "t2",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json",
+                  "category": "tankBody_dark",
+                  "dimension": "2d",
+                  "name": "tankBody_dark",
+                  "role": "npc",
+                  "sprite": "tankBody_dark.png",
+                  "style": "sci-fi",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png"
+                },
+                "name": "Bravo",
+                "position": {
+                  "x": 6,
+                  "y": 0
+                },
+                "team": "enemy",
+                "unitType": "tank",
+                "x": 6,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "health": 8,
+                "id": "t3",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json",
+                  "category": "tankBody_dark",
+                  "dimension": "2d",
+                  "name": "tankBody_dark",
+                  "role": "npc",
+                  "sprite": "tankBody_dark.png",
+                  "style": "sci-fi",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png"
+                },
+                "name": "Charlie",
+                "position": {
+                  "x": 6,
+                  "y": 4
+                },
+                "team": "enemy",
+                "unitType": "tank",
+                "x": 6,
+                "y": 4,
+                "z": 0
+              }
+            ]
           }
         ],
+        "capabilities": [],
+        "ref": "Frame.traits.TacticsAuthority"
+      },
+      {
+        "name": "FxDecay",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.FxDecay"
+      },
+      {
+        "name": "RoundLogic",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.RoundLogic"
+      },
+      {
+        "name": "ScoreKeeper",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "initialEnemies",
+            "type": "unknown",
+            "default": 2
+          },
+          {
+            "key": "pointsPerKill",
+            "type": "unknown",
+            "default": 10
+          },
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "startScore",
+            "type": "unknown",
+            "default": 0
+          }
+        ],
+        "capabilities": [],
+        "ref": "Score.traits.ScoreKeeper"
+      },
+      {
+        "name": "Player",
+        "emittedEvents": [],
+        "listenedEvents": [],
         "overridableConfigKeys": [
           {
             "key": "assetManifest",
-            "type": "TanksBoardAssetManifest",
+            "type": "unknown",
             "default": {
               "effects": {
                 "explosion": {
@@ -150,8 +627,7 @@
                   "sprite": "regularExplosion04.png",
                   "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png"
                 }
               },
               "features": {
@@ -168,8 +644,7 @@
                   "sprite": "sandbagBeige.png",
                   "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png"
                 }
               },
               "terrains": {
@@ -186,8 +661,7 @@
                   "sprite": "0,0",
                   "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png"
                 },
                 "sand": {
                   "animations": [
@@ -202,8 +676,7 @@
                   "sprite": "0,2",
                   "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png"
                 }
               },
               "units": {
@@ -224,353 +697,34 @@
                   "sprite": "tankBody_green.png",
                   "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png",
-                  "variant": ""
-                }
-              }
-            },
-            "label": "Asset Manifest",
-            "description": "Asset sprite manifest",
-            "tier": "presentation",
-            "properties": {
-              "effects": {
-                "name": "effects",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "features": {
-                "name": "features",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "terrains": {
-                "name": "terrains",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "units": {
-                "name": "units",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png"
                 }
               }
             }
           },
           {
-            "key": "className",
-            "type": "string",
-            "default": "",
-            "label": "Class Name",
-            "description": "Additional CSS classes",
-            "tier": "presentation"
-          },
-          {
-            "key": "error",
-            "type": "TanksBoardError",
-            "label": "Error",
-            "description": "Error state (UiError)",
-            "tier": "presentation",
-            "properties": {
-              "code": {
-                "name": "code",
-                "required": false,
-                "type": "string"
-              },
-              "message": {
-                "name": "message",
-                "required": true,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "stack": {
-                "name": "stack",
-                "required": false,
-                "type": "string"
-              }
+            "key": "backgroundAsset",
+            "type": "unknown",
+            "default": {
+              "animations": [],
+              "aspect": "1:1",
+              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json",
+              "category": "ui",
+              "dimension": "2d",
+              "name": "panel-frame",
+              "role": "ui",
+              "sprite": "metalPanel_blue.png",
+              "style": "sci-fi",
+              "thumbnailUrl": "",
+              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png"
             }
           },
           {
             "key": "features",
-            "type": "[TanksBoardFeaturesItem]",
+            "type": "unknown",
             "default": [
               {
-                "id": "f1",
-                "sprite": {
+                "assetUrl": {
                   "animations": [
                     "static"
                   ],
@@ -583,16 +737,15 @@
                   "sprite": "sandbagBeige.png",
                   "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png"
                 },
+                "id": "f1",
                 "type": "obstacle",
                 "x": 2,
                 "y": 1
               },
               {
-                "id": "f2",
-                "sprite": {
+                "assetUrl": {
                   "animations": [
                     "static"
                   ],
@@ -605,16 +758,15 @@
                   "sprite": "sandbagBeige.png",
                   "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png"
                 },
+                "id": "f2",
                 "type": "obstacle",
                 "x": 3,
                 "y": 2
               },
               {
-                "id": "f3",
-                "sprite": {
+                "assetUrl": {
                   "animations": [
                     "static"
                   ],
@@ -627,16 +779,15 @@
                   "sprite": "sandbagBeige.png",
                   "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png"
                 },
+                "id": "f3",
                 "type": "obstacle",
                 "x": 4,
                 "y": 3
               },
               {
-                "id": "f4",
-                "sprite": {
+                "assetUrl": {
                   "animations": [
                     "static"
                   ],
@@ -649,16 +800,15 @@
                   "sprite": "sandbagBeige.png",
                   "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png"
                 },
+                "id": "f4",
                 "type": "obstacle",
                 "x": 5,
                 "y": 3
               },
               {
-                "id": "f5",
-                "sprite": {
+                "assetUrl": {
                   "animations": [
                     "static"
                   ],
@@ -671,16 +821,15 @@
                   "sprite": "sandbagBeige.png",
                   "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png"
                 },
+                "id": "f5",
                 "type": "obstacle",
                 "x": 5,
                 "y": 4
               },
               {
-                "id": "f6",
-                "sprite": {
+                "assetUrl": {
                   "animations": [
                     "static"
                   ],
@@ -693,1985 +842,75 @@
                   "sprite": "sandbagBeige.png",
                   "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png",
-                  "variant": ""
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png"
                 },
+                "id": "f6",
                 "type": "obstacle",
                 "x": 2,
                 "y": 4
               }
-            ],
-            "label": "Features",
-            "description": "Obstacles and structures on the board",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "assetUrl": {
-                  "name": "assetUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "sprite": {
-                  "name": "sprite",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "type": {
-                  "name": "type",
-                  "required": true,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
+            ]
+          },
+          {
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 6
+          },
+          {
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 8
+          },
+          {
+            "key": "hudBackgroundAsset",
+            "type": "unknown",
+            "default": {
+              "animations": [],
+              "aspect": "1:1",
+              "atlas": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.json",
+              "category": "ui",
+              "dimension": "2d",
+              "name": "panel-frame",
+              "role": "ui",
+              "sprite": "metalPanel_blue.png",
+              "style": "sci-fi",
+              "thumbnailUrl": "",
+              "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-pack-sci-fi/ui/uipackSpace_sheet.png"
             }
           },
           {
-            "key": "isLoading",
-            "type": "boolean",
-            "default": false,
-            "label": "Is Loading",
-            "description": "Loading state indicator",
-            "tier": "presentation"
+            "key": "movementRange",
+            "type": "unknown",
+            "default": 2
+          },
+          {
+            "key": "projection",
+            "type": "unknown",
+            "default": "flat"
           },
           {
             "key": "scale",
-            "type": "number",
-            "default": 0.45,
-            "label": "Scale",
-            "description": "Render scale",
-            "tier": "presentation"
+            "type": "unknown",
+            "default": 0.45
           },
           {
-            "key": "tiles",
-            "type": "[TanksBoardTilesItem]",
-            "default": [
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 0
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 0
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 0
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 0
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 0
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 5,
-                "y": 0
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 6,
-                "y": 0
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 7,
-                "y": 0
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 5,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 6,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 7,
-                "y": 1
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "sand",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileSand1",
-                  "dimension": "2d",
-                  "name": "tileSand1",
-                  "role": "tile",
-                  "sprite": "0,2",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "sand",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileSand1",
-                  "dimension": "2d",
-                  "name": "tileSand1",
-                  "role": "tile",
-                  "sprite": "0,2",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "sand",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileSand1",
-                  "dimension": "2d",
-                  "name": "tileSand1",
-                  "role": "tile",
-                  "sprite": "0,2",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 5,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 6,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 7,
-                "y": 2
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "sand",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileSand1",
-                  "dimension": "2d",
-                  "name": "tileSand1",
-                  "role": "tile",
-                  "sprite": "0,2",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "sand",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileSand1",
-                  "dimension": "2d",
-                  "name": "tileSand1",
-                  "role": "tile",
-                  "sprite": "0,2",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "sand",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileSand1",
-                  "dimension": "2d",
-                  "name": "tileSand1",
-                  "role": "tile",
-                  "sprite": "0,2",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "sand",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileSand1",
-                  "dimension": "2d",
-                  "name": "tileSand1",
-                  "role": "tile",
-                  "sprite": "0,2",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 5,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 6,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 7,
-                "y": 3
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "sand",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileSand1",
-                  "dimension": "2d",
-                  "name": "tileSand1",
-                  "role": "tile",
-                  "sprite": "0,2",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "sand",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileSand1",
-                  "dimension": "2d",
-                  "name": "tileSand1",
-                  "role": "tile",
-                  "sprite": "0,2",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 5,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 6,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 7,
-                "y": 4
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 0,
-                "y": 5
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 1,
-                "y": 5
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 2,
-                "y": 5
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 3,
-                "y": 5
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 4,
-                "y": 5
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 5,
-                "y": 5
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 6,
-                "y": 5
-              },
-              {
-                "passable": true,
-                "terrain": "ground",
-                "terrainSprite": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/Tilesheet_terrainTiles_default.tiles.json",
-                  "category": "tileGrass1",
-                  "dimension": "2d",
-                  "name": "tileGrass1",
-                  "role": "tile",
-                  "sprite": "0,0",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/terrain/terrainTiles_default.png",
-                  "variant": ""
-                },
-                "x": 7,
-                "y": 5
-              }
-            ],
-            "label": "Tiles",
-            "description": "Ground/sand terrain tiles",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "movementCost": {
-                  "name": "movementCost",
-                  "required": false,
-                  "type": "number"
-                },
-                "passable": {
-                  "name": "passable",
-                  "required": false,
-                  "type": "boolean"
-                },
-                "terrain": {
-                  "name": "terrain",
-                  "required": false,
-                  "type": "string"
-                },
-                "terrainSprite": {
-                  "name": "terrainSprite",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "tileType": {
-                  "name": "tileType",
-                  "required": false,
-                  "type": "string"
-                },
-                "type": {
-                  "name": "type",
-                  "required": false,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
-          },
-          {
-            "key": "units",
-            "type": "[TanksBoardUnitsItem]",
-            "default": [
-              {
-                "animation": "idle",
-                "frame": 0,
-                "health": 10,
-                "id": "t1",
-                "maxHealth": 10,
-                "name": "Alpha",
-                "position": {
-                  "x": 1,
-                  "y": 1
-                },
-                "sprite": {
-                  "animations": [
-                    "idle",
-                    "walk",
-                    "attack",
-                    "hit",
-                    "death"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json",
-                  "category": "tankBody_green",
-                  "dimension": "2d",
-                  "name": "tankBody_green",
-                  "role": "npc",
-                  "sprite": "tankBody_green.png",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png",
-                  "variant": ""
-                },
-                "team": "player",
-                "unitType": "tank"
-              },
-              {
-                "animation": "idle",
-                "frame": 0,
-                "health": 10,
-                "id": "t2",
-                "maxHealth": 10,
-                "name": "Bravo",
-                "position": {
-                  "x": 6,
-                  "y": 0
-                },
-                "sprite": {
-                  "animations": [
-                    "idle",
-                    "walk",
-                    "attack",
-                    "hit",
-                    "death"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json",
-                  "category": "tankBody_dark",
-                  "dimension": "2d",
-                  "name": "tankBody_dark",
-                  "role": "npc",
-                  "sprite": "tankBody_dark.png",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png",
-                  "variant": ""
-                },
-                "team": "enemy",
-                "unitType": "tank"
-              },
-              {
-                "animation": "idle",
-                "frame": 0,
-                "health": 8,
-                "id": "t3",
-                "maxHealth": 10,
-                "name": "Charlie",
-                "position": {
-                  "x": 6,
-                  "y": 4
-                },
-                "sprite": {
-                  "animations": [
-                    "idle",
-                    "walk",
-                    "attack",
-                    "hit",
-                    "death"
-                  ],
-                  "aspect": "1:1",
-                  "atlas": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.json",
-                  "category": "tankBody_dark",
-                  "dimension": "2d",
-                  "name": "tankBody_dark",
-                  "role": "npc",
-                  "sprite": "tankBody_dark.png",
-                  "style": "sci-fi",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/kenney-topdown-tanks-redux/features/allSprites_default.png",
-                  "variant": ""
-                },
-                "team": "enemy",
-                "unitType": "tank"
-              }
-            ],
-            "label": "Units",
-            "description": "Tank units on the board",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "animation": {
-                  "name": "animation",
-                  "required": false,
-                  "type": "string"
-                },
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "faction": {
-                  "name": "faction",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
-                },
-                "frame": {
-                  "name": "frame",
-                  "required": false,
-                  "type": "number"
-                },
-                "health": {
-                  "name": "health",
-                  "required": false,
-                  "type": "number"
-                },
-                "heroId": {
-                  "name": "heroId",
-                  "required": false,
-                  "type": "string"
-                },
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
-                "maxHealth": {
-                  "name": "maxHealth",
-                  "required": false,
-                  "type": "number"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "name": {
-                  "name": "name",
-                  "required": false,
-                  "type": "string"
-                },
-                "position": {
-                  "name": "position",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "previousPosition": {
-                  "name": "previousPosition",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "sprite": {
-                  "name": "sprite",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "spriteSheet": {
-                  "name": "spriteSheet",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "team": {
-                  "name": "team",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
-                },
-                "traits": {
-                  "name": "traits",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "properties": {
-                      "cooldown": {
-                        "name": "cooldown",
-                        "required": true,
-                        "type": "number"
-                      },
-                      "currentState": {
-                        "name": "currentState",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "name": {
-                        "name": "name",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "states": {
-                        "name": "states",
-                        "required": true,
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "type": "object"
-                  }
-                },
-                "unitType": {
-                  "name": "unitType",
-                  "required": false,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": false,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": false,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
+            "key": "showMinimap",
+            "type": "unknown",
+            "default": false
           }
         ],
         "capabilities": [],
-        "entityRebindable": true,
-        "entityContract": {
-          "requires": [],
-          "provides": [
-            "effects",
-            "enemyTurn",
-            "firingRange",
-            "gridHeight",
-            "gridWidth",
-            "lives",
-            "phase",
-            "result",
-            "score",
-            "selectedUnitId",
-            "turn",
-            "units",
-            "validMoves"
-          ]
-        }
+        "ref": "Frame.traits.PlayerIntent"
       }
     ],
     "pages": [
       {
         "name": "TanksBoardPage",
         "defaultPath": "/tanks-board",
-        "primaryEntity": "TanksBoardItem"
+        "primaryEntity": "GameState"
       }
     ],
-    "emittedEvents": [
-      "CANCEL",
-      "END_TURN",
-      "GAME_END",
-      "PLAY_AGAIN",
-      "TILE_CLICK",
-      "UNIT_CLICK"
-    ],
+    "emittedEvents": [],
     "listenedEvents": []
   }
 ]

@@ -22,6 +22,9 @@ import { ASYNC_OPERATORS } from './modules/async.js';
 import { NN_OPERATORS } from './modules/nn.js';
 import { TENSOR_OPERATORS } from './modules/tensor.js';
 import { TRAIN_OPERATORS } from './modules/train.js';
+import { GRAPH_OPERATORS } from './modules/graph.js';
+import { CONTRACT_OPERATORS } from './modules/contract.js';
+import { DATA_OPERATORS } from './modules/data.js';
 import { PROB_OPERATORS } from './modules/prob.js';
 import { OS_OPERATORS } from './modules/os.js';
 import { AGENT_OPERATORS } from './modules/agent.js';
@@ -54,6 +57,9 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...NN_OPERATORS,
   ...TENSOR_OPERATORS,
   ...TRAIN_OPERATORS,
+  ...GRAPH_OPERATORS,
+  ...CONTRACT_OPERATORS,
+  ...DATA_OPERATORS,
   ...PROB_OPERATORS,
   ...OS_OPERATORS,
   ...AGENT_OPERATORS,
@@ -89,6 +95,9 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   nn: NN_OPERATORS,
   tensor: TENSOR_OPERATORS,
   train: TRAIN_OPERATORS,
+  graph: GRAPH_OPERATORS,
+  contract: CONTRACT_OPERATORS,
+  data: DATA_OPERATORS,
   prob: PROB_OPERATORS,
   os: OS_OPERATORS,
   agent: AGENT_OPERATORS,

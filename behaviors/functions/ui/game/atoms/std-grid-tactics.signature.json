@@ -1,0 +1,232 @@
+[
+  {
+    "organism": "std-grid-tactics",
+    "orbital": "GridTacticsOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/2d/atoms/std-grid-tactics.ts",
+    "entities": [
+      {
+        "name": "TacticsState",
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "tiles",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "GridTactics",
+        "emittedEvents": [
+          "BURST",
+          "UNITS_CHANGED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BURST",
+            "direction": "emit",
+            "description": "Hit particles produced by an attack or AI strike; a fx-particles listener spawns them",
+            "tier": "domain"
+          },
+          {
+            "name": "UNITS_CHANGED",
+            "direction": "emit",
+            "description": "Live team survivor counts after this intent resolved; a round-flow listener decides win/lose",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "MOVE",
+            "direction": "listen"
+          },
+          {
+            "name": "ATTACK",
+            "direction": "listen"
+          },
+          {
+            "name": "SPAWN",
+            "direction": "listen"
+          },
+          {
+            "name": "HEAL",
+            "direction": "listen"
+          },
+          {
+            "name": "AI_TURN",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "attackDamage",
+            "type": "number",
+            "default": 1,
+            "label": "Attack Damage",
+            "description": "Health removed from a target per ATTACK intent",
+            "tier": "domain"
+          },
+          {
+            "key": "gridHeight",
+            "type": "number",
+            "default": 12,
+            "label": "Grid Height",
+            "description": "Grid row count clamping move + AI bounds",
+            "tier": "domain"
+          },
+          {
+            "key": "gridWidth",
+            "type": "number",
+            "default": 12,
+            "label": "Grid Width",
+            "description": "Grid column count clamping move + AI bounds",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, incoming MOVE/ATTACK/AI_TURN intents are applied; toggle to freeze the board",
+            "tier": "domain"
+          },
+          {
+            "key": "tiles",
+            "type": "[Tile]",
+            "default": [],
+            "label": "Tiles",
+            "description": "Grid tiles used for passability checks during moves and AI stepping",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "units",
+            "type": "[Unit]",
+            "default": [],
+            "label": "Initial Units",
+            "description": "Seed unit roster (players and enemies) present before the first intent",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "tiles",
+            "units"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "GridTacticsPage",
+        "defaultPath": "/grid-tactics",
+        "primaryEntity": "TacticsState"
+      }
+    ],
+    "emittedEvents": [
+      "BURST",
+      "UNITS_CHANGED"
+    ],
+    "listenedEvents": []
+  }
+]

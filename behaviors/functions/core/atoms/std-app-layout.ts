@@ -70,7 +70,10 @@ export interface StdAppLayoutAppLayoutStateLoadFailedPayload {
 export interface StdAppLayoutConfig {
   /** Default: `"App"` */
   appName?: string;
+  /** Default: `"max-w-5xl mx-auto w-full"` */
+  contentClassName?: string;
   contentTrait?: TraitFieldRef;
+  currentPath?: string;
   /** Default: `"modal"` */
   detailSlot?: unknown;
   /** Default: `"sidebar"` */

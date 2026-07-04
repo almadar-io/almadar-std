@@ -1,0 +1,371 @@
+{
+  "description": "Headless projectile authority: sole writer of projectiles; moves by velocity, decays ttl, culls stragglers each tick.",
+  "name": "std-projectiles",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": true,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "projectiles",
+            "type": "array"
+          }
+        ],
+        "name": "ProjectileState",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "ProjectilesOrbital",
+      "pages": [
+        {
+          "name": "ProjectilesPage",
+          "path": "/projectiles",
+          "traits": [
+            {
+              "ref": "Projectiles"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "gridHeight": {
+              "default": 480.0,
+              "description": "Arena height in pixels; projectiles outside this bound are culled",
+              "label": "Bounds Height",
+              "tier": "domain",
+              "type": "number"
+            },
+            "gridWidth": {
+              "default": 640.0,
+              "description": "Arena width in pixels; projectiles outside this bound are culled",
+              "label": "Bounds Width",
+              "tier": "domain",
+              "type": "number"
+            },
+            "projectiles": {
+              "default": [],
+              "description": "Seed projectiles present before the first FIRE intent; usually empty",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "team": {
+                    "name": "team",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "ttl": {
+                    "name": "ttl",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vx": {
+                    "name": "vx",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "vy": {
+                    "name": "vy",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Initial Projectiles",
+              "tier": "domain",
+              "type": "[Projectile]"
+            },
+            "running": {
+              "default": true,
+              "description": "When true, FIRE intents are applied and the movement/cull tick advances; toggle to freeze projectiles",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            }
+          },
+          "entityContract": {
+            "provides": [
+              "projectiles"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ProjectileState",
+          "name": "Projectiles",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "FIRE",
+                "name": "Fire",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "type": "number"
+                  },
+                  {
+                    "name": "vx",
+                    "type": "number"
+                  },
+                  {
+                    "name": "vy",
+                    "type": "number"
+                  },
+                  {
+                    "name": "team",
+                    "type": "string"
+                  },
+                  {
+                    "name": "ttl",
+                    "type": "number"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.projectiles",
+                    "@config.projectiles"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.projectiles",
+                    [
+                      "array/append",
+                      "@entity.projectiles",
+                      {
+                        "id": "@payload.id",
+                        "team": "@payload.team",
+                        "ttl": "@payload.ttl",
+                        "vx": "@payload.vx",
+                        "vy": "@payload.vy",
+                        "x": "@payload.x",
+                        "y": "@payload.y"
+                      }
+                    ]
+                  ]
+                ],
+                "event": "FIRE",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.projectiles",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.projectiles",
+                      [
+                        "fn",
+                        "p",
+                        [
+                          "object/merge",
+                          "@p",
+                          {
+                            "ttl": [
+                              "if",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "@p",
+                                  "ttl"
+                                ],
+                                null
+                              ],
+                              null,
+                              [
+                                "-",
+                                [
+                                  "object/get",
+                                  "@p",
+                                  "ttl"
+                                ],
+                                1.0
+                              ]
+                            ],
+                            "x": [
+                              "+",
+                              [
+                                "object/get",
+                                "@p",
+                                "x"
+                              ],
+                              [
+                                "object/get",
+                                "@p",
+                                "vx"
+                              ]
+                            ],
+                            "y": [
+                              "+",
+                              [
+                                "object/get",
+                                "@p",
+                                "y"
+                              ],
+                              [
+                                "object/get",
+                                "@p",
+                                "vy"
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "p",
+                      [
+                        "and",
+                        [
+                          "grid/in-bounds",
+                          {
+                            "x": [
+                              "object/get",
+                              "@p",
+                              "x"
+                            ],
+                            "y": [
+                              "object/get",
+                              "@p",
+                              "y"
+                            ]
+                          },
+                          "@config.gridWidth",
+                          "@config.gridHeight"
+                        ],
+                        [
+                          "or",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              "@p",
+                              "ttl"
+                            ],
+                            null
+                          ],
+                          [
+                            ">",
+                            [
+                              "object/get",
+                              "@p",
+                              "ttl"
+                            ],
+                            0.0
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              "guard": "@config.running",
+              "interval": 100.0,
+              "name": "advanceTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

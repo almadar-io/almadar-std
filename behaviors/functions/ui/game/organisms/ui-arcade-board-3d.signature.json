@@ -6,7 +6,7 @@
     "factoryPath": "behaviors/functions/ui/game/3d/organisms/ui-arcade-board-3d.ts",
     "entities": [
       {
-        "name": "ArcadeBoard3DItem",
+        "name": "GameState",
         "fields": [
           {
             "name": "units",
@@ -14,17 +14,22 @@
             "required": false
           },
           {
-            "name": "selectedUnitId",
-            "type": "string",
-            "required": false
-          },
-          {
-            "name": "validMoves",
+            "name": "tiles",
             "type": "array",
             "required": false
           },
           {
-            "name": "fx",
+            "name": "movesLeft",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "features",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "machines",
             "type": "array",
             "required": false
           },
@@ -39,7 +44,7 @@
             "required": false
           },
           {
-            "name": "ticketsToWin",
+            "name": "lastRoll",
             "type": "number",
             "required": false
           },
@@ -49,27 +54,27 @@
             "required": false
           },
           {
-            "name": "npcTick",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "gridWidth",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "gridHeight",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "lastRoll",
-            "type": "number",
+            "name": "fx",
+            "type": "array",
             "required": false
           },
           {
             "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validMoves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "phase",
             "type": "string",
             "required": false
           }
@@ -79,99 +84,918 @@
     ],
     "traits": [
       {
-        "name": "ArcadeBoard3DRender",
-        "emittedEvents": [
-          "UNIT_CLICK",
-          "TILE_CLICK",
-          "FEATURE_CLICK",
-          "CANCEL",
-          "GAME_END",
-          "PLAY_AGAIN"
-        ],
+        "name": "HeroAuthority",
+        "emittedEvents": [],
         "listenedEvents": [],
-        "events": [
-          {
-            "name": "UNIT_CLICK",
-            "direction": "emit",
-            "description": "Emits UI:{unitClickEvent} with { unitId } — selects the player kid",
-            "tier": "domain"
-          },
-          {
-            "name": "TILE_CLICK",
-            "direction": "emit",
-            "description": "Emits UI:{tileClickEvent} with { x, z } — moves the selected kid one step",
-            "tier": "domain"
-          },
-          {
-            "name": "FEATURE_CLICK",
-            "direction": "emit",
-            "description": "Emits UI:{featureClickEvent} with { x, z, type } — plays a machine or claims the prize counter",
-            "tier": "domain"
-          },
-          {
-            "name": "CANCEL",
-            "direction": "emit",
-            "description": "Deselects the current unit",
-            "tier": "domain"
-          },
-          {
-            "name": "GAME_END",
-            "direction": "emit",
-            "description": "Called when the match ends (won or lost)",
-            "tier": "domain"
-          },
-          {
-            "name": "PLAY_AGAIN",
-            "direction": "emit",
-            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
-            "tier": "domain"
-          },
-          {
-            "name": "INIT",
-            "direction": "listen"
-          }
-        ],
         "overridableConfigKeys": [
           {
-            "key": "className",
-            "type": "string",
-            "default": "",
-            "label": "Class Name",
-            "description": "className prop",
-            "tier": "presentation"
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 6
           },
           {
-            "key": "error",
-            "type": "ArcadeBoard3DError",
-            "label": "Error",
-            "description": "Error state (UiError)",
-            "tier": "presentation",
-            "properties": {
-              "code": {
-                "name": "code",
-                "required": false,
-                "type": "string"
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 5
+          },
+          {
+            "key": "moveBudget",
+            "type": "unknown",
+            "default": 9999
+          },
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "tiles",
+            "type": "unknown",
+            "default": [
+              {
+                "id": "t00",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-corner",
+                  "dimension": "3d",
+                  "name": "wall-corner",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
-              "message": {
-                "name": "message",
-                "required": true,
-                "type": "string"
+              {
+                "id": "t10",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 1,
+                "y": 0,
+                "z": 0
               },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
+              {
+                "id": "t20",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-window",
+                  "dimension": "3d",
+                  "name": "wall-window",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-window.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 2,
+                "y": 0,
+                "z": 0
               },
-              "stack": {
-                "name": "stack",
-                "required": false,
-                "type": "string"
+              {
+                "id": "t30",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 3,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "id": "t40",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-corner",
+                  "dimension": "3d",
+                  "name": "wall-corner",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 4,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "id": "t01",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t11",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t21",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t31",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t41",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 4,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t02",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t12",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t22",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t32",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t42",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 4,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t03",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t13",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t23",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t33",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t43",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 4,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t04",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t14",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t24",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t34",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
+                  "variant": ""
+                },
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t44",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 4,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t05",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-corner",
+                  "dimension": "3d",
+                  "name": "wall-corner",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 0,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t15",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 1,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t25",
+                "modelUrl": {
+                  "animations": [
+                    "open",
+                    "close",
+                    "open-and-close"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-door-rotate",
+                  "dimension": "3d",
+                  "name": "wall-door-rotate",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-door-rotate.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 2,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t35",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "3d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 3,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t45",
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall-corner",
+                  "dimension": "3d",
+                  "name": "wall-corner",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb",
+                  "variant": ""
+                },
+                "passable": false,
+                "terrain": "wall",
+                "x": 4,
+                "y": 5,
+                "z": 0
               }
+            ]
+          },
+          {
+            "key": "units",
+            "type": "unknown",
+            "default": [
+              {
+                "health": 1,
+                "id": "player1",
+                "maxHealth": 1,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk"
+                  ],
+                  "aspect": "1:1",
+                  "category": "character-gamer",
+                  "dimension": "3d",
+                  "name": "character-gamer",
+                  "role": "player",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/units/character-gamer.glb",
+                  "variant": ""
+                },
+                "name": "Kid Gamer",
+                "position": {
+                  "x": 2,
+                  "y": 1
+                },
+                "team": "player",
+                "unitType": "player-kid",
+                "x": 2,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "health": 1,
+                "id": "npc1",
+                "maxHealth": 1,
+                "modelUrl": {
+                  "animations": [
+                    "idle",
+                    "walk"
+                  ],
+                  "aspect": "1:1",
+                  "category": "character-employee",
+                  "dimension": "3d",
+                  "name": "character-employee",
+                  "role": "npc",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/units/character-employee.glb",
+                  "variant": ""
+                },
+                "name": "Wandering Kid",
+                "position": {
+                  "x": 2,
+                  "y": 3
+                },
+                "team": "neutral",
+                "unitType": "wander-kid",
+                "x": 2,
+                "y": 3,
+                "z": 0
+              }
+            ]
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.HeroAuthority"
+      },
+      {
+        "name": "PlayEconomy",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "machines",
+            "type": "unknown",
+            "default": [
+              {
+                "id": "f1",
+                "type": "arcade_machine",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "id": "f2",
+                "type": "claw_machine",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "id": "f3",
+                "type": "air_hockey",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "id": "f4",
+                "type": "prize_wheel",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "id": "f5",
+                "type": "basketball_game",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "id": "f6",
+                "type": "pinball",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "id": "f7",
+                "type": "dance_machine",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "id": "f8",
+                "type": "gambling_machine",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "id": "f10",
+                "type": "vending_machine",
+                "x": 3,
+                "y": 4
+              }
+            ]
+          },
+          {
+            "key": "maxPayout",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "minPayout",
+            "type": "unknown",
+            "default": 0
+          },
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "startTokens",
+            "type": "unknown",
+            "default": 14
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.PlayEconomy"
+      },
+      {
+        "name": "FxDecay",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.FxDecay"
+      },
+      {
+        "name": "RoundGate",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "ticketsToWin",
+            "type": "unknown",
+            "default": 5
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.RoundGate"
+      },
+      {
+        "name": "Player",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "assetManifest",
+            "type": "unknown",
+            "default": {
+              "effects": {},
+              "features": {},
+              "terrains": {},
+              "units": {}
             }
           },
           {
+            "key": "bgColor",
+            "type": "unknown",
+            "default": "#12161d"
+          },
+          {
+            "key": "cameraMode",
+            "type": "unknown",
+            "default": "isometric"
+          },
+          {
             "key": "features",
-            "type": "[ArcadeBoard3DFeaturesItem]",
+            "type": "unknown",
             "default": [
               {
                 "assetUrl": {
@@ -373,1125 +1197,66 @@
                 "x": 3,
                 "y": 4
               }
-            ],
-            "label": "Features",
-            "description": "Arcade machines + the prize counter.",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "assetUrl": {
-                  "name": "assetUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "type": {
-                  "name": "type",
-                  "required": true,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
+            ]
+          },
+          {
+            "key": "goalText",
+            "type": "unknown",
+            "default": "Win 5 tickets from the arcade machines"
           },
           {
             "key": "gridHeight",
-            "type": "number",
-            "default": 6,
-            "label": "Grid Height",
-            "description": "Arcade hall height in cells",
-            "tier": "presentation"
+            "type": "unknown",
+            "default": 6
           },
           {
             "key": "gridWidth",
-            "type": "number",
-            "default": 5,
-            "label": "Grid Width",
-            "description": "Arcade hall width in cells",
-            "tier": "presentation"
+            "type": "unknown",
+            "default": 5
           },
           {
-            "key": "isLoading",
-            "type": "boolean",
-            "default": false,
-            "label": "Is Loading",
-            "description": "Loading state indicator",
-            "tier": "presentation"
+            "key": "howText",
+            "type": "unknown",
+            "default": "Click your kid, then click an adjacent tile to walk; click a machine to play a token"
+          },
+          {
+            "key": "movementRange",
+            "type": "unknown",
+            "default": 1
           },
           {
             "key": "scale",
-            "type": "number",
-            "default": 0.45,
-            "label": "Scale",
-            "description": "Canvas render scale",
-            "tier": "presentation"
+            "type": "unknown",
+            "default": 0.45
           },
           {
-            "key": "startingTokens",
-            "type": "number",
-            "default": 14,
-            "label": "Starting Tokens",
-            "description": "Tokens the player starts with",
-            "tier": "presentation"
+            "key": "ticketsLabel",
+            "type": "unknown",
+            "default": "Tickets"
           },
           {
-            "key": "ticketChance",
-            "type": "number",
-            "default": 0.42,
-            "label": "Ticket Chance",
-            "description": "Probability each play awards a ticket — luck-based so tokens can run out before winning",
-            "tier": "presentation"
-          },
-          {
-            "key": "ticketsToWin",
-            "type": "number",
-            "default": 5,
-            "label": "Tickets To Win",
-            "description": "Tickets required to unlock the prize counter",
-            "tier": "presentation"
-          },
-          {
-            "key": "tiles",
-            "type": "[ArcadeBoard3DTilesItem]",
-            "default": [
-              {
-                "id": "t00",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall-corner",
-                  "dimension": "3d",
-                  "name": "wall-corner",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 0,
-                "y": 0
-              },
-              {
-                "id": "t10",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "3d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 1,
-                "y": 0
-              },
-              {
-                "id": "t20",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall-window",
-                  "dimension": "3d",
-                  "name": "wall-window",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-window.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 2,
-                "y": 0
-              },
-              {
-                "id": "t30",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "3d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 3,
-                "y": 0
-              },
-              {
-                "id": "t40",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall-corner",
-                  "dimension": "3d",
-                  "name": "wall-corner",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 4,
-                "y": 0
-              },
-              {
-                "id": "t01",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "3d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 0,
-                "y": 1
-              },
-              {
-                "id": "t11",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "floor",
-                  "dimension": "3d",
-                  "name": "floor",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
-                  "variant": ""
-                },
-                "passable": true,
-                "terrain": "floor",
-                "x": 1,
-                "y": 1
-              },
-              {
-                "id": "t21",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "floor",
-                  "dimension": "3d",
-                  "name": "floor",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
-                  "variant": ""
-                },
-                "passable": true,
-                "terrain": "floor",
-                "x": 2,
-                "y": 1
-              },
-              {
-                "id": "t31",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "floor",
-                  "dimension": "3d",
-                  "name": "floor",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
-                  "variant": ""
-                },
-                "passable": true,
-                "terrain": "floor",
-                "x": 3,
-                "y": 1
-              },
-              {
-                "id": "t41",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "3d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 4,
-                "y": 1
-              },
-              {
-                "id": "t02",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "3d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 0,
-                "y": 2
-              },
-              {
-                "id": "t12",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "floor",
-                  "dimension": "3d",
-                  "name": "floor",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
-                  "variant": ""
-                },
-                "passable": true,
-                "terrain": "floor",
-                "x": 1,
-                "y": 2
-              },
-              {
-                "id": "t22",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "floor",
-                  "dimension": "3d",
-                  "name": "floor",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
-                  "variant": ""
-                },
-                "passable": true,
-                "terrain": "floor",
-                "x": 2,
-                "y": 2
-              },
-              {
-                "id": "t32",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "floor",
-                  "dimension": "3d",
-                  "name": "floor",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
-                  "variant": ""
-                },
-                "passable": true,
-                "terrain": "floor",
-                "x": 3,
-                "y": 2
-              },
-              {
-                "id": "t42",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "3d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 4,
-                "y": 2
-              },
-              {
-                "id": "t03",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "3d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 0,
-                "y": 3
-              },
-              {
-                "id": "t13",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "floor",
-                  "dimension": "3d",
-                  "name": "floor",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
-                  "variant": ""
-                },
-                "passable": true,
-                "terrain": "floor",
-                "x": 1,
-                "y": 3
-              },
-              {
-                "id": "t23",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "floor",
-                  "dimension": "3d",
-                  "name": "floor",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
-                  "variant": ""
-                },
-                "passable": true,
-                "terrain": "floor",
-                "x": 2,
-                "y": 3
-              },
-              {
-                "id": "t33",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "floor",
-                  "dimension": "3d",
-                  "name": "floor",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
-                  "variant": ""
-                },
-                "passable": true,
-                "terrain": "floor",
-                "x": 3,
-                "y": 3
-              },
-              {
-                "id": "t43",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "3d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 4,
-                "y": 3
-              },
-              {
-                "id": "t04",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "3d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 0,
-                "y": 4
-              },
-              {
-                "id": "t14",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "floor",
-                  "dimension": "3d",
-                  "name": "floor",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
-                  "variant": ""
-                },
-                "passable": true,
-                "terrain": "floor",
-                "x": 1,
-                "y": 4
-              },
-              {
-                "id": "t24",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "floor",
-                  "dimension": "3d",
-                  "name": "floor",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
-                  "variant": ""
-                },
-                "passable": true,
-                "terrain": "floor",
-                "x": 2,
-                "y": 4
-              },
-              {
-                "id": "t34",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "floor",
-                  "dimension": "3d",
-                  "name": "floor",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/floor.glb",
-                  "variant": ""
-                },
-                "passable": true,
-                "terrain": "floor",
-                "x": 3,
-                "y": 4
-              },
-              {
-                "id": "t44",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "3d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 4,
-                "y": 4
-              },
-              {
-                "id": "t05",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall-corner",
-                  "dimension": "3d",
-                  "name": "wall-corner",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 0,
-                "y": 5
-              },
-              {
-                "id": "t15",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "3d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 1,
-                "y": 5
-              },
-              {
-                "id": "t25",
-                "modelUrl": {
-                  "animations": [
-                    "open",
-                    "close",
-                    "open-and-close"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall-door-rotate",
-                  "dimension": "3d",
-                  "name": "wall-door-rotate",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-door-rotate.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 2,
-                "y": 5
-              },
-              {
-                "id": "t35",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall",
-                  "dimension": "3d",
-                  "name": "wall",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 3,
-                "y": 5
-              },
-              {
-                "id": "t45",
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "wall-corner",
-                  "dimension": "3d",
-                  "name": "wall-corner",
-                  "role": "tile",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/terrain/wall-corner.glb",
-                  "variant": ""
-                },
-                "passable": false,
-                "terrain": "wall",
-                "x": 4,
-                "y": 5
-              }
-            ],
-            "label": "Tiles",
-            "description": "5x6 arcade hall grid — floor interior + wall/corner/window/door border.",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "passable": {
-                  "name": "passable",
-                  "required": false,
-                  "type": "boolean"
-                },
-                "terrain": {
-                  "name": "terrain",
-                  "required": false,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
+            "key": "tokensLabel",
+            "type": "unknown",
+            "default": "Tokens"
           },
           {
             "key": "unitScale",
-            "type": "number",
-            "default": 1,
-            "label": "Unit Scale",
-            "description": "Unit draw-size multiplier",
-            "tier": "presentation"
-          },
-          {
-            "key": "units",
-            "type": "[ArcadeBoard3DUnitsItem]",
-            "default": [
-              {
-                "id": "player1",
-                "modelUrl": {
-                  "animations": [
-                    "idle",
-                    "walk"
-                  ],
-                  "aspect": "1:1",
-                  "category": "character-gamer",
-                  "dimension": "3d",
-                  "name": "character-gamer",
-                  "role": "player",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/units/character-gamer.glb",
-                  "variant": ""
-                },
-                "name": "Kid Gamer",
-                "position": {
-                  "x": 2,
-                  "y": 1
-                },
-                "team": "player",
-                "unitType": "player-kid"
-              },
-              {
-                "id": "npc1",
-                "modelUrl": {
-                  "animations": [
-                    "idle",
-                    "walk"
-                  ],
-                  "aspect": "1:1",
-                  "category": "character-employee",
-                  "dimension": "3d",
-                  "name": "character-employee",
-                  "role": "npc",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-arcade-board-3d/kenney-mini-arcade/units/character-employee.glb",
-                  "variant": ""
-                },
-                "name": "Wandering Kid",
-                "position": {
-                  "x": 2,
-                  "y": 3
-                },
-                "team": "neutral",
-                "unitType": "wander-kid"
-              }
-            ],
-            "label": "Units",
-            "description": "Player kid + wandering NPC kid — takes priority over entity-derived units.",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "atlas": {
-                      "name": "atlas",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "sprite": {
-                      "name": "sprite",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "variant": {
-                      "name": "variant",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "name": {
-                  "name": "name",
-                  "required": false,
-                  "type": "string"
-                },
-                "position": {
-                  "name": "position",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "team": {
-                  "name": "team",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
-                },
-                "unitType": {
-                  "name": "unitType",
-                  "required": false,
-                  "type": "string"
-                }
-              },
-              "type": "object"
-            }
+            "type": "unknown",
+            "default": 1
           }
         ],
         "capabilities": [],
-        "entityRebindable": true,
-        "entityContract": {
-          "requires": [],
-          "provides": [
-            "fx",
-            "gridHeight",
-            "gridWidth",
-            "lastRoll",
-            "npcTick",
-            "playCount",
-            "result",
-            "selectedUnitId",
-            "tickets",
-            "ticketsToWin",
-            "tokens",
-            "units",
-            "validMoves"
-          ]
-        }
+        "ref": "Frame.traits.ArcadeIntent"
       }
     ],
     "pages": [
       {
         "name": "ArcadeBoard3DPage",
         "defaultPath": "/arcade-board-3d",
-        "primaryEntity": "ArcadeBoard3DItem"
+        "primaryEntity": "GameState"
       }
     ],
-    "emittedEvents": [
-      "CANCEL",
-      "FEATURE_CLICK",
-      "GAME_END",
-      "PLAY_AGAIN",
-      "TILE_CLICK",
-      "UNIT_CLICK"
-    ],
+    "emittedEvents": [],
     "listenedEvents": []
   }
 ]

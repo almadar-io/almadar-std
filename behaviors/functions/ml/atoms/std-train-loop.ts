@@ -33,7 +33,7 @@ export interface StdTrainLoopParams {
   /** Event emitted when training finishes (default: "TRAINING_DONE") */
   doneEvent?: string;
   /** Persistence mode */
-  persistence?: 'runtime' | 'singleton';
+  persistence?: 'runtime' | 'persistent';
 
   // Page
   /** Page name (defaults to "{Entity}TrainPage") */
@@ -56,7 +56,7 @@ interface TrainLoopConfig {
   startEvent: string;
   epochEvent: string;
   doneEvent: string;
-  persistence: 'runtime' | 'singleton';
+  persistence: 'runtime' | 'persistent';
   traitName: string;
   pluralName: string;
   pageName: string;

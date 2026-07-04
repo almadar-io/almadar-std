@@ -12135,7 +12135,7 @@ export const StdAgentPipelineExecutionLogOrbitalManifest = {
   paramFields: [
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
     { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
     { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },

@@ -1,0 +1,987 @@
+[
+  {
+    "organism": "std-crew-board-2d",
+    "orbital": "CrewBoard2DOrbital",
+    "tier": "molecules",
+    "factoryPath": "behaviors/functions/ui/game/2d/molecules/std-crew-board-2d.ts",
+    "entities": [
+      {
+        "name": "GameState",
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "tiles",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "movesLeft",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validMoves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "phase",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "oxygen",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "crewCount",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CrewAuthority",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 7
+          },
+          {
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 7
+          },
+          {
+            "key": "moveBudget",
+            "type": "unknown",
+            "default": 999999
+          },
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "units",
+            "type": "unknown",
+            "default": [
+              {
+                "health": 10,
+                "id": "c1",
+                "maxHealth": 10,
+                "position": {
+                  "x": 1,
+                  "y": 1
+                },
+                "team": "player",
+                "unitType": "crew",
+                "x": 1,
+                "y": 1,
+                "z": 0
+              }
+            ]
+          }
+        ],
+        "capabilities": [],
+        "ref": "Nav.traits.HeroNav"
+      },
+      {
+        "name": "FxDecay",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Particles.traits.FxParticles"
+      },
+      {
+        "name": "CrewIntent",
+        "emittedEvents": [
+          "MOVE",
+          "TILE_CLICK",
+          "UNIT_CLICK",
+          "CANCEL"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "MOVE",
+            "direction": "emit",
+            "description": "Crew move intent applied by the hero-nav authority",
+            "tier": "domain"
+          },
+          {
+            "name": "TILE_CLICK",
+            "direction": "emit",
+            "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
+            "tier": "domain"
+          },
+          {
+            "name": "UNIT_CLICK",
+            "direction": "emit",
+            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+            "tier": "domain"
+          },
+          {
+            "name": "CANCEL",
+            "direction": "emit",
+            "description": "Emits UI:{cancelEvent} with {} on cancel",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "assetManifest",
+            "type": "AssetManifest",
+            "default": {
+              "effects": {},
+              "features": {},
+              "terrains": {},
+              "units": {}
+            },
+            "label": "Asset Manifest",
+            "description": "Terrain/unit/feature/effect sprite manifest.",
+            "tier": "presentation",
+            "properties": {
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          },
+          {
+            "key": "backgroundAsset",
+            "type": "Asset",
+            "default": {},
+            "label": "Background Asset",
+            "description": "Game-shell background panel sprite (theme chrome).",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "atlas": {
+                "name": "atlas",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "sprite": {
+                "name": "sprite",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "cancelIcon",
+            "type": "Asset",
+            "default": {},
+            "label": "Cancel Icon",
+            "description": "Icon asset for the Cancel button.",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "atlas": {
+                "name": "atlas",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "sprite": {
+                "name": "sprite",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "crewCount",
+            "type": "number",
+            "default": 3,
+            "label": "Crew Count",
+            "description": "Initial HUD crew-count display value. Cosmetic only: the source board never changes it after INIT.",
+            "tier": "domain"
+          },
+          {
+            "key": "crewIcon",
+            "type": "Asset",
+            "default": {},
+            "label": "Crew Icon",
+            "description": "Icon asset for the Crew HUD stat.",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "atlas": {
+                "name": "atlas",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "sprite": {
+                "name": "sprite",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "features",
+            "type": "[Feature]",
+            "default": [],
+            "label": "Features",
+            "description": "Decorative environment features (e.g. consoles) drawn on the board.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "assetUrl": {
+                  "name": "assetUrl",
+                  "required": false,
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "gridHeight",
+            "type": "number",
+            "default": 7,
+            "label": "Grid Height",
+            "description": "Grid row count (matches CrewAuthority.gridHeight).",
+            "tier": "domain"
+          },
+          {
+            "key": "gridWidth",
+            "type": "number",
+            "default": 7,
+            "label": "Grid Width",
+            "description": "Grid column count (matches CrewAuthority.gridWidth).",
+            "tier": "domain"
+          },
+          {
+            "key": "hudBackgroundAsset",
+            "type": "Asset",
+            "default": {},
+            "label": "HUD Background Asset",
+            "description": "HUD panel background sprite (theme chrome).",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "atlas": {
+                "name": "atlas",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "sprite": {
+                "name": "sprite",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "movementRange",
+            "type": "number",
+            "default": 2,
+            "label": "Movement Range",
+            "description": "Max manhattan distance a selected crew unit may move.",
+            "tier": "domain"
+          },
+          {
+            "key": "oxygen",
+            "type": "number",
+            "default": 100,
+            "label": "Oxygen",
+            "description": "Initial HUD oxygen display value. Cosmetic only: the source board never depletes it, so no atom writes it after INIT.",
+            "tier": "domain"
+          },
+          {
+            "key": "oxygenIcon",
+            "type": "Asset",
+            "default": {},
+            "label": "Oxygen Icon",
+            "description": "Icon asset for the Oxygen HUD stat.",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "atlas": {
+                "name": "atlas",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "sprite": {
+                "name": "sprite",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "projection",
+            "type": "string",
+            "default": "flat",
+            "label": "Projection",
+            "description": "canvas-2d projection: flat or isometric.",
+            "tier": "presentation"
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 1,
+            "label": "Scale",
+            "description": "Canvas render scale.",
+            "tier": "presentation"
+          },
+          {
+            "key": "showMinimap",
+            "type": "boolean",
+            "default": false,
+            "label": "Show Minimap",
+            "description": "Whether the canvas draws a minimap.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "CrewBoard2DPage",
+        "defaultPath": "/crew-board-2d",
+        "primaryEntity": "GameState"
+      }
+    ],
+    "emittedEvents": [
+      "CANCEL",
+      "MOVE",
+      "TILE_CLICK",
+      "UNIT_CLICK"
+    ],
+    "listenedEvents": []
+  }
+]

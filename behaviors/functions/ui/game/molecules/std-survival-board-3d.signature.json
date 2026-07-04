@@ -1,0 +1,626 @@
+[
+  {
+    "organism": "std-survival-board-3d",
+    "orbital": "SurvivalBoard3DOrbital",
+    "tier": "molecules",
+    "factoryPath": "behaviors/functions/ui/game/3d/molecules/std-survival-board-3d.ts",
+    "entities": [
+      {
+        "name": "GameState",
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "tiles",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "movesLeft",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "features",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "wood",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "stone",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validMoves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "phase",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "HeroAuthority",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 16
+          },
+          {
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 16
+          },
+          {
+            "key": "moveBudget",
+            "type": "unknown",
+            "default": 100
+          },
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "units",
+            "type": "unknown",
+            "default": [
+              {
+                "health": 1,
+                "id": "survivor",
+                "maxHealth": 1,
+                "position": {
+                  "x": 1,
+                  "y": 1
+                },
+                "team": "player",
+                "unitType": "survivor",
+                "x": 1,
+                "y": 1,
+                "z": 0
+              }
+            ]
+          }
+        ],
+        "capabilities": [],
+        "ref": "Nav.traits.HeroNav"
+      },
+      {
+        "name": "Gather",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "stoneType",
+            "type": "unknown",
+            "default": "rock"
+          },
+          {
+            "key": "woodType",
+            "type": "unknown",
+            "default": "tree"
+          },
+          {
+            "key": "yieldPerNode",
+            "type": "unknown",
+            "default": 1
+          }
+        ],
+        "capabilities": [],
+        "ref": "Harvest.traits.Gather"
+      },
+      {
+        "name": "FxDecay",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Particles.traits.FxParticles"
+      },
+      {
+        "name": "Flow",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Survival.traits.SurvivalFlow"
+      },
+      {
+        "name": "SurvivalIntent",
+        "emittedEvents": [
+          "MOVE",
+          "WANDER",
+          "RESTART",
+          "TILE_CLICK",
+          "UNIT_CLICK",
+          "CANCEL",
+          "BUILD_CAMP"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "MOVE",
+            "direction": "emit",
+            "description": "Hero move intent applied by the hero-nav authority",
+            "tier": "domain"
+          },
+          {
+            "name": "WANDER",
+            "direction": "emit",
+            "description": "Advances neutral NPCs one random step via the hero-nav authority",
+            "tier": "domain"
+          },
+          {
+            "name": "RESTART",
+            "direction": "emit",
+            "description": "Resets every mechanic (units/budget, resources, result) for a new round",
+            "tier": "domain"
+          },
+          {
+            "name": "TILE_CLICK",
+            "direction": "emit",
+            "description": "tileClickEvent prop",
+            "tier": "domain"
+          },
+          {
+            "name": "UNIT_CLICK",
+            "direction": "emit",
+            "description": "unitClickEvent prop",
+            "tier": "domain"
+          },
+          {
+            "name": "CANCEL",
+            "direction": "emit",
+            "description": "Clears the current selection",
+            "tier": "domain"
+          },
+          {
+            "name": "BUILD_CAMP",
+            "direction": "emit",
+            "description": "Requests building the camp once wood/stone goals are met; survival-flow resolves the win",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "assetManifest",
+            "type": "AssetManifest",
+            "default": {
+              "effects": {},
+              "features": {},
+              "terrains": {},
+              "units": {}
+            },
+            "label": "Asset Manifest",
+            "description": "Per-role model manifest resolving tile/unit/feature models by terrain/category key.",
+            "tier": "presentation",
+            "properties": {
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          },
+          {
+            "key": "bgColor",
+            "type": "string",
+            "default": "#0a0f1a",
+            "label": "Bg Color",
+            "description": "Canvas background color.",
+            "tier": "presentation"
+          },
+          {
+            "key": "cameraMode",
+            "type": "string",
+            "default": "top-down",
+            "label": "Camera Mode",
+            "description": "3D canvas camera mode.",
+            "tier": "presentation"
+          },
+          {
+            "key": "campStone",
+            "type": "number",
+            "default": 4,
+            "label": "Camp Stone",
+            "description": "Stone required before the Build Camp action is allowed.",
+            "tier": "domain"
+          },
+          {
+            "key": "campWood",
+            "type": "number",
+            "default": 4,
+            "label": "Camp Wood",
+            "description": "Wood required before the Build Camp action is allowed.",
+            "tier": "domain"
+          },
+          {
+            "key": "extraStats",
+            "type": "[HudStat]",
+            "default": [],
+            "label": "Extra Stats",
+            "description": "Board-specific HUD stats appended after the standard set.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "gridHeight",
+            "type": "number",
+            "default": 16,
+            "label": "Grid Height",
+            "description": "Grid row count (matches HeroAuthority.gridHeight).",
+            "tier": "domain"
+          },
+          {
+            "key": "gridWidth",
+            "type": "number",
+            "default": 16,
+            "label": "Grid Width",
+            "description": "Grid column count (matches HeroAuthority.gridWidth).",
+            "tier": "domain"
+          },
+          {
+            "key": "movementRange",
+            "type": "number",
+            "default": 3,
+            "label": "Movement Range",
+            "description": "Max manhattan distance the hero may step per move.",
+            "tier": "domain"
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.45,
+            "label": "Scale",
+            "description": "Canvas render scale.",
+            "tier": "presentation"
+          },
+          {
+            "key": "unitScale",
+            "type": "number",
+            "default": 1,
+            "label": "Unit Scale",
+            "description": "Unit draw-size multiplier.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "SurvivalBoard3DPage",
+        "defaultPath": "/survival-board-3d",
+        "primaryEntity": "GameState"
+      }
+    ],
+    "emittedEvents": [
+      "BUILD_CAMP",
+      "CANCEL",
+      "MOVE",
+      "RESTART",
+      "TILE_CLICK",
+      "UNIT_CLICK",
+      "WANDER"
+    ],
+    "listenedEvents": []
+  }
+]

@@ -6,11 +6,21 @@
     "factoryPath": "behaviors/functions/ui/game/3d/organisms/ui-space-board-3d.ts",
     "entities": [
       {
-        "name": "SpaceBoard3DItem",
+        "name": "GameState",
         "fields": [
           {
             "name": "units",
             "type": "array",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
             "required": false
           },
           {
@@ -29,53 +39,13 @@
             "required": false
           },
           {
-            "name": "fx",
-            "type": "array",
-            "required": false
-          },
-          {
-            "name": "phase",
+            "name": "uiPhase",
             "type": "string",
             "required": false
           },
           {
             "name": "turn",
             "type": "number",
-            "required": false
-          },
-          {
-            "name": "result",
-            "type": "string",
-            "required": false
-          },
-          {
-            "name": "currentTeam",
-            "type": "string",
-            "required": false
-          },
-          {
-            "name": "gridWidth",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "gridHeight",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "movementRange",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "enemyTurn",
-            "type": "boolean",
-            "required": false
-          },
-          {
-            "name": "tiles",
-            "type": "array",
             "required": false
           }
         ],
@@ -84,69 +54,244 @@
     ],
     "traits": [
       {
-        "name": "SpaceBoard3DRender",
-        "emittedEvents": [
-          "GAME_END",
-          "UNIT_MOVE",
-          "TILE_CLICK",
-          "UNIT_CLICK",
-          "END_TURN",
-          "CANCEL",
-          "PLAY_AGAIN"
-        ],
+        "name": "Authority",
+        "emittedEvents": [],
         "listenedEvents": [],
-        "events": [
+        "overridableConfigKeys": [
           {
-            "name": "GAME_END",
-            "direction": "emit",
-            "description": "Called when the match ends",
-            "tier": "domain"
+            "key": "attackDamage",
+            "type": "unknown",
+            "default": 3
           },
           {
-            "name": "UNIT_MOVE",
-            "direction": "emit",
-            "description": "Called after a unit moves",
-            "tier": "domain"
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 18
           },
           {
-            "name": "TILE_CLICK",
-            "direction": "emit",
-            "description": "-- Declarative event props --",
-            "tier": "domain"
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 18
           },
           {
-            "name": "UNIT_CLICK",
-            "direction": "emit",
-            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
-            "tier": "domain"
+            "key": "running",
+            "type": "unknown",
+            "default": true
           },
           {
-            "name": "END_TURN",
-            "direction": "emit",
-            "description": "Emits UI:{endTurnEvent} with {} on end turn",
-            "tier": "domain"
-          },
-          {
-            "name": "CANCEL",
-            "direction": "emit",
-            "description": "Emits UI:{cancelEvent} with {} on cancel",
-            "tier": "domain"
-          },
-          {
-            "name": "PLAY_AGAIN",
-            "direction": "emit",
-            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
-            "tier": "domain"
-          },
-          {
-            "name": "INIT",
-            "direction": "listen"
+            "key": "units",
+            "type": "unknown",
+            "default": [
+              {
+                "health": 10,
+                "id": "u1",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "astronaut",
+                  "dimension": "3d",
+                  "name": "astronautA",
+                  "role": "player",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb"
+                },
+                "name": "Astronaut",
+                "position": {
+                  "x": 4,
+                  "y": 16
+                },
+                "team": "player",
+                "unitType": "astronaut",
+                "x": 4,
+                "y": 16,
+                "z": 0
+              },
+              {
+                "health": 12,
+                "id": "u2",
+                "maxHealth": 12,
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "rover",
+                  "dimension": "3d",
+                  "name": "rover",
+                  "role": "player",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rover.glb"
+                },
+                "name": "Rover",
+                "position": {
+                  "x": 9,
+                  "y": 16
+                },
+                "team": "player",
+                "unitType": "rover",
+                "x": 9,
+                "y": 16,
+                "z": 0
+              },
+              {
+                "health": 10,
+                "id": "u3",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "astronaut",
+                  "dimension": "3d",
+                  "name": "astronautA",
+                  "role": "player",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb"
+                },
+                "name": "Engineer",
+                "position": {
+                  "x": 14,
+                  "y": 16
+                },
+                "team": "player",
+                "unitType": "astronaut",
+                "x": 14,
+                "y": 16,
+                "z": 0
+              },
+              {
+                "health": 8,
+                "id": "e1",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "alien",
+                  "dimension": "3d",
+                  "name": "alien",
+                  "role": "enemy",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb"
+                },
+                "name": "Alien",
+                "position": {
+                  "x": 4,
+                  "y": 1
+                },
+                "team": "enemy",
+                "unitType": "alien",
+                "x": 4,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "health": 6,
+                "id": "e2",
+                "maxHealth": 8,
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "raider",
+                  "dimension": "3d",
+                  "name": "craft_speederA",
+                  "role": "enemy",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/craft_speederA.glb"
+                },
+                "name": "Raider Craft",
+                "position": {
+                  "x": 9,
+                  "y": 1
+                },
+                "team": "enemy",
+                "unitType": "raider",
+                "x": 9,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "health": 8,
+                "id": "e3",
+                "maxHealth": 10,
+                "modelUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "alien",
+                  "dimension": "3d",
+                  "name": "alien",
+                  "role": "enemy",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb"
+                },
+                "name": "Alien Scout",
+                "position": {
+                  "x": 14,
+                  "y": 1
+                },
+                "team": "enemy",
+                "unitType": "alien",
+                "x": 14,
+                "y": 1,
+                "z": 0
+              }
+            ]
           }
         ],
+        "capabilities": [],
+        "ref": "Frame.traits.TacticsAuthority"
+      },
+      {
+        "name": "FxDecay",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.FxDecay"
+      },
+      {
+        "name": "RoundLogic",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.RoundLogic"
+      },
+      {
+        "name": "Player",
+        "emittedEvents": [],
+        "listenedEvents": [],
         "overridableConfigKeys": [
           {
             "key": "assetManifest",
-            "type": "SpaceBoard3DAssetManifest",
+            "type": "unknown",
             "default": {
               "effects": {
                 "death": {
@@ -377,371 +522,21 @@
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rover.glb"
                 }
               }
-            },
-            "label": "Asset Manifest",
-            "description": "Asset manifest for terrain/unit/feature/effect models.",
-            "tier": "presentation",
-            "properties": {
-              "effects": {
-                "name": "effects",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "features": {
-                "name": "features",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "terrains": {
-                "name": "terrains",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              },
-              "units": {
-                "name": "units",
-                "required": false,
-                "type": "object",
-                "items": {
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                }
-              }
             }
-          },
-          {
-            "key": "attackDamage",
-            "type": "number",
-            "default": 3,
-            "label": "Attack Damage",
-            "description": "Damage a player unit deals to an adjacent enemy on attack",
-            "tier": "presentation"
           },
           {
             "key": "bgColor",
-            "type": "string",
-            "default": "#05070f",
-            "label": "Bg Color",
-            "description": "Deep-space canvas background color",
-            "tier": "presentation"
+            "type": "unknown",
+            "default": "#05070f"
           },
           {
-            "key": "className",
-            "type": "string",
-            "default": "",
-            "label": "Class Name",
-            "description": "className prop",
-            "tier": "presentation"
-          },
-          {
-            "key": "coverAsset",
-            "type": "Asset",
-            "default": {
-              "animations": [
-                "static"
-              ],
-              "aspect": "1:1",
-              "category": "boulder",
-              "dimension": "3d",
-              "name": "rock_largeA",
-              "role": "decoration",
-              "style": "lowpoly-flat",
-              "thumbnailUrl": "",
-              "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rock_largeA.glb"
-            },
-            "label": "Cover Asset",
-            "description": "Impassable boulder cover tile, scattered for chokepoints.",
-            "tier": "presentation",
-            "properties": {
-              "animations": {
-                "name": "animations",
-                "required": false,
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "aspect": {
-                "name": "aspect",
-                "required": false,
-                "type": "string"
-              },
-              "category": {
-                "name": "category",
-                "required": false,
-                "type": "string"
-              },
-              "dimension": {
-                "name": "dimension",
-                "required": false,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "role": {
-                "name": "role",
-                "required": false,
-                "type": "string"
-              },
-              "style": {
-                "name": "style",
-                "required": false,
-                "type": "string"
-              },
-              "thumbnailUrl": {
-                "name": "thumbnailUrl",
-                "required": false,
-                "type": "string"
-              },
-              "url": {
-                "name": "url",
-                "required": false,
-                "type": "string"
-              }
-            }
-          },
-          {
-            "key": "error",
-            "type": "SpaceBoard3DError",
-            "label": "Error",
-            "description": "Error state (UiError)",
-            "tier": "presentation",
-            "properties": {
-              "code": {
-                "name": "code",
-                "required": false,
-                "type": "string"
-              },
-              "message": {
-                "name": "message",
-                "required": true,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "stack": {
-                "name": "stack",
-                "required": false,
-                "type": "string"
-              }
-            }
+            "key": "cameraMode",
+            "type": "unknown",
+            "default": "isometric"
           },
           {
             "key": "features",
-            "type": "[SpaceBoard3DFeaturesItem]",
+            "type": "unknown",
             "default": [
               {
                 "assetUrl": {
@@ -819,706 +614,46 @@
                 "x": 9,
                 "y": 12
               }
-            ],
-            "label": "Features",
-            "description": "Base features spread across the mid-battlefield: central dome, rocket pad, hangar, and comms dish.",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "assetUrl": {
-                  "name": "assetUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "color": {
-                  "name": "color",
-                  "required": false,
-                  "type": "string"
-                },
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "sprite": {
-                  "name": "sprite",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "type": {
-                  "name": "type",
-                  "required": true,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
+            ]
           },
           {
-            "key": "groundAsset",
-            "type": "Asset",
-            "default": {
-              "animations": [
-                "static"
-              ],
-              "aspect": "1:1",
-              "category": "regolith",
-              "dimension": "3d",
-              "name": "terrain",
-              "role": "tile",
-              "style": "lowpoly-flat",
-              "thumbnailUrl": "",
-              "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/terrain/terrain.glb"
-            },
-            "label": "Ground Asset",
-            "description": "Passable regolith ground tile, tiled across the battlefield.",
-            "tier": "presentation",
-            "properties": {
-              "animations": {
-                "name": "animations",
-                "required": false,
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "aspect": {
-                "name": "aspect",
-                "required": false,
-                "type": "string"
-              },
-              "category": {
-                "name": "category",
-                "required": false,
-                "type": "string"
-              },
-              "dimension": {
-                "name": "dimension",
-                "required": false,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "role": {
-                "name": "role",
-                "required": false,
-                "type": "string"
-              },
-              "style": {
-                "name": "style",
-                "required": false,
-                "type": "string"
-              },
-              "thumbnailUrl": {
-                "name": "thumbnailUrl",
-                "required": false,
-                "type": "string"
-              },
-              "url": {
-                "name": "url",
-                "required": false,
-                "type": "string"
-              }
-            }
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 18
           },
           {
-            "key": "isLoading",
-            "type": "boolean",
-            "default": false,
-            "label": "Is Loading",
-            "description": "Loading state indicator",
-            "tier": "presentation"
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 18
+          },
+          {
+            "key": "movementRange",
+            "type": "unknown",
+            "default": 4
           },
           {
             "key": "scale",
-            "type": "number",
-            "default": 0.45,
-            "label": "Scale",
-            "description": "Canvas render scale",
-            "tier": "presentation"
+            "type": "unknown",
+            "default": 0.45
           },
           {
             "key": "unitScale",
-            "type": "number",
-            "default": 1,
-            "label": "Unit Scale",
-            "description": "Unit draw-size multiplier",
-            "tier": "presentation"
-          },
-          {
-            "key": "units",
-            "type": "[SpaceBoard3DUnitsItem]",
-            "default": [
-              {
-                "health": 10,
-                "id": "u1",
-                "maxHealth": 10,
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "astronaut",
-                  "dimension": "3d",
-                  "name": "astronautA",
-                  "role": "player",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb"
-                },
-                "name": "Astronaut",
-                "position": {
-                  "x": 4,
-                  "y": 16
-                },
-                "team": "player",
-                "unitType": "astronaut"
-              },
-              {
-                "health": 12,
-                "id": "u2",
-                "maxHealth": 12,
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "rover",
-                  "dimension": "3d",
-                  "name": "rover",
-                  "role": "player",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/rover.glb"
-                },
-                "name": "Rover",
-                "position": {
-                  "x": 9,
-                  "y": 16
-                },
-                "team": "player",
-                "unitType": "rover"
-              },
-              {
-                "health": 10,
-                "id": "u3",
-                "maxHealth": 10,
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "astronaut",
-                  "dimension": "3d",
-                  "name": "astronautA",
-                  "role": "player",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/units/astronautA.glb"
-                },
-                "name": "Engineer",
-                "position": {
-                  "x": 14,
-                  "y": 16
-                },
-                "team": "player",
-                "unitType": "astronaut"
-              },
-              {
-                "health": 8,
-                "id": "e1",
-                "maxHealth": 10,
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "alien",
-                  "dimension": "3d",
-                  "name": "alien",
-                  "role": "enemy",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb"
-                },
-                "name": "Alien",
-                "position": {
-                  "x": 4,
-                  "y": 1
-                },
-                "team": "enemy",
-                "unitType": "alien"
-              },
-              {
-                "health": 6,
-                "id": "e2",
-                "maxHealth": 8,
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "raider",
-                  "dimension": "3d",
-                  "name": "craft_speederA",
-                  "role": "enemy",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/craft_speederA.glb"
-                },
-                "name": "Raider Craft",
-                "position": {
-                  "x": 9,
-                  "y": 1
-                },
-                "team": "enemy",
-                "unitType": "raider"
-              },
-              {
-                "health": 8,
-                "id": "e3",
-                "maxHealth": 10,
-                "modelUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "alien",
-                  "dimension": "3d",
-                  "name": "alien",
-                  "role": "enemy",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-board-3d/kenney-space-kit/features/alien.glb"
-                },
-                "name": "Alien Scout",
-                "position": {
-                  "x": 14,
-                  "y": 1
-                },
-                "team": "enemy",
-                "unitType": "alien"
-              }
-            ],
-            "label": "Units",
-            "description": "Initial unit roster (3 player: astronaut, rover, engineer vs 3 enemy: alien, raider craft, alien scout), opposite ends of the battlefield — takes priority over entity-derived units.",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "faction": {
-                  "name": "faction",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
-                },
-                "health": {
-                  "name": "health",
-                  "required": false,
-                  "type": "number"
-                },
-                "heroId": {
-                  "name": "heroId",
-                  "required": false,
-                  "type": "string"
-                },
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
-                "maxHealth": {
-                  "name": "maxHealth",
-                  "required": false,
-                  "type": "number"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "name": {
-                  "name": "name",
-                  "required": false,
-                  "type": "string"
-                },
-                "position": {
-                  "name": "position",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "previousPosition": {
-                  "name": "previousPosition",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "sprite": {
-                  "name": "sprite",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "team": {
-                  "name": "team",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
-                },
-                "traits": {
-                  "name": "traits",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "properties": {
-                      "cooldown": {
-                        "name": "cooldown",
-                        "required": true,
-                        "type": "number"
-                      },
-                      "currentState": {
-                        "name": "currentState",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "name": {
-                        "name": "name",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "states": {
-                        "name": "states",
-                        "required": true,
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "type": "object"
-                  }
-                },
-                "unitType": {
-                  "name": "unitType",
-                  "required": false,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": false,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": false,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
+            "type": "unknown",
+            "default": 1
           }
         ],
         "capabilities": [],
-        "entityRebindable": true,
-        "entityContract": {
-          "requires": [],
-          "provides": [
-            "attackTargets",
-            "currentTeam",
-            "enemyTurn",
-            "fx",
-            "gridHeight",
-            "gridWidth",
-            "movementRange",
-            "phase",
-            "result",
-            "selectedUnitId",
-            "tiles",
-            "turn",
-            "units",
-            "validMoves"
-          ]
-        }
+        "ref": "Frame.traits.PlayerIntent"
       }
     ],
     "pages": [
       {
         "name": "SpaceBoard3DPage",
         "defaultPath": "/space-board-3d",
-        "primaryEntity": "SpaceBoard3DItem"
+        "primaryEntity": "GameState"
       }
     ],
-    "emittedEvents": [
-      "CANCEL",
-      "END_TURN",
-      "GAME_END",
-      "PLAY_AGAIN",
-      "TILE_CLICK",
-      "UNIT_CLICK",
-      "UNIT_MOVE"
-    ],
+    "emittedEvents": [],
     "listenedEvents": []
   }
 ]

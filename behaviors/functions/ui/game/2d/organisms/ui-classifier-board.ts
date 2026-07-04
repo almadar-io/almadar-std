@@ -804,7 +804,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                                   {
                                     'entity': '@i.options',
                                     'fields': [],
-                                    'gap': 'xs',
+                                    'gap': 'sm',
                                     'renderItem': [
                                       'fn',
                                       'opt',
@@ -1005,7 +1005,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                                   {
                                     'entity': '@i.options',
                                     'fields': [],
-                                    'gap': 'xs',
+                                    'gap': 'sm',
                                     'renderItem': [
                                       'fn',
                                       'opt',
@@ -1161,7 +1161,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                                   {
                                     'entity': '@i.options',
                                     'fields': [],
-                                    'gap': 'xs',
+                                    'gap': 'sm',
                                     'renderItem': [
                                       'fn',
                                       'opt',
@@ -1303,7 +1303,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                                   {
                                     'entity': '@i.options',
                                     'fields': [],
-                                    'gap': 'xs',
+                                    'gap': 'sm',
                                     'renderItem': [
                                       'fn',
                                       'opt',
@@ -1468,7 +1468,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                                   {
                                     'entity': '@i.options',
                                     'fields': [],
-                                    'gap': 'xs',
+                                    'gap': 'sm',
                                     'renderItem': [
                                       'fn',
                                       'opt',
@@ -1697,7 +1697,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                                   {
                                     'entity': '@i.options',
                                     'fields': [],
-                                    'gap': 'xs',
+                                    'gap': 'sm',
                                     'renderItem': [
                                       'fn',
                                       'opt',

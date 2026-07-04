@@ -1,99 +1,42 @@
-app ui-fantasy-town-board-3d "1.1.0"
-"FantasyTownBoard3D — 3D grid-tactics siege defense: soldier and guard repel goblin and troll raiders in the town square."
+app ui-fantasy-town-board-3d "1.0.0"
+"FantasyTownBoard3D — 3D grid-tactics siege defense: player units repel enemy raiders."
 orbital FantasyTownBoard3DOrbital {
-  type FantasyTownBoard3DError = {
-    message : string!
-    name : string
-    code : string
-    stack : string
-  }
+  uses Frame from "std/behaviors/std-tactics-board-3d"
+
   type Asset = {
-      url : asset
-      atlas : asset
-      sprite : string
-      role : string
-      category : string
-      animations : [string]
-      style : string
-      variant : string
-      dimension : string
-      aspect : string
-      name : string
-      thumbnailUrl : string
-    }
-  type FantasyTownBoard3DTilesItem = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    team : string
+    health : number
+    maxHealth : number
+    unitType : string
+    name : string
+    modelUrl : Asset
+  }
+  type Tile = {
     id : string
     x : number!
     y : number!
     z : number
     terrain : string
-    type : string
-    terrainSprite : Asset
     passable : boolean
-    movementCost : number
-    tileType : string
-    elevation : number
     modelUrl : Asset
   }
-  type FantasyTownBoard3DUnitsItem = {
-    id : string!
-    position : FantasyTownBoard3DUnitsItemPosition
-    x : number
-    y : number
-    z : number
-    sprite : Asset
-    modelUrl : Asset
-    unitType : string
-    heroId : string
-    name : string
-    team : "player" | "enemy" | "neutral"
-    faction : "player" | "enemy" | "neutral"
-    health : number
-    maxHealth : number
-    traits : [FantasyTownBoard3DUnitsItemTraitsItem]
-    previousPosition : FantasyTownBoard3DUnitsItemPreviousPosition
-    elevation : number
-  }
-  type FantasyTownBoard3DUnitsItemPosition = {
-    x : number!
-    y : number!
-  }
-  type FantasyTownBoard3DUnitsItemTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number!
-  }
-  type FantasyTownBoard3DUnitsItemPreviousPosition = {
-    x : number!
-    y : number!
-  }
-  type FantasyTownBoard3DFeaturesItem = {
-    id : string
-    x : number!
-    y : number!
-    z : number
-    type : string!
-    sprite : Asset
-    assetUrl : Asset
-    color : string
-    elevation : number
-  }
-  type FantasyTownBoard3DAssetManifest = {
-    terrains : Map string Asset
-    units : Map string Asset
-    features : Map string Asset
-    effects : Map string Asset
-  }
-  type FantasyTownBoard3DValidMovesItem = {
-    x : number!
-    z : number!
-  }
-  type FantasyTownBoard3DAttackTargetsItem = {
-    x : number!
-    z : number!
-  }
-  type FantasyTownBoard3DFxEvent = {
+  type Fx = {
     id : string!
     type : string!
     x : number!
@@ -102,295 +45,67 @@ orbital FantasyTownBoard3DOrbital {
     message : string
     ttl : number!
   }
+  type ValidMove = { x : number!  z : number! }
+  type Feature = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string
+    assetUrl : Asset
+    color : string
+    elevation : number
+  }
+  type AssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
+  }
 
-  entity FantasyTownBoard3DItem [runtime] {
+  entity GameState [runtime, shared] {
     id : string!
-    units : [FantasyTownBoard3DUnitsItem]
-    selectedUnitId : string
-    validMoves : [FantasyTownBoard3DValidMovesItem]
-    attackTargets : [FantasyTownBoard3DAttackTargetsItem]
-    fx : [FantasyTownBoard3DFxEvent] = []
-    phase : "observation" | "selection" | "movement" | "action" | "enemy_turn" | "game_over" = "observation"
+    units : [Unit] = []
+    fx : [Fx] = []
+    result : string = "none"
+    selectedUnitId : string = ""
+    validMoves : [ValidMove] = []
+    attackTargets : [ValidMove] = []
+    uiPhase : string = "observation"
     turn : number = 0
-    result : "none" | "victory" | "defeat" = none
-    currentTeam : "player" | "enemy" = "player"
-    gridWidth : number = 16
-    gridHeight : number = 16
-    movementRange : number = 4
-    enemyTurn : boolean = false
-    tiles : [FantasyTownBoard3DTilesItem] = []
   }
 
-  trait FantasyTownBoard3DRender -> @rebindable FantasyTownBoard3DItem [interaction, instance] {
-    initial: playing
-
-    state playing {
-      INIT -> playing
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.attackTargets [])
-        (set @entity.fx [])
-        (set @entity.turn 0)
-        (set @entity.result "none")
-        (set @entity.phase "observation")
-        (set @entity.currentTeam "player")
-        (set @entity.enemyTurn false)
-        (set @entity.gridWidth 16)
-        (set @entity.gridHeight 16)
-        (set @entity.movementRange 4)
-        (set @entity.tiles (array/flatten (array/map (array/range 0 16) (fn gy (array/map (array/range 0 16) (fn gx (let ((cover (and (>= @gy 3) (and (<= @gy 12) (== (math/mod (+ (* @gx 3) (* @gy 7)) 8) 0))))) { id: (str/concat "t-" @gx "-" @gy), x: @gx, y: @gy, terrain: (if @cover "wall" "stone"), passable: (if @cover false true), modelUrl: (if @cover @config.coverAsset @config.groundAsset) })))))))
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Defeat all raiders" }, { label: "How", value: "Click your unit → move → click it again → strike an adjacent foe" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "isometric", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
-        (set @entity.phase "action")
-        (set @entity.attackTargets (array/map (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn s (== @s.id @entity.selectedUnitId))) position) (object/get @u position)) 1)))) (fn u { x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y) })))
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Defeat all raiders" }, { label: "How", value: "Click your unit → move → click it again → strike an adjacent foe" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "isometric", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
-        (set @entity.selectedUnitId ?unitId)
-        (set @entity.phase "selection")
-        (set @entity.validMoves (array/map (array/filter @entity.tiles (fn t (and (== (object/get @t passable) true) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0)))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
-        (set @entity.attackTargets [])
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Defeat all raiders" }, { label: "How", value: "Click your unit → move → click it again → strike an adjacent foe" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "isometric", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      UNIT_CLICK -> playing when (and (== @entity.phase "action") (let ((target (array/find @entity.units (fn u (== @u.id ?unitId)))) (attacker (array/find @entity.units (fn s (== @s.id @entity.selectedUnitId))))) (and (== (object/get @target team) "enemy") (<= (grid/manhattan-distance (object/get @attacker position) (object/get @target position)) 1))))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?unitId) (object/merge @u { health: (math/max 0 (- @u.health @config.attackDamage)) }) @u))))
-        (set @entity.fx (let ((target (array/find @entity.units (fn u (== @u.id ?unitId))))) (array/append @entity.fx { id: (str/concat "fx-" (array/len @entity.fx)), type: "hit", x: (object/get (object/get @target position) x), z: (object/get (object/get @target position) y), message: (str/concat "-" @config.attackDamage), ttl: 3 })))
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.attackTargets [])
-        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) "victory" @entity.result))
-        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
-        (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Defeat all raiders" }, { label: "How", value: "Click your unit → move → click it again → strike an adjacent foe" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "isometric", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0))))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.attackTargets [])
-        (set @entity.phase "observation")
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Defeat all raiders" }, { label: "How", value: "Click your unit → move → click it again → strike an adjacent foe" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "isometric", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      END_TURN -> playing when (== @entity.result "none")
-        (set @entity.turn (+ @entity.turn 1))
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.attackTargets [])
-        (set @entity.enemyTurn true)
-        (set @entity.currentTeam "enemy")
-        (set @entity.phase "enemy_turn")
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Defeat all raiders" }, { label: "How", value: "Click your unit → move → click it again → strike an adjacent foe" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "isometric", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      CANCEL -> playing when (!= @entity.selectedUnitId "")
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.attackTargets [])
-        (set @entity.phase "observation")
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Defeat all raiders" }, { label: "How", value: "Click your unit → move → click it again → strike an adjacent foe" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "isometric", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
-        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "defeat" "victory"))
-        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
-        (set @entity.phase "game_over")
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.attackTargets [])
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Defeat all raiders" }, { label: "How", value: "Click your unit → move → click it again → strike an adjacent foe" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "isometric", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-    }
-
-    state gameover {
-      PLAY_AGAIN -> playing
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.attackTargets [])
-        (set @entity.fx [])
-        (set @entity.turn 0)
-        (set @entity.result "none")
-        (set @entity.phase "observation")
-        (set @entity.currentTeam "player")
-        (set @entity.enemyTurn false)
-        (set @entity.gridWidth 16)
-        (set @entity.gridHeight 16)
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Defeat all raiders" }, { label: "How", value: "Click your unit → move → click it again → strike an adjacent foe" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "isometric", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-    }
-
-    ticks {
-      enemyAiTick every 1s
-        when (and (== @entity.enemyTurn true) (== @entity.result "none"))
-        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 1)) }) @u) @u))))
-        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (let ((target (array/reduce (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.health 0)))) null (fn best p (if (== @best null) @p (if (< (grid/manhattan-distance (object/get @u position) (object/get @p position)) (grid/manhattan-distance (object/get @u position) (object/get @best position))) @p @best)))))) (if (== @target null) @u (if (== (grid/manhattan-distance (object/get @u position) (object/get @target position)) 1) @u (let ((candX (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1))) (candY (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)))) (if (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) @candX) (== (object/get @t y) @candY)))) passable) true) (== (array/len (array/filter @entity.units (fn o (and (== (object/get (object/get @o position) x) @candX) (== (object/get (object/get @o position) y) @candY))))) 0)) (object/merge @u { position: { x: @candX, y: @candY } }) @u))))) @u))))
-        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
-        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
-        (set @entity.enemyTurn false)
-        (set @entity.currentTeam "player")
-        (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Defeat all raiders" }, { label: "How", value: "Click your unit → move → click it again → strike an adjacent foe" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "isometric", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      fxDecayTick every 500ms
-        when (> (array/len @entity.fx) 0)
-        (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Defeat all raiders" }, { label: "How", value: "Click your unit → move → click it again → strike an adjacent foe" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "isometric", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-    }
-
-    emits {
-      GAME_END -> external {
-        result : string
-      }
-        @description "Called when the match ends"
-        @tier "domain"
-      UNIT_MOVE -> external {
-        unit : object
-        to : FantasyTownBoard3DValidMovesItem
-      }
-        @description "Called after a unit moves"
-        @tier "domain"
-      TILE_CLICK -> external {
-        x : number!
-        z : number!
-        tileId : string
-      }
-        @description "Emitted on tile click with grid coordinates"
-        @tier "domain"
-      UNIT_CLICK -> external {
-        unitId : string!
-        x : number
-        z : number
-      }
-        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
-        @tier "domain"
-      END_TURN -> external {
-        id : string
-      }
-        @description "Emits UI:{endTurnEvent} with {} on end turn"
-        @tier "domain"
-      CANCEL -> external {
-        id : string
-      }
-        @description "Emits UI:{cancelEvent} with {} on cancel"
-        @tier "domain"
-      PLAY_AGAIN -> external {
-        id : string
-      }
-        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
-        @tier "domain"
-    }
-
+  trait Authority = Frame.traits.TacticsAuthority -> GameState {
     config {
-      className : string = ""
-        @label "Class Name"
-        @description "className prop"
-        @tier "presentation"
-      isLoading : boolean = false
-        @label "Is Loading"
-        @description "Loading state indicator"
-        @tier "presentation"
-      error : FantasyTownBoard3DError
-        @label "Error"
-        @description "Error state (UiError)"
-        @tier "presentation"
-      groundAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" }
-        @label "Ground Asset"
-        @description "Passable ground tile, tiled across the battlefield."
-        @tier "presentation"
-      coverAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb", role: "tile", category: "wall-block", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall-block", thumbnailUrl: "" }
-        @label "Cover Asset"
-        @description "Impassable cover tile, scattered for chokepoints."
-        @tier "presentation"
-      units : [FantasyTownBoard3DUnitsItem] = [{ id: "soldier", position: { x: 4, y: 14 }, unitType: "soldier", name: "Soldier", team: player, health: 12, maxHealth: 12, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/units/character-soldier.glb", role: "player", category: "soldier", animations: ["idle", "walk", "attack-melee-right", "die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-soldier", thumbnailUrl: "" } }, { id: "guard", position: { x: 8, y: 14 }, unitType: "guard", name: "Guard", team: player, health: 12, maxHealth: 12, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb", role: "player", category: "guard", animations: ["idle", "walk", "attack-melee-right", "die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-j", thumbnailUrl: "" } }, { id: "sentinel", position: { x: 12, y: 14 }, unitType: "guard", name: "Sentinel", team: player, health: 12, maxHealth: 12, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb", role: "player", category: "guard", animations: ["idle", "walk", "attack-melee-right", "die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-j", thumbnailUrl: "" } }, { id: "goblin", position: { x: 4, y: 1 }, unitType: "goblin", name: "Goblin", team: enemy, health: 10, maxHealth: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb", role: "enemy", category: "goblin", animations: ["idle", "walk", "attack-melee-right", "die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-l", thumbnailUrl: "" } }, { id: "troll", position: { x: 8, y: 1 }, unitType: "troll", name: "Troll", team: enemy, health: 14, maxHealth: 14, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-o.glb", role: "enemy", category: "troll", animations: ["idle", "walk", "attack-melee-right", "die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-o", thumbnailUrl: "" } }, { id: "raider", position: { x: 12, y: 1 }, unitType: "goblin", name: "Raider", team: enemy, health: 10, maxHealth: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb", role: "enemy", category: "goblin", animations: ["idle", "walk", "attack-melee-right", "die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-l", thumbnailUrl: "" } }]
-        @label "Units"
-        @description "Initial unit roster (3 defenders vs 3 raiders at opposite ends) — takes priority over entity-derived units."
-        @tier "presentation"
-      features : [FantasyTownBoard3DFeaturesItem] = [{ id: "fountain", x: 8, y: 7, type: "fountain", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/fountain-center.glb", role: "decoration", category: "fountain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "fountain-center", thumbnailUrl: "" } }, { id: "tower", x: 2, y: 5, type: "tower", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/tower-square.glb", role: "decoration", category: "tower", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tower-square", thumbnailUrl: "" } }, { id: "catapult", x: 13, y: 5, type: "catapult", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-catapult.glb", role: "decoration", category: "catapult", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "siege-catapult", thumbnailUrl: "" } }, { id: "trebuchet", x: 2, y: 10, type: "trebuchet", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-trebuchet.glb", role: "decoration", category: "trebuchet", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "siege-trebuchet", thumbnailUrl: "" } }, { id: "windmill", x: 13, y: 10, type: "windmill", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/windmill.glb", role: "decoration", category: "windmill", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "windmill", thumbnailUrl: "" } }, { id: "cart", x: 8, y: 4, type: "cart", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/cart.glb", role: "decoration", category: "cart", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "cart", thumbnailUrl: "" } }]
-        @label "Features"
-        @description "Decorative town features: fountain, tower, siege engines, windmill, cart."
-        @tier "presentation"
-      assetManifest : FantasyTownBoard3DAssetManifest = { terrains: { wall: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb", atlas: "", sprite: "", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" }, stone: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb", atlas: "", sprite: "", role: "tile", category: "stone", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, cobble: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb", atlas: "", sprite: "", role: "tile", category: "cobble", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cobble", thumbnailUrl: "" } }, units: { soldier: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/units/character-soldier.glb", atlas: "", sprite: "", role: "npc", category: "soldier", animations: ["idle","walk","attack-melee-right","die"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "soldier", thumbnailUrl: "" }, guard: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb", atlas: "", sprite: "", role: "npc", category: "guard", animations: ["idle","walk","attack-melee-right","die"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "guard", thumbnailUrl: "" }, goblin: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb", atlas: "", sprite: "", role: "npc", category: "goblin", animations: ["idle","walk","attack-melee-right","die"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "goblin", thumbnailUrl: "" }, troll: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-o.glb", atlas: "", sprite: "", role: "npc", category: "troll", animations: ["idle","walk","attack-melee-right","die"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "troll", thumbnailUrl: "" } }, features: { fountain: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/fountain-center.glb", atlas: "", sprite: "", role: "decoration", category: "fountain", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "fountain", thumbnailUrl: "" }, tower: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/tower-square.glb", atlas: "", sprite: "", role: "decoration", category: "tower", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tower", thumbnailUrl: "" }, catapult: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-catapult.glb", atlas: "", sprite: "", role: "decoration", category: "catapult", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "catapult", thumbnailUrl: "" }, trebuchet: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-trebuchet.glb", atlas: "", sprite: "", role: "decoration", category: "trebuchet", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "trebuchet", thumbnailUrl: "" }, windmill: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/windmill.glb", atlas: "", sprite: "", role: "decoration", category: "windmill", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "windmill", thumbnailUrl: "" }, cart: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/cart.glb", atlas: "", sprite: "", role: "decoration", category: "cart", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cart", thumbnailUrl: "" } }, effects: { melee: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/features/weapon-sword.glb", atlas: "", sprite: "", role: "effect", category: "melee", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "8:1", name: "melee", thumbnailUrl: "" }, ranged: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/features/weapon-spear.glb", atlas: "", sprite: "", role: "effect", category: "ranged", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "8:1", name: "ranged", thumbnailUrl: "" }, magic: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/banner-red.glb", atlas: "", sprite: "", role: "effect", category: "magic", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "8:1", name: "magic", thumbnailUrl: "" }, hit: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/features/statue.glb", atlas: "", sprite: "", role: "effect", category: "hit", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "8:1", name: "hit", thumbnailUrl: "" }, heal: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/fountain-center.glb", atlas: "", sprite: "", role: "effect", category: "heal", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "8:1", name: "heal", thumbnailUrl: "" }, death: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/rock-large.glb", atlas: "", sprite: "", role: "effect", category: "death", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "8:1", name: "death", thumbnailUrl: "" } } }
-        @label "Asset Manifest"
-        @description "Asset manifest for terrain/unit/feature/effect sprites."
-        @tier "presentation"
-      attackDamage : number = 3
-        @label "Attack Damage"
-        @description "Damage dealt per melee attack"
-        @tier "presentation"
-      scale : number = 0.45
-        @label "Scale"
-        @description "Canvas render scale"
-        @tier "presentation"
-      unitScale : number = 1
-        @label "Unit Scale"
-        @description "Unit draw-size multiplier"
-        @tier "presentation"
+      running: true
+      gridWidth: 16
+      gridHeight: 16
+      attackDamage: 3
+      units: [ { id: "soldier", position: { x: 4, y: 14 }, x: 4, y: 14, z: 0, team: "player", health: 12, maxHealth: 12, unitType: "soldier", name: "Soldier", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/units/character-soldier.glb", role: "player", category: "soldier", animations: ["idle", "walk", "attack-melee-right", "die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-soldier", thumbnailUrl: "" } }, { id: "guard", position: { x: 8, y: 14 }, x: 8, y: 14, z: 0, team: "player", health: 12, maxHealth: 12, unitType: "guard", name: "Guard", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb", role: "player", category: "guard", animations: ["idle", "walk", "attack-melee-right", "die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-j", thumbnailUrl: "" } }, { id: "sentinel", position: { x: 12, y: 14 }, x: 12, y: 14, z: 0, team: "player", health: 12, maxHealth: 12, unitType: "guard", name: "Sentinel", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb", role: "player", category: "guard", animations: ["idle", "walk", "attack-melee-right", "die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-j", thumbnailUrl: "" } }, { id: "goblin", position: { x: 4, y: 1 }, x: 4, y: 1, z: 0, team: "enemy", health: 10, maxHealth: 10, unitType: "goblin", name: "Goblin", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb", role: "enemy", category: "goblin", animations: ["idle", "walk", "attack-melee-right", "die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-l", thumbnailUrl: "" } }, { id: "troll", position: { x: 8, y: 1 }, x: 8, y: 1, z: 0, team: "enemy", health: 14, maxHealth: 14, unitType: "troll", name: "Troll", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-o.glb", role: "enemy", category: "troll", animations: ["idle", "walk", "attack-melee-right", "die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-o", thumbnailUrl: "" } }, { id: "raider", position: { x: 12, y: 1 }, x: 12, y: 1, z: 0, team: "enemy", health: 10, maxHealth: 10, unitType: "goblin", name: "Raider", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb", role: "enemy", category: "goblin", animations: ["idle", "walk", "attack-melee-right", "die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-l", thumbnailUrl: "" } } ]
     }
   }
 
-  page "/fantasy-town-board-3d" as FantasyTownBoard3DPage -> FantasyTownBoard3DRender
+  trait FxDecay = Frame.traits.FxDecay -> GameState {
+    config { running: true }
+  }
+
+  trait RoundLogic = Frame.traits.RoundLogic -> GameState {
+    config { running: true }
+  }
+
+  trait Player = Frame.traits.PlayerIntent -> GameState {
+    config {
+      gridWidth: 16
+      gridHeight: 16
+      movementRange: 4
+      features: [ { id: "fountain", x: 8, y: 7, type: "fountain", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/fountain-center.glb", role: "decoration", category: "fountain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "fountain-center", thumbnailUrl: "" } }, { id: "tower", x: 2, y: 5, type: "tower", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/tower-square.glb", role: "decoration", category: "tower", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tower-square", thumbnailUrl: "" } }, { id: "catapult", x: 13, y: 5, type: "catapult", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-catapult.glb", role: "decoration", category: "catapult", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "siege-catapult", thumbnailUrl: "" } }, { id: "trebuchet", x: 2, y: 10, type: "trebuchet", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-trebuchet.glb", role: "decoration", category: "trebuchet", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "siege-trebuchet", thumbnailUrl: "" } }, { id: "windmill", x: 13, y: 10, type: "windmill", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/windmill.glb", role: "decoration", category: "windmill", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "windmill", thumbnailUrl: "" } }, { id: "cart", x: 8, y: 4, type: "cart", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/cart.glb", role: "decoration", category: "cart", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "cart", thumbnailUrl: "" } } ]
+      assetManifest: { terrains: { wall: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/wall-block.glb", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" }, stone: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/terrain/floor.glb", role: "tile", category: "stone", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, cobble: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/terrain/road.glb", role: "tile", category: "cobble", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "cobble", thumbnailUrl: "" } }, units: { soldier: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/units/character-soldier.glb", role: "npc", category: "soldier", animations: ["idle","walk","attack-melee-right","die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "soldier", thumbnailUrl: "" }, guard: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-j.glb", role: "npc", category: "guard", animations: ["idle","walk","attack-melee-right","die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "guard", thumbnailUrl: "" }, goblin: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-l.glb", role: "npc", category: "goblin", animations: ["idle","walk","attack-melee-right","die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "goblin", thumbnailUrl: "" }, troll: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-blocky-characters/units/character-o.glb", role: "npc", category: "troll", animations: ["idle","walk","attack-melee-right","die"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "troll", thumbnailUrl: "" } }, features: { fountain: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/fountain-center.glb", role: "decoration", category: "fountain", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "fountain", thumbnailUrl: "" }, tower: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/tower-square.glb", role: "decoration", category: "tower", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "tower", thumbnailUrl: "" }, catapult: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-catapult.glb", role: "decoration", category: "catapult", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "catapult", thumbnailUrl: "" }, trebuchet: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-castle-kit/features/siege-trebuchet.glb", role: "decoration", category: "trebuchet", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "trebuchet", thumbnailUrl: "" }, windmill: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/windmill.glb", role: "decoration", category: "windmill", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "windmill", thumbnailUrl: "" }, cart: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/cart.glb", role: "decoration", category: "cart", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "cart", thumbnailUrl: "" } }, effects: { melee: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/features/weapon-sword.glb", role: "effect", category: "melee", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "melee", thumbnailUrl: "" }, ranged: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/features/weapon-spear.glb", role: "effect", category: "ranged", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "ranged", thumbnailUrl: "" }, magic: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/banner-red.glb", role: "effect", category: "magic", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "magic", thumbnailUrl: "" }, hit: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-mini-arena/features/statue.glb", role: "effect", category: "hit", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "hit", thumbnailUrl: "" }, heal: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/fountain-center.glb", role: "effect", category: "heal", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "heal", thumbnailUrl: "" }, death: { url: "https://almadar-kflow-assets.web.app/shared/ui-fantasy-town-board-3d/kenney-fantasy-town-kit/features/rock-large.glb", role: "effect", category: "death", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "8:1", name: "death", thumbnailUrl: "" } } }
+      cameraMode: "isometric"
+      scale: 0.45
+      unitScale: 1
+      bgColor: "#1a1a2e"
+    }
+  }
+
+  page "/fantasy-town-board-3d" as FantasyTownBoard3DPage -> Authority, FxDecay, RoundLogic, Player
 }

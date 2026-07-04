@@ -97,7 +97,7 @@ export interface StdAgentProviderParams {
   /** Extra fields to add to the orbital-scoped entity clone. */
   fields?: EntityField[];
   /** Entity persistence mode. Defaults to `persistent` when omitted.
-   *  See @almadar/core EntityPersistence: persistent | runtime | singleton | instance | local. */
+   *  See @almadar/core EntityPersistence: persistent | runtime. */
   persistence?: EntityPersistence;
   /** Rename the inlined trait at the call site. */
   traitName?: string;

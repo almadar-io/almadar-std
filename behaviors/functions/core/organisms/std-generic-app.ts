@@ -1084,7 +1084,7 @@ export const StdGenericAppContactOrbitalManifest = {
   paramFields: [
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
     { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
     { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
@@ -2200,7 +2200,10 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         'config': {
           'enabled': {
             'default': true,
-            'type': 'unknown',
+            'description': 'When enabled, items must be approved before they become active.',
+            'label': 'Enable approval workflow',
+            'tier': 'policy',
+            'type': 'boolean',
           },
         },
         'events': {
@@ -2213,7 +2216,10 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         'config': {
           'enabled': {
             'default': false,
-            'type': 'unknown',
+            'description': 'When enabled, admins can permanently erase items on request (e.g., GDPR right-to-be-forgotten).',
+            'label': 'Enable erasure workflow',
+            'tier': 'policy',
+            'type': 'boolean',
           },
           'targetEntity': {
             'default': 'Item',
@@ -2227,7 +2233,10 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         'config': {
           'enabled': {
             'default': false,
-            'type': 'unknown',
+            'description': 'When enabled, submitted items enter a moderation queue before publication.',
+            'label': 'Enable moderation queue',
+            'tier': 'policy',
+            'type': 'boolean',
           },
         },
         'name': 'ItemModeration',
@@ -2352,7 +2361,7 @@ export const StdGenericAppItemOrbitalManifest = {
   paramFields: [
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
     { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
     { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
@@ -3219,7 +3228,7 @@ export const StdGenericAppActivityOrbitalManifest = {
   paramFields: [
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
     { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
     { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
@@ -4272,7 +4281,7 @@ export const StdGenericAppTaskOrbitalManifest = {
   paramFields: [
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
     { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
     { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
@@ -5265,7 +5274,7 @@ export const StdGenericAppCalendarOrbitalManifest = {
   paramFields: [
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
     { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
     { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
@@ -6229,7 +6238,7 @@ export const StdGenericAppWidgetOrbitalManifest = {
   paramFields: [
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
     { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
     { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
@@ -7201,7 +7210,7 @@ export const StdGenericAppFeedOrbitalManifest = {
   paramFields: [
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
     { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
     { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
@@ -8214,7 +8223,7 @@ export const StdGenericAppNoteOrbitalManifest = {
   paramFields: [
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
+    { name: 'persistence', type: "'persistent' | 'runtime'", description: 'Override the canonical entity persistence mode.' },
     { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
     { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },

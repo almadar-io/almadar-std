@@ -6,11 +6,21 @@
     "factoryPath": "behaviors/functions/ui/game/3d/organisms/ui-pirate-board-3d.ts",
     "entities": [
       {
-        "name": "PirateBoard3DItem",
+        "name": "GameState",
         "fields": [
           {
             "name": "units",
             "type": "array",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
             "required": false
           },
           {
@@ -29,53 +39,13 @@
             "required": false
           },
           {
-            "name": "fx",
-            "type": "array",
-            "required": false
-          },
-          {
-            "name": "phase",
+            "name": "uiPhase",
             "type": "string",
             "required": false
           },
           {
             "name": "turn",
             "type": "number",
-            "required": false
-          },
-          {
-            "name": "result",
-            "type": "string",
-            "required": false
-          },
-          {
-            "name": "currentTeam",
-            "type": "string",
-            "required": false
-          },
-          {
-            "name": "gridWidth",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "gridHeight",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "movementRange",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "enemyTurn",
-            "type": "boolean",
-            "required": false
-          },
-          {
-            "name": "tiles",
-            "type": "array",
             "required": false
           }
         ],
@@ -84,565 +54,33 @@
     ],
     "traits": [
       {
-        "name": "PirateBoard3DRender",
-        "emittedEvents": [
-          "GAME_END",
-          "UNIT_MOVE",
-          "TILE_CLICK",
-          "UNIT_CLICK",
-          "END_TURN",
-          "CANCEL",
-          "PLAY_AGAIN"
-        ],
+        "name": "Authority",
+        "emittedEvents": [],
         "listenedEvents": [],
-        "events": [
-          {
-            "name": "GAME_END",
-            "direction": "emit",
-            "description": "Called when the naval skirmish ends",
-            "tier": "domain"
-          },
-          {
-            "name": "UNIT_MOVE",
-            "direction": "emit",
-            "description": "Called after a ship moves",
-            "tier": "domain"
-          },
-          {
-            "name": "TILE_CLICK",
-            "direction": "emit",
-            "description": "Sea tile clicked",
-            "tier": "domain"
-          },
-          {
-            "name": "UNIT_CLICK",
-            "direction": "emit",
-            "description": "Emits UI:{unitClickEvent} with { unitId } on ship click",
-            "tier": "domain"
-          },
-          {
-            "name": "END_TURN",
-            "direction": "emit",
-            "description": "Emits UI:{endTurnEvent} with {} on end turn",
-            "tier": "domain"
-          },
-          {
-            "name": "CANCEL",
-            "direction": "emit",
-            "description": "Emits UI:{cancelEvent} with {} on cancel",
-            "tier": "domain"
-          },
-          {
-            "name": "PLAY_AGAIN",
-            "direction": "emit",
-            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
-            "tier": "domain"
-          },
-          {
-            "name": "INIT",
-            "direction": "listen"
-          }
-        ],
         "overridableConfigKeys": [
           {
             "key": "attackDamage",
-            "type": "number",
-            "default": 4,
-            "label": "Attack Damage",
-            "description": "Cannon damage a player ship deals to an adjacent enemy on attack",
-            "tier": "presentation"
+            "type": "unknown",
+            "default": 4
           },
           {
-            "key": "bgColor",
-            "type": "string",
-            "default": "#123a52",
-            "label": "Bg Color",
-            "description": "Canvas background color (deep sea)",
-            "tier": "presentation"
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 18
           },
           {
-            "key": "className",
-            "type": "string",
-            "default": "",
-            "label": "Class Name",
-            "description": "className prop",
-            "tier": "presentation"
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 18
           },
           {
-            "key": "coverAsset",
-            "type": "Asset",
-            "default": {
-              "animations": [
-                "static"
-              ],
-              "aspect": "1:1",
-              "category": "reef",
-              "dimension": "3d",
-              "name": "reef-rocks",
-              "role": "tile",
-              "style": "lowpoly-flat",
-              "thumbnailUrl": "",
-              "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/rocks-sand-b.glb"
-            },
-            "label": "Cover Asset",
-            "description": "Impassable reef-rock cover tile, scattered for chokepoints.",
-            "tier": "presentation",
-            "properties": {
-              "animations": {
-                "name": "animations",
-                "required": false,
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "aspect": {
-                "name": "aspect",
-                "required": false,
-                "type": "string"
-              },
-              "category": {
-                "name": "category",
-                "required": false,
-                "type": "string"
-              },
-              "dimension": {
-                "name": "dimension",
-                "required": false,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "role": {
-                "name": "role",
-                "required": false,
-                "type": "string"
-              },
-              "style": {
-                "name": "style",
-                "required": false,
-                "type": "string"
-              },
-              "thumbnailUrl": {
-                "name": "thumbnailUrl",
-                "required": false,
-                "type": "string"
-              },
-              "url": {
-                "name": "url",
-                "required": false,
-                "type": "string"
-              }
-            }
-          },
-          {
-            "key": "error",
-            "type": "PirateBoard3DError",
-            "label": "Error",
-            "description": "Error state (UiError)",
-            "tier": "presentation",
-            "properties": {
-              "code": {
-                "name": "code",
-                "required": false,
-                "type": "string"
-              },
-              "message": {
-                "name": "message",
-                "required": true,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "stack": {
-                "name": "stack",
-                "required": false,
-                "type": "string"
-              }
-            }
-          },
-          {
-            "key": "features",
-            "type": "[PirateBoard3DFeaturesItem]",
-            "default": [
-              {
-                "assetUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "palm",
-                  "dimension": "3d",
-                  "name": "palm-straight",
-                  "role": "decoration",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/palm-straight.glb"
-                },
-                "id": "f1",
-                "type": "palm",
-                "x": 2,
-                "y": 6
-              },
-              {
-                "assetUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "palm",
-                  "dimension": "3d",
-                  "name": "palm-bend",
-                  "role": "decoration",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/palm-bend.glb"
-                },
-                "id": "f2",
-                "type": "palm",
-                "x": 15,
-                "y": 11
-              },
-              {
-                "assetUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "tower",
-                  "dimension": "3d",
-                  "name": "tower-watch",
-                  "role": "decoration",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/tower-watch.glb"
-                },
-                "id": "f3",
-                "type": "tower",
-                "x": 3,
-                "y": 9
-              },
-              {
-                "assetUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "cannon",
-                  "dimension": "3d",
-                  "name": "cannon-mobile",
-                  "role": "decoration",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/cannon-mobile.glb"
-                },
-                "id": "f4",
-                "type": "cannon",
-                "x": 14,
-                "y": 9
-              },
-              {
-                "assetUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "tower",
-                  "dimension": "3d",
-                  "name": "tower-watch",
-                  "role": "decoration",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/tower-watch.glb"
-                },
-                "id": "f5",
-                "type": "tower",
-                "x": 8,
-                "y": 5
-              },
-              {
-                "assetUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "cannon",
-                  "dimension": "3d",
-                  "name": "cannon-mobile",
-                  "role": "decoration",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/cannon-mobile.glb"
-                },
-                "id": "f6",
-                "type": "cannon",
-                "x": 9,
-                "y": 12
-              },
-              {
-                "assetUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "barrel",
-                  "dimension": "3d",
-                  "name": "barrel",
-                  "role": "decoration",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/barrel.glb"
-                },
-                "id": "f7",
-                "type": "barrel",
-                "x": 6,
-                "y": 8
-              },
-              {
-                "assetUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "crate",
-                  "dimension": "3d",
-                  "name": "crate",
-                  "role": "decoration",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/crate.glb"
-                },
-                "id": "f8",
-                "type": "crate",
-                "x": 7,
-                "y": 8
-              },
-              {
-                "assetUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "barrel",
-                  "dimension": "3d",
-                  "name": "barrel",
-                  "role": "decoration",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/barrel.glb"
-                },
-                "id": "f9",
-                "type": "barrel",
-                "x": 11,
-                "y": 5
-              },
-              {
-                "assetUrl": {
-                  "animations": [
-                    "static"
-                  ],
-                  "aspect": "1:1",
-                  "category": "crate",
-                  "dimension": "3d",
-                  "name": "crate",
-                  "role": "decoration",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/crate.glb"
-                },
-                "id": "f10",
-                "type": "crate",
-                "x": 12,
-                "y": 13
-              }
-            ],
-            "label": "Features",
-            "description": "Decorative features on the board (palms, watch towers, cannons, dock crates/barrels), each at a unique tile.",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "assetUrl": {
-                  "name": "assetUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "type": {
-                  "name": "type",
-                  "required": true,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
-          },
-          {
-            "key": "groundAsset",
-            "type": "Asset",
-            "default": {
-              "animations": [
-                "static"
-              ],
-              "aspect": "1:1",
-              "category": "dock",
-              "dimension": "3d",
-              "name": "dock",
-              "role": "tile",
-              "style": "lowpoly-flat",
-              "thumbnailUrl": "",
-              "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/structure-platform-dock.glb"
-            },
-            "label": "Ground Asset",
-            "description": "Passable open-sea deck tile, tiled across the battlefield.",
-            "tier": "presentation",
-            "properties": {
-              "animations": {
-                "name": "animations",
-                "required": false,
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "aspect": {
-                "name": "aspect",
-                "required": false,
-                "type": "string"
-              },
-              "category": {
-                "name": "category",
-                "required": false,
-                "type": "string"
-              },
-              "dimension": {
-                "name": "dimension",
-                "required": false,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "role": {
-                "name": "role",
-                "required": false,
-                "type": "string"
-              },
-              "style": {
-                "name": "style",
-                "required": false,
-                "type": "string"
-              },
-              "thumbnailUrl": {
-                "name": "thumbnailUrl",
-                "required": false,
-                "type": "string"
-              },
-              "url": {
-                "name": "url",
-                "required": false,
-                "type": "string"
-              }
-            }
-          },
-          {
-            "key": "isLoading",
-            "type": "boolean",
-            "default": false,
-            "label": "Is Loading",
-            "description": "Loading state indicator",
-            "tier": "presentation"
-          },
-          {
-            "key": "scale",
-            "type": "number",
-            "default": 0.45,
-            "label": "Scale",
-            "description": "Canvas render scale",
-            "tier": "presentation"
-          },
-          {
-            "key": "unitScale",
-            "type": "number",
-            "default": 1,
-            "label": "Unit Scale",
-            "description": "Unit draw-size multiplier",
-            "tier": "presentation"
+            "key": "running",
+            "type": "unknown",
+            "default": true
           },
           {
             "key": "units",
-            "type": "[PirateBoard3DUnitsItem]",
+            "type": "unknown",
             "default": [
               {
                 "health": 10,
@@ -667,7 +105,10 @@
                   "y": 16
                 },
                 "team": "player",
-                "unitType": "ship-medium"
+                "unitType": "ship-medium",
+                "x": 4,
+                "y": 16,
+                "z": 0
               },
               {
                 "health": 8,
@@ -692,7 +133,10 @@
                   "y": 16
                 },
                 "team": "player",
-                "unitType": "ship-small"
+                "unitType": "ship-small",
+                "x": 9,
+                "y": 16,
+                "z": 0
               },
               {
                 "health": 9,
@@ -717,7 +161,10 @@
                   "y": 16
                 },
                 "team": "player",
-                "unitType": "ship-small"
+                "unitType": "ship-small",
+                "x": 14,
+                "y": 16,
+                "z": 0
               },
               {
                 "health": 10,
@@ -742,7 +189,10 @@
                   "y": 1
                 },
                 "team": "enemy",
-                "unitType": "ship-pirate-medium"
+                "unitType": "ship-pirate-medium",
+                "x": 4,
+                "y": 1,
+                "z": 0
               },
               {
                 "health": 8,
@@ -767,7 +217,10 @@
                   "y": 1
                 },
                 "team": "enemy",
-                "unitType": "ship-pirate-small"
+                "unitType": "ship-pirate-small",
+                "x": 9,
+                "y": 1,
+                "z": 0
               },
               {
                 "health": 9,
@@ -792,165 +245,314 @@
                   "y": 1
                 },
                 "team": "enemy",
-                "unitType": "ship-pirate-small"
+                "unitType": "ship-pirate-small",
+                "x": 14,
+                "y": 1,
+                "z": 0
               }
-            ],
-            "label": "Units",
-            "description": "Initial fleet (3 player ships + 3 enemy corsairs, opposite ends of the sea) — takes priority over entity-derived units.",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "health": {
-                  "name": "health",
-                  "required": false,
-                  "type": "number"
-                },
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
-                "maxHealth": {
-                  "name": "maxHealth",
-                  "required": false,
-                  "type": "number"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "name": {
-                  "name": "name",
-                  "required": false,
-                  "type": "string"
-                },
-                "position": {
-                  "name": "position",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "team": {
-                  "name": "team",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
-                },
-                "unitType": {
-                  "name": "unitType",
-                  "required": false,
-                  "type": "string"
-                }
-              },
-              "type": "object"
-            }
+            ]
           }
         ],
         "capabilities": [],
-        "entityRebindable": true,
-        "entityContract": {
-          "requires": [],
-          "provides": [
-            "attackTargets",
-            "currentTeam",
-            "enemyTurn",
-            "fx",
-            "gridHeight",
-            "gridWidth",
-            "movementRange",
-            "phase",
-            "result",
-            "selectedUnitId",
-            "tiles",
-            "turn",
-            "units",
-            "validMoves"
-          ]
-        }
+        "ref": "Frame.traits.TacticsAuthority"
+      },
+      {
+        "name": "FxDecay",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.FxDecay"
+      },
+      {
+        "name": "RoundLogic",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.RoundLogic"
+      },
+      {
+        "name": "Player",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "assetManifest",
+            "type": "unknown",
+            "default": {
+              "effects": {},
+              "features": {},
+              "terrains": {},
+              "units": {}
+            }
+          },
+          {
+            "key": "bgColor",
+            "type": "unknown",
+            "default": "#123a52"
+          },
+          {
+            "key": "cameraMode",
+            "type": "unknown",
+            "default": "isometric"
+          },
+          {
+            "key": "features",
+            "type": "unknown",
+            "default": [
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "palm",
+                  "dimension": "3d",
+                  "name": "palm-straight",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/palm-straight.glb"
+                },
+                "id": "f1",
+                "type": "palm",
+                "x": 2,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "palm",
+                  "dimension": "3d",
+                  "name": "palm-bend",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/terrain/palm-bend.glb"
+                },
+                "id": "f2",
+                "type": "palm",
+                "x": 15,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "tower",
+                  "dimension": "3d",
+                  "name": "tower-watch",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/tower-watch.glb"
+                },
+                "id": "f3",
+                "type": "tower",
+                "x": 3,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "cannon",
+                  "dimension": "3d",
+                  "name": "cannon-mobile",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/cannon-mobile.glb"
+                },
+                "id": "f4",
+                "type": "cannon",
+                "x": 14,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "tower",
+                  "dimension": "3d",
+                  "name": "tower-watch",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/tower-watch.glb"
+                },
+                "id": "f5",
+                "type": "tower",
+                "x": 8,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "cannon",
+                  "dimension": "3d",
+                  "name": "cannon-mobile",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/cannon-mobile.glb"
+                },
+                "id": "f6",
+                "type": "cannon",
+                "x": 9,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "barrel",
+                  "dimension": "3d",
+                  "name": "barrel",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/barrel.glb"
+                },
+                "id": "f7",
+                "type": "barrel",
+                "x": 6,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "crate",
+                  "dimension": "3d",
+                  "name": "crate",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/crate.glb"
+                },
+                "id": "f8",
+                "type": "crate",
+                "x": 7,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "barrel",
+                  "dimension": "3d",
+                  "name": "barrel",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/barrel.glb"
+                },
+                "id": "f9",
+                "type": "barrel",
+                "x": 11,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "crate",
+                  "dimension": "3d",
+                  "name": "crate",
+                  "role": "decoration",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pirate-board-3d/kenney-pirate-kit/features/crate.glb"
+                },
+                "id": "f10",
+                "type": "crate",
+                "x": 12,
+                "y": 13,
+                "z": 0
+              }
+            ]
+          },
+          {
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 18
+          },
+          {
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 18
+          },
+          {
+            "key": "movementRange",
+            "type": "unknown",
+            "default": 4
+          },
+          {
+            "key": "scale",
+            "type": "unknown",
+            "default": 0.45
+          },
+          {
+            "key": "unitScale",
+            "type": "unknown",
+            "default": 1
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.PlayerIntent"
       }
     ],
     "pages": [
       {
         "name": "PirateBoard3DPage",
         "defaultPath": "/pirate-board-3d",
-        "primaryEntity": "PirateBoard3DItem"
+        "primaryEntity": "GameState"
       }
     ],
-    "emittedEvents": [
-      "CANCEL",
-      "END_TURN",
-      "GAME_END",
-      "PLAY_AGAIN",
-      "TILE_CLICK",
-      "UNIT_CLICK",
-      "UNIT_MOVE"
-    ],
+    "emittedEvents": [],
     "listenedEvents": []
   }
 ]

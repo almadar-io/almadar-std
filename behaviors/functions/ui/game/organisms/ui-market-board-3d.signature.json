@@ -6,11 +6,51 @@
     "factoryPath": "behaviors/functions/ui/game/3d/organisms/ui-market-board-3d.ts",
     "entities": [
       {
-        "name": "MarketBoard3DItem",
+        "name": "GameState",
         "fields": [
           {
             "name": "units",
             "type": "array",
+            "required": false
+          },
+          {
+            "name": "tiles",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "movesLeft",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "customers",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "served",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "pending",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lost",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
             "required": false
           },
           {
@@ -24,53 +64,8 @@
             "required": false
           },
           {
-            "name": "attackTargets",
-            "type": "array",
-            "required": false
-          },
-          {
-            "name": "fx",
-            "type": "array",
-            "required": false
-          },
-          {
-            "name": "score",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "lives",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "result",
+            "name": "phase",
             "type": "string",
-            "required": false
-          },
-          {
-            "name": "gridWidth",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "gridHeight",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "movementRange",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "scoreTarget",
-            "type": "number",
-            "required": false
-          },
-          {
-            "name": "tiles",
-            "type": "array",
             "required": false
           }
         ],
@@ -79,85 +74,1903 @@
     ],
     "traits": [
       {
-        "name": "MarketBoard3DRender",
-        "emittedEvents": [
-          "GAME_END",
-          "TILE_CLICK",
-          "UNIT_CLICK",
-          "PLAY_AGAIN"
-        ],
+        "name": "HeroAuthority",
+        "emittedEvents": [],
         "listenedEvents": [],
-        "events": [
-          {
-            "name": "GAME_END",
-            "direction": "emit",
-            "description": "Emitted when result becomes won or lost",
-            "tier": "domain"
-          },
-          {
-            "name": "TILE_CLICK",
-            "direction": "emit",
-            "description": "Moves the shopkeeper toward the clicked tile",
-            "tier": "domain"
-          },
-          {
-            "name": "UNIT_CLICK",
-            "direction": "emit",
-            "description": "Serves the clicked customer when the shopkeeper is adjacent",
-            "tier": "domain"
-          },
-          {
-            "name": "PLAY_AGAIN",
-            "direction": "emit",
-            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
-            "tier": "domain"
-          },
-          {
-            "name": "INIT",
-            "direction": "listen"
-          }
-        ],
         "overridableConfigKeys": [
           {
-            "key": "className",
-            "type": "string",
-            "default": "",
-            "label": "Class Name",
-            "description": "className prop",
-            "tier": "presentation"
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 14
           },
           {
-            "key": "error",
-            "type": "MarketBoard3DError",
-            "label": "Error",
-            "description": "Error state (UiError)",
-            "tier": "presentation",
-            "properties": {
-              "code": {
-                "name": "code",
-                "required": false,
-                "type": "string"
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 14
+          },
+          {
+            "key": "moveBudget",
+            "type": "unknown",
+            "default": 999999
+          },
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "tiles",
+            "type": "unknown",
+            "default": [
+              {
+                "id": "t-0-0",
+                "passable": true,
+                "terrain": "floor",
+                "x": 0,
+                "y": 0,
+                "z": 0
               },
-              "message": {
-                "name": "message",
-                "required": true,
-                "type": "string"
+              {
+                "id": "t-1-0",
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 0,
+                "z": 0
               },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
+              {
+                "id": "t-2-0",
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 0,
+                "z": 0
               },
-              "stack": {
-                "name": "stack",
-                "required": false,
-                "type": "string"
+              {
+                "id": "t-3-0",
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "id": "t-4-0",
+                "passable": true,
+                "terrain": "floor",
+                "x": 4,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "id": "t-5-0",
+                "passable": true,
+                "terrain": "floor",
+                "x": 5,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "id": "t-6-0",
+                "passable": true,
+                "terrain": "floor",
+                "x": 6,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "id": "t-7-0",
+                "passable": true,
+                "terrain": "floor",
+                "x": 7,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "id": "t-8-0",
+                "passable": true,
+                "terrain": "floor",
+                "x": 8,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "id": "t-9-0",
+                "passable": true,
+                "terrain": "floor",
+                "x": 9,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "id": "t-10-0",
+                "passable": true,
+                "terrain": "floor",
+                "x": 10,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "id": "t-11-0",
+                "passable": true,
+                "terrain": "floor",
+                "x": 11,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "id": "t-12-0",
+                "passable": true,
+                "terrain": "floor",
+                "x": 12,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "id": "t-13-0",
+                "passable": true,
+                "terrain": "floor",
+                "x": 13,
+                "y": 0,
+                "z": 0
+              },
+              {
+                "id": "t-0-1",
+                "passable": true,
+                "terrain": "floor",
+                "x": 0,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t-1-1",
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t-2-1",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 2,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t-3-1",
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t-4-1",
+                "passable": true,
+                "terrain": "floor",
+                "x": 4,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t-5-1",
+                "passable": true,
+                "terrain": "floor",
+                "x": 5,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t-6-1",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 6,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t-7-1",
+                "passable": true,
+                "terrain": "floor",
+                "x": 7,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t-8-1",
+                "passable": true,
+                "terrain": "floor",
+                "x": 8,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t-9-1",
+                "passable": true,
+                "terrain": "floor",
+                "x": 9,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t-10-1",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 10,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t-11-1",
+                "passable": true,
+                "terrain": "floor",
+                "x": 11,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t-12-1",
+                "passable": true,
+                "terrain": "floor",
+                "x": 12,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t-13-1",
+                "passable": true,
+                "terrain": "floor",
+                "x": 13,
+                "y": 1,
+                "z": 0
+              },
+              {
+                "id": "t-0-2",
+                "passable": true,
+                "terrain": "floor",
+                "x": 0,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t-1-2",
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t-2-2",
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t-3-2",
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t-4-2",
+                "passable": true,
+                "terrain": "floor",
+                "x": 4,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t-5-2",
+                "passable": true,
+                "terrain": "floor",
+                "x": 5,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t-6-2",
+                "passable": true,
+                "terrain": "floor",
+                "x": 6,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t-7-2",
+                "passable": true,
+                "terrain": "floor",
+                "x": 7,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t-8-2",
+                "passable": true,
+                "terrain": "floor",
+                "x": 8,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t-9-2",
+                "passable": true,
+                "terrain": "floor",
+                "x": 9,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t-10-2",
+                "passable": true,
+                "terrain": "floor",
+                "x": 10,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t-11-2",
+                "passable": true,
+                "terrain": "floor",
+                "x": 11,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t-12-2",
+                "passable": true,
+                "terrain": "floor",
+                "x": 12,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t-13-2",
+                "passable": true,
+                "terrain": "floor",
+                "x": 13,
+                "y": 2,
+                "z": 0
+              },
+              {
+                "id": "t-0-3",
+                "passable": true,
+                "terrain": "floor",
+                "x": 0,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t-1-3",
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t-2-3",
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t-3-3",
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t-4-3",
+                "passable": true,
+                "terrain": "floor",
+                "x": 4,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t-5-3",
+                "passable": true,
+                "terrain": "floor",
+                "x": 5,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t-6-3",
+                "passable": true,
+                "terrain": "floor",
+                "x": 6,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t-7-3",
+                "passable": true,
+                "terrain": "floor",
+                "x": 7,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t-8-3",
+                "passable": true,
+                "terrain": "floor",
+                "x": 8,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t-9-3",
+                "passable": true,
+                "terrain": "floor",
+                "x": 9,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t-10-3",
+                "passable": true,
+                "terrain": "floor",
+                "x": 10,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t-11-3",
+                "passable": true,
+                "terrain": "floor",
+                "x": 11,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t-12-3",
+                "passable": true,
+                "terrain": "floor",
+                "x": 12,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t-13-3",
+                "passable": true,
+                "terrain": "floor",
+                "x": 13,
+                "y": 3,
+                "z": 0
+              },
+              {
+                "id": "t-0-4",
+                "passable": true,
+                "terrain": "floor",
+                "x": 0,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t-1-4",
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t-2-4",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 2,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t-3-4",
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t-4-4",
+                "passable": true,
+                "terrain": "floor",
+                "x": 4,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t-5-4",
+                "passable": true,
+                "terrain": "floor",
+                "x": 5,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t-6-4",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 6,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t-7-4",
+                "passable": true,
+                "terrain": "floor",
+                "x": 7,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t-8-4",
+                "passable": true,
+                "terrain": "floor",
+                "x": 8,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t-9-4",
+                "passable": true,
+                "terrain": "floor",
+                "x": 9,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t-10-4",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 10,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t-11-4",
+                "passable": true,
+                "terrain": "floor",
+                "x": 11,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t-12-4",
+                "passable": true,
+                "terrain": "floor",
+                "x": 12,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t-13-4",
+                "passable": true,
+                "terrain": "floor",
+                "x": 13,
+                "y": 4,
+                "z": 0
+              },
+              {
+                "id": "t-0-5",
+                "passable": true,
+                "terrain": "floor",
+                "x": 0,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t-1-5",
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t-2-5",
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t-3-5",
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t-4-5",
+                "passable": true,
+                "terrain": "floor",
+                "x": 4,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t-5-5",
+                "passable": true,
+                "terrain": "floor",
+                "x": 5,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t-6-5",
+                "passable": true,
+                "terrain": "floor",
+                "x": 6,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t-7-5",
+                "passable": true,
+                "terrain": "floor",
+                "x": 7,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t-8-5",
+                "passable": true,
+                "terrain": "floor",
+                "x": 8,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t-9-5",
+                "passable": true,
+                "terrain": "floor",
+                "x": 9,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t-10-5",
+                "passable": true,
+                "terrain": "floor",
+                "x": 10,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t-11-5",
+                "passable": true,
+                "terrain": "floor",
+                "x": 11,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t-12-5",
+                "passable": true,
+                "terrain": "floor",
+                "x": 12,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t-13-5",
+                "passable": true,
+                "terrain": "floor",
+                "x": 13,
+                "y": 5,
+                "z": 0
+              },
+              {
+                "id": "t-0-6",
+                "passable": true,
+                "terrain": "floor",
+                "x": 0,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "id": "t-1-6",
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "id": "t-2-6",
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "id": "t-3-6",
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "id": "t-4-6",
+                "passable": true,
+                "terrain": "floor",
+                "x": 4,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "id": "t-5-6",
+                "passable": true,
+                "terrain": "floor",
+                "x": 5,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "id": "t-6-6",
+                "passable": true,
+                "terrain": "floor",
+                "x": 6,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "id": "t-7-6",
+                "passable": true,
+                "terrain": "floor",
+                "x": 7,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "id": "t-8-6",
+                "passable": true,
+                "terrain": "floor",
+                "x": 8,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "id": "t-9-6",
+                "passable": true,
+                "terrain": "floor",
+                "x": 9,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "id": "t-10-6",
+                "passable": true,
+                "terrain": "floor",
+                "x": 10,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "id": "t-11-6",
+                "passable": true,
+                "terrain": "floor",
+                "x": 11,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "id": "t-12-6",
+                "passable": true,
+                "terrain": "floor",
+                "x": 12,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "id": "t-13-6",
+                "passable": true,
+                "terrain": "floor",
+                "x": 13,
+                "y": 6,
+                "z": 0
+              },
+              {
+                "id": "t-0-7",
+                "passable": true,
+                "terrain": "floor",
+                "x": 0,
+                "y": 7,
+                "z": 0
+              },
+              {
+                "id": "t-1-7",
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 7,
+                "z": 0
+              },
+              {
+                "id": "t-2-7",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 2,
+                "y": 7,
+                "z": 0
+              },
+              {
+                "id": "t-3-7",
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 7,
+                "z": 0
+              },
+              {
+                "id": "t-4-7",
+                "passable": true,
+                "terrain": "floor",
+                "x": 4,
+                "y": 7,
+                "z": 0
+              },
+              {
+                "id": "t-5-7",
+                "passable": true,
+                "terrain": "floor",
+                "x": 5,
+                "y": 7,
+                "z": 0
+              },
+              {
+                "id": "t-6-7",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 6,
+                "y": 7,
+                "z": 0
+              },
+              {
+                "id": "t-7-7",
+                "passable": true,
+                "terrain": "floor",
+                "x": 7,
+                "y": 7,
+                "z": 0
+              },
+              {
+                "id": "t-8-7",
+                "passable": true,
+                "terrain": "floor",
+                "x": 8,
+                "y": 7,
+                "z": 0
+              },
+              {
+                "id": "t-9-7",
+                "passable": true,
+                "terrain": "floor",
+                "x": 9,
+                "y": 7,
+                "z": 0
+              },
+              {
+                "id": "t-10-7",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 10,
+                "y": 7,
+                "z": 0
+              },
+              {
+                "id": "t-11-7",
+                "passable": true,
+                "terrain": "floor",
+                "x": 11,
+                "y": 7,
+                "z": 0
+              },
+              {
+                "id": "t-12-7",
+                "passable": true,
+                "terrain": "floor",
+                "x": 12,
+                "y": 7,
+                "z": 0
+              },
+              {
+                "id": "t-13-7",
+                "passable": true,
+                "terrain": "floor",
+                "x": 13,
+                "y": 7,
+                "z": 0
+              },
+              {
+                "id": "t-0-8",
+                "passable": true,
+                "terrain": "floor",
+                "x": 0,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "id": "t-1-8",
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "id": "t-2-8",
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "id": "t-3-8",
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "id": "t-4-8",
+                "passable": true,
+                "terrain": "floor",
+                "x": 4,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "id": "t-5-8",
+                "passable": true,
+                "terrain": "floor",
+                "x": 5,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "id": "t-6-8",
+                "passable": true,
+                "terrain": "floor",
+                "x": 6,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "id": "t-7-8",
+                "passable": true,
+                "terrain": "floor",
+                "x": 7,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "id": "t-8-8",
+                "passable": true,
+                "terrain": "floor",
+                "x": 8,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "id": "t-9-8",
+                "passable": true,
+                "terrain": "floor",
+                "x": 9,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "id": "t-10-8",
+                "passable": true,
+                "terrain": "floor",
+                "x": 10,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "id": "t-11-8",
+                "passable": true,
+                "terrain": "floor",
+                "x": 11,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "id": "t-12-8",
+                "passable": true,
+                "terrain": "floor",
+                "x": 12,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "id": "t-13-8",
+                "passable": true,
+                "terrain": "floor",
+                "x": 13,
+                "y": 8,
+                "z": 0
+              },
+              {
+                "id": "t-0-9",
+                "passable": true,
+                "terrain": "floor",
+                "x": 0,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "id": "t-1-9",
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "id": "t-2-9",
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "id": "t-3-9",
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "id": "t-4-9",
+                "passable": true,
+                "terrain": "floor",
+                "x": 4,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "id": "t-5-9",
+                "passable": true,
+                "terrain": "floor",
+                "x": 5,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "id": "t-6-9",
+                "passable": true,
+                "terrain": "floor",
+                "x": 6,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "id": "t-7-9",
+                "passable": true,
+                "terrain": "floor",
+                "x": 7,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "id": "t-8-9",
+                "passable": true,
+                "terrain": "floor",
+                "x": 8,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "id": "t-9-9",
+                "passable": true,
+                "terrain": "floor",
+                "x": 9,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "id": "t-10-9",
+                "passable": true,
+                "terrain": "floor",
+                "x": 10,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "id": "t-11-9",
+                "passable": true,
+                "terrain": "floor",
+                "x": 11,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "id": "t-12-9",
+                "passable": true,
+                "terrain": "floor",
+                "x": 12,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "id": "t-13-9",
+                "passable": true,
+                "terrain": "floor",
+                "x": 13,
+                "y": 9,
+                "z": 0
+              },
+              {
+                "id": "t-0-10",
+                "passable": true,
+                "terrain": "floor",
+                "x": 0,
+                "y": 10,
+                "z": 0
+              },
+              {
+                "id": "t-1-10",
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 10,
+                "z": 0
+              },
+              {
+                "id": "t-2-10",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 2,
+                "y": 10,
+                "z": 0
+              },
+              {
+                "id": "t-3-10",
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 10,
+                "z": 0
+              },
+              {
+                "id": "t-4-10",
+                "passable": true,
+                "terrain": "floor",
+                "x": 4,
+                "y": 10,
+                "z": 0
+              },
+              {
+                "id": "t-5-10",
+                "passable": true,
+                "terrain": "floor",
+                "x": 5,
+                "y": 10,
+                "z": 0
+              },
+              {
+                "id": "t-6-10",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 6,
+                "y": 10,
+                "z": 0
+              },
+              {
+                "id": "t-7-10",
+                "passable": true,
+                "terrain": "floor",
+                "x": 7,
+                "y": 10,
+                "z": 0
+              },
+              {
+                "id": "t-8-10",
+                "passable": true,
+                "terrain": "floor",
+                "x": 8,
+                "y": 10,
+                "z": 0
+              },
+              {
+                "id": "t-9-10",
+                "passable": true,
+                "terrain": "floor",
+                "x": 9,
+                "y": 10,
+                "z": 0
+              },
+              {
+                "id": "t-10-10",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 10,
+                "y": 10,
+                "z": 0
+              },
+              {
+                "id": "t-11-10",
+                "passable": true,
+                "terrain": "floor",
+                "x": 11,
+                "y": 10,
+                "z": 0
+              },
+              {
+                "id": "t-12-10",
+                "passable": true,
+                "terrain": "floor",
+                "x": 12,
+                "y": 10,
+                "z": 0
+              },
+              {
+                "id": "t-13-10",
+                "passable": true,
+                "terrain": "floor",
+                "x": 13,
+                "y": 10,
+                "z": 0
+              },
+              {
+                "id": "t-0-11",
+                "passable": true,
+                "terrain": "floor",
+                "x": 0,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "id": "t-1-11",
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "id": "t-2-11",
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "id": "t-3-11",
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "id": "t-4-11",
+                "passable": true,
+                "terrain": "floor",
+                "x": 4,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "id": "t-5-11",
+                "passable": true,
+                "terrain": "floor",
+                "x": 5,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "id": "t-6-11",
+                "passable": true,
+                "terrain": "floor",
+                "x": 6,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "id": "t-7-11",
+                "passable": true,
+                "terrain": "floor",
+                "x": 7,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "id": "t-8-11",
+                "passable": true,
+                "terrain": "floor",
+                "x": 8,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "id": "t-9-11",
+                "passable": true,
+                "terrain": "floor",
+                "x": 9,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "id": "t-10-11",
+                "passable": true,
+                "terrain": "floor",
+                "x": 10,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "id": "t-11-11",
+                "passable": true,
+                "terrain": "floor",
+                "x": 11,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "id": "t-12-11",
+                "passable": true,
+                "terrain": "floor",
+                "x": 12,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "id": "t-13-11",
+                "passable": true,
+                "terrain": "floor",
+                "x": 13,
+                "y": 11,
+                "z": 0
+              },
+              {
+                "id": "t-0-12",
+                "passable": true,
+                "terrain": "floor",
+                "x": 0,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "id": "t-1-12",
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "id": "t-2-12",
+                "passable": true,
+                "terrain": "floor",
+                "x": 2,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "id": "t-3-12",
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "id": "t-4-12",
+                "passable": true,
+                "terrain": "floor",
+                "x": 4,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "id": "t-5-12",
+                "passable": true,
+                "terrain": "floor",
+                "x": 5,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "id": "t-6-12",
+                "passable": true,
+                "terrain": "floor",
+                "x": 6,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "id": "t-7-12",
+                "passable": true,
+                "terrain": "floor",
+                "x": 7,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "id": "t-8-12",
+                "passable": true,
+                "terrain": "floor",
+                "x": 8,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "id": "t-9-12",
+                "passable": true,
+                "terrain": "floor",
+                "x": 9,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "id": "t-10-12",
+                "passable": true,
+                "terrain": "floor",
+                "x": 10,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "id": "t-11-12",
+                "passable": true,
+                "terrain": "floor",
+                "x": 11,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "id": "t-12-12",
+                "passable": true,
+                "terrain": "floor",
+                "x": 12,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "id": "t-13-12",
+                "passable": true,
+                "terrain": "floor",
+                "x": 13,
+                "y": 12,
+                "z": 0
+              },
+              {
+                "id": "t-0-13",
+                "passable": true,
+                "terrain": "floor",
+                "x": 0,
+                "y": 13,
+                "z": 0
+              },
+              {
+                "id": "t-1-13",
+                "passable": true,
+                "terrain": "floor",
+                "x": 1,
+                "y": 13,
+                "z": 0
+              },
+              {
+                "id": "t-2-13",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 2,
+                "y": 13,
+                "z": 0
+              },
+              {
+                "id": "t-3-13",
+                "passable": true,
+                "terrain": "floor",
+                "x": 3,
+                "y": 13,
+                "z": 0
+              },
+              {
+                "id": "t-4-13",
+                "passable": true,
+                "terrain": "floor",
+                "x": 4,
+                "y": 13,
+                "z": 0
+              },
+              {
+                "id": "t-5-13",
+                "passable": true,
+                "terrain": "floor",
+                "x": 5,
+                "y": 13,
+                "z": 0
+              },
+              {
+                "id": "t-6-13",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 6,
+                "y": 13,
+                "z": 0
+              },
+              {
+                "id": "t-7-13",
+                "passable": true,
+                "terrain": "floor",
+                "x": 7,
+                "y": 13,
+                "z": 0
+              },
+              {
+                "id": "t-8-13",
+                "passable": true,
+                "terrain": "floor",
+                "x": 8,
+                "y": 13,
+                "z": 0
+              },
+              {
+                "id": "t-9-13",
+                "passable": true,
+                "terrain": "floor",
+                "x": 9,
+                "y": 13,
+                "z": 0
+              },
+              {
+                "id": "t-10-13",
+                "passable": false,
+                "terrain": "shelf",
+                "x": 10,
+                "y": 13,
+                "z": 0
+              },
+              {
+                "id": "t-11-13",
+                "passable": true,
+                "terrain": "floor",
+                "x": 11,
+                "y": 13,
+                "z": 0
+              },
+              {
+                "id": "t-12-13",
+                "passable": true,
+                "terrain": "floor",
+                "x": 12,
+                "y": 13,
+                "z": 0
+              },
+              {
+                "id": "t-13-13",
+                "passable": true,
+                "terrain": "floor",
+                "x": 13,
+                "y": 13,
+                "z": 0
               }
+            ]
+          },
+          {
+            "key": "units",
+            "type": "unknown",
+            "default": [
+              {
+                "health": 1,
+                "id": "u1",
+                "maxHealth": 1,
+                "modelUrl": {
+                  "animations": [
+                    "static",
+                    "idle",
+                    "walk",
+                    "sprint",
+                    "jump",
+                    "fall",
+                    "crouch",
+                    "sit",
+                    "drive",
+                    "die",
+                    "pick-up",
+                    "emote-yes",
+                    "emote-no",
+                    "holding-right",
+                    "holding-left",
+                    "holding-both",
+                    "holding-right-shoot",
+                    "holding-left-shoot",
+                    "holding-both-shoot",
+                    "attack-melee-right",
+                    "attack-melee-left",
+                    "attack-kick-right",
+                    "attack-kick-left",
+                    "interact-right",
+                    "interact-left",
+                    "wheelchair-sit",
+                    "wheelchair-look-left",
+                    "wheelchair-look-right",
+                    "wheelchair-move-forward",
+                    "wheelchair-move-back",
+                    "wheelchair-move-left",
+                    "wheelchair-move-right"
+                  ],
+                  "aspect": "1:1",
+                  "category": "character-employee",
+                  "dimension": "3d",
+                  "name": "character-employee",
+                  "role": "player",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/units/character-employee.glb"
+                },
+                "name": "Shopkeeper",
+                "position": {
+                  "x": 7,
+                  "y": 7
+                },
+                "team": "player",
+                "unitType": "shopkeeper",
+                "x": 7,
+                "y": 7,
+                "z": 0
+              }
+            ]
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.HeroAuthority"
+      },
+      {
+        "name": "Patience",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "customers",
+            "type": "unknown",
+            "default": [
+              {
+                "id": "c1",
+                "maxPatience": 20,
+                "modelUrl": {
+                  "animations": [
+                    "static",
+                    "idle",
+                    "walk",
+                    "sprint",
+                    "jump",
+                    "fall",
+                    "crouch",
+                    "sit",
+                    "drive",
+                    "die",
+                    "pick-up",
+                    "emote-yes",
+                    "emote-no",
+                    "holding-right",
+                    "holding-left",
+                    "holding-both",
+                    "holding-right-shoot",
+                    "holding-left-shoot",
+                    "holding-both-shoot",
+                    "attack-melee-right",
+                    "attack-melee-left",
+                    "attack-kick-right",
+                    "attack-kick-left",
+                    "interact-right",
+                    "interact-left",
+                    "wheelchair-sit",
+                    "wheelchair-look-left",
+                    "wheelchair-look-right",
+                    "wheelchair-move-forward",
+                    "wheelchair-move-back",
+                    "wheelchair-move-left",
+                    "wheelchair-move-right"
+                  ],
+                  "aspect": "1:1",
+                  "category": "character-female-a",
+                  "dimension": "3d",
+                  "name": "character-female-a",
+                  "role": "npc",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-female-a.glb"
+                },
+                "name": "Customer A",
+                "patience": 20,
+                "position": {
+                  "x": 4,
+                  "y": 3
+                },
+                "team": "neutral",
+                "unitType": "customer"
+              },
+              {
+                "id": "c2",
+                "maxPatience": 24,
+                "modelUrl": {
+                  "animations": [
+                    "static",
+                    "idle",
+                    "walk",
+                    "sprint",
+                    "jump",
+                    "fall",
+                    "crouch",
+                    "sit",
+                    "drive",
+                    "die",
+                    "pick-up",
+                    "emote-yes",
+                    "emote-no",
+                    "holding-right",
+                    "holding-left",
+                    "holding-both",
+                    "holding-right-shoot",
+                    "holding-left-shoot",
+                    "holding-both-shoot",
+                    "attack-melee-right",
+                    "attack-melee-left",
+                    "attack-kick-right",
+                    "attack-kick-left",
+                    "interact-right",
+                    "interact-left",
+                    "wheelchair-sit",
+                    "wheelchair-look-left",
+                    "wheelchair-look-right",
+                    "wheelchair-move-forward",
+                    "wheelchair-move-back",
+                    "wheelchair-move-left",
+                    "wheelchair-move-right"
+                  ],
+                  "aspect": "1:1",
+                  "category": "character-male-a",
+                  "dimension": "3d",
+                  "name": "character-male-a",
+                  "role": "npc",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-male-a.glb"
+                },
+                "name": "Customer B",
+                "patience": 24,
+                "position": {
+                  "x": 10,
+                  "y": 11
+                },
+                "team": "neutral",
+                "unitType": "customer"
+              }
+            ]
+          },
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "serveRadius",
+            "type": "unknown",
+            "default": 1
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.Patience"
+      },
+      {
+        "name": "FxDecay",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.FxDecay"
+      },
+      {
+        "name": "RoundGate",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "maxLost",
+            "type": "unknown",
+            "default": 3
+          },
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "targetServed",
+            "type": "unknown",
+            "default": 10
+          }
+        ],
+        "capabilities": [],
+        "ref": "Frame.traits.RoundGate"
+      },
+      {
+        "name": "Player",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "assetManifest",
+            "type": "unknown",
+            "default": {
+              "effects": {},
+              "features": {},
+              "terrains": {
+                "floor": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "3d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
+                },
+                "shelf": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "shelf-boxes",
+                  "dimension": "3d",
+                  "name": "shelf-boxes",
+                  "role": "tile",
+                  "style": "lowpoly-flat",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-boxes.glb"
+                }
+              },
+              "units": {}
             }
           },
           {
+            "key": "bgColor",
+            "type": "unknown",
+            "default": "#0a0f1a"
+          },
+          {
+            "key": "cameraMode",
+            "type": "unknown",
+            "default": "top-down"
+          },
+          {
             "key": "features",
-            "type": "[MarketBoard3DFeaturesItem]",
+            "type": "unknown",
             "default": [
               {
                 "assetUrl": {
@@ -444,585 +2257,71 @@
                 "x": 12,
                 "y": 2
               }
-            ],
-            "label": "Features",
-            "description": "Shop fixtures (shelves/freezers/checkout/carts) and food props, each on a unique cell across the 14×14 floor.",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "assetUrl": {
-                  "name": "assetUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "id": {
-                  "name": "id",
-                  "required": false,
-                  "type": "string"
-                },
-                "type": {
-                  "name": "type",
-                  "required": true,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
+            ]
           },
           {
-            "key": "floorAsset",
-            "type": "Asset",
-            "default": {
-              "animations": [
-                "static"
-              ],
-              "aspect": "1:1",
-              "category": "floor",
-              "dimension": "3d",
-              "name": "floor",
-              "role": "tile",
-              "style": "lowpoly-flat",
-              "thumbnailUrl": "",
-              "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb"
-            },
-            "label": "Floor Asset",
-            "description": "Passable shop floor tile, tiled across the store.",
-            "tier": "presentation",
-            "properties": {
-              "animations": {
-                "name": "animations",
-                "required": false,
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "aspect": {
-                "name": "aspect",
-                "required": false,
-                "type": "string"
-              },
-              "category": {
-                "name": "category",
-                "required": false,
-                "type": "string"
-              },
-              "dimension": {
-                "name": "dimension",
-                "required": false,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "role": {
-                "name": "role",
-                "required": false,
-                "type": "string"
-              },
-              "style": {
-                "name": "style",
-                "required": false,
-                "type": "string"
-              },
-              "thumbnailUrl": {
-                "name": "thumbnailUrl",
-                "required": false,
-                "type": "string"
-              },
-              "url": {
-                "name": "url",
-                "required": false,
-                "type": "string"
-              }
-            }
+            "key": "goalText",
+            "type": "unknown",
+            "default": "Serve customers before their patience runs out"
           },
           {
-            "key": "isLoading",
-            "type": "boolean",
-            "default": false,
-            "label": "Is Loading",
-            "description": "Loading state indicator",
-            "tier": "presentation"
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 14
+          },
+          {
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 14
+          },
+          {
+            "key": "howText",
+            "type": "unknown",
+            "default": "Walk next to a customer — they are served automatically while you're adjacent"
+          },
+          {
+            "key": "livesLabel",
+            "type": "unknown",
+            "default": "Lives"
+          },
+          {
+            "key": "maxLost",
+            "type": "unknown",
+            "default": 3
+          },
+          {
+            "key": "movementRange",
+            "type": "unknown",
+            "default": 4
           },
           {
             "key": "scale",
-            "type": "number",
-            "default": 0.45,
-            "label": "Scale",
-            "description": "Canvas render scale",
-            "tier": "presentation"
+            "type": "unknown",
+            "default": 0.45
           },
           {
-            "key": "scoreTarget",
-            "type": "number",
-            "default": 10,
-            "label": "Score Target",
-            "description": "Score needed to win",
-            "tier": "presentation"
-          },
-          {
-            "key": "shelfAsset",
-            "type": "Asset",
-            "default": {
-              "animations": [
-                "static"
-              ],
-              "aspect": "1:1",
-              "category": "shelf-boxes",
-              "dimension": "3d",
-              "name": "shelf-boxes",
-              "role": "tile",
-              "style": "lowpoly-flat",
-              "thumbnailUrl": "",
-              "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-boxes.glb"
-            },
-            "label": "Shelf Asset",
-            "description": "Impassable shelf/counter terrain tile, scattered for shop aisles.",
-            "tier": "presentation",
-            "properties": {
-              "animations": {
-                "name": "animations",
-                "required": false,
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "aspect": {
-                "name": "aspect",
-                "required": false,
-                "type": "string"
-              },
-              "category": {
-                "name": "category",
-                "required": false,
-                "type": "string"
-              },
-              "dimension": {
-                "name": "dimension",
-                "required": false,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "role": {
-                "name": "role",
-                "required": false,
-                "type": "string"
-              },
-              "style": {
-                "name": "style",
-                "required": false,
-                "type": "string"
-              },
-              "thumbnailUrl": {
-                "name": "thumbnailUrl",
-                "required": false,
-                "type": "string"
-              },
-              "url": {
-                "name": "url",
-                "required": false,
-                "type": "string"
-              }
-            }
+            "key": "scoreLabel",
+            "type": "unknown",
+            "default": "Score"
           },
           {
             "key": "unitScale",
-            "type": "number",
-            "default": 1,
-            "label": "Unit Scale",
-            "description": "Unit draw-size multiplier",
-            "tier": "presentation"
-          },
-          {
-            "key": "units",
-            "type": "[MarketBoard3DUnitsItem]",
-            "default": [
-              {
-                "id": "u1",
-                "modelUrl": {
-                  "animations": [
-                    "static",
-                    "idle",
-                    "walk",
-                    "sprint",
-                    "jump",
-                    "fall",
-                    "crouch",
-                    "sit",
-                    "drive",
-                    "die",
-                    "pick-up",
-                    "emote-yes",
-                    "emote-no",
-                    "holding-right",
-                    "holding-left",
-                    "holding-both",
-                    "holding-right-shoot",
-                    "holding-left-shoot",
-                    "holding-both-shoot",
-                    "attack-melee-right",
-                    "attack-melee-left",
-                    "attack-kick-right",
-                    "attack-kick-left",
-                    "interact-right",
-                    "interact-left",
-                    "wheelchair-sit",
-                    "wheelchair-look-left",
-                    "wheelchair-look-right",
-                    "wheelchair-move-forward",
-                    "wheelchair-move-back",
-                    "wheelchair-move-left",
-                    "wheelchair-move-right"
-                  ],
-                  "aspect": "1:1",
-                  "category": "character-employee",
-                  "dimension": "3d",
-                  "name": "character-employee",
-                  "role": "player",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/units/character-employee.glb"
-                },
-                "name": "Shopkeeper",
-                "position": {
-                  "x": 7,
-                  "y": 7
-                },
-                "team": "player",
-                "unitType": "shopkeeper"
-              },
-              {
-                "id": "c1",
-                "maxPatience": 20,
-                "modelUrl": {
-                  "animations": [
-                    "static",
-                    "idle",
-                    "walk",
-                    "sprint",
-                    "jump",
-                    "fall",
-                    "crouch",
-                    "sit",
-                    "drive",
-                    "die",
-                    "pick-up",
-                    "emote-yes",
-                    "emote-no",
-                    "holding-right",
-                    "holding-left",
-                    "holding-both",
-                    "holding-right-shoot",
-                    "holding-left-shoot",
-                    "holding-both-shoot",
-                    "attack-melee-right",
-                    "attack-melee-left",
-                    "attack-kick-right",
-                    "attack-kick-left",
-                    "interact-right",
-                    "interact-left",
-                    "wheelchair-sit",
-                    "wheelchair-look-left",
-                    "wheelchair-look-right",
-                    "wheelchair-move-forward",
-                    "wheelchair-move-back",
-                    "wheelchair-move-left",
-                    "wheelchair-move-right"
-                  ],
-                  "aspect": "1:1",
-                  "category": "character-female-a",
-                  "dimension": "3d",
-                  "name": "character-female-a",
-                  "role": "npc",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-female-a.glb"
-                },
-                "name": "Customer A",
-                "patience": 20,
-                "position": {
-                  "x": 4,
-                  "y": 3
-                },
-                "team": "neutral",
-                "unitType": "customer"
-              },
-              {
-                "id": "c2",
-                "maxPatience": 24,
-                "modelUrl": {
-                  "animations": [
-                    "static",
-                    "idle",
-                    "walk",
-                    "sprint",
-                    "jump",
-                    "fall",
-                    "crouch",
-                    "sit",
-                    "drive",
-                    "die",
-                    "pick-up",
-                    "emote-yes",
-                    "emote-no",
-                    "holding-right",
-                    "holding-left",
-                    "holding-both",
-                    "holding-right-shoot",
-                    "holding-left-shoot",
-                    "holding-both-shoot",
-                    "attack-melee-right",
-                    "attack-melee-left",
-                    "attack-kick-right",
-                    "attack-kick-left",
-                    "interact-right",
-                    "interact-left",
-                    "wheelchair-sit",
-                    "wheelchair-look-left",
-                    "wheelchair-look-right",
-                    "wheelchair-move-forward",
-                    "wheelchair-move-back",
-                    "wheelchair-move-left",
-                    "wheelchair-move-right"
-                  ],
-                  "aspect": "1:1",
-                  "category": "character-male-a",
-                  "dimension": "3d",
-                  "name": "character-male-a",
-                  "role": "npc",
-                  "style": "lowpoly-flat",
-                  "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-male-a.glb"
-                },
-                "name": "Customer B",
-                "patience": 24,
-                "position": {
-                  "x": 10,
-                  "y": 11
-                },
-                "team": "neutral",
-                "unitType": "customer"
-              }
-            ],
-            "label": "Units",
-            "description": "Initial roster: shopkeeper + 2 customers, spread across the 14×14 floor — takes priority over entity-derived units.",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
-                "maxPatience": {
-                  "name": "maxPatience",
-                  "required": false,
-                  "type": "number"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "properties": {
-                    "animations": {
-                      "name": "animations",
-                      "required": false,
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    },
-                    "aspect": {
-                      "name": "aspect",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "category": {
-                      "name": "category",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "dimension": {
-                      "name": "dimension",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "name": {
-                      "name": "name",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "role": {
-                      "name": "role",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "style": {
-                      "name": "style",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "thumbnailUrl": {
-                      "name": "thumbnailUrl",
-                      "required": false,
-                      "type": "string"
-                    },
-                    "url": {
-                      "name": "url",
-                      "required": false,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "name": {
-                  "name": "name",
-                  "required": false,
-                  "type": "string"
-                },
-                "patience": {
-                  "name": "patience",
-                  "required": false,
-                  "type": "number"
-                },
-                "position": {
-                  "name": "position",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "team": {
-                  "name": "team",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "neutral"
-                  ]
-                },
-                "unitType": {
-                  "name": "unitType",
-                  "required": false,
-                  "type": "string"
-                }
-              },
-              "type": "object"
-            }
+            "type": "unknown",
+            "default": 1
           }
         ],
         "capabilities": [],
-        "entityRebindable": true,
-        "entityContract": {
-          "requires": [],
-          "provides": [
-            "attackTargets",
-            "fx",
-            "gridHeight",
-            "gridWidth",
-            "lives",
-            "movementRange",
-            "result",
-            "score",
-            "scoreTarget",
-            "selectedUnitId",
-            "tiles",
-            "units",
-            "validMoves"
-          ]
-        }
+        "ref": "Frame.traits.MarketIntent"
       }
     ],
     "pages": [
       {
         "name": "MarketBoard3DPage",
         "defaultPath": "/market-board-3d",
-        "primaryEntity": "MarketBoard3DItem"
+        "primaryEntity": "GameState"
       }
     ],
-    "emittedEvents": [
-      "GAME_END",
-      "PLAY_AGAIN",
-      "TILE_CLICK",
-      "UNIT_CLICK"
-    ],
+    "emittedEvents": [],
     "listenedEvents": []
   }
 ]
