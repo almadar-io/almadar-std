@@ -1,0 +1,187 @@
+{
+  "description": "Headless gold-economy mechanic: the SOLE writer of gold. Listens a mine-hit signal and adds a fixed yield; emits GOLD_CHANGED. Renders nothing.",
+  "name": "std-gold",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "gold",
+            "type": "number"
+          }
+        ],
+        "name": "GoldData",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "GoldOrbital",
+      "pages": [
+        {
+          "name": "GoldPage",
+          "path": "/gold",
+          "traits": [
+            {
+              "ref": "GoldMine"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "running": {
+              "default": true,
+              "description": "When true, mine-hit signals add gold; toggle to freeze",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "startGold": {
+              "default": 0.0,
+              "description": "Gold set on INIT/RESTART",
+              "label": "Start Gold",
+              "tier": "domain",
+              "type": "number"
+            },
+            "yieldAmount": {
+              "default": 25.0,
+              "description": "Gold added per mine-hit signal",
+              "label": "Yield Amount",
+              "tier": "domain",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Current gold total after a mine-hit; a HUD stat listens to display it",
+              "event": "GOLD_CHANGED",
+              "payloadSchema": [
+                {
+                  "name": "gold",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "gold"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "GoldData",
+          "name": "GoldMine",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MINE_HIT",
+                "name": "Mine Hit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "Current gold total after a mine-hit; a HUD stat listens to display it",
+                "key": "GOLD_CHANGED",
+                "name": "Gold Changed",
+                "payloadSchema": [
+                  {
+                    "name": "gold",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.gold",
+                    "@config.startGold"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.gold",
+                    [
+                      "+",
+                      "@entity.gold",
+                      "@config.yieldAmount"
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "GOLD_CHANGED",
+                    {
+                      "gold": "@entity.gold"
+                    }
+                  ]
+                ],
+                "event": "MINE_HIT",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.gold",
+                    "@config.startGold"
+                  ]
+                ],
+                "event": "RESTART",
+                "from": "active",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

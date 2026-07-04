@@ -1,0 +1,272 @@
+app std-worldmap-board-2d "1.0.0"
+"2D isometric overworld-travel board FRAME: composes grid-tactics (units authority) + round-flow (win/lose) + gold + a player-intent/render trait onto one shared GameState with an isometric canvas-2d render. Games consume this molecule and supply theme/assets/units/tiles/features via config."
+orbital WorldMapBoard2DOrbital {
+  uses Tactics from "std/behaviors/std-grid-tactics"
+  uses Round from "std/behaviors/std-round-flow"
+  uses Gold from "std/behaviors/std-gold"
+
+  type Asset = {
+    url : asset
+    atlas : asset
+    sprite : string
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    variant : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    sprite : Asset
+    unitType : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    animation : string
+    frame : number
+  }
+  type Tile = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    terrainSprite : Asset
+    passable : boolean
+  }
+  type Feature = {
+    id : string
+    x : number!
+    y : number!
+    type : string!
+    sprite : Asset
+  }
+  type Effect = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
+  }
+  type ValidMove = { x : number!  y : number! }
+  type AssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
+  }
+  type HudStat = {
+    label : string
+    value : number
+  }
+  type HudButton = {
+    type : string
+    action : string
+    label : string
+    variant : string
+    iconAsset : Asset
+  }
+
+  entity GameState [runtime, shared] {
+    id : string!
+    units : [Unit] = []
+    tiles : [Tile] = []
+    result : string = "none"
+    gold : number = 0
+    selectedHeroId : string = ""
+    validMoves : [ValidMove] = []
+    waypoints : [string] = []
+    turn : number = 0
+    effects : [Effect] = []
+  }
+
+  trait TacticsAuthority = Tactics.traits.GridTactics -> GameState {
+    config {
+      running: true
+      gridWidth: 4
+      gridHeight: 4
+      attackDamage: 1
+      units: [ { id: "hero", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "hero" }, { id: "guard", position: { x: 3, y: 3 }, x: 3, y: 3, z: 0, team: "enemy", health: 3, maxHealth: 3, unitType: "guard" } ]
+    }
+  }
+
+  trait RoundLogic = Round.traits.RoundFlow -> GameState {
+    config { running: true }
+  }
+
+  trait GoldAuthority = Gold.traits.GoldMine -> GameState {
+    config { running: true, startGold: 0, yieldAmount: 25 }
+  }
+
+  trait WorldMapIntent -> GameState [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.selectedHeroId "")
+        (set @entity.validMoves [])
+        (set @entity.waypoints [])
+        (set @entity.turn 0)
+        (set @entity.effects [])
+        (render-ui main {
+          type: game-shell
+          fontFamily: @config.fontFamily
+          backgroundAsset: @config.backgroundAsset
+          hudBackgroundAsset: @config.hudBackgroundAsset
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: (array/concat [ { label: "Region", value: @config.region, iconUrl: @config.regionIconAsset }, { label: "Turn", value: @entity.turn, iconUrl: @config.turnIconAsset }, { label: "Gold", value: @entity.gold, iconUrl: @config.goldIconAsset } ] @config.extraStats) }, { type: mini-map, tiles: @entity.tiles, units: @entity.units, width: @config.gridWidth, height: @config.gridHeight }, { type: waypoint-marker, waypoints: @entity.waypoints, path: @entity.validMoves } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: (array/concat [ { type: button, action: ADVANCE_TURN, label: "Pass Turn", iconAsset: @config.travelIconAsset, variant: primary } ] @config.extraAddons) }
+          overlay: (if (!= @entity.result "none") { type: game-menu, title: (if (== @entity.result "victory") "VICTORY" "DEFEAT"), subtitle: (if (== @entity.result "victory") "The realm is secured" "Your heroes have fallen"), options: [] } null)
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: HERO_MOVE, unitClickEvent: HERO_SELECT, selectedUnitId: @entity.selectedHeroId, validMoves: @entity.validMoves } ]
+        })
+
+      HERO_SELECT -> playing when (and (== @entity.result "none") (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.selectedHeroId ?unitId)
+        (set @entity.validMoves (array/map (array/filter @entity.tiles (fn t (and (grid/in-bounds { x: (object/get @t x), y: (object/get @t y) } @config.gridWidth @config.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @config.movementRange) (and (== (object/get @t passable) true) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0)))))) (fn t { x: (object/get @t x), y: (object/get @t y) })))
+        (set @entity.waypoints [])
+
+      HERO_MOVE -> playing when (and (== @entity.result "none") (and (!= @entity.selectedHeroId "") (and (grid/in-bounds { x: ?x, y: ?y } @config.gridWidth @config.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedHeroId))) position) { x: ?x, y: ?y }) @config.movementRange) (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) ?x) (== (object/get @t y) ?y)))) passable) true) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))))
+        (emit MOVE { unitId: @entity.selectedHeroId, x: ?x, y: ?y })
+        (if (== (object/get (array/find @config.features (fn f (and (== (object/get f x) ?x) (and (== (object/get f y) ?y) (== (object/get f type) "gold_mine"))))) type) "gold_mine") (emit MINE_HIT { id: "" }) null)
+        (set @entity.selectedHeroId "")
+        (set @entity.validMoves [])
+
+      HERO_SELECT -> playing when (and (== @entity.result "none") (and (!= @entity.selectedHeroId "") (and (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "enemy") (== (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedHeroId))) position) (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position)) 1))))
+        (emit ATTACK { targetId: ?unitId })
+        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) y), ttl: 4 }))
+        (set @entity.selectedHeroId "")
+        (set @entity.validMoves [])
+        (set @entity.turn (+ @entity.turn 1))
+
+      ADVANCE_TURN -> playing when (== @entity.result "none")
+        (set @entity.turn (+ @entity.turn 1))
+        (set @entity.selectedHeroId "")
+        (set @entity.validMoves [])
+    }
+
+    ticks {
+      renderTick every 100ms
+        (render-ui main {
+          type: game-shell
+          fontFamily: @config.fontFamily
+          backgroundAsset: @config.backgroundAsset
+          hudBackgroundAsset: @config.hudBackgroundAsset
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: (array/concat [ { label: "Region", value: @config.region, iconUrl: @config.regionIconAsset }, { label: "Turn", value: @entity.turn, iconUrl: @config.turnIconAsset }, { label: "Gold", value: @entity.gold, iconUrl: @config.goldIconAsset } ] @config.extraStats) }, { type: mini-map, tiles: @entity.tiles, units: @entity.units, width: @config.gridWidth, height: @config.gridHeight }, { type: waypoint-marker, waypoints: @entity.waypoints, path: @entity.validMoves } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: (array/concat [ { type: button, action: ADVANCE_TURN, label: "Pass Turn", iconAsset: @config.travelIconAsset, variant: primary } ] @config.extraAddons) }
+          overlay: (if (!= @entity.result "none") { type: game-menu, title: (if (== @entity.result "victory") "VICTORY" "DEFEAT"), subtitle: (if (== @entity.result "victory") "The realm is secured" "Your heroes have fallen"), options: [] } null)
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: HERO_MOVE, unitClickEvent: HERO_SELECT, selectedUnitId: @entity.selectedHeroId, validMoves: @entity.validMoves } ]
+        })
+    }
+
+    emits {
+      HERO_SELECT -> external {
+        unitId : string!
+      }
+        @description "Emits UI:{unitClickEvent} with { unitId } on hero selection or attack-target click"
+        @tier "domain"
+      HERO_MOVE -> external {
+        x : number!
+        y : number!
+      }
+        @description "Emits UI:{tileClickEvent} with { x, y }"
+        @tier "domain"
+      ADVANCE_TURN -> external {
+        id : string
+      }
+        @description "Emits UI:{advanceTurnEvent} with {} when the player passes the turn without moving"
+        @tier "domain"
+      MOVE -> external {
+        unitId : string!
+        x : number!
+        y : number!
+      }
+        @description "Hero travel intent applied by the grid-tactics authority"
+        @tier "domain"
+      ATTACK -> external {
+        targetId : string!
+      }
+        @description "Hero attack intent applied by the grid-tactics authority"
+        @tier "domain"
+      MINE_HIT -> external {
+        id : string
+      }
+        @description "Hero landed on a gold-mine feature tile; the gold atom adds its yield"
+        @tier "domain"
+    }
+
+    config {
+      gridWidth : number = 4
+        @label "Grid Width"
+        @description "Grid column count (matches TacticsAuthority.gridWidth)."
+        @tier "domain"
+      gridHeight : number = 4
+        @label "Grid Height"
+        @description "Grid row count (matches TacticsAuthority.gridHeight)."
+        @tier "domain"
+      movementRange : number = 3
+        @label "Movement Range"
+        @description "Max manhattan distance the selected hero may travel in one move."
+        @tier "domain"
+      features : [Feature] = []
+        @label "Features"
+        @description "Board features — gold mines, portals, and other decorative/interactive map markers."
+        @tier "domain"
+      assetManifest : AssetManifest = { terrains: {}, units: {}, features: {}, effects: {} }
+        @label "Asset Manifest"
+        @description "Terrain/unit/feature/effect sprite manifest."
+        @tier "presentation"
+      scale : number = 0.25
+        @label "Scale"
+        @description "Canvas render scale."
+        @tier "presentation"
+      region : string = "Overworld"
+        @label "Region"
+        @description "Region name shown in the HUD."
+        @tier "presentation"
+      fontFamily : string = "future"
+        @label "Font Family"
+        @description "game-shell fontFamily prop (theme chrome)."
+        @tier "presentation"
+      backgroundAsset : Asset = {}
+        @label "Background Asset"
+        @description "Game-shell background panel sprite (theme chrome)."
+        @tier "presentation"
+      hudBackgroundAsset : Asset = {}
+        @label "HUD Background Asset"
+        @description "HUD panel background sprite (theme chrome)."
+        @tier "presentation"
+      regionIconAsset : Asset = {}
+        @label "Region Icon Asset"
+        @description "Icon sprite for the Region HUD stat."
+        @tier "presentation"
+      turnIconAsset : Asset = {}
+        @label "Turn Icon Asset"
+        @description "Icon sprite for the Turn HUD stat."
+        @tier "presentation"
+      goldIconAsset : Asset = {}
+        @label "Gold Icon Asset"
+        @description "Icon sprite for the Gold HUD stat."
+        @tier "presentation"
+      travelIconAsset : Asset = {}
+        @label "Travel Icon Asset"
+        @description "Icon sprite for the Pass Turn button."
+        @tier "presentation"
+      extraStats : [HudStat] = []
+        @label "Extra HUD Stats"
+        @description "Board-specific HUD stats appended after Region/Turn/Gold."
+        @tier "presentation"
+      extraAddons : [HudButton] = []
+        @label "Extra Addon Buttons"
+        @description "Board-specific action buttons appended after Pass Turn."
+        @tier "presentation"
+    }
+  }
+
+  page "/worldmap-board-2d" as WorldMapBoard2DPage -> TacticsAuthority, RoundLogic, GoldAuthority, WorldMapIntent
+}

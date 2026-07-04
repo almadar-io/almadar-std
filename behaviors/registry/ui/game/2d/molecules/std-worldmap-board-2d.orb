@@ -1,0 +1,2610 @@
+{
+  "description": "2D isometric overworld-travel board FRAME: composes grid-tactics (units authority) + round-flow (win/lose) + gold + a player-intent/render trait onto one shared GameState with an isometric canvas-2d render. Games consume this molecule and supply theme/assets/units/tiles/features via config.",
+  "name": "std-worldmap-board-2d",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "properties": {
+                    "animations": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "name": "animations",
+                      "required": false,
+                      "type": "array"
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "units",
+            "type": "array"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "terrain": {
+                  "name": "terrain",
+                  "required": false,
+                  "type": "string"
+                },
+                "terrainSprite": {
+                  "name": "terrainSprite",
+                  "properties": {
+                    "animations": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "name": "animations",
+                      "required": false,
+                      "type": "array"
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "tiles",
+            "type": "array"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "gold",
+            "type": "number"
+          },
+          {
+            "default": "",
+            "name": "selectedHeroId",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "validMoves",
+            "type": "array"
+          },
+          {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "name": "waypoints",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "turn",
+            "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
+          }
+        ],
+        "name": "GameState",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "WorldMapBoard2DOrbital",
+      "pages": [
+        {
+          "name": "WorldMapBoard2DPage",
+          "path": "/worldmap-board-2d",
+          "traits": [
+            {
+              "ref": "TacticsAuthority"
+            },
+            {
+              "ref": "RoundLogic"
+            },
+            {
+              "ref": "GoldAuthority"
+            },
+            {
+              "ref": "WorldMapIntent"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "config": {
+            "attackDamage": {
+              "default": 1.0,
+              "type": "unknown"
+            },
+            "gridHeight": {
+              "default": 4.0,
+              "type": "unknown"
+            },
+            "gridWidth": {
+              "default": 4.0,
+              "type": "unknown"
+            },
+            "running": {
+              "default": true,
+              "type": "unknown"
+            },
+            "units": {
+              "default": [
+                {
+                  "health": 3.0,
+                  "id": "hero",
+                  "maxHealth": 3.0,
+                  "position": {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  "team": "player",
+                  "unitType": "hero",
+                  "x": 0.0,
+                  "y": 0.0,
+                  "z": 0.0
+                },
+                {
+                  "health": 3.0,
+                  "id": "guard",
+                  "maxHealth": 3.0,
+                  "position": {
+                    "x": 3.0,
+                    "y": 3.0
+                  },
+                  "team": "enemy",
+                  "unitType": "guard",
+                  "x": 3.0,
+                  "y": 3.0,
+                  "z": 0.0
+                }
+              ],
+              "type": "unknown"
+            }
+          },
+          "linkedEntity": "GameState",
+          "name": "TacticsAuthority",
+          "ref": "Tactics.traits.GridTactics"
+        },
+        {
+          "config": {
+            "running": {
+              "default": true,
+              "type": "unknown"
+            }
+          },
+          "linkedEntity": "GameState",
+          "name": "RoundLogic",
+          "ref": "Round.traits.RoundFlow"
+        },
+        {
+          "config": {
+            "running": {
+              "default": true,
+              "type": "unknown"
+            },
+            "startGold": {
+              "default": 0.0,
+              "type": "unknown"
+            },
+            "yieldAmount": {
+              "default": 25.0,
+              "type": "unknown"
+            }
+          },
+          "linkedEntity": "GameState",
+          "name": "GoldAuthority",
+          "ref": "Gold.traits.GoldMine"
+        },
+        {
+          "category": "interaction",
+          "config": {
+            "assetManifest": {
+              "default": {
+                "effects": {},
+                "features": {},
+                "terrains": {},
+                "units": {}
+              },
+              "description": "Terrain/unit/feature/effect sprite manifest.",
+              "label": "Asset Manifest",
+              "properties": {
+                "effects": {
+                  "items": {
+                    "properties": {
+                      "animations": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "animations",
+                        "required": false,
+                        "type": "array"
+                      },
+                      "aspect": {
+                        "name": "aspect",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "category": {
+                        "name": "category",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "dimension": {
+                        "name": "dimension",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "role": {
+                        "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "style": {
+                        "name": "style",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "thumbnailUrl": {
+                        "name": "thumbnailUrl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "url": {
+                        "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
+                },
+                "features": {
+                  "items": {
+                    "properties": {
+                      "animations": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "animations",
+                        "required": false,
+                        "type": "array"
+                      },
+                      "aspect": {
+                        "name": "aspect",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "category": {
+                        "name": "category",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "dimension": {
+                        "name": "dimension",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "role": {
+                        "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "style": {
+                        "name": "style",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "thumbnailUrl": {
+                        "name": "thumbnailUrl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "url": {
+                        "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "features",
+                  "required": false,
+                  "type": "object"
+                },
+                "terrains": {
+                  "items": {
+                    "properties": {
+                      "animations": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "animations",
+                        "required": false,
+                        "type": "array"
+                      },
+                      "aspect": {
+                        "name": "aspect",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "category": {
+                        "name": "category",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "dimension": {
+                        "name": "dimension",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "role": {
+                        "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "style": {
+                        "name": "style",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "thumbnailUrl": {
+                        "name": "thumbnailUrl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "url": {
+                        "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "terrains",
+                  "required": false,
+                  "type": "object"
+                },
+                "units": {
+                  "items": {
+                    "properties": {
+                      "animations": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "animations",
+                        "required": false,
+                        "type": "array"
+                      },
+                      "aspect": {
+                        "name": "aspect",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "category": {
+                        "name": "category",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "dimension": {
+                        "name": "dimension",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "role": {
+                        "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "style": {
+                        "name": "style",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "thumbnailUrl": {
+                        "name": "thumbnailUrl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "url": {
+                        "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "units",
+                  "required": false,
+                  "type": "object"
+                }
+              },
+              "tier": "presentation",
+              "type": "AssetManifest"
+            },
+            "backgroundAsset": {
+              "default": {},
+              "description": "Game-shell background panel sprite (theme chrome).",
+              "label": "Background Asset",
+              "properties": {
+                "animations": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "animations",
+                  "required": false,
+                  "type": "array"
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string"
+                },
+                "atlas": {
+                  "name": "atlas",
+                  "required": false,
+                  "type": "string"
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string"
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "Asset"
+            },
+            "extraAddons": {
+              "default": [],
+              "description": "Board-specific action buttons appended after Pass Turn.",
+              "items": {
+                "properties": {
+                  "action": {
+                    "name": "action",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "iconAsset": {
+                    "name": "iconAsset",
+                    "properties": {
+                      "animations": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "animations",
+                        "required": false,
+                        "type": "array"
+                      },
+                      "aspect": {
+                        "name": "aspect",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "category": {
+                        "name": "category",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "dimension": {
+                        "name": "dimension",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "role": {
+                        "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "style": {
+                        "name": "style",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "thumbnailUrl": {
+                        "name": "thumbnailUrl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "url": {
+                        "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Extra Addon Buttons",
+              "tier": "presentation",
+              "type": "[HudButton]"
+            },
+            "extraStats": {
+              "default": [],
+              "description": "Board-specific HUD stats appended after Region/Turn/Gold.",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Extra HUD Stats",
+              "tier": "presentation",
+              "type": "[HudStat]"
+            },
+            "features": {
+              "default": [],
+              "description": "Board features — gold mines, portals, and other decorative/interactive map markers.",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "properties": {
+                      "animations": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "animations",
+                        "required": false,
+                        "type": "array"
+                      },
+                      "aspect": {
+                        "name": "aspect",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "atlas": {
+                        "name": "atlas",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "category": {
+                        "name": "category",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "dimension": {
+                        "name": "dimension",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "role": {
+                        "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "sprite": {
+                        "name": "sprite",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "style": {
+                        "name": "style",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "thumbnailUrl": {
+                        "name": "thumbnailUrl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "url": {
+                        "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Features",
+              "tier": "domain",
+              "type": "[Feature]"
+            },
+            "fontFamily": {
+              "default": "future",
+              "description": "game-shell fontFamily prop (theme chrome).",
+              "label": "Font Family",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "goldIconAsset": {
+              "default": {},
+              "description": "Icon sprite for the Gold HUD stat.",
+              "label": "Gold Icon Asset",
+              "properties": {
+                "animations": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "animations",
+                  "required": false,
+                  "type": "array"
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string"
+                },
+                "atlas": {
+                  "name": "atlas",
+                  "required": false,
+                  "type": "string"
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string"
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "Asset"
+            },
+            "gridHeight": {
+              "default": 4.0,
+              "description": "Grid row count (matches TacticsAuthority.gridHeight).",
+              "label": "Grid Height",
+              "tier": "domain",
+              "type": "number"
+            },
+            "gridWidth": {
+              "default": 4.0,
+              "description": "Grid column count (matches TacticsAuthority.gridWidth).",
+              "label": "Grid Width",
+              "tier": "domain",
+              "type": "number"
+            },
+            "hudBackgroundAsset": {
+              "default": {},
+              "description": "HUD panel background sprite (theme chrome).",
+              "label": "HUD Background Asset",
+              "properties": {
+                "animations": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "animations",
+                  "required": false,
+                  "type": "array"
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string"
+                },
+                "atlas": {
+                  "name": "atlas",
+                  "required": false,
+                  "type": "string"
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string"
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "Asset"
+            },
+            "movementRange": {
+              "default": 3.0,
+              "description": "Max manhattan distance the selected hero may travel in one move.",
+              "label": "Movement Range",
+              "tier": "domain",
+              "type": "number"
+            },
+            "region": {
+              "default": "Overworld",
+              "description": "Region name shown in the HUD.",
+              "label": "Region",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "regionIconAsset": {
+              "default": {},
+              "description": "Icon sprite for the Region HUD stat.",
+              "label": "Region Icon Asset",
+              "properties": {
+                "animations": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "animations",
+                  "required": false,
+                  "type": "array"
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string"
+                },
+                "atlas": {
+                  "name": "atlas",
+                  "required": false,
+                  "type": "string"
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string"
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "Asset"
+            },
+            "scale": {
+              "default": 0.25,
+              "description": "Canvas render scale.",
+              "label": "Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "travelIconAsset": {
+              "default": {},
+              "description": "Icon sprite for the Pass Turn button.",
+              "label": "Travel Icon Asset",
+              "properties": {
+                "animations": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "animations",
+                  "required": false,
+                  "type": "array"
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string"
+                },
+                "atlas": {
+                  "name": "atlas",
+                  "required": false,
+                  "type": "string"
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string"
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "Asset"
+            },
+            "turnIconAsset": {
+              "default": {},
+              "description": "Icon sprite for the Turn HUD stat.",
+              "label": "Turn Icon Asset",
+              "properties": {
+                "animations": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "animations",
+                  "required": false,
+                  "type": "array"
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string"
+                },
+                "atlas": {
+                  "name": "atlas",
+                  "required": false,
+                  "type": "string"
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string"
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "Asset"
+            }
+          },
+          "emits": [
+            {
+              "description": "Emits UI:{unitClickEvent} with { unitId } on hero selection or attack-target click",
+              "event": "HERO_SELECT",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Emits UI:{tileClickEvent} with { x, y }",
+              "event": "HERO_MOVE",
+              "payloadSchema": [
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Emits UI:{advanceTurnEvent} with {} when the player passes the turn without moving",
+              "event": "ADVANCE_TURN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Hero travel intent applied by the grid-tactics authority",
+              "event": "MOVE",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Hero attack intent applied by the grid-tactics authority",
+              "event": "ATTACK",
+              "payloadSchema": [
+                {
+                  "name": "targetId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Hero landed on a gold-mine feature tile; the gold atom adds its yield",
+              "event": "MINE_HIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "linkedEntity": "GameState",
+          "name": "WorldMapIntent",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Emits UI:{unitClickEvent} with { unitId } on hero selection or attack-target click",
+                "key": "HERO_SELECT",
+                "name": "Hero Select",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emits UI:{tileClickEvent} with { x, y }",
+                "key": "HERO_MOVE",
+                "name": "Hero Move",
+                "payloadSchema": [
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emits UI:{advanceTurnEvent} with {} when the player passes the turn without moving",
+                "key": "ADVANCE_TURN",
+                "name": "Advance Turn",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Hero travel intent applied by the grid-tactics authority",
+                "key": "MOVE",
+                "name": "Move",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Hero attack intent applied by the grid-tactics authority",
+                "key": "ATTACK",
+                "name": "Attack",
+                "payloadSchema": [
+                  {
+                    "name": "targetId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Hero landed on a gold-mine feature tile; the gold atom adds its yield",
+                "key": "MINE_HIT",
+                "name": "Mine Hit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "playing"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedHeroId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.waypoints",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.turn",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "addons": {
+                        "children": [
+                          "array/concat",
+                          [
+                            {
+                              "action": "ADVANCE_TURN",
+                              "iconAsset": "@config.travelIconAsset",
+                              "label": "Pass Turn",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "@config.extraAddons"
+                        ],
+                        "direction": "vertical",
+                        "gap": "sm",
+                        "type": "stack"
+                      },
+                      "backgroundAsset": "@config.backgroundAsset",
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "projection": "isometric",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedHeroId",
+                          "showMinimap": true,
+                          "tileClickEvent": "HERO_MOVE",
+                          "tiles": "@entity.tiles",
+                          "type": "canvas-2d",
+                          "unitClickEvent": "HERO_SELECT",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "fontFamily": "@config.fontFamily",
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              "array/concat",
+                              [
+                                {
+                                  "iconUrl": "@config.regionIconAsset",
+                                  "label": "Region",
+                                  "value": "@config.region"
+                                },
+                                {
+                                  "iconUrl": "@config.turnIconAsset",
+                                  "label": "Turn",
+                                  "value": "@entity.turn"
+                                },
+                                {
+                                  "iconUrl": "@config.goldIconAsset",
+                                  "label": "Gold",
+                                  "value": "@entity.gold"
+                                }
+                              ],
+                              "@config.extraStats"
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "height": "@config.gridHeight",
+                            "tiles": "@entity.tiles",
+                            "type": "mini-map",
+                            "units": "@entity.units",
+                            "width": "@config.gridWidth"
+                          },
+                          {
+                            "path": "@entity.validMoves",
+                            "type": "waypoint-marker",
+                            "waypoints": "@entity.waypoints"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "hudBackgroundAsset": "@config.hudBackgroundAsset",
+                      "overlay": [
+                        "if",
+                        [
+                          "!=",
+                          "@entity.result",
+                          "none"
+                        ],
+                        {
+                          "options": [],
+                          "subtitle": [
+                            "if",
+                            [
+                              "==",
+                              "@entity.result",
+                              "victory"
+                            ],
+                            "The realm is secured",
+                            "Your heroes have fallen"
+                          ],
+                          "title": [
+                            "if",
+                            [
+                              "==",
+                              "@entity.result",
+                              "victory"
+                            ],
+                            "VICTORY",
+                            "DEFEAT"
+                          ],
+                          "type": "game-menu"
+                        },
+                        null
+                      ],
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedHeroId",
+                    "@payload.unitId"
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    [
+                      "array/map",
+                      [
+                        "array/filter",
+                        "@entity.tiles",
+                        [
+                          "fn",
+                          "t",
+                          [
+                            "and",
+                            [
+                              "grid/in-bounds",
+                              {
+                                "x": [
+                                  "object/get",
+                                  "@t",
+                                  "x"
+                                ],
+                                "y": [
+                                  "object/get",
+                                  "@t",
+                                  "y"
+                                ]
+                              },
+                              "@config.gridWidth",
+                              "@config.gridHeight"
+                            ],
+                            [
+                              "and",
+                              [
+                                "<=",
+                                [
+                                  "grid/manhattan-distance",
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/find",
+                                      "@entity.units",
+                                      [
+                                        "fn",
+                                        "u",
+                                        [
+                                          "==",
+                                          "@u.id",
+                                          "@payload.unitId"
+                                        ]
+                                      ]
+                                    ],
+                                    "position"
+                                  ],
+                                  {
+                                    "x": [
+                                      "object/get",
+                                      "@t",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@t",
+                                      "y"
+                                    ]
+                                  }
+                                ],
+                                "@config.movementRange"
+                              ],
+                              [
+                                "and",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    "@t",
+                                    "passable"
+                                  ],
+                                  true
+                                ],
+                                [
+                                  "==",
+                                  [
+                                    "array/len",
+                                    [
+                                      "array/filter",
+                                      "@entity.units",
+                                      [
+                                        "fn",
+                                        "u",
+                                        [
+                                          "and",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              [
+                                                "object/get",
+                                                "@u",
+                                                "position"
+                                              ],
+                                              "x"
+                                            ],
+                                            [
+                                              "object/get",
+                                              "@t",
+                                              "x"
+                                            ]
+                                          ],
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              [
+                                                "object/get",
+                                                "@u",
+                                                "position"
+                                              ],
+                                              "y"
+                                            ],
+                                            [
+                                              "object/get",
+                                              "@t",
+                                              "y"
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  0.0
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "t",
+                        {
+                          "x": [
+                            "object/get",
+                            "@t",
+                            "x"
+                          ],
+                          "y": [
+                            "object/get",
+                            "@t",
+                            "y"
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.waypoints",
+                    []
+                  ]
+                ],
+                "event": "HERO_SELECT",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "==",
+                    [
+                      "object/get",
+                      [
+                        "array/find",
+                        "@entity.units",
+                        [
+                          "fn",
+                          "u",
+                          [
+                            "==",
+                            "@u.id",
+                            "@payload.unitId"
+                          ]
+                        ]
+                      ],
+                      "team"
+                    ],
+                    "player"
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "MOVE",
+                    {
+                      "unitId": "@entity.selectedHeroId",
+                      "x": "@payload.x",
+                      "y": "@payload.y"
+                    }
+                  ],
+                  [
+                    "if",
+                    [
+                      "==",
+                      [
+                        "object/get",
+                        [
+                          "array/find",
+                          "@config.features",
+                          [
+                            "fn",
+                            "f",
+                            [
+                              "and",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "f",
+                                  "x"
+                                ],
+                                "@payload.x"
+                              ],
+                              [
+                                "and",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    "f",
+                                    "y"
+                                  ],
+                                  "@payload.y"
+                                ],
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    "f",
+                                    "type"
+                                  ],
+                                  "gold_mine"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        "type"
+                      ],
+                      "gold_mine"
+                    ],
+                    [
+                      "emit",
+                      "MINE_HIT",
+                      {
+                        "id": ""
+                      }
+                    ],
+                    null
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedHeroId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ]
+                ],
+                "event": "HERO_MOVE",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "and",
+                    [
+                      "!=",
+                      "@entity.selectedHeroId",
+                      ""
+                    ],
+                    [
+                      "and",
+                      [
+                        "grid/in-bounds",
+                        {
+                          "x": "@payload.x",
+                          "y": "@payload.y"
+                        },
+                        "@config.gridWidth",
+                        "@config.gridHeight"
+                      ],
+                      [
+                        "and",
+                        [
+                          "<=",
+                          [
+                            "grid/manhattan-distance",
+                            [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@entity.selectedHeroId"
+                                  ]
+                                ]
+                              ],
+                              "position"
+                            ],
+                            {
+                              "x": "@payload.x",
+                              "y": "@payload.y"
+                            }
+                          ],
+                          "@config.movementRange"
+                        ],
+                        [
+                          "and",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.tiles",
+                                [
+                                  "fn",
+                                  "t",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "@t",
+                                        "x"
+                                      ],
+                                      "@payload.x"
+                                    ],
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "@t",
+                                        "y"
+                                      ],
+                                      "@payload.y"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              "passable"
+                            ],
+                            true
+                          ],
+                          [
+                            "==",
+                            [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "position"
+                                        ],
+                                        "x"
+                                      ],
+                                      "@payload.x"
+                                    ],
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "position"
+                                        ],
+                                        "y"
+                                      ],
+                                      "@payload.y"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ],
+                            0.0
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "ATTACK",
+                    {
+                      "targetId": "@payload.unitId"
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    [
+                      "array/append",
+                      "@entity.effects",
+                      {
+                        "key": "slash",
+                        "ttl": 4.0,
+                        "x": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.unitId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "x"
+                        ],
+                        "y": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.unitId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "y"
+                        ]
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedHeroId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.turn",
+                    [
+                      "+",
+                      "@entity.turn",
+                      1.0
+                    ]
+                  ]
+                ],
+                "event": "HERO_SELECT",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "and",
+                    [
+                      "!=",
+                      "@entity.selectedHeroId",
+                      ""
+                    ],
+                    [
+                      "and",
+                      [
+                        "==",
+                        [
+                          "object/get",
+                          [
+                            "array/find",
+                            "@entity.units",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "==",
+                                "@u.id",
+                                "@payload.unitId"
+                              ]
+                            ]
+                          ],
+                          "team"
+                        ],
+                        "enemy"
+                      ],
+                      [
+                        "==",
+                        [
+                          "grid/manhattan-distance",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@entity.selectedHeroId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.unitId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ]
+                        ],
+                        1.0
+                      ]
+                    ]
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.turn",
+                    [
+                      "+",
+                      "@entity.turn",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedHeroId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ]
+                ],
+                "event": "ADVANCE_TURN",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "addons": {
+                      "children": [
+                        "array/concat",
+                        [
+                          {
+                            "action": "ADVANCE_TURN",
+                            "iconAsset": "@config.travelIconAsset",
+                            "label": "Pass Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "@config.extraAddons"
+                      ],
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    "backgroundAsset": "@config.backgroundAsset",
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "projection": "isometric",
+                        "scale": "@config.scale",
+                        "selectedUnitId": "@entity.selectedHeroId",
+                        "showMinimap": true,
+                        "tileClickEvent": "HERO_MOVE",
+                        "tiles": "@entity.tiles",
+                        "type": "canvas-2d",
+                        "unitClickEvent": "HERO_SELECT",
+                        "units": "@entity.units",
+                        "validMoves": "@entity.validMoves"
+                      }
+                    ],
+                    "fontFamily": "@config.fontFamily",
+                    "hud": {
+                      "children": [
+                        {
+                          "stats": [
+                            "array/concat",
+                            [
+                              {
+                                "iconUrl": "@config.regionIconAsset",
+                                "label": "Region",
+                                "value": "@config.region"
+                              },
+                              {
+                                "iconUrl": "@config.turnIconAsset",
+                                "label": "Turn",
+                                "value": "@entity.turn"
+                              },
+                              {
+                                "iconUrl": "@config.goldIconAsset",
+                                "label": "Gold",
+                                "value": "@entity.gold"
+                              }
+                            ],
+                            "@config.extraStats"
+                          ],
+                          "type": "game-hud"
+                        },
+                        {
+                          "height": "@config.gridHeight",
+                          "tiles": "@entity.tiles",
+                          "type": "mini-map",
+                          "units": "@entity.units",
+                          "width": "@config.gridWidth"
+                        },
+                        {
+                          "path": "@entity.validMoves",
+                          "type": "waypoint-marker",
+                          "waypoints": "@entity.waypoints"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
+                    },
+                    "hudBackgroundAsset": "@config.hudBackgroundAsset",
+                    "overlay": [
+                      "if",
+                      [
+                        "!=",
+                        "@entity.result",
+                        "none"
+                      ],
+                      {
+                        "options": [],
+                        "subtitle": [
+                          "if",
+                          [
+                            "==",
+                            "@entity.result",
+                            "victory"
+                          ],
+                          "The realm is secured",
+                          "Your heroes have fallen"
+                        ],
+                        "title": [
+                          "if",
+                          [
+                            "==",
+                            "@entity.result",
+                            "victory"
+                          ],
+                          "VICTORY",
+                          "DEFEAT"
+                        ],
+                        "type": "game-menu"
+                      },
+                      null
+                    ],
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "renderTick"
+            }
+          ]
+        }
+      ],
+      "uses": [
+        {
+          "as": "Tactics",
+          "from": "std/behaviors/std-grid-tactics"
+        },
+        {
+          "as": "Round",
+          "from": "std/behaviors/std-round-flow"
+        },
+        {
+          "as": "Gold",
+          "from": "std/behaviors/std-gold"
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

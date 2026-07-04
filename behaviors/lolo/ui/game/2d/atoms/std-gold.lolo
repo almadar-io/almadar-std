@@ -1,0 +1,54 @@
+app std-gold "1.0.0"
+"Headless gold-economy mechanic: the SOLE writer of gold. Listens a mine-hit signal and adds a fixed yield; emits GOLD_CHANGED. Renders nothing."
+orbital GoldOrbital {
+  entity GoldData [runtime, shared] {
+    id : string!
+    gold : number = 0
+  }
+
+  trait GoldMine -> @rebindable GoldData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.gold @config.startGold)
+
+      MINE_HIT -> active when @config.running
+        (set @entity.gold (+ @entity.gold @config.yieldAmount))
+        (emit GOLD_CHANGED { gold: @entity.gold })
+
+      RESTART -> active
+        (set @entity.gold @config.startGold)
+    }
+
+    emits {
+      GOLD_CHANGED -> external {
+        gold : number!
+      }
+        @description "Current gold total after a mine-hit; a HUD stat listens to display it"
+        @tier "domain"
+    }
+
+    listens {
+      MINE_HIT { id : string }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, mine-hit signals add gold; toggle to freeze"
+        @tier "domain"
+      startGold : number = 0
+        @label "Start Gold"
+        @description "Gold set on INIT/RESTART"
+        @tier "domain"
+      yieldAmount : number = 25
+        @label "Yield Amount"
+        @description "Gold added per mine-hit signal"
+        @tier "domain"
+    }
+  }
+
+  page "/gold" as GoldPage -> GoldMine
+}
