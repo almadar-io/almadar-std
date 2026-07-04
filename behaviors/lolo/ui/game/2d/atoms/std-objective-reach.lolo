@@ -22,6 +22,7 @@ orbital ObjectiveReachOrbital {
     assetUrl : Asset
     color : string
     elevation : number
+    done : boolean
   }
   type Fx = {
     id : string!
@@ -50,11 +51,15 @@ orbital ObjectiveReachOrbital {
         (set @entity.objectivesLeft (array/len (array/filter @config.features (fn f (== (object/get @f type) @config.targetType)))))
 
       HERO_STEPPED -> active when @config.running
-        (set @entity.score (if (> (array/len (array/filter @entity.features (fn f (and (== (object/get @f type) @config.targetType) (and (== (object/get @f x) @payload.x) (== (object/get @f y) @payload.z)))))) 0) (+ @entity.score @config.pointsPerTarget) @entity.score))
-        (set @entity.objectivesLeft (if (> (array/len (array/filter @entity.features (fn f (and (== (object/get @f type) @config.targetType) (and (== (object/get @f x) @payload.x) (== (object/get @f y) @payload.z)))))) 0) (- @entity.objectivesLeft 1) @entity.objectivesLeft))
-        (emit BURST { particles: (array/map (array/filter @entity.features (fn f (and (== (object/get @f type) @config.targetType) (and (== (object/get @f x) @payload.x) (== (object/get @f y) @payload.z))))) (fn f { id: (str/concat "fx-obj-" (object/get @f id)), type: "pickup", x: @payload.x, z: @payload.z, message: "+1", ttl: 3 })) })
-        (set @entity.features (if (and @config.removeOnReach (> (array/len (array/filter @entity.features (fn f (and (== (object/get @f type) @config.targetType) (and (== (object/get @f x) @payload.x) (== (object/get @f y) @payload.z)))))) 0)) (array/filter @entity.features (fn f (not (and (== (object/get @f type) @config.targetType) (and (== (object/get @f x) @payload.x) (== (object/get @f y) @payload.z)))))) @entity.features))
-        (emit PROGRESS { objectivesLeft: @entity.objectivesLeft, movesLeft: @payload.movesLeft })
+        (let ((matched (array/filter @entity.features (fn f (and (== (object/get @f type) @config.targetType) (and (!= (object/get @f done) true) (<= (grid/manhattan-distance { x: (object/get @f x), y: (object/get @f y) } { x: @payload.x, y: @payload.z }) @config.reachRadius)))))))
+        (let ((hitCount (array/len @matched)))
+        (do
+          (set @entity.score (+ @entity.score (* @config.pointsPerTarget @hitCount)))
+          (set @entity.objectivesLeft (- @entity.objectivesLeft @hitCount))
+          (set @entity.features (if @config.removeOnReach (array/filter @entity.features (fn f (not (and (== (object/get @f type) @config.targetType) (and (!= (object/get @f done) true) (<= (grid/manhattan-distance { x: (object/get @f x), y: (object/get @f y) } { x: @payload.x, y: @payload.z }) @config.reachRadius)))))) (array/map @entity.features (fn f (if (and (== (object/get @f type) @config.targetType) (and (!= (object/get @f done) true) (<= (grid/manhattan-distance { x: (object/get @f x), y: (object/get @f y) } { x: @payload.x, y: @payload.z }) @config.reachRadius))) (object/merge @f { done: true }) @f)))))
+          (emit BURST { particles: (array/map @matched (fn f { id: (str/concat "fx-obj-" (object/get @f id)), type: "pickup", x: (object/get @f x), z: (object/get @f y), message: "+1", ttl: 3 })) })
+          (emit PROGRESS { objectivesLeft: @entity.objectivesLeft, movesLeft: @payload.movesLeft })
+        )))
 
       RESTART -> active
         (set @entity.features @config.features)
@@ -104,7 +109,11 @@ orbital ObjectiveReachOrbital {
         @tier "domain"
       removeOnReach : boolean = true
         @label "Remove On Reach"
-        @description "When true the target model is removed once reached (collect); when false it stays (visit/deliver)"
+        @description "When true the target model is removed once reached (collect); when false it is flagged done and stays (visit/deliver)"
+        @tier "domain"
+      reachRadius : number = 0
+        @label "Reach Radius"
+        @description "Manhattan distance at which a target counts as reached: 0 = step onto the tile (collect), 1 = adjacent (deliver)"
         @tier "domain"
     }
   }

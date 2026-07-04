@@ -78,6 +78,11 @@
                   "required": false,
                   "type": "string"
                 },
+                "done": {
+                  "name": "done",
+                  "required": false,
+                  "type": "boolean"
+                },
                 "elevation": {
                   "name": "elevation",
                   "required": false,
@@ -215,6 +220,11 @@
                     "required": false,
                     "type": "string"
                   },
+                  "done": {
+                    "name": "done",
+                    "required": false,
+                    "type": "boolean"
+                  },
                   "elevation": {
                     "name": "elevation",
                     "required": false,
@@ -259,9 +269,16 @@
               "tier": "domain",
               "type": "number"
             },
+            "reachRadius": {
+              "default": 0.0,
+              "description": "Manhattan distance at which a target counts as reached: 0 = step onto the tile (collect), 1 = adjacent (deliver)",
+              "label": "Reach Radius",
+              "tier": "domain",
+              "type": "number"
+            },
             "removeOnReach": {
               "default": true,
-              "description": "When true the target model is removed once reached (collect); when false it stays (visit/deliver)",
+              "description": "When true the target model is removed once reached (collect); when false it is flagged done and stays (visit/deliver)",
               "label": "Remove On Reach",
               "tier": "domain",
               "type": "boolean"
@@ -451,133 +468,10 @@
               {
                 "effects": [
                   [
-                    "set",
-                    "@entity.score",
+                    "let",
                     [
-                      "if",
                       [
-                        ">",
-                        [
-                          "array/len",
-                          [
-                            "array/filter",
-                            "@entity.features",
-                            [
-                              "fn",
-                              "f",
-                              [
-                                "and",
-                                [
-                                  "==",
-                                  [
-                                    "object/get",
-                                    "@f",
-                                    "type"
-                                  ],
-                                  "@config.targetType"
-                                ],
-                                [
-                                  "and",
-                                  [
-                                    "==",
-                                    [
-                                      "object/get",
-                                      "@f",
-                                      "x"
-                                    ],
-                                    "@payload.x"
-                                  ],
-                                  [
-                                    "==",
-                                    [
-                                      "object/get",
-                                      "@f",
-                                      "y"
-                                    ],
-                                    "@payload.z"
-                                  ]
-                                ]
-                              ]
-                            ]
-                          ]
-                        ],
-                        0.0
-                      ],
-                      [
-                        "+",
-                        "@entity.score",
-                        "@config.pointsPerTarget"
-                      ],
-                      "@entity.score"
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.objectivesLeft",
-                    [
-                      "if",
-                      [
-                        ">",
-                        [
-                          "array/len",
-                          [
-                            "array/filter",
-                            "@entity.features",
-                            [
-                              "fn",
-                              "f",
-                              [
-                                "and",
-                                [
-                                  "==",
-                                  [
-                                    "object/get",
-                                    "@f",
-                                    "type"
-                                  ],
-                                  "@config.targetType"
-                                ],
-                                [
-                                  "and",
-                                  [
-                                    "==",
-                                    [
-                                      "object/get",
-                                      "@f",
-                                      "x"
-                                    ],
-                                    "@payload.x"
-                                  ],
-                                  [
-                                    "==",
-                                    [
-                                      "object/get",
-                                      "@f",
-                                      "y"
-                                    ],
-                                    "@payload.z"
-                                  ]
-                                ]
-                              ]
-                            ]
-                          ]
-                        ],
-                        0.0
-                      ],
-                      [
-                        "-",
-                        "@entity.objectivesLeft",
-                        1.0
-                      ],
-                      "@entity.objectivesLeft"
-                    ]
-                  ],
-                  [
-                    "emit",
-                    "BURST",
-                    {
-                      "particles": [
-                        "array/map",
+                        "matched",
                         [
                           "array/filter",
                           "@entity.features",
@@ -598,62 +492,84 @@
                               [
                                 "and",
                                 [
-                                  "==",
+                                  "!=",
                                   [
                                     "object/get",
                                     "@f",
-                                    "x"
+                                    "done"
                                   ],
-                                  "@payload.x"
+                                  true
                                 ],
                                 [
-                                  "==",
+                                  "<=",
                                   [
-                                    "object/get",
-                                    "@f",
-                                    "y"
+                                    "grid/manhattan-distance",
+                                    {
+                                      "x": [
+                                        "object/get",
+                                        "@f",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@f",
+                                        "y"
+                                      ]
+                                    },
+                                    {
+                                      "x": "@payload.x",
+                                      "y": "@payload.z"
+                                    }
                                   ],
-                                  "@payload.z"
+                                  "@config.reachRadius"
                                 ]
                               ]
                             ]
                           ]
-                        ],
-                        [
-                          "fn",
-                          "f",
-                          {
-                            "id": [
-                              "str/concat",
-                              "fx-obj-",
-                              [
-                                "object/get",
-                                "@f",
-                                "id"
-                              ]
-                            ],
-                            "message": "+1",
-                            "ttl": 3.0,
-                            "type": "pickup",
-                            "x": "@payload.x",
-                            "z": "@payload.z"
-                          }
                         ]
                       ]
-                    }
-                  ],
-                  [
-                    "set",
-                    "@entity.features",
+                    ],
                     [
-                      "if",
+                      "let",
                       [
-                        "and",
-                        "@config.removeOnReach",
                         [
-                          ">",
+                          "hitCount",
                           [
                             "array/len",
+                            "@matched"
+                          ]
+                        ]
+                      ],
+                      [
+                        "do",
+                        [
+                          "set",
+                          "@entity.score",
+                          [
+                            "+",
+                            "@entity.score",
+                            [
+                              "*",
+                              "@config.pointsPerTarget",
+                              "@hitCount"
+                            ]
+                          ]
+                        ],
+                        [
+                          "set",
+                          "@entity.objectivesLeft",
+                          [
+                            "-",
+                            "@entity.objectivesLeft",
+                            "@hitCount"
+                          ]
+                        ],
+                        [
+                          "set",
+                          "@entity.features",
+                          [
+                            "if",
+                            "@config.removeOnReach",
                             [
                               "array/filter",
                               "@entity.features",
@@ -661,16 +577,7 @@
                                 "fn",
                                 "f",
                                 [
-                                  "and",
-                                  [
-                                    "==",
-                                    [
-                                      "object/get",
-                                      "@f",
-                                      "type"
-                                    ],
-                                    "@config.targetType"
-                                  ],
+                                  "not",
                                   [
                                     "and",
                                     [
@@ -678,81 +585,165 @@
                                       [
                                         "object/get",
                                         "@f",
-                                        "x"
+                                        "type"
                                       ],
-                                      "@payload.x"
+                                      "@config.targetType"
                                     ],
+                                    [
+                                      "and",
+                                      [
+                                        "!=",
+                                        [
+                                          "object/get",
+                                          "@f",
+                                          "done"
+                                        ],
+                                        true
+                                      ],
+                                      [
+                                        "<=",
+                                        [
+                                          "grid/manhattan-distance",
+                                          {
+                                            "x": [
+                                              "object/get",
+                                              "@f",
+                                              "x"
+                                            ],
+                                            "y": [
+                                              "object/get",
+                                              "@f",
+                                              "y"
+                                            ]
+                                          },
+                                          {
+                                            "x": "@payload.x",
+                                            "y": "@payload.z"
+                                          }
+                                        ],
+                                        "@config.reachRadius"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "array/map",
+                              "@entity.features",
+                              [
+                                "fn",
+                                "f",
+                                [
+                                  "if",
+                                  [
+                                    "and",
                                     [
                                       "==",
                                       [
                                         "object/get",
                                         "@f",
-                                        "y"
+                                        "type"
                                       ],
-                                      "@payload.z"
+                                      "@config.targetType"
+                                    ],
+                                    [
+                                      "and",
+                                      [
+                                        "!=",
+                                        [
+                                          "object/get",
+                                          "@f",
+                                          "done"
+                                        ],
+                                        true
+                                      ],
+                                      [
+                                        "<=",
+                                        [
+                                          "grid/manhattan-distance",
+                                          {
+                                            "x": [
+                                              "object/get",
+                                              "@f",
+                                              "x"
+                                            ],
+                                            "y": [
+                                              "object/get",
+                                              "@f",
+                                              "y"
+                                            ]
+                                          },
+                                          {
+                                            "x": "@payload.x",
+                                            "y": "@payload.z"
+                                          }
+                                        ],
+                                        "@config.reachRadius"
+                                      ]
                                     ]
-                                  ]
-                                ]
-                              ]
-                            ]
-                          ],
-                          0.0
-                        ]
-                      ],
-                      [
-                        "array/filter",
-                        "@entity.features",
-                        [
-                          "fn",
-                          "f",
-                          [
-                            "not",
-                            [
-                              "and",
-                              [
-                                "==",
-                                [
-                                  "object/get",
-                                  "@f",
-                                  "type"
-                                ],
-                                "@config.targetType"
-                              ],
-                              [
-                                "and",
-                                [
-                                  "==",
-                                  [
-                                    "object/get",
-                                    "@f",
-                                    "x"
                                   ],
-                                  "@payload.x"
-                                ],
-                                [
-                                  "==",
                                   [
-                                    "object/get",
+                                    "object/merge",
                                     "@f",
-                                    "y"
+                                    {
+                                      "done": true
+                                    }
                                   ],
-                                  "@payload.z"
+                                  "@f"
                                 ]
                               ]
                             ]
                           ]
+                        ],
+                        [
+                          "emit",
+                          "BURST",
+                          {
+                            "particles": [
+                              "array/map",
+                              "@matched",
+                              [
+                                "fn",
+                                "f",
+                                {
+                                  "id": [
+                                    "str/concat",
+                                    "fx-obj-",
+                                    [
+                                      "object/get",
+                                      "@f",
+                                      "id"
+                                    ]
+                                  ],
+                                  "message": "+1",
+                                  "ttl": 3.0,
+                                  "type": "pickup",
+                                  "x": [
+                                    "object/get",
+                                    "@f",
+                                    "x"
+                                  ],
+                                  "z": [
+                                    "object/get",
+                                    "@f",
+                                    "y"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ],
+                        [
+                          "emit",
+                          "PROGRESS",
+                          {
+                            "movesLeft": "@payload.movesLeft",
+                            "objectivesLeft": "@entity.objectivesLeft"
+                          }
                         ]
-                      ],
-                      "@entity.features"
+                      ]
                     ]
-                  ],
-                  [
-                    "emit",
-                    "PROGRESS",
-                    {
-                      "movesLeft": "@payload.movesLeft",
-                      "objectivesLeft": "@entity.objectivesLeft"
-                    }
                   ]
                 ],
                 "event": "HERO_STEPPED",

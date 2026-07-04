@@ -899,6 +899,13 @@
               "tier": "presentation",
               "type": "number"
             },
+            "scoreLabel": {
+              "default": "Score",
+              "description": "HUD label for the score/progress counter (e.g. Deliveries counting up).",
+              "label": "Score Label",
+              "tier": "presentation",
+              "type": "string"
+            },
             "unitScale": {
               "default": 1.0,
               "description": "Unit draw-size multiplier.",
@@ -1202,7 +1209,7 @@
                           "array/concat",
                           [
                             {
-                              "label": "Score",
+                              "label": "@config.scoreLabel",
                               "value": "@entity.score"
                             },
                             {
@@ -1527,48 +1534,88 @@
                           "@config.movementRange"
                         ],
                         [
-                          "==",
+                          "and",
                           [
-                            "array/len",
+                            "==",
                             [
-                              "array/filter",
-                              "@entity.units",
+                              "object/get",
                               [
-                                "fn",
-                                "u",
+                                "array/find",
+                                "@entity.tiles",
                                 [
-                                  "and",
+                                  "fn",
+                                  "t",
                                   [
-                                    "==",
+                                    "and",
                                     [
-                                      "object/get",
+                                      "==",
                                       [
                                         "object/get",
-                                        "@u",
-                                        "position"
+                                        "@t",
+                                        "x"
                                       ],
-                                      "x"
+                                      "@payload.x"
                                     ],
-                                    "@payload.x"
-                                  ],
-                                  [
-                                    "==",
                                     [
-                                      "object/get",
+                                      "==",
                                       [
                                         "object/get",
-                                        "@u",
-                                        "position"
+                                        "@t",
+                                        "y"
                                       ],
-                                      "y"
+                                      "@payload.z"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              "passable"
+                            ],
+                            true
+                          ],
+                          [
+                            "==",
+                            [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "position"
+                                        ],
+                                        "x"
+                                      ],
+                                      "@payload.x"
                                     ],
-                                    "@payload.z"
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "position"
+                                        ],
+                                        "y"
+                                      ],
+                                      "@payload.z"
+                                    ]
                                   ]
                                 ]
                               ]
-                            ]
-                          ],
-                          0.0
+                            ],
+                            0.0
+                          ]
                         ]
                       ]
                     ]
@@ -1684,7 +1731,7 @@
                         "array/concat",
                         [
                           {
-                            "label": "Score",
+                            "label": "@config.scoreLabel",
                             "value": "@entity.score"
                           },
                           {
