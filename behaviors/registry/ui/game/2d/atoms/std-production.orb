@@ -1,0 +1,332 @@
+{
+  "description": "Headless unit-production mechanic: accrues productionPoints each turn (AI_TURN) and, on an affordable PRODUCE, emits a SPAWN intent for the grid-tactics authority to place a new unit. Owns only productionPoints (+ its spawn counter); never writes units directly.",
+  "name": "std-production",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "productionPoints",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "spawnCount",
+            "type": "number"
+          }
+        ],
+        "name": "ProductionState",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "ProductionOrbital",
+      "pages": [
+        {
+          "name": "ProductionPage",
+          "path": "/production",
+          "traits": [
+            {
+              "ref": "Producer"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "pointsPerTurn": {
+              "default": 2.0,
+              "description": "Points accrued each AI_TURN (turn advance).",
+              "label": "Points Per Turn",
+              "tier": "domain",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true, turns accrue points and PRODUCE spends them; toggle to freeze production.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "spawnCost": {
+              "default": 3.0,
+              "description": "Points spent per produced unit; PRODUCE only fires when affordable.",
+              "label": "Spawn Cost",
+              "tier": "domain",
+              "type": "number"
+            },
+            "spawnHealth": {
+              "default": 3.0,
+              "description": "Health/maxHealth of produced units.",
+              "label": "Spawn Health",
+              "tier": "domain",
+              "type": "number"
+            },
+            "spawnTeam": {
+              "default": "player",
+              "description": "Team of produced units.",
+              "label": "Spawn Team",
+              "tier": "domain",
+              "type": "string"
+            },
+            "spawnUnitType": {
+              "default": "unit",
+              "description": "unitType of produced units (drives the asset-manifest sprite).",
+              "label": "Spawn Unit Type",
+              "tier": "domain",
+              "type": "string"
+            },
+            "spawnX": {
+              "default": 0.0,
+              "description": "Grid column where produced units appear (rally point).",
+              "label": "Spawn X",
+              "tier": "domain",
+              "type": "number"
+            },
+            "spawnY": {
+              "default": 0.0,
+              "description": "Grid row where produced units appear (rally point).",
+              "label": "Spawn Y",
+              "tier": "domain",
+              "type": "number"
+            },
+            "startPoints": {
+              "default": 0.0,
+              "description": "Production points set on INIT.",
+              "label": "Start Points",
+              "tier": "domain",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "New-unit intent applied by the grid-tactics authority (the sole units writer)",
+              "event": "SPAWN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "team",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "health",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "maxHealth",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "unitType",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "productionPoints",
+              "spawnCount"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ProductionState",
+          "name": "Producer",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "AI_TURN",
+                "name": "Ai Turn",
+                "payloadSchema": [
+                  {
+                    "name": "turn",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "PRODUCE",
+                "name": "Produce",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "New-unit intent applied by the grid-tactics authority (the sole units writer)",
+                "key": "SPAWN",
+                "name": "Spawn",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "team",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "health",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "maxHealth",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "unitType",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.productionPoints",
+                    "@config.startPoints"
+                  ],
+                  [
+                    "set",
+                    "@entity.spawnCount",
+                    0.0
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.productionPoints",
+                    [
+                      "+",
+                      "@entity.productionPoints",
+                      "@config.pointsPerTurn"
+                    ]
+                  ]
+                ],
+                "event": "AI_TURN",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "SPAWN",
+                    {
+                      "health": "@config.spawnHealth",
+                      "id": [
+                        "str/concat",
+                        "prod-u-",
+                        "@entity.spawnCount"
+                      ],
+                      "maxHealth": "@config.spawnHealth",
+                      "team": "@config.spawnTeam",
+                      "unitType": "@config.spawnUnitType",
+                      "x": "@config.spawnX",
+                      "y": "@config.spawnY"
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.spawnCount",
+                    [
+                      "+",
+                      "@entity.spawnCount",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.productionPoints",
+                    [
+                      "-",
+                      "@entity.productionPoints",
+                      "@config.spawnCost"
+                    ]
+                  ]
+                ],
+                "event": "PRODUCE",
+                "from": "active",
+                "guard": [
+                  "and",
+                  "@config.running",
+                  [
+                    ">=",
+                    "@entity.productionPoints",
+                    "@config.spawnCost"
+                  ]
+                ],
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

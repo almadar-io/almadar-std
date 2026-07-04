@@ -1,0 +1,85 @@
+app std-production "1.0.0"
+"Headless unit-production mechanic: accrues productionPoints each turn (AI_TURN) and, on an affordable PRODUCE, emits a SPAWN intent for the grid-tactics authority to place a new unit. Owns only productionPoints (+ its spawn counter); never writes units directly."
+orbital ProductionOrbital {
+  entity ProductionState [runtime, shared] {
+    id : string!
+    productionPoints : number = 0
+    spawnCount : number = 0
+  }
+
+  trait Producer -> @rebindable ProductionState [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.productionPoints @config.startPoints)
+        (set @entity.spawnCount 0)
+      AI_TURN -> active when @config.running
+        (set @entity.productionPoints (+ @entity.productionPoints @config.pointsPerTurn))
+      PRODUCE -> active when (and @config.running (>= @entity.productionPoints @config.spawnCost))
+        (emit SPAWN { id: (str/concat "prod-u-" @entity.spawnCount), x: @config.spawnX, y: @config.spawnY, team: @config.spawnTeam, health: @config.spawnHealth, maxHealth: @config.spawnHealth, unitType: @config.spawnUnitType })
+        (set @entity.spawnCount (+ @entity.spawnCount 1))
+        (set @entity.productionPoints (- @entity.productionPoints @config.spawnCost))
+    }
+
+    emits {
+      SPAWN -> external {
+        id : string!
+        x : number!
+        y : number!
+        team : string!
+        health : number!
+        maxHealth : number!
+        unitType : string!
+      }
+        @description "New-unit intent applied by the grid-tactics authority (the sole units writer)"
+        @tier "domain"
+    }
+
+    listens {
+      AI_TURN { turn : number }
+      PRODUCE { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, turns accrue points and PRODUCE spends them; toggle to freeze production."
+        @tier "domain"
+      startPoints : number = 0
+        @label "Start Points"
+        @description "Production points set on INIT."
+        @tier "domain"
+      pointsPerTurn : number = 2
+        @label "Points Per Turn"
+        @description "Points accrued each AI_TURN (turn advance)."
+        @tier "domain"
+      spawnCost : number = 3
+        @label "Spawn Cost"
+        @description "Points spent per produced unit; PRODUCE only fires when affordable."
+        @tier "domain"
+      spawnX : number = 0
+        @label "Spawn X"
+        @description "Grid column where produced units appear (rally point)."
+        @tier "domain"
+      spawnY : number = 0
+        @label "Spawn Y"
+        @description "Grid row where produced units appear (rally point)."
+        @tier "domain"
+      spawnTeam : string = "player"
+        @label "Spawn Team"
+        @description "Team of produced units."
+        @tier "domain"
+      spawnUnitType : string = "unit"
+        @label "Spawn Unit Type"
+        @description "unitType of produced units (drives the asset-manifest sprite)."
+        @tier "domain"
+      spawnHealth : number = 3
+        @label "Spawn Health"
+        @description "Health/maxHealth of produced units."
+        @tier "domain"
+    }
+  }
+
+  page "/production" as ProductionPage -> Producer
+}

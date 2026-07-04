@@ -854,6 +854,60 @@
               "tier": "presentation",
               "type": "Asset"
             },
+            "extraAddons": {
+              "default": [],
+              "description": "Board-specific action buttons appended after End Turn/Cancel (e.g. Produce). The action names events listened by composed mechanic atoms.",
+              "items": {
+                "properties": {
+                  "action": {
+                    "name": "action",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Extra Addon Buttons",
+              "tier": "presentation",
+              "type": "[HudButton]"
+            },
+            "extraStats": {
+              "default": [],
+              "description": "Board-specific HUD stats appended after Result/Phase/Turn/Score (e.g. production, resources). Values may bind @entity fields owned by composed mechanic atoms.",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Extra HUD Stats",
+              "tier": "presentation",
+              "type": "[HudStat]"
+            },
             "features": {
               "default": [],
               "description": "Decorative environment features drawn on the board.",
@@ -1316,18 +1370,22 @@
                     {
                       "addons": {
                         "children": [
-                          {
-                            "action": "END_TURN",
-                            "label": "End Turn",
-                            "type": "button",
-                            "variant": "primary"
-                          },
-                          {
-                            "action": "CANCEL",
-                            "label": "Cancel",
-                            "type": "button",
-                            "variant": "secondary"
-                          }
+                          "array/concat",
+                          [
+                            {
+                              "action": "END_TURN",
+                              "label": "End Turn",
+                              "type": "button",
+                              "variant": "primary"
+                            },
+                            {
+                              "action": "CANCEL",
+                              "label": "Cancel",
+                              "type": "button",
+                              "variant": "secondary"
+                            }
+                          ],
+                          "@config.extraAddons"
                         ],
                         "direction": "vertical",
                         "gap": "sm",
@@ -1353,22 +1411,26 @@
                       ],
                       "hud": {
                         "stats": [
-                          {
-                            "label": "Result",
-                            "value": "@entity.result"
-                          },
-                          {
-                            "label": "Phase",
-                            "value": "@entity.uiPhase"
-                          },
-                          {
-                            "label": "Turn",
-                            "value": "@entity.turn"
-                          },
-                          {
-                            "label": "Score",
-                            "value": "@entity.score"
-                          }
+                          "array/concat",
+                          [
+                            {
+                              "label": "Result",
+                              "value": "@entity.result"
+                            },
+                            {
+                              "label": "Phase",
+                              "value": "@entity.uiPhase"
+                            },
+                            {
+                              "label": "Turn",
+                              "value": "@entity.turn"
+                            },
+                            {
+                              "label": "Score",
+                              "value": "@entity.score"
+                            }
+                          ],
+                          "@config.extraStats"
                         ],
                         "type": "game-hud"
                       },
@@ -1926,18 +1988,22 @@
                   {
                     "addons": {
                       "children": [
-                        {
-                          "action": "END_TURN",
-                          "label": "End Turn",
-                          "type": "button",
-                          "variant": "primary"
-                        },
-                        {
-                          "action": "CANCEL",
-                          "label": "Cancel",
-                          "type": "button",
-                          "variant": "secondary"
-                        }
+                        "array/concat",
+                        [
+                          {
+                            "action": "END_TURN",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "primary"
+                          },
+                          {
+                            "action": "CANCEL",
+                            "label": "Cancel",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "@config.extraAddons"
                       ],
                       "direction": "vertical",
                       "gap": "sm",
@@ -1963,22 +2029,26 @@
                     ],
                     "hud": {
                       "stats": [
-                        {
-                          "label": "Result",
-                          "value": "@entity.result"
-                        },
-                        {
-                          "label": "Phase",
-                          "value": "@entity.uiPhase"
-                        },
-                        {
-                          "label": "Turn",
-                          "value": "@entity.turn"
-                        },
-                        {
-                          "label": "Score",
-                          "value": "@entity.score"
-                        }
+                        "array/concat",
+                        [
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          },
+                          {
+                            "label": "Phase",
+                            "value": "@entity.uiPhase"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          }
+                        ],
+                        "@config.extraStats"
                       ],
                       "type": "game-hud"
                     },

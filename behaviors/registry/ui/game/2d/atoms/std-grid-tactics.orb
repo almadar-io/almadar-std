@@ -1,0 +1,1667 @@
+{
+  "description": "Headless grid-tactics unit-authority: the SOLE writer of units. Applies MOVE/ATTACK/SPAWN intents from any source (player, AI, or production) and runs the enemy AI_TURN pipeline, emitting BURST hit-particles and UNITS_CHANGED survivor counts. Renders nothing.",
+  "name": "std-grid-tactics",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "units",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "tiles",
+            "type": "array"
+          }
+        ],
+        "name": "TacticsState",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "GridTacticsOrbital",
+      "pages": [
+        {
+          "name": "GridTacticsPage",
+          "path": "/grid-tactics",
+          "traits": [
+            {
+              "ref": "GridTactics"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "attackDamage": {
+              "default": 1.0,
+              "description": "Health removed from a target per ATTACK intent",
+              "label": "Attack Damage",
+              "tier": "domain",
+              "type": "number"
+            },
+            "gridHeight": {
+              "default": 12.0,
+              "description": "Grid row count clamping move + AI bounds",
+              "label": "Grid Height",
+              "tier": "domain",
+              "type": "number"
+            },
+            "gridWidth": {
+              "default": 12.0,
+              "description": "Grid column count clamping move + AI bounds",
+              "label": "Grid Width",
+              "tier": "domain",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true, incoming MOVE/ATTACK/AI_TURN intents are applied; toggle to freeze the board",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "tiles": {
+              "default": [],
+              "description": "Grid tiles used for passability checks during moves and AI stepping",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "passable": {
+                    "name": "passable",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Tiles",
+              "tier": "domain",
+              "type": "[Tile]"
+            },
+            "units": {
+              "default": [],
+              "description": "Seed unit roster (players and enemies) present before the first intent",
+              "items": {
+                "properties": {
+                  "health": {
+                    "name": "health",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "maxHealth": {
+                    "name": "maxHealth",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "position": {
+                    "name": "position",
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "team": {
+                    "name": "team",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "unitType": {
+                    "name": "unitType",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "z": {
+                    "name": "z",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Initial Units",
+              "tier": "domain",
+              "type": "[Unit]"
+            }
+          },
+          "emits": [
+            {
+              "description": "Hit particles produced by an attack or AI strike; a fx-particles listener spawns them",
+              "event": "BURST",
+              "payloadSchema": [
+                {
+                  "name": "particles",
+                  "type": "[Fx]"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Live team survivor counts after this intent resolved; a round-flow listener decides win/lose",
+              "event": "UNITS_CHANGED",
+              "payloadSchema": [
+                {
+                  "name": "playersAlive",
+                  "type": "number"
+                },
+                {
+                  "name": "enemiesAlive",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "tiles",
+              "units"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "TacticsState",
+          "name": "GridTactics",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MOVE",
+                "name": "Move",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "ATTACK",
+                "name": "Attack",
+                "payloadSchema": [
+                  {
+                    "name": "targetId",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "SPAWN",
+                "name": "Spawn",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "type": "number"
+                  },
+                  {
+                    "name": "team",
+                    "type": "string"
+                  },
+                  {
+                    "name": "health",
+                    "type": "number"
+                  },
+                  {
+                    "name": "maxHealth",
+                    "type": "number"
+                  },
+                  {
+                    "name": "unitType",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "AI_TURN",
+                "name": "Ai Turn",
+                "payloadSchema": [
+                  {
+                    "name": "turn",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "description": "Hit particles produced by an attack or AI strike; a fx-particles listener spawns them",
+                "key": "BURST",
+                "name": "Burst",
+                "payloadSchema": [
+                  {
+                    "name": "particles",
+                    "type": "[Fx]"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Live team survivor counts after this intent resolved; a round-flow listener decides win/lose",
+                "key": "UNITS_CHANGED",
+                "name": "Units Changed",
+                "payloadSchema": [
+                  {
+                    "name": "playersAlive",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enemiesAlive",
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.tiles",
+                    [
+                      "if",
+                      [
+                        ">",
+                        [
+                          "array/len",
+                          "@config.tiles"
+                        ],
+                        0.0
+                      ],
+                      "@config.tiles",
+                      [
+                        "array/flatten",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            0.0,
+                            "@config.gridHeight"
+                          ],
+                          [
+                            "fn",
+                            "gy",
+                            [
+                              "array/map",
+                              [
+                                "array/range",
+                                0.0,
+                                "@config.gridWidth"
+                              ],
+                              [
+                                "fn",
+                                "gx",
+                                {
+                                  "id": [
+                                    "str/concat",
+                                    "t-",
+                                    "@gx",
+                                    "-",
+                                    "@gy"
+                                  ],
+                                  "passable": true,
+                                  "x": "@gx",
+                                  "y": "@gy"
+                                }
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "and",
+                            [
+                              "==",
+                              "@u.id",
+                              "@payload.unitId"
+                            ],
+                            [
+                              "and",
+                              [
+                                "grid/in-bounds",
+                                {
+                                  "x": "@payload.x",
+                                  "y": "@payload.y"
+                                },
+                                "@config.gridWidth",
+                                "@config.gridHeight"
+                              ],
+                              [
+                                "and",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/find",
+                                      "@entity.tiles",
+                                      [
+                                        "fn",
+                                        "t",
+                                        [
+                                          "and",
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@t",
+                                              "x"
+                                            ],
+                                            "@payload.x"
+                                          ],
+                                          [
+                                            "==",
+                                            [
+                                              "object/get",
+                                              "@t",
+                                              "y"
+                                            ],
+                                            "@payload.y"
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "passable"
+                                  ],
+                                  true
+                                ],
+                                [
+                                  "==",
+                                  [
+                                    "array/len",
+                                    [
+                                      "array/filter",
+                                      "@entity.units",
+                                      [
+                                        "fn",
+                                        "o",
+                                        [
+                                          "and",
+                                          [
+                                            "!=",
+                                            "@o.id",
+                                            "@payload.unitId"
+                                          ],
+                                          [
+                                            "and",
+                                            [
+                                              ">",
+                                              "@o.health",
+                                              0.0
+                                            ],
+                                            [
+                                              "and",
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  [
+                                                    "object/get",
+                                                    "@o",
+                                                    "position"
+                                                  ],
+                                                  "x"
+                                                ],
+                                                "@payload.x"
+                                              ],
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  [
+                                                    "object/get",
+                                                    "@o",
+                                                    "position"
+                                                  ],
+                                                  "y"
+                                                ],
+                                                "@payload.y"
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  0.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "position": {
+                                "x": "@payload.x",
+                                "y": "@payload.y"
+                              }
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "MOVE",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "BURST",
+                    {
+                      "particles": [
+                        "array/map",
+                        [
+                          "array/filter",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@u.id",
+                                "@payload.targetId"
+                              ],
+                              [
+                                ">",
+                                "@u.health",
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "fn",
+                          "u",
+                          {
+                            "id": [
+                              "str/concat",
+                              "fx-atk-",
+                              "@u.id"
+                            ],
+                            "message": [
+                              "str/concat",
+                              "-",
+                              "@config.attackDamage"
+                            ],
+                            "ttl": 3.0,
+                            "type": "hit",
+                            "x": [
+                              "object/get",
+                              [
+                                "object/get",
+                                "@u",
+                                "position"
+                              ],
+                              "x"
+                            ],
+                            "z": [
+                              "object/get",
+                              [
+                                "object/get",
+                                "@u",
+                                "position"
+                              ],
+                              "y"
+                            ]
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "@payload.targetId"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "health": [
+                                "math/max",
+                                0.0,
+                                [
+                                  "-",
+                                  "@u.health",
+                                  "@config.attackDamage"
+                                ]
+                              ]
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "UNITS_CHANGED",
+                    {
+                      "enemiesAlive": [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@u.team",
+                                "enemy"
+                              ],
+                              [
+                                ">",
+                                "@u.health",
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      "playersAlive": [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@u.team",
+                                "player"
+                              ],
+                              [
+                                ">",
+                                "@u.health",
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    }
+                  ]
+                ],
+                "event": "ATTACK",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "if",
+                      [
+                        "and",
+                        [
+                          "grid/in-bounds",
+                          {
+                            "x": "@payload.x",
+                            "y": "@payload.y"
+                          },
+                          "@config.gridWidth",
+                          "@config.gridHeight"
+                        ],
+                        [
+                          "and",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.tiles",
+                                [
+                                  "fn",
+                                  "t",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "@t",
+                                        "x"
+                                      ],
+                                      "@payload.x"
+                                    ],
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "@t",
+                                        "y"
+                                      ],
+                                      "@payload.y"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              "passable"
+                            ],
+                            true
+                          ],
+                          [
+                            "==",
+                            [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "o",
+                                  [
+                                    "and",
+                                    [
+                                      ">",
+                                      "@o.health",
+                                      0.0
+                                    ],
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@o",
+                                            "position"
+                                          ],
+                                          "x"
+                                        ],
+                                        "@payload.x"
+                                      ],
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          [
+                                            "object/get",
+                                            "@o",
+                                            "position"
+                                          ],
+                                          "y"
+                                        ],
+                                        "@payload.y"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ],
+                            0.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "array/append",
+                        "@entity.units",
+                        {
+                          "health": "@payload.health",
+                          "id": "@payload.id",
+                          "maxHealth": "@payload.maxHealth",
+                          "position": {
+                            "x": "@payload.x",
+                            "y": "@payload.y"
+                          },
+                          "team": "@payload.team",
+                          "unitType": "@payload.unitType",
+                          "x": "@payload.x",
+                          "y": "@payload.y",
+                          "z": 0.0
+                        }
+                      ],
+                      "@entity.units"
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "UNITS_CHANGED",
+                    {
+                      "enemiesAlive": [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@u.team",
+                                "enemy"
+                              ],
+                              [
+                                ">",
+                                "@u.health",
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      "playersAlive": [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@u.team",
+                                "player"
+                              ],
+                              [
+                                ">",
+                                "@u.health",
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    }
+                  ]
+                ],
+                "event": "SPAWN",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "BURST",
+                    {
+                      "particles": [
+                        "array/map",
+                        [
+                          "array/filter",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "and",
+                              [
+                                "and",
+                                [
+                                  "==",
+                                  "@u.team",
+                                  "player"
+                                ],
+                                [
+                                  ">",
+                                  "@u.health",
+                                  0.0
+                                ]
+                              ],
+                              [
+                                ">",
+                                [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "e",
+                                      [
+                                        "and",
+                                        [
+                                          "and",
+                                          [
+                                            "==",
+                                            "@e.team",
+                                            "enemy"
+                                          ],
+                                          [
+                                            ">",
+                                            "@e.health",
+                                            0.0
+                                          ]
+                                        ],
+                                        [
+                                          "==",
+                                          [
+                                            "grid/manhattan-distance",
+                                            [
+                                              "object/get",
+                                              "@e",
+                                              "position"
+                                            ],
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ]
+                                          ],
+                                          1.0
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "fn",
+                          "u",
+                          {
+                            "id": [
+                              "str/concat",
+                              "fx-ai-",
+                              "@u.id"
+                            ],
+                            "message": "-1",
+                            "ttl": 3.0,
+                            "type": "hit",
+                            "x": [
+                              "object/get",
+                              [
+                                "object/get",
+                                "@u",
+                                "position"
+                              ],
+                              "x"
+                            ],
+                            "z": [
+                              "object/get",
+                              [
+                                "object/get",
+                                "@u",
+                                "position"
+                              ],
+                              "y"
+                            ]
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "and",
+                            [
+                              "==",
+                              "@u.team",
+                              "player"
+                            ],
+                            [
+                              ">",
+                              "@u.health",
+                              0.0
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              ">",
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@entity.units",
+                                  [
+                                    "fn",
+                                    "e",
+                                    [
+                                      "and",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@e.team",
+                                          "enemy"
+                                        ],
+                                        [
+                                          ">",
+                                          "@e.health",
+                                          0.0
+                                        ]
+                                      ],
+                                      [
+                                        "==",
+                                        [
+                                          "grid/manhattan-distance",
+                                          [
+                                            "object/get",
+                                            "@e",
+                                            "position"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "position"
+                                          ]
+                                        ],
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              0.0
+                            ],
+                            [
+                              "object/merge",
+                              "@u",
+                              {
+                                "health": [
+                                  "math/max",
+                                  0.0,
+                                  [
+                                    "-",
+                                    "@u.health",
+                                    1.0
+                                  ]
+                                ]
+                              }
+                            ],
+                            "@u"
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "and",
+                            [
+                              "==",
+                              "@u.team",
+                              "enemy"
+                            ],
+                            [
+                              ">",
+                              "@u.health",
+                              0.0
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@entity.units",
+                                  [
+                                    "fn",
+                                    "p",
+                                    [
+                                      "and",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          "@p.team",
+                                          "player"
+                                        ],
+                                        [
+                                          ">",
+                                          "@p.health",
+                                          0.0
+                                        ]
+                                      ],
+                                      [
+                                        "==",
+                                        [
+                                          "grid/manhattan-distance",
+                                          [
+                                            "object/get",
+                                            "@u",
+                                            "position"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@p",
+                                            "position"
+                                          ]
+                                        ],
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              0.0
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "target",
+                                  [
+                                    "array/reduce",
+                                    [
+                                      "array/filter",
+                                      "@entity.units",
+                                      [
+                                        "fn",
+                                        "p",
+                                        [
+                                          "and",
+                                          [
+                                            "==",
+                                            "@p.team",
+                                            "player"
+                                          ],
+                                          [
+                                            ">",
+                                            "@p.health",
+                                            0.0
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    null,
+                                    [
+                                      "fn",
+                                      [
+                                        "nearest",
+                                        "p"
+                                      ],
+                                      [
+                                        "if",
+                                        [
+                                          "or",
+                                          [
+                                            "==",
+                                            "@nearest",
+                                            null
+                                          ],
+                                          [
+                                            "<",
+                                            [
+                                              "grid/manhattan-distance",
+                                              [
+                                                "object/get",
+                                                "@p",
+                                                "position"
+                                              ],
+                                              [
+                                                "object/get",
+                                                "@u",
+                                                "position"
+                                              ]
+                                            ],
+                                            [
+                                              "grid/manhattan-distance",
+                                              [
+                                                "object/get",
+                                                "@nearest",
+                                                "position"
+                                              ],
+                                              [
+                                                "object/get",
+                                                "@u",
+                                                "position"
+                                              ]
+                                            ]
+                                          ]
+                                        ],
+                                        "@p",
+                                        "@nearest"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "if",
+                                [
+                                  "==",
+                                  "@target",
+                                  null
+                                ],
+                                "@u",
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "nextX",
+                                      [
+                                        "math/clamp",
+                                        [
+                                          "+",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ],
+                                            "x"
+                                          ],
+                                          [
+                                            "math/sign",
+                                            [
+                                              "-",
+                                              [
+                                                "object/get",
+                                                [
+                                                  "object/get",
+                                                  "@target",
+                                                  "position"
+                                                ],
+                                                "x"
+                                              ],
+                                              [
+                                                "object/get",
+                                                [
+                                                  "object/get",
+                                                  "@u",
+                                                  "position"
+                                                ],
+                                                "x"
+                                              ]
+                                            ]
+                                          ]
+                                        ],
+                                        0.0,
+                                        [
+                                          "-",
+                                          "@config.gridWidth",
+                                          1.0
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "nextY",
+                                      [
+                                        "math/clamp",
+                                        [
+                                          "+",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ],
+                                            "y"
+                                          ],
+                                          [
+                                            "math/sign",
+                                            [
+                                              "-",
+                                              [
+                                                "object/get",
+                                                [
+                                                  "object/get",
+                                                  "@target",
+                                                  "position"
+                                                ],
+                                                "y"
+                                              ],
+                                              [
+                                                "object/get",
+                                                [
+                                                  "object/get",
+                                                  "@u",
+                                                  "position"
+                                                ],
+                                                "y"
+                                              ]
+                                            ]
+                                          ]
+                                        ],
+                                        0.0,
+                                        [
+                                          "-",
+                                          "@config.gridHeight",
+                                          1.0
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "if",
+                                    [
+                                      "and",
+                                      [
+                                        "grid/in-bounds",
+                                        {
+                                          "x": "@nextX",
+                                          "y": "@nextY"
+                                        },
+                                        "@config.gridWidth",
+                                        "@config.gridHeight"
+                                      ],
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "array/find",
+                                              "@entity.tiles",
+                                              [
+                                                "fn",
+                                                "t",
+                                                [
+                                                  "and",
+                                                  [
+                                                    "==",
+                                                    [
+                                                      "object/get",
+                                                      "@t",
+                                                      "x"
+                                                    ],
+                                                    "@nextX"
+                                                  ],
+                                                  [
+                                                    "==",
+                                                    [
+                                                      "object/get",
+                                                      "@t",
+                                                      "y"
+                                                    ],
+                                                    "@nextY"
+                                                  ]
+                                                ]
+                                              ]
+                                            ],
+                                            "passable"
+                                          ],
+                                          true
+                                        ],
+                                        [
+                                          "==",
+                                          [
+                                            "array/len",
+                                            [
+                                              "array/filter",
+                                              "@entity.units",
+                                              [
+                                                "fn",
+                                                "o",
+                                                [
+                                                  "and",
+                                                  [
+                                                    "!=",
+                                                    "@o.id",
+                                                    "@u.id"
+                                                  ],
+                                                  [
+                                                    "and",
+                                                    [
+                                                      ">",
+                                                      "@o.health",
+                                                      0.0
+                                                    ],
+                                                    [
+                                                      "and",
+                                                      [
+                                                        "==",
+                                                        [
+                                                          "object/get",
+                                                          [
+                                                            "object/get",
+                                                            "@o",
+                                                            "position"
+                                                          ],
+                                                          "x"
+                                                        ],
+                                                        "@nextX"
+                                                      ],
+                                                      [
+                                                        "==",
+                                                        [
+                                                          "object/get",
+                                                          [
+                                                            "object/get",
+                                                            "@o",
+                                                            "position"
+                                                          ],
+                                                          "y"
+                                                        ],
+                                                        "@nextY"
+                                                      ]
+                                                    ]
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          ],
+                                          0.0
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "object/merge",
+                                      "@u",
+                                      {
+                                        "position": {
+                                          "x": "@nextX",
+                                          "y": "@nextY"
+                                        }
+                                      }
+                                    ],
+                                    "@u"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            "@u"
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "UNITS_CHANGED",
+                    {
+                      "enemiesAlive": [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@u.team",
+                                "enemy"
+                              ],
+                              [
+                                ">",
+                                "@u.health",
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      "playersAlive": [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "and",
+                              [
+                                "==",
+                                "@u.team",
+                                "player"
+                              ],
+                              [
+                                ">",
+                                "@u.health",
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    }
+                  ]
+                ],
+                "event": "AI_TURN",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

@@ -67,6 +67,17 @@ orbital TacticsBoard2DOrbital {
     features : Map string Asset
     effects : Map string Asset
   }
+  type HudStat = {
+    label : string
+    value : number
+  }
+  type HudButton = {
+    type : string
+    action : string
+    label : string
+    variant : string
+    iconAsset : Asset
+  }
 
   entity GameState [runtime, shared] {
     id : string!
@@ -119,8 +130,8 @@ orbital TacticsBoard2DOrbital {
           type: game-shell
           backgroundAsset: @config.backgroundAsset
           hudBackgroundAsset: @config.hudBackgroundAsset
-          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.uiPhase }, { label: "Turn", value: @entity.turn }, { label: "Score", value: @entity.score } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] }
+          hud: { type: game-hud, stats: (array/concat [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.uiPhase }, { label: "Turn", value: @entity.turn }, { label: "Score", value: @entity.score } ] @config.extraStats) }
+          addons: { type: stack, direction: vertical, gap: sm, children: (array/concat [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] @config.extraAddons) }
           children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, effects: @entity.fx, features: @config.features, assetManifest: @config.assetManifest, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, projection: @config.projection, showMinimap: @config.showMinimap, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
 
@@ -166,8 +177,8 @@ orbital TacticsBoard2DOrbital {
           type: game-shell
           backgroundAsset: @config.backgroundAsset
           hudBackgroundAsset: @config.hudBackgroundAsset
-          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.uiPhase }, { label: "Turn", value: @entity.turn }, { label: "Score", value: @entity.score } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] }
+          hud: { type: game-hud, stats: (array/concat [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.uiPhase }, { label: "Turn", value: @entity.turn }, { label: "Score", value: @entity.score } ] @config.extraStats) }
+          addons: { type: stack, direction: vertical, gap: sm, children: (array/concat [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] @config.extraAddons) }
           children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, effects: @entity.fx, features: @config.features, assetManifest: @config.assetManifest, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, projection: @config.projection, showMinimap: @config.showMinimap, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK } ]
         })
     }
@@ -248,6 +259,14 @@ orbital TacticsBoard2DOrbital {
       hudBackgroundAsset : Asset = {}
         @label "HUD Background Asset"
         @description "HUD panel background sprite (theme chrome)."
+        @tier "presentation"
+      extraStats : [HudStat] = []
+        @label "Extra HUD Stats"
+        @description "Board-specific HUD stats appended after Result/Phase/Turn/Score (e.g. production, resources). Values may bind @entity fields owned by composed mechanic atoms."
+        @tier "presentation"
+      extraAddons : [HudButton] = []
+        @label "Extra Addon Buttons"
+        @description "Board-specific action buttons appended after End Turn/Cancel (e.g. Produce). The action names events listened by composed mechanic atoms."
         @tier "presentation"
     }
   }
