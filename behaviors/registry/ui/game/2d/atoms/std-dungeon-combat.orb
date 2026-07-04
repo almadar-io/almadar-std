@@ -1,0 +1,1062 @@
+{
+  "description": "Headless dungeon combat authority: owns the enemy roster, hero HP, and kill score. Bump-attacks damage enemies; monster ticks chase the hero and deal contact damage.",
+  "name": "std-dungeon-combat",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "enemies",
+            "type": "array"
+          },
+          {
+            "default": 5.0,
+            "name": "hp",
+            "type": "number"
+          },
+          {
+            "default": 5.0,
+            "name": "maxHp",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "combatScore",
+            "type": "number"
+          },
+          {
+            "default": "none",
+            "name": "combatResult",
+            "type": "string"
+          }
+        ],
+        "name": "DungeonCombatData",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "DungeonCombatOrbital",
+      "pages": [
+        {
+          "name": "DungeonCombatPage",
+          "path": "/dungeon-combat",
+          "traits": [
+            {
+              "ref": "DungeonCombat"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "attackDamage": {
+              "default": 1.0,
+              "description": "Damage dealt to an enemy per bump-attack",
+              "label": "Attack Damage",
+              "tier": "domain",
+              "type": "number"
+            },
+            "enemies": {
+              "default": [],
+              "description": "Seed enemy roster",
+              "items": {
+                "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "frame": {
+                    "name": "frame",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "health": {
+                    "name": "health",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "maxHealth": {
+                    "name": "maxHealth",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "position": {
+                    "name": "position",
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "team": {
+                    "name": "team",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "unitType": {
+                    "name": "unitType",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "z": {
+                    "name": "z",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Initial Enemies",
+              "tier": "domain",
+              "type": "[Unit]"
+            },
+            "gridHeight": {
+              "default": 9.0,
+              "description": "Grid row count clamping enemy chase bounds",
+              "label": "Grid Height",
+              "tier": "domain",
+              "type": "number"
+            },
+            "gridWidth": {
+              "default": 12.0,
+              "description": "Grid column count clamping enemy chase bounds",
+              "label": "Grid Width",
+              "tier": "domain",
+              "type": "number"
+            },
+            "pointsPerKill": {
+              "default": 50.0,
+              "description": "Score awarded when an enemy's health reaches zero",
+              "label": "Points Per Kill",
+              "tier": "domain",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true, ATTACK/MONSTER_TICK intents are applied; toggle to freeze combat",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "startHp": {
+              "default": 5.0,
+              "description": "Hero HP set on INIT/RESTART (also used as maxHp)",
+              "label": "Start HP",
+              "tier": "domain",
+              "type": "number"
+            },
+            "tiles": {
+              "default": [],
+              "description": "Grid tiles used for enemy chase passability checks",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "passable": {
+                    "name": "passable",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Tiles",
+              "tier": "domain",
+              "type": "[Tile]"
+            }
+          },
+          "emits": [
+            {
+              "description": "An enemy died from a bump-attack; a fx-particles listener spawns an explosion",
+              "event": "BURST",
+              "payloadSchema": [
+                {
+                  "name": "particles",
+                  "type": "[Fx]"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Hero HP reached zero from monster contact damage",
+              "event": "DEFEATED",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "combatResult",
+              "combatScore",
+              "enemies",
+              "hp",
+              "maxHp"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DungeonCombatData",
+          "name": "DungeonCombat",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ATTACK",
+                "name": "Attack",
+                "payloadSchema": [
+                  {
+                    "name": "targetId",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "MONSTER_TICK",
+                "name": "Monster Tick",
+                "payloadSchema": [
+                  {
+                    "name": "heroX",
+                    "type": "number"
+                  },
+                  {
+                    "name": "heroY",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "An enemy died from a bump-attack; a fx-particles listener spawns an explosion",
+                "key": "BURST",
+                "name": "Burst",
+                "payloadSchema": [
+                  {
+                    "name": "particles",
+                    "type": "[Fx]"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Hero HP reached zero from monster contact damage",
+                "key": "DEFEATED",
+                "name": "Defeated",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.enemies",
+                    "@config.enemies"
+                  ],
+                  [
+                    "set",
+                    "@entity.hp",
+                    "@config.startHp"
+                  ],
+                  [
+                    "set",
+                    "@entity.maxHp",
+                    "@config.startHp"
+                  ],
+                  [
+                    "set",
+                    "@entity.combatScore",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.combatResult",
+                    "none"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "target",
+                        [
+                          "array/find",
+                          "@entity.enemies",
+                          [
+                            "fn",
+                            "e",
+                            [
+                              "==",
+                              "@e.id",
+                              "@payload.targetId"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "newHealth",
+                          [
+                            "math/max",
+                            0.0,
+                            [
+                              "-",
+                              [
+                                "object/get",
+                                "@target",
+                                "health"
+                              ],
+                              "@config.attackDamage"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "do",
+                        [
+                          "set",
+                          "@entity.enemies",
+                          [
+                            "array/map",
+                            "@entity.enemies",
+                            [
+                              "fn",
+                              "e",
+                              [
+                                "if",
+                                [
+                                  "==",
+                                  "@e.id",
+                                  "@payload.targetId"
+                                ],
+                                [
+                                  "object/merge",
+                                  "@e",
+                                  {
+                                    "animation": [
+                                      "if",
+                                      [
+                                        "<=",
+                                        "@newHealth",
+                                        0.0
+                                      ],
+                                      "death",
+                                      "hit"
+                                    ],
+                                    "health": "@newHealth"
+                                  }
+                                ],
+                                "e"
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "if",
+                          [
+                            "<=",
+                            "@newHealth",
+                            0.0
+                          ],
+                          [
+                            "do",
+                            [
+                              "set",
+                              "@entity.combatScore",
+                              [
+                                "+",
+                                "@entity.combatScore",
+                                "@config.pointsPerKill"
+                              ]
+                            ],
+                            [
+                              "emit",
+                              "BURST",
+                              {
+                                "particles": [
+                                  "array/map",
+                                  [
+                                    "array/filter",
+                                    "@entity.enemies",
+                                    [
+                                      "fn",
+                                      "e",
+                                      [
+                                        "==",
+                                        "@e.id",
+                                        "@payload.targetId"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "fn",
+                                    "t",
+                                    {
+                                      "id": [
+                                        "str/concat",
+                                        "fx-kill-",
+                                        [
+                                          "object/get",
+                                          "t",
+                                          "id"
+                                        ]
+                                      ],
+                                      "ttl": 5.0,
+                                      "type": "explosion",
+                                      "x": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "t",
+                                          "position"
+                                        ],
+                                        "x"
+                                      ],
+                                      "z": [
+                                        "object/get",
+                                        [
+                                          "object/get",
+                                          "t",
+                                          "position"
+                                        ],
+                                        "y"
+                                      ]
+                                    }
+                                  ]
+                                ]
+                              }
+                            ]
+                          ],
+                          true
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "ATTACK",
+                "from": "active",
+                "guard": [
+                  "and",
+                  "@config.running",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      [
+                        "array/filter",
+                        "@entity.enemies",
+                        [
+                          "fn",
+                          "e",
+                          [
+                            "and",
+                            [
+                              "==",
+                              "@e.id",
+                              "@payload.targetId"
+                            ],
+                            [
+                              ">",
+                              "@e.health",
+                              0.0
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    0.0
+                  ]
+                ],
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.enemies",
+                    [
+                      "array/map",
+                      "@entity.enemies",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            ">",
+                            "@u.health",
+                            0.0
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "ux",
+                                [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@u",
+                                    "position"
+                                  ],
+                                  "x"
+                                ]
+                              ],
+                              [
+                                "uy",
+                                [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@u",
+                                    "position"
+                                  ],
+                                  "y"
+                                ]
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "dx",
+                                  [
+                                    "math/sign",
+                                    [
+                                      "-",
+                                      "@payload.heroX",
+                                      "@ux"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "dy",
+                                  [
+                                    "math/sign",
+                                    [
+                                      "-",
+                                      "@payload.heroY",
+                                      "@uy"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "absDx",
+                                  [
+                                    "math/abs",
+                                    [
+                                      "-",
+                                      "@payload.heroX",
+                                      "@ux"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "absDy",
+                                  [
+                                    "math/abs",
+                                    [
+                                      "-",
+                                      "@payload.heroY",
+                                      "@uy"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "moveX",
+                                    [
+                                      "and",
+                                      [
+                                        "!=",
+                                        "@dx",
+                                        0.0
+                                      ],
+                                      [
+                                        ">=",
+                                        "@absDx",
+                                        "@absDy"
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "nx",
+                                      [
+                                        "if",
+                                        "@moveX",
+                                        [
+                                          "+",
+                                          "@ux",
+                                          "@dx"
+                                        ],
+                                        "@ux"
+                                      ]
+                                    ],
+                                    [
+                                      "ny",
+                                      [
+                                        "if",
+                                        "@moveX",
+                                        "@uy",
+                                        [
+                                          "+",
+                                          "@uy",
+                                          "@dy"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "tile",
+                                        [
+                                          "array/find",
+                                          "@config.tiles",
+                                          [
+                                            "fn",
+                                            "t",
+                                            [
+                                              "and",
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "@t",
+                                                  "x"
+                                                ],
+                                                "@nx"
+                                              ],
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "@t",
+                                                  "y"
+                                                ],
+                                                "@ny"
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "occupied",
+                                        [
+                                          "array/find",
+                                          "@entity.enemies",
+                                          [
+                                            "fn",
+                                            "o",
+                                            [
+                                              "and",
+                                              [
+                                                "!=",
+                                                "@o.id",
+                                                "@u.id"
+                                              ],
+                                              [
+                                                "and",
+                                                [
+                                                  ">",
+                                                  "@o.health",
+                                                  0.0
+                                                ],
+                                                [
+                                                  "and",
+                                                  [
+                                                    "==",
+                                                    [
+                                                      "object/get",
+                                                      [
+                                                        "object/get",
+                                                        "@o",
+                                                        "position"
+                                                      ],
+                                                      "x"
+                                                    ],
+                                                    "@nx"
+                                                  ],
+                                                  [
+                                                    "==",
+                                                    [
+                                                      "object/get",
+                                                      [
+                                                        "object/get",
+                                                        "@o",
+                                                        "position"
+                                                      ],
+                                                      "y"
+                                                    ],
+                                                    "@ny"
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "if",
+                                      [
+                                        "and",
+                                        [
+                                          "grid/in-bounds",
+                                          {
+                                            "x": "@nx",
+                                            "y": "@ny"
+                                          },
+                                          "@config.gridWidth",
+                                          "@config.gridHeight"
+                                        ],
+                                        [
+                                          "and",
+                                          [
+                                            "==",
+                                            [
+                                              "if",
+                                              [
+                                                "==",
+                                                "@tile",
+                                                null
+                                              ],
+                                              false,
+                                              [
+                                                "object/get",
+                                                "@tile",
+                                                "passable"
+                                              ]
+                                            ],
+                                            true
+                                          ],
+                                          [
+                                            "==",
+                                            "@occupied",
+                                            null
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "object/merge",
+                                        "@u",
+                                        {
+                                          "animation": "walk",
+                                          "position": {
+                                            "x": "@nx",
+                                            "y": "@ny"
+                                          }
+                                        }
+                                      ],
+                                      "@u"
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.hp",
+                    [
+                      "if",
+                      [
+                        ">",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@entity.enemies",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "and",
+                                [
+                                  ">",
+                                  "@u.health",
+                                  0.0
+                                ],
+                                [
+                                  "<=",
+                                  [
+                                    "grid/manhattan-distance",
+                                    [
+                                      "object/get",
+                                      "@u",
+                                      "position"
+                                    ],
+                                    {
+                                      "x": "@payload.heroX",
+                                      "y": "@payload.heroY"
+                                    }
+                                  ],
+                                  1.0
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ],
+                      [
+                        "math/max",
+                        0.0,
+                        [
+                          "-",
+                          "@entity.hp",
+                          1.0
+                        ]
+                      ],
+                      "@entity.hp"
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "<=",
+                      "@entity.hp",
+                      0.0
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.combatResult",
+                        "lost"
+                      ],
+                      [
+                        "emit",
+                        "DEFEATED",
+                        {
+                          "id": "board"
+                        }
+                      ]
+                    ],
+                    true
+                  ]
+                ],
+                "event": "MONSTER_TICK",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.enemies",
+                    "@config.enemies"
+                  ],
+                  [
+                    "set",
+                    "@entity.hp",
+                    "@config.startHp"
+                  ],
+                  [
+                    "set",
+                    "@entity.maxHp",
+                    "@config.startHp"
+                  ],
+                  [
+                    "set",
+                    "@entity.combatScore",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.combatResult",
+                    "none"
+                  ]
+                ],
+                "event": "RESTART",
+                "from": "active",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

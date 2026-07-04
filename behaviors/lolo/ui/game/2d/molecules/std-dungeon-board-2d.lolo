@@ -1,0 +1,307 @@
+app std-dungeon-board-2d "1.0.0"
+"2D key-move dungeon-crawl board FRAME: composes hero-nav (key-move intent) + dungeon-combat (bump-attack, monster chase, hero HP) + objective-reach (exit/chest) + fx-particles + objective-flow (win) onto one shared GameState with a canvas-2d render. Games consume this molecule and supply only theme/assets/tiles/units/enemies/features via config."
+orbital DungeonBoard2DOrbital {
+  uses Nav from "std/behaviors/std-hero-nav"
+  uses Combat from "std/behaviors/std-dungeon-combat"
+  uses Objective from "std/behaviors/std-objective-reach"
+  uses Particles from "std/behaviors/std-fx-particles"
+  uses Gate from "std/behaviors/std-objective-flow"
+
+  type Asset = {
+    url : asset
+    atlas : asset
+    sprite : string
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    variant : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    team : string
+    health : number
+    maxHealth : number
+    unitType : string
+    name : string
+    animation : string
+    frame : number
+    sprite : Asset
+  }
+  type Tile = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    passable : boolean
+    terrainSprite : Asset
+  }
+  type Feature = {
+    id : string
+    x : number!
+    y : number!
+    type : string!
+    sprite : Asset
+    done : boolean
+  }
+  type Fx = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
+  type DirectionAssets = {
+    up : Asset
+    down : Asset
+    left : Asset
+    right : Asset
+  }
+  type AssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
+  }
+  type HudStat = {
+    label : string
+    value : number
+    max : number
+    format : string
+    iconUrl : Asset
+  }
+
+  entity GameState [runtime, shared] {
+    id : string!
+    units : [Unit] = []
+    enemies : [Unit] = []
+    tiles : [Tile] = []
+    features : [Feature] = []
+    fx : [Fx] = []
+    movesLeft : number = 0
+    score : number = 0
+    combatScore : number = 0
+    objectivesLeft : number = 0
+    hp : number = 5
+    maxHp : number = 5
+    result : string = "none"
+    combatResult : string = "none"
+  }
+
+  trait HeroAuthority = Nav.traits.HeroNav -> GameState {
+    config {
+      running: true
+      gridWidth: 12
+      gridHeight: 9
+      moveBudget: 999999
+      units: [ { id: "hero", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 1, maxHealth: 1, unitType: "hero" } ]
+    }
+  }
+
+  trait Enemies = Combat.traits.DungeonCombat -> GameState {
+    config {
+      running: true
+      gridWidth: 12
+      gridHeight: 9
+      startHp: 5
+      attackDamage: 1
+      pointsPerKill: 50
+      enemies: []
+    }
+  }
+
+  trait Collector = Objective.traits.ObjectiveReach -> GameState {
+    config {
+      running: true
+      targetType: "chest"
+      pointsPerTarget: 200
+      removeOnReach: false
+      reachRadius: 0
+      features: []
+    }
+  }
+
+  trait FxDecay = Particles.traits.FxParticles -> GameState {
+    config { running: true }
+  }
+
+  trait RoundGate = Gate.traits.ObjectiveFlow -> GameState {
+    config { running: true }
+  }
+
+  trait DungeonIntent -> GameState [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (render-ui main {
+          type: game-shell
+          fontFamily: @config.fontFamily
+          backgroundAsset: @config.backgroundAsset
+          hudBackgroundAsset: @config.hudBackgroundAsset
+          hud: { type: game-hud, stats: [ { label: "HP", value: @entity.hp, max: @entity.maxHp, format: "hearts" }, { label: "Score", value: (+ @entity.score @entity.combatScore) } ] }
+          controls: { type: control-grid, kind: "dpad", directionEvents: { up: "MOVE_UP", down: "MOVE_DOWN", left: "MOVE_LEFT", right: "MOVE_RIGHT" }, directionAssets: @config.directionAssets }
+          overlay: (if (!= @entity.result "none") { type: game-menu, title: "VICTORY", subtitle: "You found the chest!", options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] } (if (!= @entity.combatResult "none") { type: game-menu, title: "DEFEAT", subtitle: "The dungeon claims another hero", options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] } null))
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: (array/concat @entity.units @entity.enemies), features: @entity.features, effects: (array/map @entity.fx (fn e { key: (object/get e type), x: (object/get e x), y: (object/get e z), ttl: (object/get e ttl) })), assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT" } } ]
+        })
+
+      MOVE_UP -> playing when (and (== @entity.result "none") (== @entity.combatResult "none"))
+        (let ((hero (array/find @entity.units (fn u (== @u.id "hero")))))
+          (let ((nx (object/get (object/get @hero position) x)) (ny (- (object/get (object/get @hero position) y) 1)))
+            (let ((targetEnemy (array/find @entity.enemies (fn e (and (> @e.health 0) (and (== (object/get (object/get @e position) x) @nx) (== (object/get (object/get @e position) y) @ny)))))) (tile (array/find @entity.tiles (fn t (and (== (object/get @t x) @nx) (== (object/get @t y) @ny))))))
+              (if (!= @targetEnemy null)
+                (emit ATTACK { targetId: (object/get @targetEnemy id) })
+                (if (and (grid/in-bounds { x: @nx, y: @ny } @config.gridWidth @config.gridHeight) (== (if (== @tile null) false (object/get @tile passable)) true))
+                  (emit MOVE { unitId: "hero", x: @nx, y: @ny })
+                  true)))))
+
+      MOVE_DOWN -> playing when (and (== @entity.result "none") (== @entity.combatResult "none"))
+        (let ((hero (array/find @entity.units (fn u (== @u.id "hero")))))
+          (let ((nx (object/get (object/get @hero position) x)) (ny (+ (object/get (object/get @hero position) y) 1)))
+            (let ((targetEnemy (array/find @entity.enemies (fn e (and (> @e.health 0) (and (== (object/get (object/get @e position) x) @nx) (== (object/get (object/get @e position) y) @ny)))))) (tile (array/find @entity.tiles (fn t (and (== (object/get @t x) @nx) (== (object/get @t y) @ny))))))
+              (if (!= @targetEnemy null)
+                (emit ATTACK { targetId: (object/get @targetEnemy id) })
+                (if (and (grid/in-bounds { x: @nx, y: @ny } @config.gridWidth @config.gridHeight) (== (if (== @tile null) false (object/get @tile passable)) true))
+                  (emit MOVE { unitId: "hero", x: @nx, y: @ny })
+                  true)))))
+
+      MOVE_LEFT -> playing when (and (== @entity.result "none") (== @entity.combatResult "none"))
+        (let ((hero (array/find @entity.units (fn u (== @u.id "hero")))))
+          (let ((nx (- (object/get (object/get @hero position) x) 1)) (ny (object/get (object/get @hero position) y)))
+            (let ((targetEnemy (array/find @entity.enemies (fn e (and (> @e.health 0) (and (== (object/get (object/get @e position) x) @nx) (== (object/get (object/get @e position) y) @ny)))))) (tile (array/find @entity.tiles (fn t (and (== (object/get @t x) @nx) (== (object/get @t y) @ny))))))
+              (if (!= @targetEnemy null)
+                (emit ATTACK { targetId: (object/get @targetEnemy id) })
+                (if (and (grid/in-bounds { x: @nx, y: @ny } @config.gridWidth @config.gridHeight) (== (if (== @tile null) false (object/get @tile passable)) true))
+                  (emit MOVE { unitId: "hero", x: @nx, y: @ny })
+                  true)))))
+
+      MOVE_RIGHT -> playing when (and (== @entity.result "none") (== @entity.combatResult "none"))
+        (let ((hero (array/find @entity.units (fn u (== @u.id "hero")))))
+          (let ((nx (+ (object/get (object/get @hero position) x) 1)) (ny (object/get (object/get @hero position) y)))
+            (let ((targetEnemy (array/find @entity.enemies (fn e (and (> @e.health 0) (and (== (object/get (object/get @e position) x) @nx) (== (object/get (object/get @e position) y) @ny)))))) (tile (array/find @entity.tiles (fn t (and (== (object/get @t x) @nx) (== (object/get @t y) @ny))))))
+              (if (!= @targetEnemy null)
+                (emit ATTACK { targetId: (object/get @targetEnemy id) })
+                (if (and (grid/in-bounds { x: @nx, y: @ny } @config.gridWidth @config.gridHeight) (== (if (== @tile null) false (object/get @tile passable)) true))
+                  (emit MOVE { unitId: "hero", x: @nx, y: @ny })
+                  true)))))
+
+      PLAY_AGAIN -> playing
+        (emit RESTART { id: "board" })
+    }
+
+    ticks {
+      renderTick every 100ms
+        (render-ui main {
+          type: game-shell
+          fontFamily: @config.fontFamily
+          backgroundAsset: @config.backgroundAsset
+          hudBackgroundAsset: @config.hudBackgroundAsset
+          hud: { type: game-hud, stats: [ { label: "HP", value: @entity.hp, max: @entity.maxHp, format: "hearts" }, { label: "Score", value: (+ @entity.score @entity.combatScore) } ] }
+          controls: { type: control-grid, kind: "dpad", directionEvents: { up: "MOVE_UP", down: "MOVE_DOWN", left: "MOVE_LEFT", right: "MOVE_RIGHT" }, directionAssets: @config.directionAssets }
+          overlay: (if (!= @entity.result "none") { type: game-menu, title: "VICTORY", subtitle: "You found the chest!", options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] } (if (!= @entity.combatResult "none") { type: game-menu, title: "DEFEAT", subtitle: "The dungeon claims another hero", options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] } null))
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: (array/concat @entity.units @entity.enemies), features: @entity.features, effects: (array/map @entity.fx (fn e { key: (object/get e type), x: (object/get e x), y: (object/get e z), ttl: (object/get e ttl) })), assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, keyMap: { ArrowUp: "MOVE_UP", KeyW: "MOVE_UP", ArrowDown: "MOVE_DOWN", KeyS: "MOVE_DOWN", ArrowLeft: "MOVE_LEFT", KeyA: "MOVE_LEFT", ArrowRight: "MOVE_RIGHT", KeyD: "MOVE_RIGHT" } } ]
+        })
+
+      chaseTick every 900ms when (and (== @entity.result "none") (== @entity.combatResult "none"))
+        (emit MONSTER_TICK { heroX: (object/get (object/get (array/find @entity.units (fn u (== @u.id "hero"))) position) x), heroY: (object/get (object/get (array/find @entity.units (fn u (== @u.id "hero"))) position) y) })
+    }
+
+    emits {
+      MOVE -> external {
+        unitId : string!
+        x : number!
+        y : number!
+      }
+        @description "Hero move intent applied by the hero-nav authority"
+        @tier "domain"
+      ATTACK -> external {
+        targetId : string!
+      }
+        @description "Bump-attack intent applied by the dungeon-combat authority"
+        @tier "domain"
+      MONSTER_TICK -> external {
+        heroX : number!
+        heroY : number!
+      }
+        @description "Advances enemy chase AI and applies hero contact damage via the dungeon-combat authority"
+        @tier "domain"
+      MOVE_UP -> external {
+        id : string
+      }
+        @description "Step north (keyMap or d-pad directionEvents)"
+        @tier "domain"
+      MOVE_DOWN -> external {
+        id : string
+      }
+        @description "Step south (keyMap or d-pad directionEvents)"
+        @tier "domain"
+      MOVE_LEFT -> external {
+        id : string
+      }
+        @description "Step west (keyMap or d-pad directionEvents)"
+        @tier "domain"
+      MOVE_RIGHT -> external {
+        id : string
+      }
+        @description "Step east (keyMap or d-pad directionEvents)"
+        @tier "domain"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Resets every mechanic (units/enemies/HP, objectives, result) for a new run"
+        @tier "domain"
+      RESTART -> external {
+        id : string
+      }
+        @description "Broadcast reset consumed by hero-nav/dungeon-combat/objective-reach/objective-flow"
+        @tier "domain"
+    }
+
+    config {
+      gridWidth : number = 12
+        @label "Grid Width"
+        @description "Grid column count (matches HeroAuthority/Enemies.gridWidth)."
+        @tier "domain"
+      gridHeight : number = 9
+        @label "Grid Height"
+        @description "Grid row count (matches HeroAuthority/Enemies.gridHeight)."
+        @tier "domain"
+      scale : number = 0.3
+        @label "Scale"
+        @description "Canvas render scale."
+        @tier "presentation"
+      fontFamily : string = ""
+        @label "Font Family"
+        @description "game-shell font family (e.g. pixel)."
+        @tier "presentation"
+      assetManifest : AssetManifest = { terrains: {}, units: {}, features: {}, effects: {} }
+        @label "Asset Manifest"
+        @description "Terrain/unit/feature/effect sprite manifest."
+        @tier "presentation"
+      backgroundAsset : Asset = {}
+        @label "Background Asset"
+        @description "Game-shell background panel sprite (theme chrome)."
+        @tier "presentation"
+      hudBackgroundAsset : Asset = {}
+        @label "HUD Background Asset"
+        @description "HUD panel background sprite (theme chrome)."
+        @tier "presentation"
+      directionAssets : DirectionAssets = {}
+        @label "Direction Assets"
+        @description "D-pad direction icon sprites."
+        @tier "presentation"
+    }
+  }
+
+  page "/dungeon-board-2d" as DungeonBoard2DPage -> HeroAuthority, Enemies, Collector, FxDecay, RoundGate, DungeonIntent
+}
