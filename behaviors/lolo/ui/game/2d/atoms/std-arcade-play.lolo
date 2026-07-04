@@ -1,0 +1,104 @@
+app std-arcade-play "1.0.0"
+"Headless arcade play-economy mechanic: the SOLE writer of tokens + tickets + machines. Applies a PLAY_MACHINE intent (spends a token, rolls a pseudo-random ticket payout within a configured range, emits BURST + SCORE_CHANGED). Renders nothing."
+orbital ArcadePlayOrbital {
+  type Machine = {
+    id : string!
+    x : number!
+    y : number!
+    type : string!
+  }
+  type Fx = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
+
+  entity ArcadePlayData [runtime, shared] {
+    id : string!
+    tokens : number = 0
+    tickets : number = 0
+    machines : [Machine] = []
+    lastRoll : number = 0
+    playCount : number = 0
+  }
+
+  trait ArcadePlay -> @rebindable ArcadePlayData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.tokens @config.startTokens)
+        (set @entity.tickets 0)
+        (set @entity.machines @config.machines)
+        (set @entity.lastRoll 0)
+        (set @entity.playCount 0)
+
+      PLAY_MACHINE -> active when (and @config.running (and (> @entity.tokens 0) (> (array/len (array/filter @entity.machines (fn m (== @m.id @payload.machineId)))) 0)))
+        (let ((roll (math/random)))
+        (let ((payout (+ @config.minPayout (math/floor (* @roll (+ 1 (- @config.maxPayout @config.minPayout)))))))
+        (do
+          (set @entity.tokens (- @entity.tokens 1))
+          (set @entity.playCount (+ @entity.playCount 1))
+          (set @entity.lastRoll @roll)
+          (set @entity.tickets (+ @entity.tickets @payout))
+          (emit BURST { particles: (array/map (array/filter @entity.machines (fn m (== @m.id @payload.machineId))) (fn m { id: (str/concat "fx-play-" @entity.playCount), type: (if (> @payout 0) "score" "info"), x: @payload.x, z: @payload.z, message: (if (> @payout 0) (str/concat "+" @payout " ticket(s)") "no luck"), ttl: 3 })) })
+          (emit SCORE_CHANGED { tickets: @entity.tickets, tokens: @entity.tokens })
+        )))
+
+      RESTART -> active
+        (set @entity.tokens @config.startTokens)
+        (set @entity.tickets 0)
+        (set @entity.machines @config.machines)
+        (set @entity.lastRoll 0)
+        (set @entity.playCount 0)
+    }
+
+    emits {
+      BURST -> external {
+        particles : [Fx]
+      }
+        @description "Payout (or dud) particle spawned at the played machine's tile; a fx-particles listener spawns it"
+        @tier "domain"
+      SCORE_CHANGED -> external {
+        tickets : number!
+        tokens : number!
+      }
+        @description "Tickets + tokens after this play; a flow listener decides win/lose"
+        @tier "domain"
+    }
+
+    listens {
+      PLAY_MACHINE { machineId : string, x : number, z : number }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, PLAY_MACHINE intents are applied; toggle to freeze the economy"
+        @tier "domain"
+      machines : [Machine] = []
+        @label "Machines"
+        @description "Playable machine ids the PLAY_MACHINE intent is validated against"
+        @tier "domain"
+      startTokens : number = 14
+        @label "Start Tokens"
+        @description "Tokens the player starts with"
+        @tier "domain"
+      minPayout : number = 0
+        @label "Min Payout"
+        @description "Lowest ticket payout a single play can award"
+        @tier "domain"
+      maxPayout : number = 1
+        @label "Max Payout"
+        @description "Highest ticket payout a single play can award"
+        @tier "domain"
+    }
+  }
+
+  page "/arcade-play" as ArcadePlayPage -> ArcadePlay
+}

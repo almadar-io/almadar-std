@@ -1,0 +1,50 @@
+app std-arcade-flow "1.0.0"
+"Headless win/lose authority for the arcade play-for-tickets loop: owns only result. Listens SCORE_CHANGED (tickets + tokens) and sets result to won once tickets reach the target, lost when tokens run out first, else none. Renders nothing."
+orbital ArcadeFlowOrbital {
+  entity ArcadeFlowData [runtime, shared] {
+    id : string!
+    result : string = "none"
+  }
+
+  trait ArcadeFlow -> @rebindable ArcadeFlowData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.result "none")
+
+      SCORE_CHANGED -> active when @config.running
+        (set @entity.result (if (>= @payload.tickets @config.ticketsToWin) "won" (if (<= @payload.tokens 0) "lost" "none")))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+
+      RESTART -> active
+        (set @entity.result "none")
+    }
+
+    emits {
+      GAME_END -> external {
+        result : string!
+      }
+        @description "Emitted when the play loop resolves to won or lost"
+        @tier "domain"
+    }
+
+    listens {
+      SCORE_CHANGED { tickets : number, tokens : number }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, SCORE_CHANGED signals resolve win/lose; toggle to freeze"
+        @tier "domain"
+      ticketsToWin : number = 5
+        @label "Tickets To Win"
+        @description "Ticket count that ends the round in a win"
+        @tier "domain"
+    }
+  }
+
+  page "/arcade-flow" as ArcadeFlowPage -> ArcadeFlow
+}

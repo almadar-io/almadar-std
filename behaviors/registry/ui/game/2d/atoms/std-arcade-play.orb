@@ -1,0 +1,515 @@
+{
+  "description": "Headless arcade play-economy mechanic: the SOLE writer of tokens + tickets + machines. Applies a PLAY_MACHINE intent (spends a token, rolls a pseudo-random ticket payout within a configured range, emits BURST + SCORE_CHANGED). Renders nothing.",
+  "name": "std-arcade-play",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "tokens",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "tickets",
+            "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "machines",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "lastRoll",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "playCount",
+            "type": "number"
+          }
+        ],
+        "name": "ArcadePlayData",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "ArcadePlayOrbital",
+      "pages": [
+        {
+          "name": "ArcadePlayPage",
+          "path": "/arcade-play",
+          "traits": [
+            {
+              "ref": "ArcadePlay"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "machines": {
+              "default": [],
+              "description": "Playable machine ids the PLAY_MACHINE intent is validated against",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Machines",
+              "tier": "domain",
+              "type": "[Machine]"
+            },
+            "maxPayout": {
+              "default": 1.0,
+              "description": "Highest ticket payout a single play can award",
+              "label": "Max Payout",
+              "tier": "domain",
+              "type": "number"
+            },
+            "minPayout": {
+              "default": 0.0,
+              "description": "Lowest ticket payout a single play can award",
+              "label": "Min Payout",
+              "tier": "domain",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true, PLAY_MACHINE intents are applied; toggle to freeze the economy",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "startTokens": {
+              "default": 14.0,
+              "description": "Tokens the player starts with",
+              "label": "Start Tokens",
+              "tier": "domain",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Payout (or dud) particle spawned at the played machine's tile; a fx-particles listener spawns it",
+              "event": "BURST",
+              "payloadSchema": [
+                {
+                  "name": "particles",
+                  "type": "[Fx]"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Tickets + tokens after this play; a flow listener decides win/lose",
+              "event": "SCORE_CHANGED",
+              "payloadSchema": [
+                {
+                  "name": "tickets",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "tokens",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "lastRoll",
+              "machines",
+              "playCount",
+              "tickets",
+              "tokens"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ArcadePlayData",
+          "name": "ArcadePlay",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PLAY_MACHINE",
+                "name": "Play Machine",
+                "payloadSchema": [
+                  {
+                    "name": "machineId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "z",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "Payout (or dud) particle spawned at the played machine's tile; a fx-particles listener spawns it",
+                "key": "BURST",
+                "name": "Burst",
+                "payloadSchema": [
+                  {
+                    "name": "particles",
+                    "type": "[Fx]"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Tickets + tokens after this play; a flow listener decides win/lose",
+                "key": "SCORE_CHANGED",
+                "name": "Score Changed",
+                "payloadSchema": [
+                  {
+                    "name": "tickets",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "tokens",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.tokens",
+                    "@config.startTokens"
+                  ],
+                  [
+                    "set",
+                    "@entity.tickets",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.machines",
+                    "@config.machines"
+                  ],
+                  [
+                    "set",
+                    "@entity.lastRoll",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.playCount",
+                    0.0
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "roll",
+                        [
+                          "math/random"
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "payout",
+                          [
+                            "+",
+                            "@config.minPayout",
+                            [
+                              "math/floor",
+                              [
+                                "*",
+                                "@roll",
+                                [
+                                  "+",
+                                  1.0,
+                                  [
+                                    "-",
+                                    "@config.maxPayout",
+                                    "@config.minPayout"
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "do",
+                        [
+                          "set",
+                          "@entity.tokens",
+                          [
+                            "-",
+                            "@entity.tokens",
+                            1.0
+                          ]
+                        ],
+                        [
+                          "set",
+                          "@entity.playCount",
+                          [
+                            "+",
+                            "@entity.playCount",
+                            1.0
+                          ]
+                        ],
+                        [
+                          "set",
+                          "@entity.lastRoll",
+                          "@roll"
+                        ],
+                        [
+                          "set",
+                          "@entity.tickets",
+                          [
+                            "+",
+                            "@entity.tickets",
+                            "@payout"
+                          ]
+                        ],
+                        [
+                          "emit",
+                          "BURST",
+                          {
+                            "particles": [
+                              "array/map",
+                              [
+                                "array/filter",
+                                "@entity.machines",
+                                [
+                                  "fn",
+                                  "m",
+                                  [
+                                    "==",
+                                    "@m.id",
+                                    "@payload.machineId"
+                                  ]
+                                ]
+                              ],
+                              [
+                                "fn",
+                                "m",
+                                {
+                                  "id": [
+                                    "str/concat",
+                                    "fx-play-",
+                                    "@entity.playCount"
+                                  ],
+                                  "message": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@payout",
+                                      0.0
+                                    ],
+                                    [
+                                      "str/concat",
+                                      "+",
+                                      "@payout",
+                                      " ticket(s)"
+                                    ],
+                                    "no luck"
+                                  ],
+                                  "ttl": 3.0,
+                                  "type": [
+                                    "if",
+                                    [
+                                      ">",
+                                      "@payout",
+                                      0.0
+                                    ],
+                                    "score",
+                                    "info"
+                                  ],
+                                  "x": "@payload.x",
+                                  "z": "@payload.z"
+                                }
+                              ]
+                            ]
+                          }
+                        ],
+                        [
+                          "emit",
+                          "SCORE_CHANGED",
+                          {
+                            "tickets": "@entity.tickets",
+                            "tokens": "@entity.tokens"
+                          }
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "PLAY_MACHINE",
+                "from": "active",
+                "guard": [
+                  "and",
+                  "@config.running",
+                  [
+                    "and",
+                    [
+                      ">",
+                      "@entity.tokens",
+                      0.0
+                    ],
+                    [
+                      ">",
+                      [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.machines",
+                          [
+                            "fn",
+                            "m",
+                            [
+                              "==",
+                              "@m.id",
+                              "@payload.machineId"
+                            ]
+                          ]
+                        ]
+                      ],
+                      0.0
+                    ]
+                  ]
+                ],
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.tokens",
+                    "@config.startTokens"
+                  ],
+                  [
+                    "set",
+                    "@entity.tickets",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.machines",
+                    "@config.machines"
+                  ],
+                  [
+                    "set",
+                    "@entity.lastRoll",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.playCount",
+                    0.0
+                  ]
+                ],
+                "event": "RESTART",
+                "from": "active",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

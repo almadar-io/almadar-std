@@ -1,0 +1,207 @@
+{
+  "description": "Headless win/lose authority for the arcade play-for-tickets loop: owns only result. Listens SCORE_CHANGED (tickets + tokens) and sets result to won once tickets reach the target, lost when tokens run out first, else none. Renders nothing.",
+  "name": "std-arcade-flow",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string"
+          }
+        ],
+        "name": "ArcadeFlowData",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "ArcadeFlowOrbital",
+      "pages": [
+        {
+          "name": "ArcadeFlowPage",
+          "path": "/arcade-flow",
+          "traits": [
+            {
+              "ref": "ArcadeFlow"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "running": {
+              "default": true,
+              "description": "When true, SCORE_CHANGED signals resolve win/lose; toggle to freeze",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "ticketsToWin": {
+              "default": 5.0,
+              "description": "Ticket count that ends the round in a win",
+              "label": "Tickets To Win",
+              "tier": "domain",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Emitted when the play loop resolves to won or lost",
+              "event": "GAME_END",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "result"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ArcadeFlowData",
+          "name": "ArcadeFlow",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SCORE_CHANGED",
+                "name": "Score Changed",
+                "payloadSchema": [
+                  {
+                    "name": "tickets",
+                    "type": "number"
+                  },
+                  {
+                    "name": "tokens",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "Emitted when the play loop resolves to won or lost",
+                "key": "GAME_END",
+                "name": "Game End",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    [
+                      "if",
+                      [
+                        ">=",
+                        "@payload.tickets",
+                        "@config.ticketsToWin"
+                      ],
+                      "won",
+                      [
+                        "if",
+                        [
+                          "<=",
+                          "@payload.tokens",
+                          0.0
+                        ],
+                        "lost",
+                        "none"
+                      ]
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "!=",
+                      "@entity.result",
+                      "none"
+                    ],
+                    [
+                      "emit",
+                      "GAME_END",
+                      {
+                        "result": "@entity.result"
+                      }
+                    ],
+                    null
+                  ]
+                ],
+                "event": "SCORE_CHANGED",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ]
+                ],
+                "event": "RESTART",
+                "from": "active",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}
