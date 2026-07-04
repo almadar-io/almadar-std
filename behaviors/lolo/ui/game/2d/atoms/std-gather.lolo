@@ -1,0 +1,122 @@
+app std-gather "1.0.0"
+"Headless resource-gathering mechanic: owns features + wood + stone. Listens HERO_STEPPED and, when the hero lands on a wood/stone-type feature, increments the matching resource, removes the node, emits a BURST pickup particle, and emits RESOURCES so survival-flow can decide loss. Never writes units."
+orbital GatherOrbital {
+  type Asset = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    variant : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Feature = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    assetUrl : Asset
+    color : string
+    elevation : number
+  }
+  type Fx = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
+
+  entity GatherData [runtime, shared] {
+    id : string!
+    features : [Feature]
+    wood : number = 0
+    stone : number = 0
+  }
+
+  trait Gather -> @rebindable GatherData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.features @config.features)
+        (set @entity.wood @config.startWood)
+        (set @entity.stone @config.startStone)
+
+      HERO_STEPPED -> active when @config.running
+        (let ((matched (array/filter @entity.features (fn f (and (== (object/get @f x) @payload.x) (and (== (object/get @f y) @payload.z) (or (== (object/get @f type) @config.woodType) (== (object/get @f type) @config.stoneType))))))))
+        (let ((woodHits (array/len (array/filter @matched (fn f (== (object/get @f type) @config.woodType))))) (stoneHits (array/len (array/filter @matched (fn f (== (object/get @f type) @config.stoneType))))))
+        (do
+          (set @entity.wood (+ @entity.wood (* @config.yieldPerNode @woodHits)))
+          (set @entity.stone (+ @entity.stone (* @config.yieldPerNode @stoneHits)))
+          (set @entity.features (array/filter @entity.features (fn f (not (and (== (object/get @f x) @payload.x) (and (== (object/get @f y) @payload.z) (or (== (object/get @f type) @config.woodType) (== (object/get @f type) @config.stoneType))))))))
+          (emit BURST { particles: (array/map @matched (fn f { id: (str/concat "fx-gather-" (object/get @f id)), type: "pickup", x: (object/get @f x), z: (object/get @f y), message: (if (== (object/get @f type) @config.woodType) "+1 wood" "+1 stone"), ttl: 3 })) })
+          (emit RESOURCES { wood: @entity.wood, stone: @entity.stone, movesLeft: @payload.movesLeft })
+        )))
+
+      RESTART -> active
+        (set @entity.features @config.features)
+        (set @entity.wood @config.startWood)
+        (set @entity.stone @config.startStone)
+    }
+
+    emits {
+      BURST -> external {
+        particles : [Fx]
+      }
+        @description "Pickup particle produced when a resource node is gathered; a fx-particles listener spawns it"
+        @tier "domain"
+      RESOURCES -> external {
+        wood : number!
+        stone : number!
+        movesLeft : number!
+      }
+        @description "Wood/stone totals and moves remaining after this step; a survival-flow listener decides loss"
+        @tier "domain"
+    }
+
+    listens {
+      HERO_STEPPED { unitId : string, x : number, z : number, movesLeft : number }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, hero steps onto resource nodes are gathered; toggle to freeze"
+        @tier "domain"
+      features : [Feature] = []
+        @label "Features"
+        @description "Board features — resource nodes (matched by woodType/stoneType) plus decorations"
+        @tier "domain"
+      woodType : string = "tree"
+        @label "Wood Type"
+        @description "Feature type counted as a wood resource node"
+        @tier "domain"
+      stoneType : string = "rock"
+        @label "Stone Type"
+        @description "Feature type counted as a stone resource node"
+        @tier "domain"
+      yieldPerNode : number = 1
+        @label "Yield Per Node"
+        @description "Wood or stone gained per node gathered"
+        @tier "domain"
+      startWood : number = 0
+        @label "Start Wood"
+        @description "Wood set on INIT"
+        @tier "domain"
+      startStone : number = 0
+        @label "Start Stone"
+        @description "Stone set on INIT"
+        @tier "domain"
+    }
+  }
+
+  page "/gather" as GatherPage -> Gather
+}

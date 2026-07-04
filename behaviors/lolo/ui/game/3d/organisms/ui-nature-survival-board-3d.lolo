@@ -1,62 +1,43 @@
 app ui-nature-survival-board-3d "1.0.0"
-"NatureSurvivalBoard3D — gather wood/stone before energy runs out; build a camp to win or run out and lose."
+"NatureSurvivalBoard3D — gather wood/stone before energy runs out; build a camp to win or run out and lose; composes the std single-hero survival frame."
 orbital NatureSurvivalBoard3DOrbital {
-  type NatureSurvivalBoard3DError = {
-    message : string!
-    name : string
-    code : string
-    stack : string
-  }
+  uses Frame from "std/behaviors/std-survival-board-3d"
+
   type Asset = {
-      url : asset
-      role : string
-      category : string
-      animations : [string]
-      style : string
-      variant : string
-      dimension : string
-      aspect : string
-      name : string
-      thumbnailUrl : string
-    }
-  type NatureSurvivalBoard3DTilesItem = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    variant : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    team : string
+    health : number
+    maxHealth : number
+    unitType : string
+    name : string
+    modelUrl : Asset
+  }
+  type Tile = {
     id : string
     x : number!
     y : number!
+    z : number
     terrain : string
     passable : boolean
     modelUrl : Asset
   }
-  type NatureSurvivalBoard3DUnitsItemPosition = {
-    x : number!
-    y : number!
-  }
-  type NatureSurvivalBoard3DUnitsItem = {
-    id : string!
-    position : NatureSurvivalBoard3DUnitsItemPosition
-    unitType : string
-    name : string
-    team : "player" | "neutral"
-    health : number
-    maxHealth : number
-    modelUrl : Asset
-  }
-  type NatureSurvivalBoard3DFeaturesItem = {
-    id : string
-    x : number!
-    y : number!
-    type : string!
-    assetUrl : Asset
-  }
-  type NatureSurvivalBoard3DValidMovesItem = {
-    x : number!
-    z : number!
-  }
-  type NatureSurvivalBoard3DAttackTargetsItem = {
-    x : number!
-    z : number!
-  }
-  type NatureSurvivalBoard3DFxEvent = {
+  type Fx = {
     id : string!
     type : string!
     x : number!
@@ -65,283 +46,85 @@ orbital NatureSurvivalBoard3DOrbital {
     message : string
     ttl : number!
   }
+  type ValidMove = { x : number!  z : number! }
+  type Feature = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    assetUrl : Asset
+    color : string
+    elevation : number
+  }
+  type HudStat = { label : string  value : number }
+  type AssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
+  }
 
-  entity NatureSurvivalBoard3DItem [runtime] {
+  entity GameState [runtime, shared] {
     id : string!
-    units : [NatureSurvivalBoard3DUnitsItem]
-    features : [NatureSurvivalBoard3DFeaturesItem]
-    selectedUnitId : string
-    validMoves : [NatureSurvivalBoard3DValidMovesItem]
-    attackTargets : [NatureSurvivalBoard3DAttackTargetsItem]
-    fx : [NatureSurvivalBoard3DFxEvent] = []
+    units : [Unit] = []
+    tiles : [Tile] = []
+    movesLeft : number = 0
+    features : [Feature] = []
     wood : number = 0
     stone : number = 0
-    woodGoal : number = 4
-    stoneGoal : number = 4
-    result : "none" | "victory" | "defeat" = "none"
-    energyLeft : number = 100
-    gridWidth : number = 16
-    gridHeight : number = 16
-    movementRange : number = 3
-    tiles : [NatureSurvivalBoard3DTilesItem] = []
+    fx : [Fx] = []
+    result : string = "none"
+    selectedUnitId : string = ""
+    validMoves : [ValidMove] = []
+    phase : string = "observation"
   }
 
-  trait NatureSurvivalBoard3DRender -> @rebindable NatureSurvivalBoard3DItem [interaction, instance] {
-    initial: playing
-
-    state playing {
-      INIT -> playing
-        (set @entity.units @config.units)
-        (set @entity.features @config.features)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.attackTargets [])
-        (set @entity.fx [])
-        (set @entity.wood 0)
-        (set @entity.stone 0)
-        (set @entity.woodGoal 4)
-        (set @entity.stoneGoal 4)
-        (set @entity.result "none")
-        (set @entity.energyLeft @config.turnBudget)
-        (set @entity.gridWidth 16)
-        (set @entity.gridHeight 16)
-        (set @entity.movementRange 3)
-        (set @entity.tiles (array/flatten (array/map (array/range 0 16) (fn gy (array/map (array/range 0 16) (fn gx (let ((obstacle (== (math/mod (+ (* @gx 5) (* @gy 3)) 11) 0)) (isRiver (== (math/mod @gy 2) 0))) { id: (str/concat "t-" @gx "-" @gy), x: @gx, y: @gy, terrain: (if @obstacle (if @isRiver "river" "cliff") "grass"), passable: (if @obstacle false true), modelUrl: (if @obstacle (if @isRiver @config.riverAsset @config.cliffAsset) @config.groundAsset) })))))))
-        (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Gather 4 wood + 4 stone, then build camp" }, { label: "How", value: "Click survivor, then click an adjacent tile to move or gather" } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
-        (set @entity.selectedUnitId ?unitId)
-        (set @entity.validMoves (array/map (array/filter @entity.tiles (fn t (and (== @t.passable true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: @t.x, y: @t.y }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) @t.x) (== (object/get (object/get @u position) y) @t.y))))) 0))))) (fn t { x: @t.x, z: @t.y })))
-        (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Gather 4 wood + 4 stone, then build camp" }, { label: "How", value: "Click survivor, then click an adjacent tile to move or gather" } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (!= (array/find @entity.features (fn f (and (== @f.x ?x) (== @f.y ?z)))) null) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) 1)))
-        (let ((hitType (object/get (array/find @entity.features (fn f (and (== @f.x ?x) (== @f.y ?z)))) type)))
-        (do
-        (set @entity.wood (if (== @hitType "tree") (+ @entity.wood 1) @entity.wood))
-        (set @entity.stone (if (== @hitType "rock") (+ @entity.stone 1) @entity.stone))
-        (set @entity.features (array/filter @entity.features (fn f (or (!= @f.x ?x) (!= @f.y ?z)))))
-        (set @entity.fx (array/append @entity.fx { id: (str/concat "fx-" (str/concat ?x ?z)), type: "pickup", x: ?x, z: ?z, message: (if (== @hitType "tree") "+1 wood" "+1 stone"), ttl: 3 }))
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Gather 4 wood + 4 stone, then build camp" }, { label: "How", value: "Click survivor, then click an adjacent tile to move or gather" } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-        ))
-
-      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (== (array/find @entity.features (fn f (and (== @f.x ?x) (== @f.y ?z)))) null) (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (== (object/get (array/find @entity.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0))))))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Gather 4 wood + 4 stone, then build camp" }, { label: "How", value: "Click survivor, then click an adjacent tile to move or gather" } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      CANCEL -> playing when (!= @entity.selectedUnitId "")
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Gather 4 wood + 4 stone, then build camp" }, { label: "How", value: "Click survivor, then click an adjacent tile to move or gather" } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      BUILD_CAMP -> gameover when (and (>= @entity.wood @entity.woodGoal) (>= @entity.stone @entity.stoneGoal))
-        (set @entity.features (array/append @entity.features { id: "camp-fire", x: 2, y: 0, type: "campfire", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-survival-kit/features/campfire-pit.glb", role: "decoration", category: "campfire-pit", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "campfire-pit", thumbnailUrl: "" } }))
-        (set @entity.features (array/append @entity.features { id: "camp-tent", x: 3, y: 0, type: "tent", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-survival-kit/features/tent-canvas.glb", role: "decoration", category: "tent-canvas", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tent-canvas", thumbnailUrl: "" } }))
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.result "victory")
-        (set @entity.fx (array/append @entity.fx { id: "fx-camp", type: "win", x: 2, z: 0, message: "Camp built!", ttl: 6 }))
-        (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Gather 4 wood + 4 stone, then build camp" }, { label: "How", value: "Click survivor, then click an adjacent tile to move or gather" } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      GAME_END -> gameover when (!= @entity.result "none")
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Gather 4 wood + 4 stone, then build camp" }, { label: "How", value: "Click survivor, then click an adjacent tile to move or gather" } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-    }
-
-    state gameover {
-      PLAY_AGAIN -> playing
-        (set @entity.units @config.units)
-        (set @entity.features @config.features)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.attackTargets [])
-        (set @entity.fx [])
-        (set @entity.wood 0)
-        (set @entity.stone 0)
-        (set @entity.result "none")
-        (set @entity.energyLeft @config.turnBudget)
-        (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Gather 4 wood + 4 stone, then build camp" }, { label: "How", value: "Click survivor, then click an adjacent tile to move or gather" } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-    }
-
-    ticks {
-      animalWanderTick every 1200ms
-        when (== @entity.result "none")
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "neutral") (let ((nx (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (math/floor (+ @config.roamMinX (* (math/random) (+ (- @config.roamMaxX @config.roamMinX) 1)))) (object/get (object/get @u position) x)))) @config.roamMinX @config.roamMaxX)) (ny (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (math/floor (+ @config.roamMinY (* (math/random) (+ (- @config.roamMaxY @config.roamMinY) 1)))) (object/get (object/get @u position) y)))) @config.roamMinY @config.roamMaxY))) (let ((valid (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get t x) @nx) (== (object/get t y) @ny)))) passable) true) (== (array/len (array/filter @entity.units (fn o (and (== (object/get (object/get o position) x) @nx) (== (object/get (object/get o position) y) @ny))))) 0)))) (if @valid (object/merge @u { position: { x: @nx, y: @ny } }) @u))) @u))))
-        (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
-        (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Gather 4 wood + 4 stone, then build camp" }, { label: "How", value: "Click survivor, then click an adjacent tile to move or gather" } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      energyTick every 1500ms
-        when (== @entity.result "none")
-        (set @entity.energyLeft (math/max 0 (- @entity.energyLeft 1)))
-        (set @entity.result (if (<= @entity.energyLeft 0) "defeat" @entity.result))
-        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
-        (render-ui main {
-          type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.energyLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Gather 4 wood + 4 stone, then build camp" }, { label: "How", value: "Click survivor, then click an adjacent tile to move or gather" } ] }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-    }
-
-    emits {
-      UNIT_CLICK -> external {
-        unitId : string!
-        x : number
-        z : number
-      }
-        @description "Selects the survivor unit and computes valid move tiles"
-        @tier "domain"
-      TILE_CLICK -> external {
-        x : number!
-        z : number
-        tileId : string
-      }
-        @description "Gathers an adjacent resource, or moves the survivor to a valid tile"
-        @tier "domain"
-      CANCEL -> external {
-        id : string
-      }
-        @description "Clears the current unit selection"
-        @tier "domain"
-      BUILD_CAMP -> external {
-        id : string
-      }
-        @description "Builds the camp (campfire + tent) once wood/stone goals are met"
-        @tier "domain"
-      GAME_END -> external {
-        result : string
-      }
-        @description "Called when the match ends in victory or defeat"
-        @tier "domain"
-      PLAY_AGAIN -> external {
-        id : string
-      }
-        @description "Resets the board after victory or defeat"
-        @tier "domain"
-    }
-
+  trait HeroAuthority = Frame.traits.HeroAuthority -> GameState {
     config {
-      className : string = ""
-        @label "Class Name"
-        @description "className prop"
-        @tier "presentation"
-      isLoading : boolean = false
-        @label "Is Loading"
-        @description "Loading state indicator"
-        @tier "presentation"
-      error : NatureSurvivalBoard3DError
-        @label "Error"
-        @description "Error state (UiError)"
-        @tier "presentation"
-      groundAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb", role: "tile", category: "ground_grass", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "ground_grass", thumbnailUrl: "" }
-        @label "Ground Asset"
-        @description "Passable grass ground tile, tiled across the wilderness."
-        @tier "presentation"
-      riverAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_riverStraight.glb", role: "tile", category: "ground_riverStraight", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "ground_riverStraight", thumbnailUrl: "" }
-        @label "River Asset"
-        @description "Impassable river obstacle tile, scattered across the map."
-        @tier "presentation"
-      cliffAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/cliff_block_rock.glb", role: "tile", category: "cliff_block_rock", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cliff_block_rock", thumbnailUrl: "" }
-        @label "Cliff Asset"
-        @description "Impassable cliff obstacle tile, scattered across the map."
-        @tier "presentation"
-      features : [NatureSurvivalBoard3DFeaturesItem] = [{ id: "f1", x: 5, y: 1, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_default.glb", role: "decoration", category: "tree_default", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_default", thumbnailUrl: "" } }, { id: "f2", x: 13, y: 1, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_oak.glb", role: "decoration", category: "tree_oak", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_oak", thumbnailUrl: "" } }, { id: "f3", x: 5, y: 5, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_pineRoundA.glb", role: "decoration", category: "tree_pineRoundA", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_pineRoundA", thumbnailUrl: "" } }, { id: "f4", x: 13, y: 5, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_default.glb", role: "decoration", category: "tree_default", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_default", thumbnailUrl: "" } }, { id: "f5", x: 5, y: 9, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_oak.glb", role: "decoration", category: "tree_oak", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_oak", thumbnailUrl: "" } }, { id: "f6", x: 13, y: 9, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_pineRoundA.glb", role: "decoration", category: "tree_pineRoundA", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_pineRoundA", thumbnailUrl: "" } }, { id: "f7", x: 9, y: 13, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_default.glb", role: "decoration", category: "tree_default", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_default", thumbnailUrl: "" } }, { id: "f8", x: 3, y: 3, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_oak.glb", role: "decoration", category: "tree_oak", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_oak", thumbnailUrl: "" } }, { id: "f9", x: 9, y: 1, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeA.glb", role: "decoration", category: "rock_largeA", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "f10", x: 1, y: 5, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeB.glb", role: "decoration", category: "rock_largeB", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeB", thumbnailUrl: "" } }, { id: "f11", x: 9, y: 5, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeC.glb", role: "decoration", category: "rock_largeC", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeC", thumbnailUrl: "" } }, { id: "f12", x: 1, y: 9, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeA.glb", role: "decoration", category: "rock_largeA", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "f13", x: 9, y: 9, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeB.glb", role: "decoration", category: "rock_largeB", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeB", thumbnailUrl: "" } }, { id: "f14", x: 5, y: 13, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeC.glb", role: "decoration", category: "rock_largeC", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeC", thumbnailUrl: "" } }, { id: "f15", x: 13, y: 13, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeA.glb", role: "decoration", category: "rock_largeA", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "f16", x: 11, y: 3, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeB.glb", role: "decoration", category: "rock_largeB", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeB", thumbnailUrl: "" } }]
-        @label "Features"
-        @description "Initial resource nodes (8 trees for wood, 8 rocks for stone) scattered across the wilderness."
-        @tier "presentation"
-      units : [NatureSurvivalBoard3DUnitsItem] = [{ id: "survivor", position: { x: 1, y: 1 }, unitType: "survivor", name: "Survivor", team: player, health: 1, maxHealth: 1, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-male-a.glb", role: "player", category: "character-male-a", animations: ["idle","walk"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "character-male-a", thumbnailUrl: "" } }, { id: "deer", position: { x: 2, y: 3 }, unitType: "deer", name: "Deer", team: neutral, health: 1, maxHealth: 1, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cube-pets/units/animal-deer.glb", role: "npc", category: "animal-deer", animations: ["idle","walk"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "animal-deer", thumbnailUrl: "" } }]
-        @label "Units"
-        @description "Survivor (player) and a wandering deer (neutral)."
-        @tier "presentation"
-      roamMinX : number = 0
-        @label "Roam Min X"
-        @description "Animal roam rectangle min x"
-        @tier "presentation"
-      roamMaxX : number = 5
-        @label "Roam Max X"
-        @description "Animal roam rectangle max x"
-        @tier "presentation"
-      roamMinY : number = 1
-        @label "Roam Min Y"
-        @description "Animal roam rectangle min y"
-        @tier "presentation"
-      roamMaxY : number = 6
-        @label "Roam Max Y"
-        @description "Animal roam rectangle max y"
-        @tier "presentation"
-      scale : number = 0.45
-        @label "Scale"
-        @description "Canvas render scale"
-        @tier "presentation"
-      unitScale : number = 1
-        @label "Unit Scale"
-        @description "Unit draw-size multiplier"
-        @tier "presentation"
-      turnBudget : number = 100
-        @label "Turn Budget"
-        @description "Energy ticks allowed before defeat if the camp is not yet built"
-        @tier "presentation"
+      running: true
+      gridWidth: 16
+      gridHeight: 16
+      moveBudget: 100
+      units: [ { id: "survivor", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 1, maxHealth: 1, unitType: "survivor", name: "Survivor", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-male-a.glb", role: "player", category: "character-male-a", animations: ["idle","walk"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "character-male-a", thumbnailUrl: "" } }, { id: "deer", position: { x: 2, y: 3 }, x: 2, y: 3, z: 0, team: "neutral", health: 1, maxHealth: 1, unitType: "deer", name: "Deer", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-cube-pets/units/animal-deer.glb", role: "npc", category: "animal-deer", animations: ["idle","walk"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "animal-deer", thumbnailUrl: "" } } ]
+      tiles: [ { id: "t-0-0", x: 0, y: 0, z: 0, terrain: "river", passable: false }, { id: "t-1-0", x: 1, y: 0, z: 0, terrain: "grass", passable: true }, { id: "t-2-0", x: 2, y: 0, z: 0, terrain: "grass", passable: true }, { id: "t-3-0", x: 3, y: 0, z: 0, terrain: "grass", passable: true }, { id: "t-4-0", x: 4, y: 0, z: 0, terrain: "grass", passable: true }, { id: "t-5-0", x: 5, y: 0, z: 0, terrain: "grass", passable: true }, { id: "t-6-0", x: 6, y: 0, z: 0, terrain: "grass", passable: true }, { id: "t-7-0", x: 7, y: 0, z: 0, terrain: "grass", passable: true }, { id: "t-8-0", x: 8, y: 0, z: 0, terrain: "grass", passable: true }, { id: "t-9-0", x: 9, y: 0, z: 0, terrain: "grass", passable: true }, { id: "t-10-0", x: 10, y: 0, z: 0, terrain: "grass", passable: true }, { id: "t-11-0", x: 11, y: 0, z: 0, terrain: "river", passable: false }, { id: "t-12-0", x: 12, y: 0, z: 0, terrain: "grass", passable: true }, { id: "t-13-0", x: 13, y: 0, z: 0, terrain: "grass", passable: true }, { id: "t-14-0", x: 14, y: 0, z: 0, terrain: "grass", passable: true }, { id: "t-15-0", x: 15, y: 0, z: 0, terrain: "grass", passable: true }, { id: "t-0-1", x: 0, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-2-1", x: 2, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-3-1", x: 3, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-4-1", x: 4, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-5-1", x: 5, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-6-1", x: 6, y: 1, z: 0, terrain: "cliff", passable: false }, { id: "t-7-1", x: 7, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-8-1", x: 8, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-9-1", x: 9, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-10-1", x: 10, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-11-1", x: 11, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-12-1", x: 12, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-13-1", x: 13, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-14-1", x: 14, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-15-1", x: 15, y: 1, z: 0, terrain: "grass", passable: true }, { id: "t-0-2", x: 0, y: 2, z: 0, terrain: "grass", passable: true }, { id: "t-1-2", x: 1, y: 2, z: 0, terrain: "river", passable: false }, { id: "t-2-2", x: 2, y: 2, z: 0, terrain: "grass", passable: true }, { id: "t-3-2", x: 3, y: 2, z: 0, terrain: "grass", passable: true }, { id: "t-4-2", x: 4, y: 2, z: 0, terrain: "grass", passable: true }, { id: "t-5-2", x: 5, y: 2, z: 0, terrain: "grass", passable: true }, { id: "t-6-2", x: 6, y: 2, z: 0, terrain: "grass", passable: true }, { id: "t-7-2", x: 7, y: 2, z: 0, terrain: "grass", passable: true }, { id: "t-8-2", x: 8, y: 2, z: 0, terrain: "grass", passable: true }, { id: "t-9-2", x: 9, y: 2, z: 0, terrain: "grass", passable: true }, { id: "t-10-2", x: 10, y: 2, z: 0, terrain: "grass", passable: true }, { id: "t-11-2", x: 11, y: 2, z: 0, terrain: "grass", passable: true }, { id: "t-12-2", x: 12, y: 2, z: 0, terrain: "river", passable: false }, { id: "t-13-2", x: 13, y: 2, z: 0, terrain: "grass", passable: true }, { id: "t-14-2", x: 14, y: 2, z: 0, terrain: "grass", passable: true }, { id: "t-15-2", x: 15, y: 2, z: 0, terrain: "grass", passable: true }, { id: "t-0-3", x: 0, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-1-3", x: 1, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-2-3", x: 2, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-3-3", x: 3, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-4-3", x: 4, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-5-3", x: 5, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-6-3", x: 6, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-7-3", x: 7, y: 3, z: 0, terrain: "cliff", passable: false }, { id: "t-8-3", x: 8, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-9-3", x: 9, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-10-3", x: 10, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-11-3", x: 11, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-12-3", x: 12, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-13-3", x: 13, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-14-3", x: 14, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-15-3", x: 15, y: 3, z: 0, terrain: "grass", passable: true }, { id: "t-0-4", x: 0, y: 4, z: 0, terrain: "grass", passable: true }, { id: "t-1-4", x: 1, y: 4, z: 0, terrain: "grass", passable: true }, { id: "t-2-4", x: 2, y: 4, z: 0, terrain: "river", passable: false }, { id: "t-3-4", x: 3, y: 4, z: 0, terrain: "grass", passable: true }, { id: "t-4-4", x: 4, y: 4, z: 0, terrain: "grass", passable: true }, { id: "t-5-4", x: 5, y: 4, z: 0, terrain: "grass", passable: true }, { id: "t-6-4", x: 6, y: 4, z: 0, terrain: "grass", passable: true }, { id: "t-7-4", x: 7, y: 4, z: 0, terrain: "grass", passable: true }, { id: "t-8-4", x: 8, y: 4, z: 0, terrain: "grass", passable: true }, { id: "t-9-4", x: 9, y: 4, z: 0, terrain: "grass", passable: true }, { id: "t-10-4", x: 10, y: 4, z: 0, terrain: "grass", passable: true }, { id: "t-11-4", x: 11, y: 4, z: 0, terrain: "grass", passable: true }, { id: "t-12-4", x: 12, y: 4, z: 0, terrain: "grass", passable: true }, { id: "t-13-4", x: 13, y: 4, z: 0, terrain: "river", passable: false }, { id: "t-14-4", x: 14, y: 4, z: 0, terrain: "grass", passable: true }, { id: "t-15-4", x: 15, y: 4, z: 0, terrain: "grass", passable: true }, { id: "t-0-5", x: 0, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-1-5", x: 1, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-2-5", x: 2, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-3-5", x: 3, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-4-5", x: 4, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-5-5", x: 5, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-6-5", x: 6, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-7-5", x: 7, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-8-5", x: 8, y: 5, z: 0, terrain: "cliff", passable: false }, { id: "t-9-5", x: 9, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-10-5", x: 10, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-11-5", x: 11, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-12-5", x: 12, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-13-5", x: 13, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-14-5", x: 14, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-15-5", x: 15, y: 5, z: 0, terrain: "grass", passable: true }, { id: "t-0-6", x: 0, y: 6, z: 0, terrain: "grass", passable: true }, { id: "t-1-6", x: 1, y: 6, z: 0, terrain: "grass", passable: true }, { id: "t-2-6", x: 2, y: 6, z: 0, terrain: "grass", passable: true }, { id: "t-3-6", x: 3, y: 6, z: 0, terrain: "river", passable: false }, { id: "t-4-6", x: 4, y: 6, z: 0, terrain: "grass", passable: true }, { id: "t-5-6", x: 5, y: 6, z: 0, terrain: "grass", passable: true }, { id: "t-6-6", x: 6, y: 6, z: 0, terrain: "grass", passable: true }, { id: "t-7-6", x: 7, y: 6, z: 0, terrain: "grass", passable: true }, { id: "t-8-6", x: 8, y: 6, z: 0, terrain: "grass", passable: true }, { id: "t-9-6", x: 9, y: 6, z: 0, terrain: "grass", passable: true }, { id: "t-10-6", x: 10, y: 6, z: 0, terrain: "grass", passable: true }, { id: "t-11-6", x: 11, y: 6, z: 0, terrain: "grass", passable: true }, { id: "t-12-6", x: 12, y: 6, z: 0, terrain: "grass", passable: true }, { id: "t-13-6", x: 13, y: 6, z: 0, terrain: "grass", passable: true }, { id: "t-14-6", x: 14, y: 6, z: 0, terrain: "river", passable: false }, { id: "t-15-6", x: 15, y: 6, z: 0, terrain: "grass", passable: true }, { id: "t-0-7", x: 0, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-1-7", x: 1, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-2-7", x: 2, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-3-7", x: 3, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-4-7", x: 4, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-5-7", x: 5, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-6-7", x: 6, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-7-7", x: 7, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-8-7", x: 8, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-9-7", x: 9, y: 7, z: 0, terrain: "cliff", passable: false }, { id: "t-10-7", x: 10, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-11-7", x: 11, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-12-7", x: 12, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-13-7", x: 13, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-14-7", x: 14, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-15-7", x: 15, y: 7, z: 0, terrain: "grass", passable: true }, { id: "t-0-8", x: 0, y: 8, z: 0, terrain: "grass", passable: true }, { id: "t-1-8", x: 1, y: 8, z: 0, terrain: "grass", passable: true }, { id: "t-2-8", x: 2, y: 8, z: 0, terrain: "grass", passable: true }, { id: "t-3-8", x: 3, y: 8, z: 0, terrain: "grass", passable: true }, { id: "t-4-8", x: 4, y: 8, z: 0, terrain: "river", passable: false }, { id: "t-5-8", x: 5, y: 8, z: 0, terrain: "grass", passable: true }, { id: "t-6-8", x: 6, y: 8, z: 0, terrain: "grass", passable: true }, { id: "t-7-8", x: 7, y: 8, z: 0, terrain: "grass", passable: true }, { id: "t-8-8", x: 8, y: 8, z: 0, terrain: "grass", passable: true }, { id: "t-9-8", x: 9, y: 8, z: 0, terrain: "grass", passable: true }, { id: "t-10-8", x: 10, y: 8, z: 0, terrain: "grass", passable: true }, { id: "t-11-8", x: 11, y: 8, z: 0, terrain: "grass", passable: true }, { id: "t-12-8", x: 12, y: 8, z: 0, terrain: "grass", passable: true }, { id: "t-13-8", x: 13, y: 8, z: 0, terrain: "grass", passable: true }, { id: "t-14-8", x: 14, y: 8, z: 0, terrain: "grass", passable: true }, { id: "t-15-8", x: 15, y: 8, z: 0, terrain: "river", passable: false }, { id: "t-0-9", x: 0, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-1-9", x: 1, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-2-9", x: 2, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-3-9", x: 3, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-4-9", x: 4, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-5-9", x: 5, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-6-9", x: 6, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-7-9", x: 7, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-8-9", x: 8, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-9-9", x: 9, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-10-9", x: 10, y: 9, z: 0, terrain: "cliff", passable: false }, { id: "t-11-9", x: 11, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-12-9", x: 12, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-13-9", x: 13, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-14-9", x: 14, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-15-9", x: 15, y: 9, z: 0, terrain: "grass", passable: true }, { id: "t-0-10", x: 0, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-1-10", x: 1, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-2-10", x: 2, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-3-10", x: 3, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-4-10", x: 4, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-5-10", x: 5, y: 10, z: 0, terrain: "river", passable: false }, { id: "t-6-10", x: 6, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-7-10", x: 7, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-8-10", x: 8, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-9-10", x: 9, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-10-10", x: 10, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-11-10", x: 11, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-12-10", x: 12, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-13-10", x: 13, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-14-10", x: 14, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-15-10", x: 15, y: 10, z: 0, terrain: "grass", passable: true }, { id: "t-0-11", x: 0, y: 11, z: 0, terrain: "cliff", passable: false }, { id: "t-1-11", x: 1, y: 11, z: 0, terrain: "grass", passable: true }, { id: "t-2-11", x: 2, y: 11, z: 0, terrain: "grass", passable: true }, { id: "t-3-11", x: 3, y: 11, z: 0, terrain: "grass", passable: true }, { id: "t-4-11", x: 4, y: 11, z: 0, terrain: "grass", passable: true }, { id: "t-5-11", x: 5, y: 11, z: 0, terrain: "grass", passable: true }, { id: "t-6-11", x: 6, y: 11, z: 0, terrain: "grass", passable: true }, { id: "t-7-11", x: 7, y: 11, z: 0, terrain: "grass", passable: true }, { id: "t-8-11", x: 8, y: 11, z: 0, terrain: "grass", passable: true }, { id: "t-9-11", x: 9, y: 11, z: 0, terrain: "grass", passable: true }, { id: "t-10-11", x: 10, y: 11, z: 0, terrain: "grass", passable: true }, { id: "t-11-11", x: 11, y: 11, z: 0, terrain: "cliff", passable: false }, { id: "t-12-11", x: 12, y: 11, z: 0, terrain: "grass", passable: true }, { id: "t-13-11", x: 13, y: 11, z: 0, terrain: "grass", passable: true }, { id: "t-14-11", x: 14, y: 11, z: 0, terrain: "grass", passable: true }, { id: "t-15-11", x: 15, y: 11, z: 0, terrain: "grass", passable: true }, { id: "t-0-12", x: 0, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-1-12", x: 1, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-2-12", x: 2, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-3-12", x: 3, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-4-12", x: 4, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-5-12", x: 5, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-6-12", x: 6, y: 12, z: 0, terrain: "river", passable: false }, { id: "t-7-12", x: 7, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-8-12", x: 8, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-9-12", x: 9, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-10-12", x: 10, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-11-12", x: 11, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-12-12", x: 12, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-13-12", x: 13, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-14-12", x: 14, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-15-12", x: 15, y: 12, z: 0, terrain: "grass", passable: true }, { id: "t-0-13", x: 0, y: 13, z: 0, terrain: "grass", passable: true }, { id: "t-1-13", x: 1, y: 13, z: 0, terrain: "cliff", passable: false }, { id: "t-2-13", x: 2, y: 13, z: 0, terrain: "grass", passable: true }, { id: "t-3-13", x: 3, y: 13, z: 0, terrain: "grass", passable: true }, { id: "t-4-13", x: 4, y: 13, z: 0, terrain: "grass", passable: true }, { id: "t-5-13", x: 5, y: 13, z: 0, terrain: "grass", passable: true }, { id: "t-6-13", x: 6, y: 13, z: 0, terrain: "grass", passable: true }, { id: "t-7-13", x: 7, y: 13, z: 0, terrain: "grass", passable: true }, { id: "t-8-13", x: 8, y: 13, z: 0, terrain: "grass", passable: true }, { id: "t-9-13", x: 9, y: 13, z: 0, terrain: "grass", passable: true }, { id: "t-10-13", x: 10, y: 13, z: 0, terrain: "grass", passable: true }, { id: "t-11-13", x: 11, y: 13, z: 0, terrain: "grass", passable: true }, { id: "t-12-13", x: 12, y: 13, z: 0, terrain: "cliff", passable: false }, { id: "t-13-13", x: 13, y: 13, z: 0, terrain: "grass", passable: true }, { id: "t-14-13", x: 14, y: 13, z: 0, terrain: "grass", passable: true }, { id: "t-15-13", x: 15, y: 13, z: 0, terrain: "grass", passable: true }, { id: "t-0-14", x: 0, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-1-14", x: 1, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-2-14", x: 2, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-3-14", x: 3, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-4-14", x: 4, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-5-14", x: 5, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-6-14", x: 6, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-7-14", x: 7, y: 14, z: 0, terrain: "river", passable: false }, { id: "t-8-14", x: 8, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-9-14", x: 9, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-10-14", x: 10, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-11-14", x: 11, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-12-14", x: 12, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-13-14", x: 13, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-14-14", x: 14, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-15-14", x: 15, y: 14, z: 0, terrain: "grass", passable: true }, { id: "t-0-15", x: 0, y: 15, z: 0, terrain: "grass", passable: true }, { id: "t-1-15", x: 1, y: 15, z: 0, terrain: "grass", passable: true }, { id: "t-2-15", x: 2, y: 15, z: 0, terrain: "cliff", passable: false }, { id: "t-3-15", x: 3, y: 15, z: 0, terrain: "grass", passable: true }, { id: "t-4-15", x: 4, y: 15, z: 0, terrain: "grass", passable: true }, { id: "t-5-15", x: 5, y: 15, z: 0, terrain: "grass", passable: true }, { id: "t-6-15", x: 6, y: 15, z: 0, terrain: "grass", passable: true }, { id: "t-7-15", x: 7, y: 15, z: 0, terrain: "grass", passable: true }, { id: "t-8-15", x: 8, y: 15, z: 0, terrain: "grass", passable: true }, { id: "t-9-15", x: 9, y: 15, z: 0, terrain: "grass", passable: true }, { id: "t-10-15", x: 10, y: 15, z: 0, terrain: "grass", passable: true }, { id: "t-11-15", x: 11, y: 15, z: 0, terrain: "grass", passable: true }, { id: "t-12-15", x: 12, y: 15, z: 0, terrain: "grass", passable: true }, { id: "t-13-15", x: 13, y: 15, z: 0, terrain: "cliff", passable: false }, { id: "t-14-15", x: 14, y: 15, z: 0, terrain: "grass", passable: true }, { id: "t-15-15", x: 15, y: 15, z: 0, terrain: "grass", passable: true } ]
     }
   }
 
-  page "/nature-survival-board-3d" as NatureSurvivalBoard3DPage -> NatureSurvivalBoard3DRender
+  trait Gather = Frame.traits.Gather -> GameState {
+    config {
+      running: true
+      woodType: "tree"
+      stoneType: "rock"
+      yieldPerNode: 1
+      startWood: 0
+      startStone: 0
+      features: [ { id: "f1", x: 5, y: 1, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_default.glb", role: "decoration", category: "tree_default", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_default", thumbnailUrl: "" } }, { id: "f2", x: 13, y: 1, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_oak.glb", role: "decoration", category: "tree_oak", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_oak", thumbnailUrl: "" } }, { id: "f3", x: 5, y: 5, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_pineRoundA.glb", role: "decoration", category: "tree_pineRoundA", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_pineRoundA", thumbnailUrl: "" } }, { id: "f4", x: 13, y: 5, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_default.glb", role: "decoration", category: "tree_default", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_default", thumbnailUrl: "" } }, { id: "f5", x: 5, y: 9, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_oak.glb", role: "decoration", category: "tree_oak", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_oak", thumbnailUrl: "" } }, { id: "f6", x: 13, y: 9, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_pineRoundA.glb", role: "decoration", category: "tree_pineRoundA", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_pineRoundA", thumbnailUrl: "" } }, { id: "f7", x: 9, y: 13, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_default.glb", role: "decoration", category: "tree_default", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_default", thumbnailUrl: "" } }, { id: "f8", x: 3, y: 3, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/tree_oak.glb", role: "decoration", category: "tree_oak", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree_oak", thumbnailUrl: "" } }, { id: "f9", x: 9, y: 1, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeA.glb", role: "decoration", category: "rock_largeA", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "f10", x: 1, y: 5, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeB.glb", role: "decoration", category: "rock_largeB", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeB", thumbnailUrl: "" } }, { id: "f11", x: 9, y: 5, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeC.glb", role: "decoration", category: "rock_largeC", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeC", thumbnailUrl: "" } }, { id: "f12", x: 1, y: 9, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeA.glb", role: "decoration", category: "rock_largeA", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "f13", x: 9, y: 9, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeB.glb", role: "decoration", category: "rock_largeB", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeB", thumbnailUrl: "" } }, { id: "f14", x: 5, y: 13, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeC.glb", role: "decoration", category: "rock_largeC", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeC", thumbnailUrl: "" } }, { id: "f15", x: 13, y: 13, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeA.glb", role: "decoration", category: "rock_largeA", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeA", thumbnailUrl: "" } }, { id: "f16", x: 11, y: 3, type: "rock", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/features/rock_largeB.glb", role: "decoration", category: "rock_largeB", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "rock_largeB", thumbnailUrl: "" } } ]
+    }
+  }
+
+  trait FxDecay = Frame.traits.FxDecay -> GameState {
+    config { running: true }
+  }
+
+  trait Flow = Frame.traits.Flow -> GameState {
+    config { running: true }
+  }
+
+  trait Player = Frame.traits.SurvivalIntent -> GameState {
+    config {
+      gridWidth: 16
+      gridHeight: 16
+      movementRange: 3
+      campWood: 4
+      campStone: 4
+      cameraMode: "top-down"
+      scale: 0.45
+      unitScale: 1
+      bgColor: "#0a1a0f"
+      assetManifest: { terrains: { grass: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_grass.glb", role: "tile", category: "ground_grass", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "ground_grass", thumbnailUrl: "" }, river: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/ground_riverStraight.glb", role: "tile", category: "ground_riverStraight", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "ground_riverStraight", thumbnailUrl: "" }, cliff: { url: "https://almadar-kflow-assets.web.app/shared/ui-nature-survival-board-3d/kenney-nature-kit/terrain/cliff_block_rock.glb", role: "tile", category: "cliff_block_rock", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cliff_block_rock", thumbnailUrl: "" } }, units: {}, features: {}, effects: {} }
+    }
+  }
+
+  page "/nature-survival-board-3d" as NatureSurvivalBoard3DPage -> HeroAuthority, Gather, FxDecay, Flow, Player
 }

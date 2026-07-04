@@ -1,0 +1,262 @@
+app std-survival-board-3d "1.0.0"
+"3D single-hero survival board FRAME: composes hero-nav (units + move budget as energy) + gather (wood/stone resource nodes) + fx-particles + survival-flow (build-camp win / energy-out loss) onto one shared GameState with a single render authority. Games consume this molecule and supply only theme/assets/units/tiles/features/camp thresholds via config."
+orbital SurvivalBoard3DOrbital {
+  uses Nav from "std/behaviors/std-hero-nav"
+  uses Harvest from "std/behaviors/std-gather"
+  uses Particles from "std/behaviors/std-fx-particles"
+  uses Survival from "std/behaviors/std-survival-flow"
+
+  type Asset = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    variant : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    team : string
+    health : number
+    maxHealth : number
+    unitType : string
+    name : string
+    modelUrl : Asset
+  }
+  type Tile = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    passable : boolean
+    modelUrl : Asset
+  }
+  type Fx = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
+  type ValidMove = { x : number!  z : number! }
+  type Feature = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    assetUrl : Asset
+    color : string
+    elevation : number
+  }
+  type HudStat = { label : string  value : number }
+  type AssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
+  }
+
+  entity GameState [runtime, shared] {
+    id : string!
+    units : [Unit] = []
+    tiles : [Tile] = []
+    movesLeft : number = 0
+    features : [Feature] = []
+    wood : number = 0
+    stone : number = 0
+    fx : [Fx] = []
+    result : string = "none"
+    selectedUnitId : string = ""
+    validMoves : [ValidMove] = []
+    phase : string = "observation"
+  }
+
+  trait HeroAuthority = Nav.traits.HeroNav -> GameState {
+    config {
+      running: true
+      gridWidth: 16
+      gridHeight: 16
+      moveBudget: 100
+      units: [ { id: "survivor", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 1, maxHealth: 1, unitType: "survivor" } ]
+    }
+  }
+
+  trait Gather = Harvest.traits.Gather -> GameState {
+    config {
+      running: true
+      woodType: "tree"
+      stoneType: "rock"
+      yieldPerNode: 1
+    }
+  }
+
+  trait FxDecay = Particles.traits.FxParticles -> GameState {
+    config { running: true }
+  }
+
+  trait Flow = Survival.traits.SurvivalFlow -> GameState {
+    config { running: true }
+  }
+
+  trait SurvivalIntent -> GameState [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: (array/concat [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.movesLeft }, { label: "Result", value: @entity.result } ] @config.extraStats) }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, cameraMode: @config.cameraMode, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx, assetManifest: @config.assetManifest } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.result "none") (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.phase "selection")
+        (set @entity.validMoves (array/map (array/filter @entity.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @config.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+
+      TILE_CLICK -> playing when (and (== @entity.result "none") (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @config.gridWidth @config.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @config.movementRange) (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) ?x) (== (object/get @t y) ?z)))) passable) true) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0))))))
+        (emit MOVE { unitId: @entity.selectedUnitId, x: ?x, y: ?z })
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.phase "observation")
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.phase "observation")
+
+      BUILD_CAMP -> playing when (and (== @entity.result "none") (and (>= @entity.wood @config.campWood) (>= @entity.stone @config.campStone)))
+        (emit BUILD_CAMP { id: "board" })
+
+      PLAY_AGAIN -> playing
+        (emit RESTART { id: "board" })
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.phase "observation")
+    }
+
+    ticks {
+      renderTick every 100ms
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: (array/concat [ { label: "Wood", value: @entity.wood }, { label: "Stone", value: @entity.stone }, { label: "Energy", value: @entity.movesLeft }, { label: "Result", value: @entity.result } ] @config.extraStats) }, { type: button, action: BUILD_CAMP, label: "Build Camp", variant: primary } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, cameraMode: @config.cameraMode, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @entity.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx, assetManifest: @config.assetManifest } ]
+        })
+
+      wanderTick every 900ms when (== @entity.result "none")
+        (emit WANDER { tick: 1 })
+    }
+
+    emits {
+      MOVE -> external {
+        unitId : string!
+        x : number!
+        y : number!
+      }
+        @description "Hero move intent applied by the hero-nav authority"
+        @tier "domain"
+      WANDER -> external {
+        tick : number!
+      }
+        @description "Advances neutral NPCs one random step via the hero-nav authority"
+        @tier "domain"
+      RESTART -> external {
+        id : string!
+      }
+        @description "Resets every mechanic (units/budget, resources, result) for a new round"
+        @tier "domain"
+      TILE_CLICK -> external {
+        x : number!
+        z : number!
+        tileId : string
+      }
+        @description "tileClickEvent prop"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+        x : number
+        z : number
+      }
+        @description "unitClickEvent prop"
+        @tier "domain"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Clears the current selection"
+        @tier "domain"
+      BUILD_CAMP -> external {
+        id : string
+      }
+        @description "Requests building the camp once wood/stone goals are met; survival-flow resolves the win"
+        @tier "domain"
+    }
+
+    config {
+      gridWidth : number = 16
+        @label "Grid Width"
+        @description "Grid column count (matches HeroAuthority.gridWidth)."
+        @tier "domain"
+      gridHeight : number = 16
+        @label "Grid Height"
+        @description "Grid row count (matches HeroAuthority.gridHeight)."
+        @tier "domain"
+      movementRange : number = 3
+        @label "Movement Range"
+        @description "Max manhattan distance the hero may step per move."
+        @tier "domain"
+      campWood : number = 4
+        @label "Camp Wood"
+        @description "Wood required before the Build Camp action is allowed."
+        @tier "domain"
+      campStone : number = 4
+        @label "Camp Stone"
+        @description "Stone required before the Build Camp action is allowed."
+        @tier "domain"
+      extraStats : [HudStat] = []
+        @label "Extra Stats"
+        @description "Board-specific HUD stats appended after the standard set."
+        @tier "presentation"
+      cameraMode : string = "top-down"
+        @label "Camera Mode"
+        @description "3D canvas camera mode."
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale."
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier."
+        @tier "presentation"
+      bgColor : string = "#0a0f1a"
+        @label "Bg Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      assetManifest : AssetManifest = { terrains: {}, units: {}, features: {}, effects: {} }
+        @label "Asset Manifest"
+        @description "Per-role model manifest resolving tile/unit/feature models by terrain/category key."
+        @tier "presentation"
+    }
+  }
+
+  page "/survival-board-3d" as SurvivalBoard3DPage -> HeroAuthority, Gather, FxDecay, Flow, SurvivalIntent
+}

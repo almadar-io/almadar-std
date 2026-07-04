@@ -1,0 +1,51 @@
+app std-survival-flow "1.0.0"
+"Headless win/lose authority for the nature-survival board: owns only result. Listens RESOURCES (movesLeft) and sets result to lost when the move budget runs out before the camp is built; listens BUILD_CAMP (the render-gated win intent) and sets result to won. Renders nothing."
+orbital SurvivalFlowOrbital {
+  entity SurvivalFlowData [runtime, shared] {
+    id : string!
+    result : string = "none"
+  }
+
+  trait SurvivalFlow -> @rebindable SurvivalFlowData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.result "none")
+
+      RESOURCES -> active when @config.running
+        (set @entity.result (if (and (<= @payload.movesLeft 0) (!= @entity.result "won")) "lost" @entity.result))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+
+      BUILD_CAMP -> active when @config.running
+        (set @entity.result "won")
+        (emit GAME_END { result: @entity.result })
+
+      RESTART -> active
+        (set @entity.result "none")
+    }
+
+    emits {
+      GAME_END -> external {
+        result : string!
+      }
+        @description "Emitted once the match resolves to won or lost"
+        @tier "domain"
+    }
+
+    listens {
+      RESOURCES { wood : number, stone : number, movesLeft : number }
+      BUILD_CAMP { id : string }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, RESOURCES/BUILD_CAMP signals resolve win/lose; toggle to freeze"
+        @tier "domain"
+    }
+  }
+
+  page "/survival-flow" as SurvivalFlowPage -> SurvivalFlow
+}
