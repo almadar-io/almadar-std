@@ -1,5 +1,5 @@
 import { defineConfig } from 'tsup';
-import { cpSync } from 'fs';
+import { copyDistSidecars } from './scripts/copy-dist-sidecars.mjs';
 
 export default defineConfig({
   entry: [
@@ -17,44 +17,18 @@ export default defineConfig({
     'factory-runtime/index.ts',
   ],
   format: ['esm'],
-  dts: true,
+  // The DTS type-check dominates build time but the runtime (interpreter / runtime-verify)
+  // never reads `.d.ts` — only the compiled JS + `.orb` registry. The overlay dev loop sets
+  // ALMADAR_FAST_OVERLAY to skip declaration emit; publish/CI leaves it unset → full types.
+  dts: !process.env.ALMADAR_FAST_OVERLAY,
   clean: true,
   sourcemap: true,
   splitting: false,
   treeshake: true,
+  // The data sidecars (registry .orb tree + JSON catalogs) are copied by the shared
+  // `copyDistSidecars` helper — the same one the `build:data` fast-refresh script calls,
+  // so the full build and the dev-loop refresh can never diverge on what lands in dist/.
   onSuccess: async () => {
-    // Copy the canonical registry .orb files into dist/ so downstream consumers
-    // that walk `node_modules/@almadar/std/behaviors/registry/` find them.
-    // (Legacy copies under `dist/behaviors/exports/` and `dist/exports/` are
-    // intentionally not emitted anymore — the `behaviors/exports/` layout is
-    // retired as of 2026-04-17.)
-    cpSync('behaviors/registry', 'dist/behaviors/registry', { recursive: true });
-    // Mirror the same registry tree at `dist/registry/` so the bundled
-    // `dist/index.js` (where `import.meta.url` resolves to `dist/`) can
-    // also locate `factory-signatures.json`. Mirrors the dual-copy
-    // pattern used for `behaviors-registry.json` / `behaviors-embeddings.json`.
-    cpSync('behaviors/registry', 'dist/registry', { recursive: true });
-    // Copy behaviors-registry.json so query.ts can find it at runtime.
-    cpSync('behaviors/behaviors-registry.json', 'dist/behaviors/behaviors-registry.json');
-    cpSync('behaviors/behaviors-registry.json', 'dist/behaviors-registry.json');
-    // Copy behaviors-embeddings.json (when the bake step ran). When the
-    // file is absent, consumers fall back to the full catalog walk —
-    // `getBehaviorEmbeddings()` returns null gracefully.
-    try {
-      cpSync('behaviors/behaviors-embeddings.json', 'dist/behaviors/behaviors-embeddings.json');
-      cpSync('behaviors/behaviors-embeddings.json', 'dist/behaviors-embeddings.json');
-    } catch {
-      // Bake step skipped (no OPENAI_API_KEY) — that's OK, consumers fall back.
-    }
-    // Copy knob-embeddings.json (publish-time bake). Same dual-copy
-    // pattern: one next to `dist/behaviors/knob-embeddings.js` so the
-    // un-bundled ESM loader finds it, one at the dist root so the
-    // bundled entry's `import.meta.url` resolution also works.
-    try {
-      cpSync('behaviors/knob-embeddings.json', 'dist/behaviors/knob-embeddings.json');
-      cpSync('behaviors/knob-embeddings.json', 'dist/knob-embeddings.json');
-    } catch {
-      // Bake step skipped — consumers fall back to full per-knob render.
-    }
+    copyDistSidecars();
   },
 });
