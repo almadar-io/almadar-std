@@ -1,436 +1,123 @@
 app ui-hex-strategy-board "1.0.0"
-"HexStrategyBoard — game-shell composition with LOLO-driven sprite animation and hex combat effects."
+"Fantasy hex-tile grid-tactics combat board: thin organism composing the std-tactics-board-2d frame with fantasy unit/terrain assets supplied via config."
 orbital HexStrategyBoardOrbital {
+  uses Frame from "std/behaviors/std-tactics-board-2d"
+  uses Score from "std/behaviors/std-score"
 
-  type HexStrategyBoardError = {
-    message : string!
-    name : string
-    code : string
-    stack : string
-  }
   type Asset = {
-      url : asset
-      role : string
-      category : string
-      animations : [string]
-      style : string
-      variant : string
-      dimension : string
-      aspect : string
-      name : string
-      thumbnailUrl : string
-    }
-  type HexStrategyBoardTilesItem = {
+    url : asset
+    atlas : asset
+    sprite : string
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    team : string
+    health : number
+    maxHealth : number
+    unitType : string
+    name : string
+    modelUrl : Asset
+  }
+  type Tile = {
     id : string
     x : number!
     y : number!
     z : number
     terrain : string
-    type : string
-    terrainSprite : Asset
     passable : boolean
-    movementCost : number
-    tileType : string
-    elevation : number
-    modelUrl : Asset
+    terrainSprite : Asset
   }
-  type HexStrategyBoardUnitsItem = {
+  type Fx = {
     id : string!
-    position : HexStrategyBoardUnitsItemPosition
-    x : number
-    y : number
-    z : number
-    sprite : Asset
-    spriteSheet : Asset
-    modelUrl : Asset
-    unitType : string
-    heroId : string
-    name : string
-    team : "player" | "enemy" | "neutral"
-    faction : "player" | "enemy" | "neutral"
-    health : number
-    maxHealth : number
-    traits : [HexStrategyBoardUnitsItemTraitsItem]
-    previousPosition : HexStrategyBoardUnitsItemPreviousPosition
-    elevation : number
-    animation : string
-    frame : number
-  }
-  type HexStrategyBoardEffectItem = {
-    key : string!
+    type : string!
     x : number!
-    y : number!
+    z : number
+    y : number
+    message : string
     ttl : number!
   }
-  type HexStrategyBoardUnitsItemPosition = {
-    x : number!
-    y : number!
-  }
-  type HexStrategyBoardUnitsItemTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number!
-  }
-  type HexStrategyBoardUnitsItemPreviousPosition = {
-    x : number!
-    y : number!
-  }
-  type HexStrategyBoardFeaturesItem = {
+  type ValidMove = { x : number!  z : number! }
+  type Feature = {
     id : string
     x : number!
     y : number!
     z : number
-    type : string!
-    sprite : Asset
+    type : string
     assetUrl : Asset
     color : string
     elevation : number
   }
-  type HexStrategyBoardAssetManifest = {
+  type AssetManifest = {
     terrains : Map string Asset
     units : Map string Asset
     features : Map string Asset
     effects : Map string Asset
   }
-  type HexStrategyBoardUNITMOVETo = {
-    x : number!
-    y : number!
-  }
 
-  entity HexStrategyBoardItem [runtime] {
+  entity GameState [runtime, shared] {
     id : string!
-    units : [HexStrategyBoardUnitsItem]
-    selectedUnitId : string
-    validMoves : [HexStrategyBoardUnitsItemPosition] = []
+    units : [Unit] = []
+    fx : [Fx] = []
+    tiles : [Tile] = []
+    result : string = "none"
+    selectedUnitId : string = ""
+    validMoves : [ValidMove] = []
+    attackTargets : [ValidMove] = []
+    uiPhase : string = "observation"
     turn : number = 0
-    result : "none" | "victory" | "defeat" = none
-    phase : string = "observation"
-    territory : number = 0
-    gridWidth : number = 6
-    gridHeight : number = 6
-    movementRange : number = 2
-    enemyTurn : boolean = false
-    effects : [HexStrategyBoardEffectItem] = []
-    unitEffects : [string] = []
+    score : number = 0
+    scoreBaseline : number = 0
   }
 
-  trait HexStrategyBoardRender -> @rebindable HexStrategyBoardItem [interaction, instance] {
-    initial: playing
-
-    state menu {
-      START -> playing
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.turn 0)
-        (set @entity.result "none")
-        (set @entity.phase "observation")
-        (set @entity.territory 0)
-        (set @entity.enemyTurn false)
-        (set @entity.effects [])
-        (set @entity.unitEffects [])
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-turn", thumbnailUrl: "" } }, { label: "Territory", value: @entity.territory, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-territory.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-territory", thumbnailUrl: "" } }, { label: "Result", value: @entity.result, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-result.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-result", thumbnailUrl: "" } } ] }, { type: status-effect, effects: @entity.unitEffects, label: "Unit Buffs" }, { type: damage-number, value: 0, x: 0, y: 0, visible: false }, { type: button, action: END_TURN, label: "End Turn", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-end-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-end-turn", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-    }
-
-    state playing {
-      INIT -> playing
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.turn 0)
-        (set @entity.result "none")
-        (set @entity.phase "observation")
-        (set @entity.territory 0)
-        (set @entity.enemyTurn false)
-        (set @entity.effects [])
-        (set @entity.unitEffects [])
-        (set @entity.gridWidth 6)
-        (set @entity.gridHeight 6)
-        (set @entity.movementRange 2)
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-turn", thumbnailUrl: "" } }, { label: "Territory", value: @entity.territory, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-territory.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-territory", thumbnailUrl: "" } }, { label: "Result", value: @entity.result, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-result.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-result", thumbnailUrl: "" } } ] }, { type: status-effect, effects: @entity.unitEffects, label: "Unit Buffs" }, { type: damage-number, value: 0, x: 0, y: 0, visible: false }, { type: button, action: END_TURN, label: "End Turn", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-end-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-end-turn", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-
-      UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
-        (set @entity.phase "action")
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-turn", thumbnailUrl: "" } }, { label: "Territory", value: @entity.territory, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-territory.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-territory", thumbnailUrl: "" } }, { label: "Result", value: @entity.result, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-result.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-result", thumbnailUrl: "" } } ] }, { type: status-effect, effects: @entity.unitEffects, label: "Unit Buffs" }, { type: damage-number, value: 0, x: 0, y: 0, visible: false }, { type: button, action: END_TURN, label: "End Turn", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-end-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-end-turn", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-
-      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
-        (set @entity.selectedUnitId ?unitId)
-        (set @entity.unitEffects [])
-        (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (grid/in-bounds { x: (object/get @t x), y: (object/get @t y) } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), y: (object/get @t y) })))
-        (set @entity.phase "movement")
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-turn", thumbnailUrl: "" } }, { label: "Territory", value: @entity.territory, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-territory.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-territory", thumbnailUrl: "" } }, { label: "Result", value: @entity.result, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-result.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-result", thumbnailUrl: "" } } ] }, { type: status-effect, effects: @entity.unitEffects, label: "Unit Buffs" }, { type: damage-number, value: 0, x: 0, y: 0, visible: false }, { type: button, action: END_TURN, label: "End Turn", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-end-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-end-turn", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-
-      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?y } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?y }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?y }, animation: "walk" }) @u))))
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.phase "observation")
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-turn", thumbnailUrl: "" } }, { label: "Territory", value: @entity.territory, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-territory.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-territory", thumbnailUrl: "" } }, { label: "Result", value: @entity.result, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-result.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-result", thumbnailUrl: "" } } ] }, { type: status-effect, effects: @entity.unitEffects, label: "Unit Buffs" }, { type: damage-number, value: 0, x: 0, y: 0, visible: false }, { type: button, action: END_TURN, label: "End Turn", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-end-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-end-turn", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-
-      ATTACK -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)), animation: (if (<= (math/max 0 (- (object/get @u health) ?damage)) 0) "death" "hit") }) (if (== @u.id ?attackerId) (object/merge @u { animation: "attack" }) @u)))))
-        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 4 }))
-        (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 5 })) null)
-        (set @entity.selectedUnitId "")
-        (set @entity.unitEffects [])
-        (set @entity.validMoves [])
-        (set @entity.phase "observation")
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-turn", thumbnailUrl: "" } }, { label: "Territory", value: @entity.territory, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-territory.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-territory", thumbnailUrl: "" } }, { label: "Result", value: @entity.result, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-result.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-result", thumbnailUrl: "" } } ] }, { type: status-effect, effects: @entity.unitEffects, label: "Unit Buffs" }, { type: damage-number, value: 0, x: 0, y: 0, visible: false }, { type: button, action: END_TURN, label: "End Turn", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-end-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-end-turn", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-
-      END_TURN -> playing when (== @entity.result "none")
-        (set @entity.turn (+ @entity.turn 1))
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.enemyTurn true)
-        (set @entity.phase "enemy_turn")
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-turn", thumbnailUrl: "" } }, { label: "Territory", value: @entity.territory, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-territory.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-territory", thumbnailUrl: "" } }, { label: "Result", value: @entity.result, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-result.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-result", thumbnailUrl: "" } } ] }, { type: status-effect, effects: @entity.unitEffects, label: "Unit Buffs" }, { type: damage-number, value: 0, x: 0, y: 0, visible: false }, { type: button, action: END_TURN, label: "End Turn", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-end-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-end-turn", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-
-      CANCEL -> playing when (!= @entity.selectedUnitId "")
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.phase "observation")
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-turn", thumbnailUrl: "" } }, { label: "Territory", value: @entity.territory, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-territory.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-territory", thumbnailUrl: "" } }, { label: "Result", value: @entity.result, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-result.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-result", thumbnailUrl: "" } } ] }, { type: status-effect, effects: @entity.unitEffects, label: "Unit Buffs" }, { type: damage-number, value: 0, x: 0, y: 0, visible: false }, { type: button, action: END_TURN, label: "End Turn", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-end-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-end-turn", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-
-      GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
-        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "defeat" "victory"))
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.phase "game_over")
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-turn", thumbnailUrl: "" } }, { label: "Territory", value: @entity.territory, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-territory.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-territory", thumbnailUrl: "" } }, { label: "Result", value: @entity.result, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-result.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-result", thumbnailUrl: "" } } ] }, { type: status-effect, effects: @entity.unitEffects, label: "Unit Buffs" }, { type: damage-number, value: 0, x: 0, y: 0, visible: false }, { type: button, action: END_TURN, label: "End Turn", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-end-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-end-turn", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-    }
-
-    state gameover {
-      PLAY_AGAIN -> menu
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.turn 0)
-        (set @entity.result "none")
-        (set @entity.phase "observation")
-        (set @entity.territory 0)
-        (set @entity.enemyTurn false)
-        (set @entity.effects [])
-        (set @entity.unitEffects [])
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-turn", thumbnailUrl: "" } }, { label: "Territory", value: @entity.territory, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-territory.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-territory", thumbnailUrl: "" } }, { label: "Result", value: @entity.result, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-result.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-result", thumbnailUrl: "" } } ] }, { type: status-effect, effects: @entity.unitEffects, label: "Unit Buffs" }, { type: damage-number, value: 0, x: 0, y: 0, visible: false }, { type: button, action: END_TURN, label: "End Turn", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-end-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-end-turn", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-    }
-
-    ticks {
-      renderTick every 100ms
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-turn", thumbnailUrl: "" } }, { label: "Territory", value: @entity.territory, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-territory.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-territory", thumbnailUrl: "" } }, { label: "Result", value: @entity.result, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-result.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-result", thumbnailUrl: "" } } ] }, { type: status-effect, effects: @entity.unitEffects, label: "Unit Buffs" }, { type: damage-number, value: 0, x: 0, y: 0, visible: false }, { type: button, action: END_TURN, label: "End Turn", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-end-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-end-turn", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-
-      enemyAiTick every 1s
-        when (and (== @entity.enemyTurn true) (== @entity.result "none"))
-        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 1)), animation: (if (<= (math/max 0 (- @u.health 1)) 0) "death" "hit") }) @u) @u))))
-        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/first (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) position) x), y: (object/get (object/get (array/first (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) position) y), ttl: 4 }))
-        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (if (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.health 0)) (== (grid/manhattan-distance (object/get @u position) (object/get @p position)) 1))))) 0) (let ((target (array/first (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.health 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)) } })) @u) @u))))
-        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
-        (set @entity.enemyTurn false)
-        (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
-        (render-ui main {
-          type: game-shell
-          backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-turn", thumbnailUrl: "" } }, { label: "Territory", value: @entity.territory, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-territory.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-territory", thumbnailUrl: "" } }, { label: "Result", value: @entity.result, iconUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-result.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-result", thumbnailUrl: "" } } ] }, { type: status-effect, effects: @entity.unitEffects, label: "Unit Buffs" }, { type: damage-number, value: 0, x: 0, y: 0, visible: false }, { type: button, action: END_TURN, label: "End Turn", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/icon-end-turn.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", variant: "", dimension: "2d", aspect: "1:1", name: "icon-end-turn", thumbnailUrl: "" }, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
-        })
-    }
-
-    emits {
-      ATTACK -> external {
-        attacker : object
-        target : object
-        damage : number
-        attackerId : string!
-        targetId : string!
-      }
-        @description "-- Callbacks --"
-        @tier "domain"
-      GAME_END -> external {
-        result : string
-      }
-        @description "Called when strategy game ends"
-        @tier "domain"
-      UNIT_MOVE -> external {
-        unit : object
-        to : HexStrategyBoardUNITMOVETo
-      }
-        @description "Called after a unit moves to a new hex"
-        @tier "domain"
-      TILE_CLICK -> external {
-        x : number!
-        y : number!
-      }
-        @description "-- Declarative event props --"
-        @tier "domain"
-      UNIT_CLICK -> external {
-        unitId : string!
-      }
-        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
-        @tier "domain"
-      END_TURN -> external {
-        id : string
-      }
-        @description "Emits UI:{endTurnEvent} with {} on end turn"
-        @tier "domain"
-      CANCEL -> external {
-        id : string
-      }
-        @description "Emits UI:{cancelEvent} with {} on cancel"
-        @tier "domain"
-      PLAY_AGAIN -> external {
-        id : string
-      }
-        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
-        @tier "domain"
-    }
-
+  trait Authority = Frame.traits.TacticsAuthority -> GameState {
     config {
-      className : string = ""
-        @label "Class Name"
-        @description "Additional CSS classes"
-        @tier "presentation"
-      isLoading : boolean = false
-        @label "Is Loading"
-        @description "Loading state indicator"
-        @tier "presentation"
-      error : HexStrategyBoardError
-        @label "Error"
-        @description "Error state (UiError)"
-        @tier "presentation"
-      sortBy : string = "Sort By"
-        @label "Sort By"
-        @description "Current sort field"
-        @tier "presentation"
-      sortDirection : "asc" | "desc" = asc
-        @label "Sort Direction"
-        @description "Current sort direction"
-        @tier "presentation"
-      searchValue : string = "Search Value"
-        @label "Search Value"
-        @description "Current search query value"
-        @tier "presentation"
-      pageProp : number = 0
-        @label "Page"
-        @description "Current page number"
-        @synonyms "page"
-        @tier "presentation"
-      pageSize : number = 0
-        @label "Page Size"
-        @description "Number of items per page"
-        @tier "presentation"
-      totalCount : number = 0
-        @label "Total Count"
-        @description "Total number of items"
-        @tier "presentation"
-      activeFilters : json
-        @label "Active Filters"
-        @description "Active filters"
-        @tier "presentation"
-      selectedIds : [string] = []
-        @label "Selected Ids"
-        @description "Currently selected item IDs"
-        @tier "presentation"
-      tiles : [HexStrategyBoardTilesItem] = [{ x: 0, y: 0, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 0, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 2, y: 0, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 3, y: 0, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 4, y: 0, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 5, y: 0, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 0, y: 1, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 1, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 2, y: 1, terrain: "dirt", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png", role: "tile", category: "dirt", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "dirt", thumbnailUrl: "" } }, { x: 3, y: 1, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 4, y: 1, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 5, y: 1, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 0, y: 2, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 2, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 2, y: 2, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 3, y: 2, terrain: "dirt", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png", role: "tile", category: "dirt", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "dirt", thumbnailUrl: "" } }, { x: 4, y: 2, terrain: "sand", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png", role: "tile", category: "sand", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, { x: 5, y: 2, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 0, y: 3, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 3, terrain: "dirt", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png", role: "tile", category: "dirt", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "dirt", thumbnailUrl: "" } }, { x: 2, y: 3, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 3, y: 3, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 4, y: 3, terrain: "sand", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png", role: "tile", category: "sand", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, { x: 5, y: 3, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 0, y: 4, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 4, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 2, y: 4, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 3, y: 4, terrain: "sand", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png", role: "tile", category: "sand", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, { x: 4, y: 4, terrain: "sand", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png", role: "tile", category: "sand", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, { x: 5, y: 4, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 0, y: 5, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 5, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 2, y: 5, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 3, y: 5, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 4, y: 5, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 5, y: 5, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }]
-        @label "Tiles"
-        @description "Hex grid tiles"
-        @tier "presentation"
-      units : [HexStrategyBoardUnitsItem] = [{ id: "u1", position: { x: 3, y: 2 }, unitType: "worker", name: "Miner", team: player, faction: player, health: 10, maxHealth: 10, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" }, animation: "idle", frame: 0 }, { id: "u2", position: { x: 2, y: 3 }, unitType: "ranger", name: "Thornbow", team: player, faction: player, health: 8, maxHealth: 10, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png", role: "npc", category: "ranger", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "ranger", thumbnailUrl: "" }, animation: "idle", frame: 0 }, { id: "u3", position: { x: 2, y: 4 }, unitType: "guardian", name: "Ironwall", team: player, faction: player, health: 12, maxHealth: 12, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" }, animation: "idle", frame: 0 }, { id: "e1", position: { x: 4, y: 1 }, unitType: "ranger", name: "Foe", team: enemy, faction: enemy, health: 8, maxHealth: 8, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png", role: "npc", category: "ranger", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "ranger", thumbnailUrl: "" }, animation: "idle", frame: 0 }, { id: "e2", position: { x: 3, y: 1 }, unitType: "guardian", name: "Foe", team: enemy, faction: enemy, health: 10, maxHealth: 10, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" }, animation: "idle", frame: 0 }]
-        @label "Units"
-        @description "Units on the board"
-        @tier "presentation"
-      features : [HexStrategyBoardFeaturesItem] = [{ id: "f1", x: 3, y: 1, type: "resource", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png", role: "decoration", category: "resource", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "resource", thumbnailUrl: "" } }, { id: "f2", x: 1, y: 3, type: "outpost", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png", role: "decoration", category: "outpost", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "outpost", thumbnailUrl: "" } }]
-        @label "Features"
-        @description "Features (resources, structures, etc.) on the board"
-        @tier "presentation"
-      assetManifest : HexStrategyBoardAssetManifest = { terrains: { grass: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, stone: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, dirt: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png", role: "tile", category: "dirt", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "dirt", thumbnailUrl: "" }, sand: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png", role: "tile", category: "sand", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, units: { worker: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" }, ranger: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png", role: "npc", category: "ranger", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "ranger", thumbnailUrl: "" }, guardian: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } }, features: { resource: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png", role: "decoration", category: "resource", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "resource", thumbnailUrl: "" }, outpost: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png", role: "decoration", category: "outpost", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "outpost", thumbnailUrl: "" } }, effects: { slash: { url: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/slash_03.png", role: "effect", category: "slash", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "8:1", name: "slash", thumbnailUrl: "" }, explosion: { url: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png", role: "effect", category: "explosion", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "8:1", name: "explosion", thumbnailUrl: "" } } }
-        @label "Asset Manifest"
-        @description "Asset sprite manifest"
-        @tier "presentation"
-      assetBaseUrl : Asset = "https://almadar-kflow-assets.web.app/shared/"
-        @label "Asset Base Url"
-        @description "Base URL prepended to manifest sprite paths"
-        @tier "presentation"
-      scale : number = 0.45
-        @label "Scale"
-        @description "Render scale"
-        @tier "presentation"
-      showMinimap : boolean = true
-        @label "Show Minimap"
-        @description "Show minimap overlay"
-        @tier "presentation"
-      enableCamera : boolean = true
-        @label "Enable Camera"
-        @description "Enable camera pan/zoom controls"
-        @tier "presentation"
+      running: true
+      gridWidth: 6
+      gridHeight: 6
+      attackDamage: 3
+      units: [ { id: "u1", position: { x: 3, y: 2 }, x: 3, y: 2, z: 0, team: "player", health: 10, maxHealth: 10, unitType: "worker", name: "Miner", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" } }, { id: "u2", position: { x: 2, y: 3 }, x: 2, y: 3, z: 0, team: "player", health: 8, maxHealth: 10, unitType: "ranger", name: "Thornbow", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png", role: "npc", category: "ranger", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "ranger", thumbnailUrl: "" } }, { id: "u3", position: { x: 2, y: 4 }, x: 2, y: 4, z: 0, team: "player", health: 12, maxHealth: 12, unitType: "guardian", name: "Ironwall", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } }, { id: "e1", position: { x: 4, y: 1 }, x: 4, y: 1, z: 0, team: "enemy", health: 8, maxHealth: 8, unitType: "ranger", name: "Foe", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png", role: "npc", category: "ranger", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "ranger", thumbnailUrl: "" } }, { id: "e2", position: { x: 3, y: 1 }, x: 3, y: 1, z: 0, team: "enemy", health: 10, maxHealth: 10, unitType: "guardian", name: "Foe", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } } ]
+      tiles: [ { id: "t-0-0", x: 0, y: 0, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-1-0", x: 1, y: 0, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-2-0", x: 2, y: 0, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-3-0", x: 3, y: 0, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-4-0", x: 4, y: 0, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-5-0", x: 5, y: 0, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-0-1", x: 0, y: 1, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-1-1", x: 1, y: 1, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-2-1", x: 2, y: 1, terrain: "dirt", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png", role: "tile", category: "dirt", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "dirt", thumbnailUrl: "" } }, { id: "t-3-1", x: 3, y: 1, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-4-1", x: 4, y: 1, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-5-1", x: 5, y: 1, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-0-2", x: 0, y: 2, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-1-2", x: 1, y: 2, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-2-2", x: 2, y: 2, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-3-2", x: 3, y: 2, terrain: "dirt", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png", role: "tile", category: "dirt", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "dirt", thumbnailUrl: "" } }, { id: "t-4-2", x: 4, y: 2, terrain: "sand", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png", role: "tile", category: "sand", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, { id: "t-5-2", x: 5, y: 2, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-0-3", x: 0, y: 3, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-1-3", x: 1, y: 3, terrain: "dirt", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png", role: "tile", category: "dirt", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "dirt", thumbnailUrl: "" } }, { id: "t-2-3", x: 2, y: 3, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-3-3", x: 3, y: 3, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-4-3", x: 4, y: 3, terrain: "sand", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png", role: "tile", category: "sand", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, { id: "t-5-3", x: 5, y: 3, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-0-4", x: 0, y: 4, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-1-4", x: 1, y: 4, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-2-4", x: 2, y: 4, terrain: "grass", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { id: "t-3-4", x: 3, y: 4, terrain: "sand", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png", role: "tile", category: "sand", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, { id: "t-4-4", x: 4, y: 4, terrain: "sand", passable: true, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png", role: "tile", category: "sand", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, { id: "t-5-4", x: 5, y: 4, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-0-5", x: 0, y: 5, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-1-5", x: 1, y: 5, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-2-5", x: 2, y: 5, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-3-5", x: 3, y: 5, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-4-5", x: 4, y: 5, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { id: "t-5-5", x: 5, y: 5, terrain: "stone", passable: false, terrainSprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } } ]
     }
   }
 
-page "/hex-strategy-board" as HexStrategyBoardPage -> HexStrategyBoardRender
+  trait FxDecay = Frame.traits.FxDecay -> GameState {
+    config { running: true }
+  }
+
+  trait RoundLogic = Frame.traits.RoundLogic -> GameState {
+    config { running: true }
+  }
+
+  trait ScoreKeeper = Score.traits.ScoreKeeper -> GameState {
+    config { running: true, pointsPerKill: 10, startScore: 0, initialEnemies: 2 }
+  }
+
+  trait Player = Frame.traits.PlayerIntent -> GameState {
+    config {
+      gridWidth: 6
+      gridHeight: 6
+      movementRange: 2
+      projection: "hex"
+      showMinimap: true
+      scale: 0.45
+      backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+      hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "fantasy-border", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
+      features: [ { id: "f1", x: 3, y: 1, z: 0, type: "resource", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png", role: "decoration", category: "resource", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "resource", thumbnailUrl: "" } }, { id: "f2", x: 1, y: 3, z: 0, type: "outpost", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png", role: "decoration", category: "outpost", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "outpost", thumbnailUrl: "" } } ]
+      assetManifest: { terrains: { grass: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, stone: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, dirt: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png", role: "tile", category: "dirt", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "dirt", thumbnailUrl: "" }, sand: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png", role: "tile", category: "sand", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "sand", thumbnailUrl: "" } }, units: { worker: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png", role: "npc", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" }, ranger: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png", role: "npc", category: "ranger", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "ranger", thumbnailUrl: "" }, guardian: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png", role: "npc", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } }, features: { resource: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png", role: "decoration", category: "resource", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "resource", thumbnailUrl: "" }, outpost: { url: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png", role: "decoration", category: "outpost", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "outpost", thumbnailUrl: "" } }, effects: { hit: { url: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/slash_03.png", role: "effect", category: "slash", animations: ["static"], style: "", dimension: "2d", aspect: "8:1", name: "slash", thumbnailUrl: "" } } }
+    }
+  }
+
+  page "/hex-strategy-board" as HexStrategyBoardPage -> Authority, FxDecay, RoundLogic, ScoreKeeper, Player
 }
