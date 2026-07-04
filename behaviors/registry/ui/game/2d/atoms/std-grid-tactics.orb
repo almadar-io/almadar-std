@@ -1,5 +1,5 @@
 {
-  "description": "Headless grid-tactics unit-authority: the SOLE writer of units. Applies MOVE/ATTACK/SPAWN intents from any source (player, AI, or production) and runs the enemy AI_TURN pipeline, emitting BURST hit-particles and UNITS_CHANGED survivor counts. Renders nothing.",
+  "description": "Headless grid-tactics unit-authority: the SOLE writer of units. Applies MOVE/ATTACK/SPAWN/HEAL intents from any source (player, AI, production, or progression) and runs the enemy AI_TURN pipeline, emitting BURST hit-particles and UNITS_CHANGED survivor counts. Renders nothing.",
   "name": "std-grid-tactics",
   "orbitals": [
     {
@@ -361,6 +361,20 @@
                   {
                     "name": "unitType",
                     "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "HEAL",
+                "name": "Heal",
+                "payloadSchema": [
+                  {
+                    "name": "team",
+                    "type": "string"
+                  },
+                  {
+                    "name": "amount",
+                    "type": "number"
                   }
                 ]
               },
@@ -983,6 +997,58 @@
                   ]
                 ],
                 "event": "SPAWN",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "and",
+                            [
+                              "==",
+                              "@u.team",
+                              "@payload.team"
+                            ],
+                            [
+                              ">",
+                              "@u.health",
+                              0.0
+                            ]
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "health": [
+                                "math/min",
+                                "@u.maxHealth",
+                                [
+                                  "+",
+                                  "@u.health",
+                                  "@payload.amount"
+                                ]
+                              ]
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "HEAL",
                 "from": "active",
                 "guard": "@config.running",
                 "to": "active"

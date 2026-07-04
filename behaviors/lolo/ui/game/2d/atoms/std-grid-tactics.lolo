@@ -1,5 +1,5 @@
 app std-grid-tactics "1.0.0"
-"Headless grid-tactics unit-authority: the SOLE writer of units. Applies MOVE/ATTACK/SPAWN intents from any source (player, AI, or production) and runs the enemy AI_TURN pipeline, emitting BURST hit-particles and UNITS_CHANGED survivor counts. Renders nothing."
+"Headless grid-tactics unit-authority: the SOLE writer of units. Applies MOVE/ATTACK/SPAWN/HEAL intents from any source (player, AI, production, or progression) and runs the enemy AI_TURN pipeline, emitting BURST hit-particles and UNITS_CHANGED survivor counts. Renders nothing."
 orbital GridTacticsOrbital {
   type Unit = {
     id : string!
@@ -54,6 +54,9 @@ orbital GridTacticsOrbital {
         (set @entity.units (if (and (grid/in-bounds { x: @payload.x, y: @payload.y } @config.gridWidth @config.gridHeight) (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) @payload.x) (== (object/get @t y) @payload.y)))) passable) true) (== (array/len (array/filter @entity.units (fn o (and (> @o.health 0) (and (== (object/get (object/get @o position) x) @payload.x) (== (object/get (object/get @o position) y) @payload.y)))))) 0))) (array/append @entity.units { id: @payload.id, position: { x: @payload.x, y: @payload.y }, x: @payload.x, y: @payload.y, z: 0, team: @payload.team, health: @payload.health, maxHealth: @payload.maxHealth, unitType: @payload.unitType }) @entity.units))
         (emit UNITS_CHANGED { playersAlive: (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))), enemiesAlive: (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) })
 
+      HEAL -> active when @config.running
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team @payload.team) (> @u.health 0)) (object/merge @u { health: (math/min @u.maxHealth (+ @u.health @payload.amount)) }) @u))))
+
       AI_TURN -> active when @config.running
         (emit BURST { particles: (array/map (array/filter @entity.units (fn u (and (and (== @u.team "player") (> @u.health 0)) (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0)))) (fn u { id: (str/concat "fx-ai-" @u.id), type: "hit", x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y), message: "-1", ttl: 3 })) })
         (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 1)) }) @u) @u))))
@@ -80,6 +83,7 @@ orbital GridTacticsOrbital {
       ATTACK { targetId : string }
       AI_TURN { turn : number }
       SPAWN { id : string, x : number, y : number, team : string, health : number, maxHealth : number, unitType : string }
+      HEAL { team : string, amount : number }
     }
 
     config {

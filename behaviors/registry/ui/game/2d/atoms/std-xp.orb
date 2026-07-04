@@ -1,0 +1,315 @@
+{
+  "description": "Headless XP/progression mechanic: grants xp when the enemy survivor count drops (UNITS_CHANGED), and on reaching xpToNext levels up — raising the threshold and emitting a HEAL reward the grid-tactics authority applies. Owns only xp/xpToNext/level (+ kill baseline); never writes units.",
+  "name": "std-xp",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "xp",
+            "type": "number"
+          },
+          {
+            "default": 100.0,
+            "name": "xpToNext",
+            "type": "number"
+          },
+          {
+            "default": 1.0,
+            "name": "level",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "xpBaseline",
+            "type": "number"
+          }
+        ],
+        "name": "XpState",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "XpOrbital",
+      "pages": [
+        {
+          "name": "XpPage",
+          "path": "/xp",
+          "traits": [
+            {
+              "ref": "XpProgression"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "baseXpToNext": {
+              "default": 100.0,
+              "description": "XP threshold for the first level-up.",
+              "label": "Base XP To Next",
+              "tier": "domain",
+              "type": "number"
+            },
+            "healTeam": {
+              "default": "player",
+              "description": "Team whose units are healed on level-up.",
+              "label": "Heal Team",
+              "tier": "domain",
+              "type": "string"
+            },
+            "initialEnemies": {
+              "default": 0.0,
+              "description": "Enemy count at start; the kill baseline so the first kill grants xp correctly.",
+              "label": "Initial Enemies",
+              "tier": "domain",
+              "type": "number"
+            },
+            "levelUpHeal": {
+              "default": 2.0,
+              "description": "Health restored to the healTeam's units on each level-up.",
+              "label": "Level-Up Heal",
+              "tier": "domain",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true, enemy-count drops grant xp and trigger level-ups; toggle to freeze.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "startXp": {
+              "default": 0.0,
+              "description": "XP set on INIT.",
+              "label": "Start XP",
+              "tier": "domain",
+              "type": "number"
+            },
+            "xpPerKill": {
+              "default": 25.0,
+              "description": "XP awarded for each enemy removed since the last signal.",
+              "label": "XP Per Kill",
+              "tier": "domain",
+              "type": "number"
+            },
+            "xpToNextIncrement": {
+              "default": 50.0,
+              "description": "Amount the threshold rises by on each level-up.",
+              "label": "XP To Next Increment",
+              "tier": "domain",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Level-up heal reward applied by the grid-tactics authority (the sole units writer)",
+              "event": "HEAL",
+              "payloadSchema": [
+                {
+                  "name": "team",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "amount",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "level",
+              "xp",
+              "xpBaseline",
+              "xpToNext"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "XpState",
+          "name": "XpProgression",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "UNITS_CHANGED",
+                "name": "Units Changed",
+                "payloadSchema": [
+                  {
+                    "name": "playersAlive",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enemiesAlive",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "description": "Level-up heal reward applied by the grid-tactics authority (the sole units writer)",
+                "key": "HEAL",
+                "name": "Heal",
+                "payloadSchema": [
+                  {
+                    "name": "team",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "amount",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.xp",
+                    "@config.startXp"
+                  ],
+                  [
+                    "set",
+                    "@entity.xpToNext",
+                    "@config.baseXpToNext"
+                  ],
+                  [
+                    "set",
+                    "@entity.level",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.xpBaseline",
+                    "@config.initialEnemies"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.xp",
+                    [
+                      "if",
+                      [
+                        "<",
+                        "@payload.enemiesAlive",
+                        "@entity.xpBaseline"
+                      ],
+                      [
+                        "+",
+                        "@entity.xp",
+                        [
+                          "*",
+                          [
+                            "-",
+                            "@entity.xpBaseline",
+                            "@payload.enemiesAlive"
+                          ],
+                          "@config.xpPerKill"
+                        ]
+                      ],
+                      "@entity.xp"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.xpBaseline",
+                    "@payload.enemiesAlive"
+                  ],
+                  [
+                    "if",
+                    [
+                      ">=",
+                      "@entity.xp",
+                      "@entity.xpToNext"
+                    ],
+                    [
+                      "emit",
+                      "HEAL",
+                      {
+                        "amount": "@config.levelUpHeal",
+                        "team": "@config.healTeam"
+                      }
+                    ],
+                    null
+                  ],
+                  [
+                    "set",
+                    "@entity.level",
+                    [
+                      "if",
+                      [
+                        ">=",
+                        "@entity.xp",
+                        "@entity.xpToNext"
+                      ],
+                      [
+                        "+",
+                        "@entity.level",
+                        1.0
+                      ],
+                      "@entity.level"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.xpToNext",
+                    [
+                      "if",
+                      [
+                        ">=",
+                        "@entity.xp",
+                        "@entity.xpToNext"
+                      ],
+                      [
+                        "+",
+                        "@entity.xpToNext",
+                        "@config.xpToNextIncrement"
+                      ],
+                      "@entity.xpToNext"
+                    ]
+                  ]
+                ],
+                "event": "UNITS_CHANGED",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

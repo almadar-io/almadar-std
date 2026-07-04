@@ -1,0 +1,79 @@
+app std-xp "1.0.0"
+"Headless XP/progression mechanic: grants xp when the enemy survivor count drops (UNITS_CHANGED), and on reaching xpToNext levels up — raising the threshold and emitting a HEAL reward the grid-tactics authority applies. Owns only xp/xpToNext/level (+ kill baseline); never writes units."
+orbital XpOrbital {
+  entity XpState [runtime, shared] {
+    id : string!
+    xp : number = 0
+    xpToNext : number = 100
+    level : number = 1
+    xpBaseline : number = 0
+  }
+
+  trait XpProgression -> @rebindable XpState [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.xp @config.startXp)
+        (set @entity.xpToNext @config.baseXpToNext)
+        (set @entity.level 1)
+        (set @entity.xpBaseline @config.initialEnemies)
+      UNITS_CHANGED -> active when @config.running
+        (set @entity.xp (if (< @payload.enemiesAlive @entity.xpBaseline) (+ @entity.xp (* (- @entity.xpBaseline @payload.enemiesAlive) @config.xpPerKill)) @entity.xp))
+        (set @entity.xpBaseline @payload.enemiesAlive)
+        (if (>= @entity.xp @entity.xpToNext) (emit HEAL { team: @config.healTeam, amount: @config.levelUpHeal }) null)
+        (set @entity.level (if (>= @entity.xp @entity.xpToNext) (+ @entity.level 1) @entity.level))
+        (set @entity.xpToNext (if (>= @entity.xp @entity.xpToNext) (+ @entity.xpToNext @config.xpToNextIncrement) @entity.xpToNext))
+    }
+
+    emits {
+      HEAL -> external {
+        team : string!
+        amount : number!
+      }
+        @description "Level-up heal reward applied by the grid-tactics authority (the sole units writer)"
+        @tier "domain"
+    }
+
+    listens {
+      UNITS_CHANGED { playersAlive : number, enemiesAlive : number }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, enemy-count drops grant xp and trigger level-ups; toggle to freeze."
+        @tier "domain"
+      xpPerKill : number = 25
+        @label "XP Per Kill"
+        @description "XP awarded for each enemy removed since the last signal."
+        @tier "domain"
+      startXp : number = 0
+        @label "Start XP"
+        @description "XP set on INIT."
+        @tier "domain"
+      baseXpToNext : number = 100
+        @label "Base XP To Next"
+        @description "XP threshold for the first level-up."
+        @tier "domain"
+      xpToNextIncrement : number = 50
+        @label "XP To Next Increment"
+        @description "Amount the threshold rises by on each level-up."
+        @tier "domain"
+      levelUpHeal : number = 2
+        @label "Level-Up Heal"
+        @description "Health restored to the healTeam's units on each level-up."
+        @tier "domain"
+      healTeam : string = "player"
+        @label "Heal Team"
+        @description "Team whose units are healed on level-up."
+        @tier "domain"
+      initialEnemies : number = 0
+        @label "Initial Enemies"
+        @description "Enemy count at start; the kill baseline so the first kill grants xp correctly."
+        @tier "domain"
+    }
+  }
+
+  page "/xp" as XpPage -> XpProgression
+}
