@@ -1,11 +1,9 @@
 app std-round-flow "1.0.0"
-"Headless win/lose round-resolution mechanic: derives result from team survivor counts on each UNITS_CHANGED signal, flips phase to game_over, and emits GAME_END. Renders nothing."
+"Headless win/lose round-resolution mechanic: derives result (victory/defeat/none) from team survivor counts on each UNITS_CHANGED signal and emits GAME_END. Owns only result; boards own their own phase/turn. Renders nothing."
 orbital RoundFlowOrbital {
   entity RoundState [runtime, shared] {
     id : string!
     result : string = "none"
-    phase : string = "observation"
-    turn : number = 0
   }
 
   trait RoundFlow -> @rebindable RoundState [lifecycle] {
@@ -14,12 +12,9 @@ orbital RoundFlowOrbital {
     state active {
       INIT -> active
         (set @entity.result "none")
-        (set @entity.phase "observation")
-        (set @entity.turn 0)
       UNITS_CHANGED -> active when @config.running
         (set @entity.result (if (== @payload.playersAlive 0) "defeat" (if (== @payload.enemiesAlive 0) "victory" "none")))
         (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
-        (set @entity.phase (if (!= @entity.result "none") "game_over" @entity.phase))
     }
 
     emits {

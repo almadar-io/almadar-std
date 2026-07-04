@@ -1,0 +1,242 @@
+app std-tactics-board-3d "1.0.0"
+"3D player-controlled grid-tactics board FRAME: composes grid-tactics (units authority) + fx-particles + round-flow + a player-intent/render trait onto one shared GameState. Games consume this molecule and supply only theme/assets/units via config."
+orbital TacticsBoard3DOrbital {
+  uses Tactics from "std/behaviors/std-grid-tactics"
+  uses Particles from "std/behaviors/std-fx-particles"
+  uses Round from "std/behaviors/std-round-flow"
+
+  type Asset = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    team : string
+    health : number
+    maxHealth : number
+    unitType : string
+    name : string
+    modelUrl : Asset
+  }
+  type Tile = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    passable : boolean
+    modelUrl : Asset
+  }
+  type Fx = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
+  type ValidMove = { x : number!  z : number! }
+  type Feature = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string
+    assetUrl : Asset
+    color : string
+    elevation : number
+  }
+  type AssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
+  }
+
+  entity GameState [runtime, shared] {
+    id : string!
+    units : [Unit] = []
+    fx : [Fx] = []
+    tiles : [Tile] = []
+    result : string = "none"
+    selectedUnitId : string = ""
+    validMoves : [ValidMove] = []
+    attackTargets : [ValidMove] = []
+    uiPhase : string = "observation"
+    turn : number = 0
+  }
+
+  trait TacticsAuthority = Tactics.traits.GridTactics -> GameState {
+    config {
+      running: true
+      gridWidth: 2
+      gridHeight: 2
+      attackDamage: 3
+      units: [ { id: "p1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "unit" }, { id: "e1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "unit" } ]
+    }
+  }
+
+  trait FxDecay = Particles.traits.FxParticles -> GameState {
+    config { running: true }
+  }
+
+  trait RoundLogic = Round.traits.RoundFlow -> GameState {
+    config { running: true }
+  }
+
+  trait PlayerIntent -> GameState [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.uiPhase "observation")
+        (set @entity.turn 0)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.uiPhase }, { label: "Turn", value: @entity.turn } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, cameraMode: @config.cameraMode, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.uiPhase "action") (and (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "enemy") (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position)) 1)))
+        (emit ATTACK { targetId: ?unitId })
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.uiPhase "observation")
+
+      UNIT_CLICK -> playing when (== @entity.selectedUnitId ?unitId)
+        (set @entity.uiPhase "action")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets (array/map (array/filter @entity.units (fn u (and (== @u.team "enemy") (and (> @u.health 0) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn s (== @s.id @entity.selectedUnitId))) position) (object/get @u position)) 1))))) (fn u { x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y) })))
+
+      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.uiPhase "selection")
+        (set @entity.attackTargets [])
+        (set @entity.validMoves (array/map (array/filter @entity.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @config.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @config.gridWidth @config.gridHeight) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @config.movementRange)))
+        (emit MOVE { unitId: @entity.selectedUnitId, x: ?x, y: ?z })
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.uiPhase "observation")
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.uiPhase "observation")
+
+      END_TURN -> playing when (== @entity.result "none")
+        (set @entity.turn (+ @entity.turn 1))
+        (emit AI_TURN { turn: @entity.turn })
+    }
+
+    ticks {
+      renderTick every 100ms
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Result", value: @entity.result }, { label: "Phase", value: @entity.uiPhase }, { label: "Turn", value: @entity.turn } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: END_TURN, label: "End Turn", variant: primary }, { type: button, action: CANCEL, label: "Cancel", variant: secondary } ] }
+          children: [ { type: game-canvas-3d, cameraMode: @config.cameraMode, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx } ]
+        })
+    }
+
+    emits {
+      MOVE -> external {
+        unitId : string!
+        x : number!
+        y : number!
+      }
+        @description "Player move intent applied by the grid-tactics authority"
+        @tier "domain"
+      ATTACK -> external {
+        targetId : string!
+      }
+        @description "Player attack intent applied by the grid-tactics authority"
+        @tier "domain"
+      AI_TURN -> external {
+        turn : number!
+      }
+        @description "Ends the player turn; the grid-tactics authority runs the enemy AI pipeline"
+        @tier "domain"
+      TILE_CLICK -> external {
+        x : number!
+        z : number!
+        tileId : string
+      }
+        @description "tileClickEvent prop"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+        x : number
+        z : number
+      }
+        @description "unitClickEvent prop"
+        @tier "domain"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Clears the current selection"
+        @tier "domain"
+    }
+
+    config {
+      gridWidth : number = 2
+        @label "Grid Width"
+        @description "Grid column count (matches TacticsAuthority.gridWidth)."
+        @tier "domain"
+      gridHeight : number = 2
+        @label "Grid Height"
+        @description "Grid row count (matches TacticsAuthority.gridHeight)."
+        @tier "domain"
+      movementRange : number = 4
+        @label "Movement Range"
+        @description "Max manhattan distance a selected unit may move."
+        @tier "domain"
+      features : [Feature] = []
+        @label "Features"
+        @description "Decorative environment features drawn on the board."
+        @tier "presentation"
+      assetManifest : AssetManifest = { terrains: {}, units: {}, features: {}, effects: {} }
+        @label "Asset Manifest"
+        @description "Terrain/unit/feature/effect model manifest."
+        @tier "presentation"
+      cameraMode : string = "isometric"
+        @label "Camera Mode"
+        @description "3D canvas camera mode."
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale."
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier."
+        @tier "presentation"
+      bgColor : string = "#05070f"
+        @label "Bg Color"
+        @description "Canvas background color."
+        @tier "presentation"
+    }
+  }
+
+  page "/tactics-board-3d" as TacticsBoard3DPage -> TacticsAuthority, FxDecay, RoundLogic, PlayerIntent
+}

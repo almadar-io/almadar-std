@@ -1,0 +1,111 @@
+app ui-tactics-demo-3d "1.0.0"
+"Reference thin organism: a 3D grid-tactics game composed entirely from the std-tactics-board-3d frame molecule — supplies only units/tiles/theme via config."
+orbital TacticsDemo3DOrbital {
+  uses Frame from "std/behaviors/std-tactics-board-3d"
+
+  type Asset = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    team : string
+    health : number
+    maxHealth : number
+    unitType : string
+    name : string
+    modelUrl : Asset
+  }
+  type Tile = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    passable : boolean
+    modelUrl : Asset
+  }
+  type Fx = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
+  type ValidMove = { x : number!  z : number! }
+  type Feature = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string
+    assetUrl : Asset
+    color : string
+    elevation : number
+  }
+  type AssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
+  }
+
+  entity GameState [runtime, shared] {
+    id : string!
+    units : [Unit] = []
+    fx : [Fx] = []
+    result : string = "none"
+    selectedUnitId : string = ""
+    validMoves : [ValidMove] = []
+    attackTargets : [ValidMove] = []
+    uiPhase : string = "observation"
+    turn : number = 0
+  }
+
+  trait Authority = Frame.traits.TacticsAuthority -> GameState {
+    config {
+      running: true
+      gridWidth: 3
+      gridHeight: 3
+      attackDamage: 2
+      units: [ { id: "p1", position: { x: 0, y: 0 }, x: 0, y: 0, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "marine", name: "Marine A" }, { id: "p2", position: { x: 0, y: 2 }, x: 0, y: 2, z: 0, team: "player", health: 3, maxHealth: 3, unitType: "marine", name: "Marine B" }, { id: "e1", position: { x: 2, y: 1 }, x: 2, y: 1, z: 0, team: "enemy", health: 2, maxHealth: 2, unitType: "raider", name: "Raider" } ]
+    }
+  }
+
+  trait FxDecay = Frame.traits.FxDecay -> GameState {
+    config { running: true }
+  }
+
+  trait RoundLogic = Frame.traits.RoundLogic -> GameState {
+    config { running: true }
+  }
+
+  trait Player = Frame.traits.PlayerIntent -> GameState {
+    config {
+      gridWidth: 3
+      gridHeight: 3
+      movementRange: 2
+      features: []
+      assetManifest: { terrains: {}, units: {}, features: {}, effects: {} }
+      cameraMode: "isometric"
+      scale: 0.5
+      unitScale: 1
+      bgColor: "#0a0a1a"
+    }
+  }
+
+  page "/tactics-demo-3d" as TacticsDemo3DPage -> Authority, FxDecay, RoundLogic, Player
+}
