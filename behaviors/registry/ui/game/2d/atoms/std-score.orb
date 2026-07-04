@@ -1,0 +1,174 @@
+{
+  "description": "Headless scoring mechanic: awards points when the enemy survivor count drops on a UNITS_CHANGED signal. Owns only score (+ its kill baseline); renders nothing.",
+  "name": "std-score",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "score",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "scoreBaseline",
+            "type": "number"
+          }
+        ],
+        "name": "ScoreState",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "ScoreOrbital",
+      "pages": [
+        {
+          "name": "ScorePage",
+          "path": "/score",
+          "traits": [
+            {
+              "ref": "ScoreKeeper"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "initialEnemies": {
+              "default": 0.0,
+              "description": "Enemy count at start; the kill baseline so the first kill scores correctly.",
+              "label": "Initial Enemies",
+              "tier": "domain",
+              "type": "number"
+            },
+            "pointsPerKill": {
+              "default": 10.0,
+              "description": "Points awarded for each enemy removed since the last signal.",
+              "label": "Points Per Kill",
+              "tier": "domain",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true, enemy-count drops award points; toggle to freeze scoring.",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "startScore": {
+              "default": 0.0,
+              "description": "Initial score set on INIT.",
+              "label": "Start Score",
+              "tier": "domain",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [
+              "score",
+              "scoreBaseline"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ScoreState",
+          "name": "ScoreKeeper",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "UNITS_CHANGED",
+                "name": "Units Changed",
+                "payloadSchema": [
+                  {
+                    "name": "playersAlive",
+                    "type": "number"
+                  },
+                  {
+                    "name": "enemiesAlive",
+                    "type": "number"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.score",
+                    "@config.startScore"
+                  ],
+                  [
+                    "set",
+                    "@entity.scoreBaseline",
+                    "@config.initialEnemies"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.score",
+                    [
+                      "if",
+                      [
+                        "<",
+                        "@payload.enemiesAlive",
+                        "@entity.scoreBaseline"
+                      ],
+                      [
+                        "+",
+                        "@entity.score",
+                        [
+                          "*",
+                          [
+                            "-",
+                            "@entity.scoreBaseline",
+                            "@payload.enemiesAlive"
+                          ],
+                          "@config.pointsPerKill"
+                        ]
+                      ],
+                      "@entity.score"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.scoreBaseline",
+                    "@payload.enemiesAlive"
+                  ]
+                ],
+                "event": "UNITS_CHANGED",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

@@ -1,0 +1,47 @@
+app std-score "1.0.0"
+"Headless scoring mechanic: awards points when the enemy survivor count drops on a UNITS_CHANGED signal. Owns only score (+ its kill baseline); renders nothing."
+orbital ScoreOrbital {
+  entity ScoreState [runtime, shared] {
+    id : string!
+    score : number = 0
+    scoreBaseline : number = 0
+  }
+
+  trait ScoreKeeper -> @rebindable ScoreState [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.score @config.startScore)
+        (set @entity.scoreBaseline @config.initialEnemies)
+      UNITS_CHANGED -> active when @config.running
+        (set @entity.score (if (< @payload.enemiesAlive @entity.scoreBaseline) (+ @entity.score (* (- @entity.scoreBaseline @payload.enemiesAlive) @config.pointsPerKill)) @entity.score))
+        (set @entity.scoreBaseline @payload.enemiesAlive)
+    }
+
+    listens {
+      UNITS_CHANGED { playersAlive : number, enemiesAlive : number }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, enemy-count drops award points; toggle to freeze scoring."
+        @tier "domain"
+      pointsPerKill : number = 10
+        @label "Points Per Kill"
+        @description "Points awarded for each enemy removed since the last signal."
+        @tier "domain"
+      startScore : number = 0
+        @label "Start Score"
+        @description "Initial score set on INIT."
+        @tier "domain"
+      initialEnemies : number = 0
+        @label "Initial Enemies"
+        @description "Enemy count at start; the kill baseline so the first kill scores correctly."
+        @tier "domain"
+    }
+  }
+
+  page "/score" as ScorePage -> ScoreKeeper
+}
