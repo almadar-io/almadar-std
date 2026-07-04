@@ -1,0 +1,218 @@
+{
+  "description": "Headless win/lose authority for market-service boards: owns only result. Listens SERVICE_CHANGED (served + lost) and sets result to won when enough customers are served, lost when too many patience timers expire, else none. Renders nothing.",
+  "name": "std-market-flow",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string"
+          }
+        ],
+        "name": "MarketFlowData",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "MarketFlowOrbital",
+      "pages": [
+        {
+          "name": "MarketFlowPage",
+          "path": "/market-flow",
+          "traits": [
+            {
+              "ref": "MarketFlow"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "maxLost": {
+              "default": 3.0,
+              "description": "Cumulative starved-customer count that ends the round in a loss",
+              "label": "Max Lost",
+              "tier": "domain",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true, SERVICE_CHANGED signals resolve win/lose; toggle to freeze",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "targetServed": {
+              "default": 10.0,
+              "description": "Cumulative customers served needed to win",
+              "label": "Target Served",
+              "tier": "domain",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Emitted when result becomes won or lost",
+              "event": "GAME_END",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "result"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "MarketFlowData",
+          "name": "MarketFlow",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "SERVICE_CHANGED",
+                "name": "Service Changed",
+                "payloadSchema": [
+                  {
+                    "name": "served",
+                    "type": "number"
+                  },
+                  {
+                    "name": "pending",
+                    "type": "number"
+                  },
+                  {
+                    "name": "lost",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "Emitted when result becomes won or lost",
+                "key": "GAME_END",
+                "name": "Game End",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    [
+                      "if",
+                      [
+                        ">=",
+                        "@payload.served",
+                        "@config.targetServed"
+                      ],
+                      "won",
+                      [
+                        "if",
+                        [
+                          ">=",
+                          "@payload.lost",
+                          "@config.maxLost"
+                        ],
+                        "lost",
+                        "none"
+                      ]
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "!=",
+                      "@entity.result",
+                      "none"
+                    ],
+                    [
+                      "emit",
+                      "GAME_END",
+                      {
+                        "result": "@entity.result"
+                      }
+                    ],
+                    null
+                  ]
+                ],
+                "event": "SERVICE_CHANGED",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ]
+                ],
+                "event": "RESTART",
+                "from": "active",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

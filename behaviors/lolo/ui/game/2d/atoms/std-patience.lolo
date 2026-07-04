@@ -1,0 +1,127 @@
+app std-patience "1.0.0"
+"Headless customer-service mechanic: owns a stationary customer roster with per-customer patience. Decrements patience every tick, serves nearby customers on HERO_STEPPED (resets their patience + scores), and emits CUSTOMER_LOST when a timer expires. Never writes units."
+orbital PatienceOrbital {
+  type Asset = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Customer = {
+    id : string!
+    position : { x : number!  y : number! }
+    patience : number
+    maxPatience : number
+    unitType : string
+    name : string
+    team : string
+    modelUrl : Asset
+  }
+  type Fx = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
+
+  entity PatienceData [runtime, shared] {
+    id : string!
+    customers : [Customer]
+    served : number = 0
+    pending : number = 0
+    lost : number = 0
+  }
+
+  trait Patience -> @rebindable PatienceData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.customers @config.customers)
+        (set @entity.served 0)
+        (set @entity.pending (array/len @config.customers))
+        (set @entity.lost 0)
+
+      HERO_STEPPED -> active when @config.running
+        (let ((matched (array/filter @entity.customers (fn c (<= (grid/manhattan-distance (object/get @c position) { x: @payload.x, y: @payload.z }) @config.serveRadius)))))
+        (let ((hitCount (array/len @matched)))
+        (do
+          (set @entity.customers (array/map @entity.customers (fn c (if (<= (grid/manhattan-distance (object/get @c position) { x: @payload.x, y: @payload.z }) @config.serveRadius) (object/merge @c { patience: @c.maxPatience }) @c))))
+          (set @entity.served (+ @entity.served @hitCount))
+          (emit BURST { particles: (array/map @matched (fn c { id: (str/concat "fx-serve-" @c.id), type: "score", x: (object/get (object/get @c position) x), z: (object/get (object/get @c position) y), message: "+1", ttl: 3 })) })
+          (emit SERVICE_CHANGED { served: @entity.served, pending: @entity.pending, lost: @entity.lost })
+        )))
+
+      RESTART -> active
+        (set @entity.customers @config.customers)
+        (set @entity.served 0)
+        (set @entity.pending (array/len @config.customers))
+        (set @entity.lost 0)
+    }
+
+    ticks {
+      patienceTick every 1000ms
+        when @config.running
+        (set @entity.customers (array/map @entity.customers (fn c (object/merge @c { patience: (math/clamp (- @c.patience 1) 0 @c.maxPatience) }))))
+        (let ((starved (array/filter @entity.customers (fn c (<= @c.patience 0)))))
+        (let ((starvedCount (array/len @starved)))
+        (do
+          (set @entity.lost (+ @entity.lost @starvedCount))
+          (set @entity.customers (array/map @entity.customers (fn c (if (<= @c.patience 0) (object/merge @c { patience: @c.maxPatience }) @c))))
+          (if (> @starvedCount 0) (emit BURST { particles: (array/map @starved (fn c { id: (str/concat "fx-starve-" @c.id), type: "damage", x: (object/get (object/get @c position) x), z: (object/get (object/get @c position) y), message: "-1 life", ttl: 3 })) }) null)
+          (if (> @starvedCount 0) (emit CUSTOMER_LOST { count: @starvedCount }) null)
+          (emit SERVICE_CHANGED { served: @entity.served, pending: @entity.pending, lost: @entity.lost })
+        )))
+    }
+
+    emits {
+      BURST -> external {
+        particles : [Fx]
+      }
+        @description "Serve or starve particle burst; a fx-particles listener spawns it"
+        @tier "domain"
+      SERVICE_CHANGED -> external {
+        served : number!
+        pending : number!
+        lost : number!
+      }
+        @description "Served/pending/lost counts after this step; a market-flow listener decides win/lose"
+        @tier "domain"
+      CUSTOMER_LOST -> external {
+        count : number!
+      }
+        @description "Emitted when one or more customers' patience expires in the same tick"
+        @tier "domain"
+    }
+
+    listens {
+      HERO_STEPPED { unitId : string, x : number, z : number, movesLeft : number }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, patience ticks down and HERO_STEPPED serves nearby customers; toggle to freeze"
+        @tier "domain"
+      customers : [Customer] = []
+        @label "Customers"
+        @description "Seed roster of stationary customers, each with their own position + patience/maxPatience"
+        @tier "domain"
+      serveRadius : number = 1
+        @label "Serve Radius"
+        @description "Manhattan distance at which a customer counts as served by the hero's last step: 0 = step onto tile, 1 = adjacent"
+        @tier "domain"
+    }
+  }
+
+  page "/patience" as PatiencePage -> Patience
+}

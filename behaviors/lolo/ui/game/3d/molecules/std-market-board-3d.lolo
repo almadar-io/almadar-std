@@ -1,0 +1,263 @@
+app std-market-board-3d "1.0.0"
+"3D single-hero market-service board FRAME: composes hero-nav (hero movement) + patience (stationary customers + starve timers) + fx-particles + market-flow (win/lose) onto one shared GameState with a single render authority. Games consume this molecule and supply only theme/assets/units/customers via config."
+orbital MarketBoard3DOrbital {
+  uses Nav from "std/behaviors/std-hero-nav"
+  uses Svc from "std/behaviors/std-patience"
+  uses Particles from "std/behaviors/std-fx-particles"
+  uses Flow from "std/behaviors/std-market-flow"
+
+  type Asset = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    team : string
+    health : number
+    maxHealth : number
+    unitType : string
+    name : string
+    modelUrl : Asset
+  }
+  type Tile = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    passable : boolean
+    modelUrl : Asset
+  }
+  type Customer = {
+    id : string!
+    position : { x : number!  y : number! }
+    patience : number
+    maxPatience : number
+    unitType : string
+    name : string
+    team : string
+    modelUrl : Asset
+  }
+  type Fx = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
+  type ValidMove = { x : number!  z : number! }
+  type Feature = {
+    id : string
+    x : number!
+    y : number!
+    type : string!
+    assetUrl : Asset
+  }
+  type AssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
+  }
+
+  entity GameState [runtime, shared] {
+    id : string!
+    units : [Unit] = []
+    tiles : [Tile] = []
+    movesLeft : number = 0
+    customers : [Customer] = []
+    served : number = 0
+    pending : number = 0
+    lost : number = 0
+    fx : [Fx] = []
+    result : string = "none"
+    selectedUnitId : string = ""
+    validMoves : [ValidMove] = []
+    phase : string = "observation"
+  }
+
+  trait HeroAuthority = Nav.traits.HeroNav -> GameState {
+    config {
+      running: true
+      gridWidth: 12
+      gridHeight: 12
+      moveBudget: 999999
+      units: [ { id: "hero", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 1, maxHealth: 1, unitType: "hero" } ]
+    }
+  }
+
+  trait Patience = Svc.traits.Patience -> GameState {
+    config {
+      running: true
+      serveRadius: 1
+      customers: []
+    }
+  }
+
+  trait FxDecay = Particles.traits.FxParticles -> GameState {
+    config { running: true }
+  }
+
+  trait RoundGate = Flow.traits.MarketFlow -> GameState {
+    config { running: true, targetServed: 10, maxLost: 3 }
+  }
+
+  trait MarketIntent -> GameState [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: @config.scoreLabel, value: @entity.served }, { label: @config.livesLabel, value: (- @config.maxLost @entity.lost) }, { label: "Result", value: @entity.result }, { label: "Goal", value: @config.goalText }, { label: "How", value: @config.howText } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, cameraMode: @config.cameraMode, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: (array/concat @entity.units (array/map @entity.customers (fn c { id: @c.id, position: (object/get @c position), x: (object/get (object/get @c position) x), y: (object/get (object/get @c position) y), z: 0, team: @c.team, health: 1, maxHealth: 1, unitType: @c.unitType, name: @c.name, modelUrl: @c.modelUrl }))), features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx, assetManifest: @config.assetManifest } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.result "none") (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.phase "selection")
+        (set @entity.validMoves (array/map (array/filter @entity.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @config.movementRange) (and (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0) (== (array/len (array/filter @entity.customers (fn c (and (== (object/get (object/get @c position) x) (object/get @t x)) (== (object/get (object/get @c position) y) (object/get @t y)))))) 0)))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+
+      TILE_CLICK -> playing when (and (== @entity.result "none") (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @config.gridWidth @config.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @config.movementRange) (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) ?x) (== (object/get @t y) ?z)))) passable) true) (and (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0) (== (array/len (array/filter @entity.customers (fn c (and (== (object/get (object/get @c position) x) ?x) (== (object/get (object/get @c position) y) ?z))))) 0)))))))
+        (emit MOVE { unitId: @entity.selectedUnitId, x: ?x, y: ?z })
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.phase "observation")
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.phase "observation")
+
+      PLAY_AGAIN -> playing
+        (emit RESTART { id: "board" })
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.phase "observation")
+    }
+
+    ticks {
+      renderTick every 100ms
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: @config.scoreLabel, value: @entity.served }, { label: @config.livesLabel, value: (- @config.maxLost @entity.lost) }, { label: "Result", value: @entity.result }, { label: "Goal", value: @config.goalText }, { label: "How", value: @config.howText } ] }
+          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
+          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
+          children: [ { type: game-canvas-3d, cameraMode: @config.cameraMode, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: (array/concat @entity.units (array/map @entity.customers (fn c { id: @c.id, position: (object/get @c position), x: (object/get (object/get @c position) x), y: (object/get (object/get @c position) y), z: 0, team: @c.team, health: 1, maxHealth: 1, unitType: @c.unitType, name: @c.name, modelUrl: @c.modelUrl }))), features: @config.features, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, backgroundColor: @config.bgColor, interpolateUnits: true, events: @entity.fx, assetManifest: @config.assetManifest } ]
+        })
+    }
+
+    emits {
+      MOVE -> external {
+        unitId : string!
+        x : number!
+        y : number!
+      }
+        @description "Hero move intent applied by the hero-nav authority"
+        @tier "domain"
+      RESTART -> external {
+        id : string!
+      }
+        @description "Resets every mechanic (units/budget, customers/patience, result) for a new round"
+        @tier "domain"
+      TILE_CLICK -> external {
+        x : number!
+        z : number!
+        tileId : string
+      }
+        @description "tileClickEvent prop"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+        x : number
+        z : number
+      }
+        @description "unitClickEvent prop"
+        @tier "domain"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Clears the current selection"
+        @tier "domain"
+    }
+
+    config {
+      gridWidth : number = 12
+        @label "Grid Width"
+        @description "Grid column count (matches HeroAuthority.gridWidth)."
+        @tier "domain"
+      gridHeight : number = 12
+        @label "Grid Height"
+        @description "Grid row count (matches HeroAuthority.gridHeight)."
+        @tier "domain"
+      movementRange : number = 1
+        @label "Movement Range"
+        @description "Max manhattan distance the hero may step per move."
+        @tier "domain"
+      scoreLabel : string = "Score"
+        @label "Score Label"
+        @description "HUD label for the served/score counter."
+        @tier "presentation"
+      livesLabel : string = "Lives"
+        @label "Lives Label"
+        @description "HUD label for the remaining-lives counter (maxLost - lost)."
+        @tier "presentation"
+      maxLost : number = 3
+        @label "Max Lost"
+        @description "Starting lives shown in the HUD (matches RoundGate.maxLost)."
+        @tier "presentation"
+      goalText : string = "Serve customers before their patience runs out"
+        @label "Goal Text"
+        @description "HUD goal description."
+        @tier "presentation"
+      howText : string = "Walk next to a customer — they are served automatically while you're adjacent"
+        @label "How Text"
+        @description "HUD how-to-play description."
+        @tier "presentation"
+      cameraMode : string = "top-down"
+        @label "Camera Mode"
+        @description "3D canvas camera mode."
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale."
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier."
+        @tier "presentation"
+      bgColor : string = "#0a0f1a"
+        @label "Bg Color"
+        @description "Canvas background color."
+        @tier "presentation"
+      features : [Feature] = []
+        @label "Features"
+        @description "Static decorative props (shelves/freezers/checkout/etc); never mutated by any mechanic."
+        @tier "presentation"
+      assetManifest : AssetManifest = { terrains: {}, units: {}, features: {}, effects: {} }
+        @label "Asset Manifest"
+        @description "Per-role model manifest resolving tile models by terrain key."
+        @tier "presentation"
+    }
+  }
+
+  page "/market-board-3d" as MarketBoard3DPage -> HeroAuthority, Patience, FxDecay, RoundGate, MarketIntent
+}

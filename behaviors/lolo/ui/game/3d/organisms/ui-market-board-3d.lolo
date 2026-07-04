@@ -1,61 +1,52 @@
 app ui-market-board-3d "1.0.0"
-"MarketBoard3D — 3D shop-service board organism (game-shell + game-canvas-3d); serve customers before patience hits zero."
+"MarketBoard3D — a shopkeeper serves customers before their patience runs out; composes the std single-hero market-service frame."
 orbital MarketBoard3DOrbital {
-  type MarketBoard3DError = {
-    message : string!
-    name : string
-    code : string
-    stack : string
-  }
+  uses Frame from "std/behaviors/std-market-board-3d"
+
   type Asset = {
-      url : asset
-      role : string
-      category : string
-      animations : [string]
-      style : string
-      dimension : string
-      aspect : string
-      name : string
-      thumbnailUrl : string
-    }
-  type MarketBoard3DTilesItem = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    team : string
+    health : number
+    maxHealth : number
+    unitType : string
+    name : string
+    modelUrl : Asset
+  }
+  type Tile = {
     id : string
     x : number!
     y : number!
+    z : number
     terrain : string
     passable : boolean
     modelUrl : Asset
   }
-  type MarketBoard3DUnitsItemPosition = {
-    x : number!
-    y : number!
-  }
-  type MarketBoard3DUnitsItem = {
+  type Customer = {
     id : string!
-    position : MarketBoard3DUnitsItemPosition
-    unitType : string
-    name : string
-    team : "player" | "neutral"
+    position : { x : number!  y : number! }
     patience : number
     maxPatience : number
+    unitType : string
+    name : string
+    team : string
     modelUrl : Asset
   }
-  type MarketBoard3DFeaturesItem = {
-    id : string
-    x : number!
-    y : number!
-    type : string!
-    assetUrl : Asset
-  }
-  type MarketBoard3DValidMovesItem = {
-    x : number!
-    z : number!
-  }
-  type MarketBoard3DAttackTargetsItem = {
-    x : number!
-    z : number!
-  }
-  type MarketBoard3DFxItem = {
+  type Fx = {
     id : string!
     type : string!
     x : number!
@@ -64,206 +55,82 @@ orbital MarketBoard3DOrbital {
     message : string
     ttl : number!
   }
+  type ValidMove = { x : number!  z : number! }
+  type Feature = {
+    id : string
+    x : number!
+    y : number!
+    type : string!
+    assetUrl : Asset
+  }
+  type AssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
+  }
 
-  entity MarketBoard3DItem [runtime] {
+  entity GameState [runtime, shared] {
     id : string!
-    units : [MarketBoard3DUnitsItem]
-    selectedUnitId : string
-    validMoves : [MarketBoard3DValidMovesItem]
-    attackTargets : [MarketBoard3DAttackTargetsItem]
-    fx : [MarketBoard3DFxItem] = []
-    score : number = 0
-    lives : number = 3
-    result : "none" | "won" | "lost" = none
-    gridWidth : number = 14
-    gridHeight : number = 14
-    movementRange : number = 4
-    scoreTarget : number = 10
-    tiles : [MarketBoard3DTilesItem] = []
+    units : [Unit] = []
+    tiles : [Tile] = []
+    movesLeft : number = 0
+    customers : [Customer] = []
+    served : number = 0
+    pending : number = 0
+    lost : number = 0
+    fx : [Fx] = []
+    result : string = "none"
+    selectedUnitId : string = ""
+    validMoves : [ValidMove] = []
+    phase : string = "observation"
   }
 
-  trait MarketBoard3DRender -> @rebindable MarketBoard3DItem [interaction, instance] {
-    initial: playing
-
-    state playing {
-      INIT -> playing
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "u1")
-        (set @entity.gridWidth 14)
-        (set @entity.gridHeight 14)
-        (set @entity.movementRange 4)
-        (set @entity.tiles (array/flatten (array/map (array/range 0 14) (fn gy (array/map (array/range 0 14) (fn gx (let ((cover (and (== (math/mod @gy 3) 1) (== (math/mod @gx 4) 2)))) { id: (str/concat "t-" @gx "-" @gy), x: @gx, y: @gy, terrain: (if @cover "shelf" "floor"), passable: (if @cover false true), modelUrl: (if @cover @config.shelfAsset @config.floorAsset) })))))))
-        (set @entity.scoreTarget @config.scoreTarget)
-        (set @entity.attackTargets [])
-        (set @entity.fx [])
-        (set @entity.validMoves (array/map (array/filter @entity.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id "u1"))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
-        (set @entity.score 0)
-        (set @entity.lives 3)
-        (set @entity.result "none")
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Serve customers before patience runs out" }, { label: "How", value: "Click a floor tile to walk → click an adjacent customer to serve them" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, events: @entity.fx } ]
-        })
-
-      TILE_CLICK -> playing when (and (== @entity.result "none") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id "u1"))) position) { x: ?x, y: ?z }) @entity.movementRange) (and (== (object/get (array/find @entity.tiles (fn t (and (== @t.x ?x) (== @t.y ?z)))) passable) true) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0)))))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id "u1") (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
-        (set @entity.validMoves (array/map (array/filter @entity.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id "u1"))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Serve customers before patience runs out" }, { label: "How", value: "Click a floor tile to walk → click an adjacent customer to serve them" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, events: @entity.fx } ]
-        })
-
-      UNIT_CLICK -> playing when (and (== @entity.result "none") (and (!= (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player") (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id "u1"))) position) (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position)) 1)))
-        (set @entity.fx (array/append @entity.fx { id: (str/concat "fx-serve-" ?unitId), type: "score", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) x), z: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) y), message: "+1", ttl: 3 }))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?unitId) (object/merge @u { patience: @u.maxPatience }) @u))))
-        (set @entity.score (+ @entity.score 1))
-        (set @entity.result (if (>= @entity.score @entity.scoreTarget) "won" @entity.result))
-        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Serve customers before patience runs out" }, { label: "How", value: "Click a floor tile to walk → click an adjacent customer to serve them" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, events: @entity.fx } ]
-        })
-
-      GAME_END -> gameover when (or (== @entity.result "won") (== @entity.result "lost"))
-        (set @entity.validMoves [])
-        (set @entity.attackTargets [])
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Serve customers before patience runs out" }, { label: "How", value: "Click a floor tile to walk → click an adjacent customer to serve them" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] }
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, events: @entity.fx } ]
-        })
-    }
-
-    state gameover {
-      PLAY_AGAIN -> playing
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "u1")
-        (set @entity.gridWidth 14)
-        (set @entity.gridHeight 14)
-        (set @entity.movementRange 4)
-        (set @entity.scoreTarget @config.scoreTarget)
-        (set @entity.attackTargets [])
-        (set @entity.fx [])
-        (set @entity.validMoves (array/map (array/filter @entity.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id "u1"))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
-        (set @entity.score 0)
-        (set @entity.lives 3)
-        (set @entity.result "none")
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Serve customers before patience runs out" }, { label: "How", value: "Click a floor tile to walk → click an adjacent customer to serve them" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, events: @entity.fx } ]
-        })
-    }
-
-    ticks {
-      patienceTick every 1s
-        when (== @entity.result "none")
-        (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "neutral") (object/merge @u { patience: (math/clamp (- @u.patience 1) 0 @u.maxPatience) }) @u))))
-        (let ((starved (array/filter @entity.units (fn u (and (== @u.team "neutral") (<= @u.patience 0))))))
-          (do
-            (set @entity.fx (array/reduce @starved @entity.fx (fn acc u (array/append @acc { id: (str/concat "fx-starve-" @u.id), type: "damage", x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y), message: "-1 life", ttl: 3 }))))
-            (set @entity.lives (math/max 0 (- @entity.lives (array/len @starved))))))
-        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "neutral") (<= @u.patience 0)) (object/merge @u { patience: @u.maxPatience }) @u))))
-        (set @entity.result (if (<= @entity.lives 0) "lost" @entity.result))
-        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Serve customers before patience runs out" }, { label: "How", value: "Click a floor tile to walk → click an adjacent customer to serve them" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, events: @entity.fx } ]
-        })
-
-      wanderTick every 1500ms
-        when (== @entity.result "none")
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "neutral") (let ((cx (object/get (object/get @u position) x)) (cy (object/get (object/get @u position) y)) (dir (math/floor (* (math/random) 4)))) (let ((nx (if (== @dir 0) (+ @cx 1) (if (== @dir 1) (- @cx 1) @cx))) (ny (if (== @dir 2) (+ @cy 1) (if (== @dir 3) (- @cy 1) @cy)))) (let ((ntile (array/find @entity.tiles (fn t (and (== (object/get @t x) @nx) (== (object/get @t y) @ny))))) (occupied (array/find @entity.units (fn o (and (!= @o.id @u.id) (and (== (object/get (object/get @o position) x) @nx) (== (object/get (object/get @o position) y) @ny))))))) (if (and (grid/in-bounds { x: @nx, y: @ny } @entity.gridWidth @entity.gridHeight) (and (!= @ntile null) (and (== (object/get @ntile passable) true) (== @occupied null)))) (object/merge @u { position: { x: @nx, y: @ny } }) @u)))) @u))))
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Serve customers before patience runs out" }, { label: "How", value: "Click a floor tile to walk → click an adjacent customer to serve them" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, tiles: @entity.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale, events: @entity.fx } ]
-        })
-    }
-
-    emits {
-      GAME_END -> external {
-        result : string!
-      }
-        @description "Emitted when result becomes won or lost"
-        @tier "domain"
-      TILE_CLICK -> external {
-        x : number!
-        z : number
-        tileId : string
-      }
-        @description "Moves the shopkeeper toward the clicked tile"
-        @tier "domain"
-      UNIT_CLICK -> external {
-        unitId : string!
-        x : number
-        z : number
-      }
-        @description "Serves the clicked customer when the shopkeeper is adjacent"
-        @tier "domain"
-      PLAY_AGAIN -> external {
-        id : string
-      }
-        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
-        @tier "domain"
-    }
-
+  trait HeroAuthority = Frame.traits.HeroAuthority -> GameState {
     config {
-      className : string = ""
-        @label "Class Name"
-        @description "className prop"
-        @tier "presentation"
-      isLoading : boolean = false
-        @label "Is Loading"
-        @description "Loading state indicator"
-        @tier "presentation"
-      error : MarketBoard3DError
-        @label "Error"
-        @description "Error state (UiError)"
-        @tier "presentation"
-      floorAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" }
-        @label "Floor Asset"
-        @description "Passable shop floor tile, tiled across the store."
-        @tier "presentation"
-      shelfAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-boxes.glb", role: "tile", category: "shelf-boxes", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "shelf-boxes", thumbnailUrl: "" }
-        @label "Shelf Asset"
-        @description "Impassable shelf/counter terrain tile, scattered for shop aisles."
-        @tier "presentation"
-      units : [MarketBoard3DUnitsItem] = [{ id: "u1", position: { x: 7, y: 7 }, unitType: "shopkeeper", name: "Shopkeeper", team: player, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/units/character-employee.glb", role: "player", category: "character-employee", animations: ["static", "idle", "walk", "sprint", "jump", "fall", "crouch", "sit", "drive", "die", "pick-up", "emote-yes", "emote-no", "holding-right", "holding-left", "holding-both", "holding-right-shoot", "holding-left-shoot", "holding-both-shoot", "attack-melee-right", "attack-melee-left", "attack-kick-right", "attack-kick-left", "interact-right", "interact-left", "wheelchair-sit", "wheelchair-look-left", "wheelchair-look-right", "wheelchair-move-forward", "wheelchair-move-back", "wheelchair-move-left", "wheelchair-move-right"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-employee", thumbnailUrl: "" } }, { id: "c1", position: { x: 4, y: 3 }, unitType: "customer", name: "Customer A", team: neutral, patience: 20, maxPatience: 20, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-female-a.glb", role: "npc", category: "character-female-a", animations: ["static", "idle", "walk", "sprint", "jump", "fall", "crouch", "sit", "drive", "die", "pick-up", "emote-yes", "emote-no", "holding-right", "holding-left", "holding-both", "holding-right-shoot", "holding-left-shoot", "holding-both-shoot", "attack-melee-right", "attack-melee-left", "attack-kick-right", "attack-kick-left", "interact-right", "interact-left", "wheelchair-sit", "wheelchair-look-left", "wheelchair-look-right", "wheelchair-move-forward", "wheelchair-move-back", "wheelchair-move-left", "wheelchair-move-right"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-female-a", thumbnailUrl: "" } }, { id: "c2", position: { x: 10, y: 11 }, unitType: "customer", name: "Customer B", team: neutral, patience: 24, maxPatience: 24, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-male-a.glb", role: "npc", category: "character-male-a", animations: ["static", "idle", "walk", "sprint", "jump", "fall", "crouch", "sit", "drive", "die", "pick-up", "emote-yes", "emote-no", "holding-right", "holding-left", "holding-both", "holding-right-shoot", "holding-left-shoot", "holding-both-shoot", "attack-melee-right", "attack-melee-left", "attack-kick-right", "attack-kick-left", "interact-right", "interact-left", "wheelchair-sit", "wheelchair-look-left", "wheelchair-look-right", "wheelchair-move-forward", "wheelchair-move-back", "wheelchair-move-left", "wheelchair-move-right"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-male-a", thumbnailUrl: "" } }]
-        @label "Units"
-        @description "Initial roster: shopkeeper + 2 customers, spread across the 14×14 floor — takes priority over entity-derived units."
-        @tier "presentation"
-      features : [MarketBoard3DFeaturesItem] = [{ id: "f1", x: 1, y: 2, type: "shelf", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-boxes.glb", role: "decoration", category: "shelf-boxes", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "shelf-boxes", thumbnailUrl: "" } }, { id: "f2", x: 5, y: 2, type: "shelf", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-bags.glb", role: "decoration", category: "shelf-bags", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "shelf-bags", thumbnailUrl: "" } }, { id: "f3", x: 9, y: 2, type: "shopping_basket", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shopping-basket.glb", role: "decoration", category: "shopping-basket", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "shopping-basket", thumbnailUrl: "" } }, { id: "f4", x: 1, y: 5, type: "freezer", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/freezer.glb", role: "decoration", category: "freezer", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "freezer", thumbnailUrl: "" } }, { id: "f5", x: 5, y: 5, type: "freezer", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/freezers-standing.glb", role: "decoration", category: "freezers-standing", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "freezers-standing", thumbnailUrl: "" } }, { id: "f6", x: 9, y: 5, type: "display_fruit", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/display-fruit.glb", role: "decoration", category: "display-fruit", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "display-fruit", thumbnailUrl: "" } }, { id: "f7", x: 9, y: 6, type: "food", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/apple.glb", role: "decoration", category: "apple", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "apple", thumbnailUrl: "" } }, { id: "f8", x: 1, y: 6, type: "food", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/banana.glb", role: "decoration", category: "banana", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "banana", thumbnailUrl: "" } }, { id: "f9", x: 5, y: 6, type: "food", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/carrot.glb", role: "decoration", category: "carrot", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "carrot", thumbnailUrl: "" } }, { id: "f10", x: 12, y: 5, type: "display_bread", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/display-bread.glb", role: "decoration", category: "display-bread", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "display-bread", thumbnailUrl: "" } }, { id: "f11", x: 12, y: 6, type: "food", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/bread.glb", role: "decoration", category: "bread", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "bread", thumbnailUrl: "" } }, { id: "f12", x: 3, y: 9, type: "shopping_cart", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shopping-cart.glb", role: "decoration", category: "shopping-cart", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "shopping-cart", thumbnailUrl: "" } }, { id: "f13", x: 7, y: 9, type: "checkout", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/cash-register.glb", role: "decoration", category: "cash-register", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "cash-register", thumbnailUrl: "" } }, { id: "f14", x: 11, y: 9, type: "bottle_return", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/bottle-return.glb", role: "decoration", category: "bottle-return", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "bottle-return", thumbnailUrl: "" } }, { id: "f15", x: 12, y: 2, type: "shelf", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-end.glb", role: "decoration", category: "shelf-end", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "shelf-end", thumbnailUrl: "" } }]
-        @label "Features"
-        @description "Shop fixtures (shelves/freezers/checkout/carts) and food props, each on a unique cell across the 14×14 floor."
-        @tier "presentation"
-      scale : number = 0.45
-        @label "Scale"
-        @description "Canvas render scale"
-        @tier "presentation"
-      unitScale : number = 1
-        @label "Unit Scale"
-        @description "Unit draw-size multiplier"
-        @tier "presentation"
-      scoreTarget : number = 10
-        @label "Score Target"
-        @description "Score needed to win"
-        @tier "presentation"
+      running: true
+      gridWidth: 14
+      gridHeight: 14
+      moveBudget: 999999
+      units: [ { id: "u1", position: { x: 7, y: 7 }, x: 7, y: 7, z: 0, team: "player", health: 1, maxHealth: 1, unitType: "shopkeeper", name: "Shopkeeper", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/units/character-employee.glb", role: "player", category: "character-employee", animations: ["static", "idle", "walk", "sprint", "jump", "fall", "crouch", "sit", "drive", "die", "pick-up", "emote-yes", "emote-no", "holding-right", "holding-left", "holding-both", "holding-right-shoot", "holding-left-shoot", "holding-both-shoot", "attack-melee-right", "attack-melee-left", "attack-kick-right", "attack-kick-left", "interact-right", "interact-left", "wheelchair-sit", "wheelchair-look-left", "wheelchair-look-right", "wheelchair-move-forward", "wheelchair-move-back", "wheelchair-move-left", "wheelchair-move-right"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-employee", thumbnailUrl: "" } } ]
+      tiles: [ { id: "t-0-0", x: 0, y: 0, z: 0, terrain: "floor", passable: true }, { id: "t-1-0", x: 1, y: 0, z: 0, terrain: "floor", passable: true }, { id: "t-2-0", x: 2, y: 0, z: 0, terrain: "floor", passable: true }, { id: "t-3-0", x: 3, y: 0, z: 0, terrain: "floor", passable: true }, { id: "t-4-0", x: 4, y: 0, z: 0, terrain: "floor", passable: true }, { id: "t-5-0", x: 5, y: 0, z: 0, terrain: "floor", passable: true }, { id: "t-6-0", x: 6, y: 0, z: 0, terrain: "floor", passable: true }, { id: "t-7-0", x: 7, y: 0, z: 0, terrain: "floor", passable: true }, { id: "t-8-0", x: 8, y: 0, z: 0, terrain: "floor", passable: true }, { id: "t-9-0", x: 9, y: 0, z: 0, terrain: "floor", passable: true }, { id: "t-10-0", x: 10, y: 0, z: 0, terrain: "floor", passable: true }, { id: "t-11-0", x: 11, y: 0, z: 0, terrain: "floor", passable: true }, { id: "t-12-0", x: 12, y: 0, z: 0, terrain: "floor", passable: true }, { id: "t-13-0", x: 13, y: 0, z: 0, terrain: "floor", passable: true }, { id: "t-0-1", x: 0, y: 1, z: 0, terrain: "floor", passable: true }, { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "floor", passable: true }, { id: "t-2-1", x: 2, y: 1, z: 0, terrain: "shelf", passable: false }, { id: "t-3-1", x: 3, y: 1, z: 0, terrain: "floor", passable: true }, { id: "t-4-1", x: 4, y: 1, z: 0, terrain: "floor", passable: true }, { id: "t-5-1", x: 5, y: 1, z: 0, terrain: "floor", passable: true }, { id: "t-6-1", x: 6, y: 1, z: 0, terrain: "shelf", passable: false }, { id: "t-7-1", x: 7, y: 1, z: 0, terrain: "floor", passable: true }, { id: "t-8-1", x: 8, y: 1, z: 0, terrain: "floor", passable: true }, { id: "t-9-1", x: 9, y: 1, z: 0, terrain: "floor", passable: true }, { id: "t-10-1", x: 10, y: 1, z: 0, terrain: "shelf", passable: false }, { id: "t-11-1", x: 11, y: 1, z: 0, terrain: "floor", passable: true }, { id: "t-12-1", x: 12, y: 1, z: 0, terrain: "floor", passable: true }, { id: "t-13-1", x: 13, y: 1, z: 0, terrain: "floor", passable: true }, { id: "t-0-2", x: 0, y: 2, z: 0, terrain: "floor", passable: true }, { id: "t-1-2", x: 1, y: 2, z: 0, terrain: "floor", passable: true }, { id: "t-2-2", x: 2, y: 2, z: 0, terrain: "floor", passable: true }, { id: "t-3-2", x: 3, y: 2, z: 0, terrain: "floor", passable: true }, { id: "t-4-2", x: 4, y: 2, z: 0, terrain: "floor", passable: true }, { id: "t-5-2", x: 5, y: 2, z: 0, terrain: "floor", passable: true }, { id: "t-6-2", x: 6, y: 2, z: 0, terrain: "floor", passable: true }, { id: "t-7-2", x: 7, y: 2, z: 0, terrain: "floor", passable: true }, { id: "t-8-2", x: 8, y: 2, z: 0, terrain: "floor", passable: true }, { id: "t-9-2", x: 9, y: 2, z: 0, terrain: "floor", passable: true }, { id: "t-10-2", x: 10, y: 2, z: 0, terrain: "floor", passable: true }, { id: "t-11-2", x: 11, y: 2, z: 0, terrain: "floor", passable: true }, { id: "t-12-2", x: 12, y: 2, z: 0, terrain: "floor", passable: true }, { id: "t-13-2", x: 13, y: 2, z: 0, terrain: "floor", passable: true }, { id: "t-0-3", x: 0, y: 3, z: 0, terrain: "floor", passable: true }, { id: "t-1-3", x: 1, y: 3, z: 0, terrain: "floor", passable: true }, { id: "t-2-3", x: 2, y: 3, z: 0, terrain: "floor", passable: true }, { id: "t-3-3", x: 3, y: 3, z: 0, terrain: "floor", passable: true }, { id: "t-4-3", x: 4, y: 3, z: 0, terrain: "floor", passable: true }, { id: "t-5-3", x: 5, y: 3, z: 0, terrain: "floor", passable: true }, { id: "t-6-3", x: 6, y: 3, z: 0, terrain: "floor", passable: true }, { id: "t-7-3", x: 7, y: 3, z: 0, terrain: "floor", passable: true }, { id: "t-8-3", x: 8, y: 3, z: 0, terrain: "floor", passable: true }, { id: "t-9-3", x: 9, y: 3, z: 0, terrain: "floor", passable: true }, { id: "t-10-3", x: 10, y: 3, z: 0, terrain: "floor", passable: true }, { id: "t-11-3", x: 11, y: 3, z: 0, terrain: "floor", passable: true }, { id: "t-12-3", x: 12, y: 3, z: 0, terrain: "floor", passable: true }, { id: "t-13-3", x: 13, y: 3, z: 0, terrain: "floor", passable: true }, { id: "t-0-4", x: 0, y: 4, z: 0, terrain: "floor", passable: true }, { id: "t-1-4", x: 1, y: 4, z: 0, terrain: "floor", passable: true }, { id: "t-2-4", x: 2, y: 4, z: 0, terrain: "shelf", passable: false }, { id: "t-3-4", x: 3, y: 4, z: 0, terrain: "floor", passable: true }, { id: "t-4-4", x: 4, y: 4, z: 0, terrain: "floor", passable: true }, { id: "t-5-4", x: 5, y: 4, z: 0, terrain: "floor", passable: true }, { id: "t-6-4", x: 6, y: 4, z: 0, terrain: "shelf", passable: false }, { id: "t-7-4", x: 7, y: 4, z: 0, terrain: "floor", passable: true }, { id: "t-8-4", x: 8, y: 4, z: 0, terrain: "floor", passable: true }, { id: "t-9-4", x: 9, y: 4, z: 0, terrain: "floor", passable: true }, { id: "t-10-4", x: 10, y: 4, z: 0, terrain: "shelf", passable: false }, { id: "t-11-4", x: 11, y: 4, z: 0, terrain: "floor", passable: true }, { id: "t-12-4", x: 12, y: 4, z: 0, terrain: "floor", passable: true }, { id: "t-13-4", x: 13, y: 4, z: 0, terrain: "floor", passable: true }, { id: "t-0-5", x: 0, y: 5, z: 0, terrain: "floor", passable: true }, { id: "t-1-5", x: 1, y: 5, z: 0, terrain: "floor", passable: true }, { id: "t-2-5", x: 2, y: 5, z: 0, terrain: "floor", passable: true }, { id: "t-3-5", x: 3, y: 5, z: 0, terrain: "floor", passable: true }, { id: "t-4-5", x: 4, y: 5, z: 0, terrain: "floor", passable: true }, { id: "t-5-5", x: 5, y: 5, z: 0, terrain: "floor", passable: true }, { id: "t-6-5", x: 6, y: 5, z: 0, terrain: "floor", passable: true }, { id: "t-7-5", x: 7, y: 5, z: 0, terrain: "floor", passable: true }, { id: "t-8-5", x: 8, y: 5, z: 0, terrain: "floor", passable: true }, { id: "t-9-5", x: 9, y: 5, z: 0, terrain: "floor", passable: true }, { id: "t-10-5", x: 10, y: 5, z: 0, terrain: "floor", passable: true }, { id: "t-11-5", x: 11, y: 5, z: 0, terrain: "floor", passable: true }, { id: "t-12-5", x: 12, y: 5, z: 0, terrain: "floor", passable: true }, { id: "t-13-5", x: 13, y: 5, z: 0, terrain: "floor", passable: true }, { id: "t-0-6", x: 0, y: 6, z: 0, terrain: "floor", passable: true }, { id: "t-1-6", x: 1, y: 6, z: 0, terrain: "floor", passable: true }, { id: "t-2-6", x: 2, y: 6, z: 0, terrain: "floor", passable: true }, { id: "t-3-6", x: 3, y: 6, z: 0, terrain: "floor", passable: true }, { id: "t-4-6", x: 4, y: 6, z: 0, terrain: "floor", passable: true }, { id: "t-5-6", x: 5, y: 6, z: 0, terrain: "floor", passable: true }, { id: "t-6-6", x: 6, y: 6, z: 0, terrain: "floor", passable: true }, { id: "t-7-6", x: 7, y: 6, z: 0, terrain: "floor", passable: true }, { id: "t-8-6", x: 8, y: 6, z: 0, terrain: "floor", passable: true }, { id: "t-9-6", x: 9, y: 6, z: 0, terrain: "floor", passable: true }, { id: "t-10-6", x: 10, y: 6, z: 0, terrain: "floor", passable: true }, { id: "t-11-6", x: 11, y: 6, z: 0, terrain: "floor", passable: true }, { id: "t-12-6", x: 12, y: 6, z: 0, terrain: "floor", passable: true }, { id: "t-13-6", x: 13, y: 6, z: 0, terrain: "floor", passable: true }, { id: "t-0-7", x: 0, y: 7, z: 0, terrain: "floor", passable: true }, { id: "t-1-7", x: 1, y: 7, z: 0, terrain: "floor", passable: true }, { id: "t-2-7", x: 2, y: 7, z: 0, terrain: "shelf", passable: false }, { id: "t-3-7", x: 3, y: 7, z: 0, terrain: "floor", passable: true }, { id: "t-4-7", x: 4, y: 7, z: 0, terrain: "floor", passable: true }, { id: "t-5-7", x: 5, y: 7, z: 0, terrain: "floor", passable: true }, { id: "t-6-7", x: 6, y: 7, z: 0, terrain: "shelf", passable: false }, { id: "t-7-7", x: 7, y: 7, z: 0, terrain: "floor", passable: true }, { id: "t-8-7", x: 8, y: 7, z: 0, terrain: "floor", passable: true }, { id: "t-9-7", x: 9, y: 7, z: 0, terrain: "floor", passable: true }, { id: "t-10-7", x: 10, y: 7, z: 0, terrain: "shelf", passable: false }, { id: "t-11-7", x: 11, y: 7, z: 0, terrain: "floor", passable: true }, { id: "t-12-7", x: 12, y: 7, z: 0, terrain: "floor", passable: true }, { id: "t-13-7", x: 13, y: 7, z: 0, terrain: "floor", passable: true }, { id: "t-0-8", x: 0, y: 8, z: 0, terrain: "floor", passable: true }, { id: "t-1-8", x: 1, y: 8, z: 0, terrain: "floor", passable: true }, { id: "t-2-8", x: 2, y: 8, z: 0, terrain: "floor", passable: true }, { id: "t-3-8", x: 3, y: 8, z: 0, terrain: "floor", passable: true }, { id: "t-4-8", x: 4, y: 8, z: 0, terrain: "floor", passable: true }, { id: "t-5-8", x: 5, y: 8, z: 0, terrain: "floor", passable: true }, { id: "t-6-8", x: 6, y: 8, z: 0, terrain: "floor", passable: true }, { id: "t-7-8", x: 7, y: 8, z: 0, terrain: "floor", passable: true }, { id: "t-8-8", x: 8, y: 8, z: 0, terrain: "floor", passable: true }, { id: "t-9-8", x: 9, y: 8, z: 0, terrain: "floor", passable: true }, { id: "t-10-8", x: 10, y: 8, z: 0, terrain: "floor", passable: true }, { id: "t-11-8", x: 11, y: 8, z: 0, terrain: "floor", passable: true }, { id: "t-12-8", x: 12, y: 8, z: 0, terrain: "floor", passable: true }, { id: "t-13-8", x: 13, y: 8, z: 0, terrain: "floor", passable: true }, { id: "t-0-9", x: 0, y: 9, z: 0, terrain: "floor", passable: true }, { id: "t-1-9", x: 1, y: 9, z: 0, terrain: "floor", passable: true }, { id: "t-2-9", x: 2, y: 9, z: 0, terrain: "floor", passable: true }, { id: "t-3-9", x: 3, y: 9, z: 0, terrain: "floor", passable: true }, { id: "t-4-9", x: 4, y: 9, z: 0, terrain: "floor", passable: true }, { id: "t-5-9", x: 5, y: 9, z: 0, terrain: "floor", passable: true }, { id: "t-6-9", x: 6, y: 9, z: 0, terrain: "floor", passable: true }, { id: "t-7-9", x: 7, y: 9, z: 0, terrain: "floor", passable: true }, { id: "t-8-9", x: 8, y: 9, z: 0, terrain: "floor", passable: true }, { id: "t-9-9", x: 9, y: 9, z: 0, terrain: "floor", passable: true }, { id: "t-10-9", x: 10, y: 9, z: 0, terrain: "floor", passable: true }, { id: "t-11-9", x: 11, y: 9, z: 0, terrain: "floor", passable: true }, { id: "t-12-9", x: 12, y: 9, z: 0, terrain: "floor", passable: true }, { id: "t-13-9", x: 13, y: 9, z: 0, terrain: "floor", passable: true }, { id: "t-0-10", x: 0, y: 10, z: 0, terrain: "floor", passable: true }, { id: "t-1-10", x: 1, y: 10, z: 0, terrain: "floor", passable: true }, { id: "t-2-10", x: 2, y: 10, z: 0, terrain: "shelf", passable: false }, { id: "t-3-10", x: 3, y: 10, z: 0, terrain: "floor", passable: true }, { id: "t-4-10", x: 4, y: 10, z: 0, terrain: "floor", passable: true }, { id: "t-5-10", x: 5, y: 10, z: 0, terrain: "floor", passable: true }, { id: "t-6-10", x: 6, y: 10, z: 0, terrain: "shelf", passable: false }, { id: "t-7-10", x: 7, y: 10, z: 0, terrain: "floor", passable: true }, { id: "t-8-10", x: 8, y: 10, z: 0, terrain: "floor", passable: true }, { id: "t-9-10", x: 9, y: 10, z: 0, terrain: "floor", passable: true }, { id: "t-10-10", x: 10, y: 10, z: 0, terrain: "shelf", passable: false }, { id: "t-11-10", x: 11, y: 10, z: 0, terrain: "floor", passable: true }, { id: "t-12-10", x: 12, y: 10, z: 0, terrain: "floor", passable: true }, { id: "t-13-10", x: 13, y: 10, z: 0, terrain: "floor", passable: true }, { id: "t-0-11", x: 0, y: 11, z: 0, terrain: "floor", passable: true }, { id: "t-1-11", x: 1, y: 11, z: 0, terrain: "floor", passable: true }, { id: "t-2-11", x: 2, y: 11, z: 0, terrain: "floor", passable: true }, { id: "t-3-11", x: 3, y: 11, z: 0, terrain: "floor", passable: true }, { id: "t-4-11", x: 4, y: 11, z: 0, terrain: "floor", passable: true }, { id: "t-5-11", x: 5, y: 11, z: 0, terrain: "floor", passable: true }, { id: "t-6-11", x: 6, y: 11, z: 0, terrain: "floor", passable: true }, { id: "t-7-11", x: 7, y: 11, z: 0, terrain: "floor", passable: true }, { id: "t-8-11", x: 8, y: 11, z: 0, terrain: "floor", passable: true }, { id: "t-9-11", x: 9, y: 11, z: 0, terrain: "floor", passable: true }, { id: "t-10-11", x: 10, y: 11, z: 0, terrain: "floor", passable: true }, { id: "t-11-11", x: 11, y: 11, z: 0, terrain: "floor", passable: true }, { id: "t-12-11", x: 12, y: 11, z: 0, terrain: "floor", passable: true }, { id: "t-13-11", x: 13, y: 11, z: 0, terrain: "floor", passable: true }, { id: "t-0-12", x: 0, y: 12, z: 0, terrain: "floor", passable: true }, { id: "t-1-12", x: 1, y: 12, z: 0, terrain: "floor", passable: true }, { id: "t-2-12", x: 2, y: 12, z: 0, terrain: "floor", passable: true }, { id: "t-3-12", x: 3, y: 12, z: 0, terrain: "floor", passable: true }, { id: "t-4-12", x: 4, y: 12, z: 0, terrain: "floor", passable: true }, { id: "t-5-12", x: 5, y: 12, z: 0, terrain: "floor", passable: true }, { id: "t-6-12", x: 6, y: 12, z: 0, terrain: "floor", passable: true }, { id: "t-7-12", x: 7, y: 12, z: 0, terrain: "floor", passable: true }, { id: "t-8-12", x: 8, y: 12, z: 0, terrain: "floor", passable: true }, { id: "t-9-12", x: 9, y: 12, z: 0, terrain: "floor", passable: true }, { id: "t-10-12", x: 10, y: 12, z: 0, terrain: "floor", passable: true }, { id: "t-11-12", x: 11, y: 12, z: 0, terrain: "floor", passable: true }, { id: "t-12-12", x: 12, y: 12, z: 0, terrain: "floor", passable: true }, { id: "t-13-12", x: 13, y: 12, z: 0, terrain: "floor", passable: true }, { id: "t-0-13", x: 0, y: 13, z: 0, terrain: "floor", passable: true }, { id: "t-1-13", x: 1, y: 13, z: 0, terrain: "floor", passable: true }, { id: "t-2-13", x: 2, y: 13, z: 0, terrain: "shelf", passable: false }, { id: "t-3-13", x: 3, y: 13, z: 0, terrain: "floor", passable: true }, { id: "t-4-13", x: 4, y: 13, z: 0, terrain: "floor", passable: true }, { id: "t-5-13", x: 5, y: 13, z: 0, terrain: "floor", passable: true }, { id: "t-6-13", x: 6, y: 13, z: 0, terrain: "shelf", passable: false }, { id: "t-7-13", x: 7, y: 13, z: 0, terrain: "floor", passable: true }, { id: "t-8-13", x: 8, y: 13, z: 0, terrain: "floor", passable: true }, { id: "t-9-13", x: 9, y: 13, z: 0, terrain: "floor", passable: true }, { id: "t-10-13", x: 10, y: 13, z: 0, terrain: "shelf", passable: false }, { id: "t-11-13", x: 11, y: 13, z: 0, terrain: "floor", passable: true }, { id: "t-12-13", x: 12, y: 13, z: 0, terrain: "floor", passable: true }, { id: "t-13-13", x: 13, y: 13, z: 0, terrain: "floor", passable: true } ]
     }
   }
 
-  page "/market-board-3d" as MarketBoard3DPage -> MarketBoard3DRender
+  trait Patience = Frame.traits.Patience -> GameState {
+    config {
+      running: true
+      serveRadius: 1
+      customers: [ { id: "c1", position: { x: 4, y: 3 }, patience: 20, maxPatience: 20, unitType: "customer", name: "Customer A", team: "neutral", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-female-a.glb", role: "npc", category: "character-female-a", animations: ["static", "idle", "walk", "sprint", "jump", "fall", "crouch", "sit", "drive", "die", "pick-up", "emote-yes", "emote-no", "holding-right", "holding-left", "holding-both", "holding-right-shoot", "holding-left-shoot", "holding-both-shoot", "attack-melee-right", "attack-melee-left", "attack-kick-right", "attack-kick-left", "interact-right", "interact-left", "wheelchair-sit", "wheelchair-look-left", "wheelchair-look-right", "wheelchair-move-forward", "wheelchair-move-back", "wheelchair-move-left", "wheelchair-move-right"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-female-a", thumbnailUrl: "" } }, { id: "c2", position: { x: 10, y: 11 }, patience: 24, maxPatience: 24, unitType: "customer", name: "Customer B", team: "neutral", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/_shared/kenney-mini-characters/units/character-male-a.glb", role: "npc", category: "character-male-a", animations: ["static", "idle", "walk", "sprint", "jump", "fall", "crouch", "sit", "drive", "die", "pick-up", "emote-yes", "emote-no", "holding-right", "holding-left", "holding-both", "holding-right-shoot", "holding-left-shoot", "holding-both-shoot", "attack-melee-right", "attack-melee-left", "attack-kick-right", "attack-kick-left", "interact-right", "interact-left", "wheelchair-sit", "wheelchair-look-left", "wheelchair-look-right", "wheelchair-move-forward", "wheelchair-move-back", "wheelchair-move-left", "wheelchair-move-right"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "character-male-a", thumbnailUrl: "" } } ]
+    }
+  }
+
+  trait FxDecay = Frame.traits.FxDecay -> GameState {
+    config { running: true }
+  }
+
+  trait RoundGate = Frame.traits.RoundGate -> GameState {
+    config { running: true, targetServed: 10, maxLost: 3 }
+  }
+
+  trait Player = Frame.traits.MarketIntent -> GameState {
+    config {
+      gridWidth: 14
+      gridHeight: 14
+      movementRange: 4
+      scoreLabel: "Score"
+      livesLabel: "Lives"
+      maxLost: 3
+      goalText: "Serve customers before their patience runs out"
+      howText: "Walk next to a customer — they are served automatically while you're adjacent"
+      cameraMode: "top-down"
+      scale: 0.45
+      unitScale: 1
+      bgColor: "#0a0f1a"
+      assetManifest: { terrains: { floor: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/terrain/floor.glb", role: "tile", category: "floor", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "floor", thumbnailUrl: "" }, shelf: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-boxes.glb", role: "tile", category: "shelf-boxes", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "shelf-boxes", thumbnailUrl: "" } }, units: {}, features: {}, effects: {} }
+      features: [ { id: "f1", x: 1, y: 2, type: "shelf", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-boxes.glb", role: "decoration", category: "shelf-boxes", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "shelf-boxes", thumbnailUrl: "" } }, { id: "f2", x: 5, y: 2, type: "shelf", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-bags.glb", role: "decoration", category: "shelf-bags", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "shelf-bags", thumbnailUrl: "" } }, { id: "f3", x: 9, y: 2, type: "shopping_basket", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shopping-basket.glb", role: "decoration", category: "shopping-basket", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "shopping-basket", thumbnailUrl: "" } }, { id: "f4", x: 1, y: 5, type: "freezer", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/freezer.glb", role: "decoration", category: "freezer", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "freezer", thumbnailUrl: "" } }, { id: "f5", x: 5, y: 5, type: "freezer", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/freezers-standing.glb", role: "decoration", category: "freezers-standing", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "freezers-standing", thumbnailUrl: "" } }, { id: "f6", x: 9, y: 5, type: "display_fruit", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/display-fruit.glb", role: "decoration", category: "display-fruit", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "display-fruit", thumbnailUrl: "" } }, { id: "f7", x: 9, y: 6, type: "food", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/apple.glb", role: "decoration", category: "apple", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "apple", thumbnailUrl: "" } }, { id: "f8", x: 1, y: 6, type: "food", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/banana.glb", role: "decoration", category: "banana", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "banana", thumbnailUrl: "" } }, { id: "f9", x: 5, y: 6, type: "food", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/carrot.glb", role: "decoration", category: "carrot", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "carrot", thumbnailUrl: "" } }, { id: "f10", x: 12, y: 5, type: "display_bread", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/display-bread.glb", role: "decoration", category: "display-bread", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "display-bread", thumbnailUrl: "" } }, { id: "f11", x: 12, y: 6, type: "food", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-food-kit/features/bread.glb", role: "decoration", category: "bread", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "bread", thumbnailUrl: "" } }, { id: "f12", x: 3, y: 9, type: "shopping_cart", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shopping-cart.glb", role: "decoration", category: "shopping-cart", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "shopping-cart", thumbnailUrl: "" } }, { id: "f13", x: 7, y: 9, type: "checkout", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/cash-register.glb", role: "decoration", category: "cash-register", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "cash-register", thumbnailUrl: "" } }, { id: "f14", x: 11, y: 9, type: "bottle_return", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/bottle-return.glb", role: "decoration", category: "bottle-return", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "bottle-return", thumbnailUrl: "" } }, { id: "f15", x: 12, y: 2, type: "shelf", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-market-board-3d/kenney-mini-market/features/shelf-end.glb", role: "decoration", category: "shelf-end", animations: ["static"], style: "lowpoly-flat", dimension: "3d", aspect: "1:1", name: "shelf-end", thumbnailUrl: "" } } ]
+    }
+  }
+
+  page "/market-board-3d" as MarketBoard3DPage -> HeroAuthority, Patience, FxDecay, RoundGate, Player
 }

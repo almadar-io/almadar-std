@@ -1,0 +1,852 @@
+{
+  "description": "Headless customer-service mechanic: owns a stationary customer roster with per-customer patience. Decrements patience every tick, serves nearby customers on HERO_STEPPED (resets their patience + scores), and emits CUSTOMER_LOST when a timer expires. Never writes units.",
+  "name": "std-patience",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxPatience": {
+                  "name": "maxPatience",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "properties": {
+                    "animations": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "name": "animations",
+                      "required": false,
+                      "type": "array"
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "patience": {
+                  "name": "patience",
+                  "required": false,
+                  "type": "number"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "customers",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "served",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "pending",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "lost",
+            "type": "number"
+          }
+        ],
+        "name": "PatienceData",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "PatienceOrbital",
+      "pages": [
+        {
+          "name": "PatiencePage",
+          "path": "/patience",
+          "traits": [
+            {
+              "ref": "Patience"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "customers": {
+              "default": [],
+              "description": "Seed roster of stationary customers, each with their own position + patience/maxPatience",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "maxPatience": {
+                    "name": "maxPatience",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "modelUrl": {
+                    "name": "modelUrl",
+                    "properties": {
+                      "animations": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "animations",
+                        "required": false,
+                        "type": "array"
+                      },
+                      "aspect": {
+                        "name": "aspect",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "category": {
+                        "name": "category",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "dimension": {
+                        "name": "dimension",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "role": {
+                        "name": "role",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "style": {
+                        "name": "style",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "thumbnailUrl": {
+                        "name": "thumbnailUrl",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "url": {
+                        "name": "url",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "patience": {
+                    "name": "patience",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "position": {
+                    "name": "position",
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "team": {
+                    "name": "team",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "unitType": {
+                    "name": "unitType",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Customers",
+              "tier": "domain",
+              "type": "[Customer]"
+            },
+            "running": {
+              "default": true,
+              "description": "When true, patience ticks down and HERO_STEPPED serves nearby customers; toggle to freeze",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "serveRadius": {
+              "default": 1.0,
+              "description": "Manhattan distance at which a customer counts as served by the hero's last step: 0 = step onto tile, 1 = adjacent",
+              "label": "Serve Radius",
+              "tier": "domain",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Serve or starve particle burst; a fx-particles listener spawns it",
+              "event": "BURST",
+              "payloadSchema": [
+                {
+                  "name": "particles",
+                  "type": "[Fx]"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Served/pending/lost counts after this step; a market-flow listener decides win/lose",
+              "event": "SERVICE_CHANGED",
+              "payloadSchema": [
+                {
+                  "name": "served",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "pending",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "lost",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Emitted when one or more customers' patience expires in the same tick",
+              "event": "CUSTOMER_LOST",
+              "payloadSchema": [
+                {
+                  "name": "count",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "customers",
+              "lost",
+              "pending",
+              "served"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "PatienceData",
+          "name": "Patience",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "HERO_STEPPED",
+                "name": "Hero Stepped",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "z",
+                    "type": "number"
+                  },
+                  {
+                    "name": "movesLeft",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "Serve or starve particle burst; a fx-particles listener spawns it",
+                "key": "BURST",
+                "name": "Burst",
+                "payloadSchema": [
+                  {
+                    "name": "particles",
+                    "type": "[Fx]"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Served/pending/lost counts after this step; a market-flow listener decides win/lose",
+                "key": "SERVICE_CHANGED",
+                "name": "Service Changed",
+                "payloadSchema": [
+                  {
+                    "name": "served",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "pending",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "lost",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emitted when one or more customers' patience expires in the same tick",
+                "key": "CUSTOMER_LOST",
+                "name": "Customer Lost",
+                "payloadSchema": [
+                  {
+                    "name": "count",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.customers",
+                    "@config.customers"
+                  ],
+                  [
+                    "set",
+                    "@entity.served",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.pending",
+                    [
+                      "array/len",
+                      "@config.customers"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.lost",
+                    0.0
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "let",
+                    [
+                      [
+                        "matched",
+                        [
+                          "array/filter",
+                          "@entity.customers",
+                          [
+                            "fn",
+                            "c",
+                            [
+                              "<=",
+                              [
+                                "grid/manhattan-distance",
+                                [
+                                  "object/get",
+                                  "@c",
+                                  "position"
+                                ],
+                                {
+                                  "x": "@payload.x",
+                                  "y": "@payload.z"
+                                }
+                              ],
+                              "@config.serveRadius"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "hitCount",
+                          [
+                            "array/len",
+                            "@matched"
+                          ]
+                        ]
+                      ],
+                      [
+                        "do",
+                        [
+                          "set",
+                          "@entity.customers",
+                          [
+                            "array/map",
+                            "@entity.customers",
+                            [
+                              "fn",
+                              "c",
+                              [
+                                "if",
+                                [
+                                  "<=",
+                                  [
+                                    "grid/manhattan-distance",
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "position"
+                                    ],
+                                    {
+                                      "x": "@payload.x",
+                                      "y": "@payload.z"
+                                    }
+                                  ],
+                                  "@config.serveRadius"
+                                ],
+                                [
+                                  "object/merge",
+                                  "@c",
+                                  {
+                                    "patience": "@c.maxPatience"
+                                  }
+                                ],
+                                "@c"
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "set",
+                          "@entity.served",
+                          [
+                            "+",
+                            "@entity.served",
+                            "@hitCount"
+                          ]
+                        ],
+                        [
+                          "emit",
+                          "BURST",
+                          {
+                            "particles": [
+                              "array/map",
+                              "@matched",
+                              [
+                                "fn",
+                                "c",
+                                {
+                                  "id": [
+                                    "str/concat",
+                                    "fx-serve-",
+                                    "@c.id"
+                                  ],
+                                  "message": "+1",
+                                  "ttl": 3.0,
+                                  "type": "score",
+                                  "x": [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "position"
+                                    ],
+                                    "x"
+                                  ],
+                                  "z": [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "position"
+                                    ],
+                                    "y"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ],
+                        [
+                          "emit",
+                          "SERVICE_CHANGED",
+                          {
+                            "lost": "@entity.lost",
+                            "pending": "@entity.pending",
+                            "served": "@entity.served"
+                          }
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "HERO_STEPPED",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.customers",
+                    "@config.customers"
+                  ],
+                  [
+                    "set",
+                    "@entity.served",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.pending",
+                    [
+                      "array/len",
+                      "@config.customers"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.lost",
+                    0.0
+                  ]
+                ],
+                "event": "RESTART",
+                "from": "active",
+                "to": "active"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.customers",
+                  [
+                    "array/map",
+                    "@entity.customers",
+                    [
+                      "fn",
+                      "c",
+                      [
+                        "object/merge",
+                        "@c",
+                        {
+                          "patience": [
+                            "math/clamp",
+                            [
+                              "-",
+                              "@c.patience",
+                              1.0
+                            ],
+                            0.0,
+                            "@c.maxPatience"
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "let",
+                  [
+                    [
+                      "starved",
+                      [
+                        "array/filter",
+                        "@entity.customers",
+                        [
+                          "fn",
+                          "c",
+                          [
+                            "<=",
+                            "@c.patience",
+                            0.0
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "starvedCount",
+                        [
+                          "array/len",
+                          "@starved"
+                        ]
+                      ]
+                    ],
+                    [
+                      "do",
+                      [
+                        "set",
+                        "@entity.lost",
+                        [
+                          "+",
+                          "@entity.lost",
+                          "@starvedCount"
+                        ]
+                      ],
+                      [
+                        "set",
+                        "@entity.customers",
+                        [
+                          "array/map",
+                          "@entity.customers",
+                          [
+                            "fn",
+                            "c",
+                            [
+                              "if",
+                              [
+                                "<=",
+                                "@c.patience",
+                                0.0
+                              ],
+                              [
+                                "object/merge",
+                                "@c",
+                                {
+                                  "patience": "@c.maxPatience"
+                                }
+                              ],
+                              "@c"
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "if",
+                        [
+                          ">",
+                          "@starvedCount",
+                          0.0
+                        ],
+                        [
+                          "emit",
+                          "BURST",
+                          {
+                            "particles": [
+                              "array/map",
+                              "@starved",
+                              [
+                                "fn",
+                                "c",
+                                {
+                                  "id": [
+                                    "str/concat",
+                                    "fx-starve-",
+                                    "@c.id"
+                                  ],
+                                  "message": "-1 life",
+                                  "ttl": 3.0,
+                                  "type": "damage",
+                                  "x": [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "position"
+                                    ],
+                                    "x"
+                                  ],
+                                  "z": [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@c",
+                                      "position"
+                                    ],
+                                    "y"
+                                  ]
+                                }
+                              ]
+                            ]
+                          }
+                        ],
+                        null
+                      ],
+                      [
+                        "if",
+                        [
+                          ">",
+                          "@starvedCount",
+                          0.0
+                        ],
+                        [
+                          "emit",
+                          "CUSTOMER_LOST",
+                          {
+                            "count": "@starvedCount"
+                          }
+                        ],
+                        null
+                      ],
+                      [
+                        "emit",
+                        "SERVICE_CHANGED",
+                        {
+                          "lost": "@entity.lost",
+                          "pending": "@entity.pending",
+                          "served": "@entity.served"
+                        }
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              "guard": "@config.running",
+              "interval": 1000.0,
+              "name": "patienceTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}
