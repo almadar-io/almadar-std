@@ -1,0 +1,113 @@
+app std-objective-reach "1.0.0"
+"Headless reach-the-objective mechanic: owns features + score + objectivesLeft. Listens HERO_STEPPED and, when the hero lands on a target-type feature, scores it (optionally removing the model), emits a BURST pickup particle, and emits PROGRESS so round-flow can decide win/lose. Never writes units."
+orbital ObjectiveReachOrbital {
+  type Asset = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    variant : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Feature = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    assetUrl : Asset
+    color : string
+    elevation : number
+  }
+  type Fx = {
+    id : string!
+    type : string!
+    x : number!
+    z : number
+    y : number
+    message : string
+    ttl : number!
+  }
+
+  entity ObjectiveState [runtime, shared] {
+    id : string!
+    features : [Feature]
+    score : number = 0
+    objectivesLeft : number = 0
+  }
+
+  trait ObjectiveReach -> @rebindable ObjectiveState [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.features @config.features)
+        (set @entity.score @config.startScore)
+        (set @entity.objectivesLeft (array/len (array/filter @config.features (fn f (== (object/get @f type) @config.targetType)))))
+
+      HERO_STEPPED -> active when @config.running
+        (set @entity.score (if (> (array/len (array/filter @entity.features (fn f (and (== (object/get @f type) @config.targetType) (and (== (object/get @f x) @payload.x) (== (object/get @f y) @payload.z)))))) 0) (+ @entity.score @config.pointsPerTarget) @entity.score))
+        (set @entity.objectivesLeft (if (> (array/len (array/filter @entity.features (fn f (and (== (object/get @f type) @config.targetType) (and (== (object/get @f x) @payload.x) (== (object/get @f y) @payload.z)))))) 0) (- @entity.objectivesLeft 1) @entity.objectivesLeft))
+        (emit BURST { particles: (array/map (array/filter @entity.features (fn f (and (== (object/get @f type) @config.targetType) (and (== (object/get @f x) @payload.x) (== (object/get @f y) @payload.z))))) (fn f { id: (str/concat "fx-obj-" (object/get @f id)), type: "pickup", x: @payload.x, z: @payload.z, message: "+1", ttl: 3 })) })
+        (set @entity.features (if (and @config.removeOnReach (> (array/len (array/filter @entity.features (fn f (and (== (object/get @f type) @config.targetType) (and (== (object/get @f x) @payload.x) (== (object/get @f y) @payload.z)))))) 0)) (array/filter @entity.features (fn f (not (and (== (object/get @f type) @config.targetType) (and (== (object/get @f x) @payload.x) (== (object/get @f y) @payload.z)))))) @entity.features))
+        (emit PROGRESS { objectivesLeft: @entity.objectivesLeft, movesLeft: @payload.movesLeft })
+
+      RESTART -> active
+        (set @entity.features @config.features)
+        (set @entity.score @config.startScore)
+        (set @entity.objectivesLeft (array/len (array/filter @config.features (fn f (== (object/get @f type) @config.targetType)))))
+    }
+
+    emits {
+      BURST -> external {
+        particles : [Fx]
+      }
+        @description "Pickup particle produced when a target is reached; a fx-particles listener spawns it"
+        @tier "domain"
+      PROGRESS -> external {
+        objectivesLeft : number!
+        movesLeft : number!
+      }
+        @description "Objectives remaining + moves remaining after this step; a round-flow listener decides win/lose"
+        @tier "domain"
+    }
+
+    listens {
+      HERO_STEPPED { unitId : string, x : number, z : number, movesLeft : number }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, hero steps onto targets are scored; toggle to freeze"
+        @tier "domain"
+      features : [Feature] = []
+        @label "Features"
+        @description "Board features — collectible targets (matched by targetType) plus decorations"
+        @tier "domain"
+      targetType : string = "gift"
+        @label "Target Type"
+        @description "Feature type counted as a collectible objective"
+        @tier "domain"
+      pointsPerTarget : number = 1
+        @label "Points Per Target"
+        @description "Score awarded per objective reached"
+        @tier "domain"
+      startScore : number = 0
+        @label "Start Score"
+        @description "Score set on INIT"
+        @tier "domain"
+      removeOnReach : boolean = true
+        @label "Remove On Reach"
+        @description "When true the target model is removed once reached (collect); when false it stays (visit/deliver)"
+        @tier "domain"
+    }
+  }
+
+  page "/objective-reach" as ObjectiveReachPage -> ObjectiveReach
+}

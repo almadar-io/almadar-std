@@ -1,0 +1,200 @@
+{
+  "description": "Headless win/lose authority for objective boards: owns only result. Listens PROGRESS (objectivesLeft + movesLeft) and sets result to won when every objective is reached, lost when the move budget runs out first, else none. Renders nothing.",
+  "name": "std-objective-flow",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string"
+          }
+        ],
+        "name": "FlowState",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "ObjectiveFlowOrbital",
+      "pages": [
+        {
+          "name": "ObjectiveFlowPage",
+          "path": "/objective-flow",
+          "traits": [
+            {
+              "ref": "ObjectiveFlow"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "running": {
+              "default": true,
+              "description": "When true, PROGRESS signals resolve win/lose; toggle to freeze",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            }
+          },
+          "emits": [
+            {
+              "description": "Emitted for parity with round-flow when the round resolves; listeners may react to end-of-round",
+              "event": "GAME_END",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "result"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "FlowState",
+          "name": "ObjectiveFlow",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "PROGRESS",
+                "name": "Progress",
+                "payloadSchema": [
+                  {
+                    "name": "objectivesLeft",
+                    "type": "number"
+                  },
+                  {
+                    "name": "movesLeft",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "Emitted for parity with round-flow when the round resolves; listeners may react to end-of-round",
+                "key": "GAME_END",
+                "name": "Game End",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    [
+                      "if",
+                      [
+                        "<=",
+                        "@payload.objectivesLeft",
+                        0.0
+                      ],
+                      "won",
+                      [
+                        "if",
+                        [
+                          "<=",
+                          "@payload.movesLeft",
+                          0.0
+                        ],
+                        "lost",
+                        "none"
+                      ]
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "!=",
+                      "@entity.result",
+                      "none"
+                    ],
+                    [
+                      "emit",
+                      "GAME_END",
+                      {
+                        "result": "@entity.result"
+                      }
+                    ],
+                    null
+                  ]
+                ],
+                "event": "PROGRESS",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ]
+                ],
+                "event": "RESTART",
+                "from": "active",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

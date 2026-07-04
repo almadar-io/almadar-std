@@ -1,0 +1,97 @@
+app std-hero-nav "1.0.0"
+"Headless single-hero navigation authority: the SOLE writer of units + movesLeft on objective boards. Applies a budget-limited MOVE intent (steps the hero one tile, spends a move, emits HERO_STEPPED) and an optional WANDER intent (random step for neutral NPCs). Renders nothing."
+orbital HeroNavOrbital {
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    team : string
+    health : number
+    maxHealth : number
+    unitType : string
+  }
+  type Tile = {
+    id : string
+    x : number!
+    y : number!
+    passable : boolean
+  }
+
+  entity HeroNavData [runtime, shared] {
+    id : string!
+    units : [Unit]
+    tiles : [Tile]
+    movesLeft : number = 0
+  }
+
+  trait HeroNav -> @rebindable HeroNavData [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.units @config.units)
+        (set @entity.tiles (if (> (array/len @config.tiles) 0) @config.tiles (array/flatten (array/map (array/range 0 @config.gridHeight) (fn gy (array/map (array/range 0 @config.gridWidth) (fn gx { id: (str/concat "t-" @gx "-" @gy), x: @gx, y: @gy, passable: true })))))))
+        (set @entity.movesLeft @config.moveBudget)
+
+      MOVE -> active when (and @config.running (> @entity.movesLeft 0))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @payload.unitId) (object/merge @u { position: { x: @payload.x, y: @payload.y } }) @u))))
+        (set @entity.movesLeft (- @entity.movesLeft 1))
+        (emit HERO_STEPPED { unitId: @payload.unitId, x: @payload.x, z: @payload.y, movesLeft: @entity.movesLeft })
+
+      WANDER -> active when @config.running
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "neutral") (let ((cell (object/get @u position)) (dir (math/floor (* (math/random) 4)))) (let ((nc (if (== @dir 0) { x: (+ (object/get @cell x) 1), y: (object/get @cell y) } (if (== @dir 1) { x: (- (object/get @cell x) 1), y: (object/get @cell y) } (if (== @dir 2) { x: (object/get @cell x), y: (+ (object/get @cell y) 1) } { x: (object/get @cell x), y: (- (object/get @cell y) 1) }))))) (if (and (grid/in-bounds @nc @config.gridWidth @config.gridHeight) (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) (object/get @nc x)) (== (object/get @t y) (object/get @nc y))))) passable) true) (== (array/len (array/filter @entity.units (fn o (and (!= @o.id @u.id) (and (== (object/get (object/get @o position) x) (object/get @nc x)) (== (object/get (object/get @o position) y) (object/get @nc y))))))) 0))) (object/merge @u { position: @nc }) @u))) @u))))
+
+      RESTART -> active
+        (set @entity.units @config.units)
+        (set @entity.movesLeft @config.moveBudget)
+    }
+
+    emits {
+      HERO_STEPPED -> external {
+        unitId : string!
+        x : number!
+        z : number!
+        movesLeft : number!
+      }
+        @description "Hero moved onto tile (x,z) with movesLeft remaining; objective mechanics listen to score progress and round-flow to decide win/lose"
+        @tier "domain"
+    }
+
+    listens {
+      MOVE { unitId : string, x : number, y : number }
+      WANDER { tick : number }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, MOVE/WANDER intents are applied; toggle to freeze the board"
+        @tier "domain"
+      units : [Unit] = []
+        @label "Initial Units"
+        @description "Seed roster: the player hero plus any neutral NPCs"
+        @tier "domain"
+      tiles : [Tile] = []
+        @label "Tiles"
+        @description "Grid tiles used for passability checks (auto-generated all-passable when empty)"
+        @tier "domain"
+      gridWidth : number = 12
+        @label "Grid Width"
+        @description "Grid column count clamping move + wander bounds"
+        @tier "domain"
+      gridHeight : number = 12
+        @label "Grid Height"
+        @description "Grid row count clamping move + wander bounds"
+        @tier "domain"
+      moveBudget : number = 45
+        @label "Move Budget"
+        @description "Moves the hero may spend before the round is lost if objectives remain"
+        @tier "domain"
+    }
+  }
+
+  page "/hero-nav" as HeroNavPage -> HeroNav
+}

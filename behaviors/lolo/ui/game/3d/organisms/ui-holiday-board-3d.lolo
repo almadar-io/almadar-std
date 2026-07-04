@@ -1,58 +1,43 @@
 app ui-holiday-board-3d "1.0.0"
-"HolidayBoard3D — snowy 3D grid board: nutcracker collects gifts within a move budget or loses; restart to retry."
+"HolidayBoard3D — snowy 3D grid board: a nutcracker collects gifts within a move budget or loses; composes the std single-hero objective frame."
 orbital HolidayBoard3DOrbital {
-  type HolidayBoard3DError = {
-    message : string!
-    name : string
-    code : string
-    stack : string
-  }
+  uses Frame from "std/behaviors/std-objective-board-3d"
+
   type Asset = {
-      url : asset
-      role : string
-      category : string
-      animations : [string]
-      style : string
-      variant : string
-      dimension : string
-      aspect : string
-      name : string
-      thumbnailUrl : string
-    }
-  type HolidayBoard3DTilesItem = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    variant : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type Unit = {
+    id : string!
+    position : { x : number!  y : number! }
+    x : number
+    y : number
+    z : number
+    team : string
+    health : number
+    maxHealth : number
+    unitType : string
+    name : string
+    modelUrl : Asset
+  }
+  type Tile = {
     id : string
     x : number!
     y : number!
+    z : number
     terrain : string
     passable : boolean
     modelUrl : Asset
   }
-  type HolidayBoard3DUnitsItemPosition = {
-    x : number!
-    y : number!
-  }
-  type HolidayBoard3DUnitsItem = {
-    id : string!
-    position : HolidayBoard3DUnitsItemPosition
-    unitType : string
-    name : string
-    team : "player" | "enemy" | "neutral"
-    health : number
-    maxHealth : number
-    modelUrl : Asset
-  }
-  type HolidayBoard3DFeaturesItem = {
-    id : string
-    x : number!
-    y : number!
-    type : string!
-    assetUrl : Asset
-  }
-  type HolidayBoard3DValidMovesItem = {
-    x : number!
-    z : number!
-  }
-  type HolidayBoard3DFxEvent = {
+  type Fx = {
     id : string!
     type : string!
     x : number!
@@ -61,211 +46,82 @@ orbital HolidayBoard3DOrbital {
     message : string
     ttl : number!
   }
+  type ValidMove = { x : number!  z : number! }
+  type Feature = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    assetUrl : Asset
+    color : string
+    elevation : number
+  }
+  type HudStat = { label : string  value : number }
+  type AssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
+  }
 
-  entity HolidayBoard3DItem [runtime] {
+  entity GameState [runtime, shared] {
     id : string!
-    units : [HolidayBoard3DUnitsItem]
-    features : [HolidayBoard3DFeaturesItem]
-    selectedUnitId : string
-    validMoves : [HolidayBoard3DValidMovesItem]
-    fx : [HolidayBoard3DFxEvent] = []
-    phase : "observation" | "selection" = "observation"
-    result : "none" | "won" | "lost" = "none"
+    units : [Unit] = []
+    tiles : [Tile] = []
+    movesLeft : number = 0
+    features : [Feature] = []
     score : number = 0
-    giftsLeft : number = 0
-    movesLeft : number = 12
-    gridWidth : number = 12
-    gridHeight : number = 12
-    movementRange : number = 1
-    tiles : [HolidayBoard3DTilesItem] = []
+    objectivesLeft : number = 0
+    fx : [Fx] = []
+    result : string = "none"
+    selectedUnitId : string = ""
+    validMoves : [ValidMove] = []
+    phase : string = "observation"
   }
 
-  trait HolidayBoard3DRender -> @rebindable HolidayBoard3DItem [interaction, instance] {
-    initial: playing
-
-    state playing {
-      INIT -> playing
-        (set @entity.units @config.units)
-        (set @entity.features @config.features)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.fx [])
-        (set @entity.phase "observation")
-        (set @entity.result "none")
-        (set @entity.score 0)
-        (set @entity.giftsLeft 4)
-        (set @entity.movesLeft @config.moveBudget)
-        (set @entity.gridWidth 12)
-        (set @entity.gridHeight 12)
-        (set @entity.movementRange 1)
-        (set @entity.tiles (array/flatten (array/map (array/range 0 12) (fn gy (array/map (array/range 0 12) (fn gx (let ((obstacle (and (>= @gx 2) (and (<= @gx 9) (and (>= @gy 2) (and (<= @gy 9) (== (math/mod (+ (* @gx 5) (* @gy 7)) 9) 0))))))) { id: (str/concat "t-" @gx "-" @gy), x: @gx, y: @gy, terrain: (if @obstacle "wall" "snow"), passable: (if @obstacle false true), modelUrl: (if @obstacle @config.obstacleAsset @config.groundAsset) })))))))
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Gifts Left", value: @entity.giftsLeft }, { label: "Moves", value: @entity.movesLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Collect all the gifts" }, { label: "How", value: "Click the nutcracker → click a highlighted tile to step onto it and grab gifts" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      UNIT_CLICK -> playing when (and (== @entity.result "none") (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
-        (set @entity.selectedUnitId ?unitId)
-        (set @entity.phase "selection")
-        (set @entity.validMoves (array/map (array/filter @entity.tiles (fn t (and (== (object/get @t passable) true) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Gifts Left", value: @entity.giftsLeft }, { label: "Moves", value: @entity.movesLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Collect all the gifts" }, { label: "How", value: "Click the nutcracker → click a highlighted tile to step onto it and grab gifts" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      TILE_CLICK -> playing when (and (== @entity.result "none") (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0)))))
-        (let ((matches (array/filter @entity.features (fn f (and (== @f.type "gift") (and (== @f.x ?x) (== @f.y ?z)))))))
-        (let ((hasGift (> (array/len @matches) 0)) (hitId (object/get (array/first @matches) id)))
-        (let ((newGiftsLeft (if @hasGift (- @entity.giftsLeft 1) @entity.giftsLeft)) (newMovesLeft (- @entity.movesLeft 1)))
-        (do
-          (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
-          (set @entity.features (if @hasGift (array/filter @entity.features (fn f (!= @f.id @hitId))) @entity.features))
-          (set @entity.score (if @hasGift (+ @entity.score 1) @entity.score))
-          (set @entity.giftsLeft @newGiftsLeft)
-          (set @entity.movesLeft @newMovesLeft)
-          (set @entity.fx (if @hasGift (array/append @entity.fx { id: (str/concat "fx-" @hitId), type: "pickup", x: ?x, z: ?z, message: "+1", ttl: 3 }) @entity.fx))
-          (set @entity.selectedUnitId "")
-          (set @entity.validMoves [])
-          (set @entity.phase "observation")
-          (set @entity.result (if (<= @newGiftsLeft 0) "won" (if (<= @newMovesLeft 0) "lost" "none")))
-          (render-ui main {
-            type: game-shell
-            hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Gifts Left", value: @entity.giftsLeft }, { label: "Moves", value: @entity.movesLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Collect all the gifts" }, { label: "How", value: "Click the nutcracker → click a highlighted tile to step onto it and grab gifts" } ] }
-            addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-            overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-            children: [ { type: game-canvas-3d, cameraMode: "top-down", tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, scale: @config.scale, unitScale: @config.unitScale } ]
-          })
-        ))))
-
-      CANCEL -> playing when (!= @entity.selectedUnitId "")
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.phase "observation")
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Gifts Left", value: @entity.giftsLeft }, { label: "Moves", value: @entity.movesLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Collect all the gifts" }, { label: "How", value: "Click the nutcracker → click a highlighted tile to step onto it and grab gifts" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-
-      PLAY_AGAIN -> playing
-        (set @entity.units @config.units)
-        (set @entity.features @config.features)
-        (set @entity.selectedUnitId "")
-        (set @entity.validMoves [])
-        (set @entity.fx [])
-        (set @entity.phase "observation")
-        (set @entity.result "none")
-        (set @entity.score 0)
-        (set @entity.giftsLeft 4)
-        (set @entity.movesLeft @config.moveBudget)
-        (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Gifts Left", value: @entity.giftsLeft }, { label: "Moves", value: @entity.movesLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Collect all the gifts" }, { label: "How", value: "Click the nutcracker → click a highlighted tile to step onto it and grab gifts" } ] }
-          addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-          overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, scale: @config.scale, unitScale: @config.unitScale } ]
-        })
-    }
-
-    ticks {
-      reindeerWanderTick every 900ms
-        when (== @entity.result "none")
-        (let ((npc (array/find @entity.units (fn u (== @u.team "neutral")))))
-        (let ((cell (object/get @npc position)))
-        (let ((dir (math/floor (* (math/random) 4))))
-        (let ((nextCell (if (== @dir 0) { x: (+ (object/get @cell x) 1), y: (object/get @cell y) } (if (== @dir 1) { x: (- (object/get @cell x) 1), y: (object/get @cell y) } (if (== @dir 2) { x: (object/get @cell x), y: (+ (object/get @cell y) 1) } { x: (object/get @cell x), y: (- (object/get @cell y) 1) })))))
-        (let ((valid (and (grid/in-bounds @nextCell @entity.gridWidth @entity.gridHeight) (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) (object/get @nextCell x)) (== (object/get @t y) (object/get @nextCell y))))) passable) true) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @nextCell x)) (== (object/get (object/get @u position) y) (object/get @nextCell y)))))) 0)))))
-        (do
-          (set @entity.units (if @valid (array/map @entity.units (fn u (if (== @u.id @npc.id) (object/merge @u { position: @nextCell }) @u))) @entity.units))
-          (set @entity.fx (array/filter (array/map @entity.fx (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
-          (render-ui main {
-            type: game-shell
-            hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Gifts Left", value: @entity.giftsLeft }, { label: "Moves", value: @entity.movesLeft }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Collect all the gifts" }, { label: "How", value: "Click the nutcracker → click a highlighted tile to step onto it and grab gifts" } ] }
-            addons: { type: stack, direction: vertical, gap: sm, children: [ { type: button, action: CANCEL, label: "Cancel", variant: secondary }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
-            overlay: (if (!= @entity.result "none") { type: stack, direction: vertical, gap: md, align: center, children: [ { type: game-hud, stats: [ { label: "Result", value: @entity.result } ] }, { type: button, action: PLAY_AGAIN, label: "Play Again", variant: primary } ] } null)
-            children: [ { type: game-canvas-3d, cameraMode: "top-down", tiles: @entity.tiles, units: @entity.units, features: @entity.features, events: @entity.fx, validMoves: @entity.validMoves, selectedUnitId: @entity.selectedUnitId, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, scale: @config.scale, unitScale: @config.unitScale } ]
-          })
-        ))))))
-    }
-
-    emits {
-      TILE_CLICK -> external {
-        tileId : string
-        x : number!
-        z : number
-      }
-        @description "Move the selected unit onto a tile; collects a gift if one is present"
-        @tier "domain"
-      UNIT_CLICK -> external {
-        unitId : string!
-        x : number
-        z : number
-      }
-        @description "Select the player unit and compute adjacent valid moves"
-        @tier "domain"
-      CANCEL -> external {
-        id : string
-      }
-        @description "Deselect the current unit"
-        @tier "domain"
-      PLAY_AGAIN -> external {
-        id : string
-      }
-        @description "Reset the board for a new round"
-        @tier "domain"
-    }
-
+  trait HeroAuthority = Frame.traits.HeroAuthority -> GameState {
     config {
-      className : string = ""
-        @label "Class Name"
-        @description "className prop"
-        @tier "presentation"
-      isLoading : boolean = false
-        @label "Is Loading"
-        @description "Loading state indicator"
-        @tier "presentation"
-      error : HolidayBoard3DError
-        @label "Error"
-        @description "Error state (UiError)"
-        @tier "presentation"
-      groundAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb", role: "tile", category: "floor-wood-snow", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "floor-wood-snow", thumbnailUrl: "" }
-        @label "Ground Asset"
-        @description "Passable snowy ground tile, tiled across the yard."
-        @tier "presentation"
-      obstacleAsset : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "cabin-wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "cabin-wall", thumbnailUrl: "" }
-        @label "Obstacle Asset"
-        @description "Impassable obstacle tile, sparsely scattered through the interior."
-        @tier "presentation"
-      units : [HolidayBoard3DUnitsItem] = [{ id: "player1", position: { x: 1, y: 1 }, unitType: "nutcracker", name: "Nutcracker", team: player, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/nutcracker.glb", role: "player", category: "nutcracker", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "nutcracker", thumbnailUrl: "" } }, { id: "npc1", position: { x: 8, y: 8 }, unitType: "reindeer", name: "Reindeer", team: neutral, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/reindeer.glb", role: "npc", category: "reindeer", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "reindeer", thumbnailUrl: "" } }]
-        @label "Units"
-        @description "Initial roster — player nutcracker plus a wandering reindeer NPC."
-        @tier "presentation"
-      features : [HolidayBoard3DFeaturesItem] = [{ id: "gift1", x: 4, y: 2, type: "gift", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-a-round.glb", role: "item", category: "present-a-round", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "present-a-round", thumbnailUrl: "" } }, { id: "gift2", x: 9, y: 3, type: "gift", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-b-cube.glb", role: "item", category: "present-b-cube", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "present-b-cube", thumbnailUrl: "" } }, { id: "gift3", x: 3, y: 8, type: "gift", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-a-rectangle.glb", role: "item", category: "present-a-rectangle", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "present-a-rectangle", thumbnailUrl: "" } }, { id: "gift4", x: 7, y: 9, type: "gift", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-b-round.glb", role: "item", category: "present-b-round", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "present-b-round", thumbnailUrl: "" } }, { id: "deco1", x: 6, y: 2, type: "wreath", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/wreath-decorated.glb", role: "decoration", category: "wreath-decorated", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wreath-decorated", thumbnailUrl: "" } }, { id: "deco2", x: 2, y: 9, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/tree-snow-a.glb", role: "decoration", category: "tree-snow-a", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree-snow-a", thumbnailUrl: "" } }, { id: "deco3", x: 9, y: 6, type: "candy-cane", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/candy-cane-red.glb", role: "decoration", category: "candy-cane-red", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "candy-cane-red", thumbnailUrl: "" } }]
-        @label "Features"
-        @description "Collectible gifts plus festive decorations scattered across the 12×12 yard."
-        @tier "presentation"
-      scale : number = 0.45
-        @label "Scale"
-        @description "Canvas render scale"
-        @tier "presentation"
-      unitScale : number = 1
-        @label "Unit Scale"
-        @description "Unit draw-size multiplier"
-        @tier "presentation"
-      moveBudget : number = 45
-        @label "Move Budget"
-        @description "Moves allowed before the round is lost if gifts remain"
-        @tier "presentation"
+      running: true
+      gridWidth: 12
+      gridHeight: 12
+      moveBudget: 45
+      units: [ { id: "player1", position: { x: 1, y: 1 }, x: 1, y: 1, z: 0, team: "player", health: 1, maxHealth: 1, unitType: "nutcracker", name: "Nutcracker", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/nutcracker.glb", role: "player", category: "nutcracker", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "nutcracker", thumbnailUrl: "" } }, { id: "npc1", position: { x: 8, y: 8 }, x: 8, y: 8, z: 0, team: "neutral", health: 1, maxHealth: 1, unitType: "reindeer", name: "Reindeer", modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/reindeer.glb", role: "npc", category: "reindeer", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "reindeer", thumbnailUrl: "" } } ]
+      tiles: [ { id: "t-0-0", x: 0, y: 0, z: 0, terrain: "snow", passable: true }, { id: "t-1-0", x: 1, y: 0, z: 0, terrain: "snow", passable: true }, { id: "t-2-0", x: 2, y: 0, z: 0, terrain: "snow", passable: true }, { id: "t-3-0", x: 3, y: 0, z: 0, terrain: "snow", passable: true }, { id: "t-4-0", x: 4, y: 0, z: 0, terrain: "snow", passable: true }, { id: "t-5-0", x: 5, y: 0, z: 0, terrain: "snow", passable: true }, { id: "t-6-0", x: 6, y: 0, z: 0, terrain: "snow", passable: true }, { id: "t-7-0", x: 7, y: 0, z: 0, terrain: "snow", passable: true }, { id: "t-8-0", x: 8, y: 0, z: 0, terrain: "snow", passable: true }, { id: "t-9-0", x: 9, y: 0, z: 0, terrain: "snow", passable: true }, { id: "t-10-0", x: 10, y: 0, z: 0, terrain: "snow", passable: true }, { id: "t-11-0", x: 11, y: 0, z: 0, terrain: "snow", passable: true }, { id: "t-0-1", x: 0, y: 1, z: 0, terrain: "snow", passable: true }, { id: "t-1-1", x: 1, y: 1, z: 0, terrain: "snow", passable: true }, { id: "t-2-1", x: 2, y: 1, z: 0, terrain: "snow", passable: true }, { id: "t-3-1", x: 3, y: 1, z: 0, terrain: "snow", passable: true }, { id: "t-4-1", x: 4, y: 1, z: 0, terrain: "snow", passable: true }, { id: "t-5-1", x: 5, y: 1, z: 0, terrain: "snow", passable: true }, { id: "t-6-1", x: 6, y: 1, z: 0, terrain: "snow", passable: true }, { id: "t-7-1", x: 7, y: 1, z: 0, terrain: "snow", passable: true }, { id: "t-8-1", x: 8, y: 1, z: 0, terrain: "snow", passable: true }, { id: "t-9-1", x: 9, y: 1, z: 0, terrain: "snow", passable: true }, { id: "t-10-1", x: 10, y: 1, z: 0, terrain: "snow", passable: true }, { id: "t-11-1", x: 11, y: 1, z: 0, terrain: "snow", passable: true }, { id: "t-0-2", x: 0, y: 2, z: 0, terrain: "snow", passable: true }, { id: "t-1-2", x: 1, y: 2, z: 0, terrain: "snow", passable: true }, { id: "t-2-2", x: 2, y: 2, z: 0, terrain: "snow", passable: true }, { id: "t-3-2", x: 3, y: 2, z: 0, terrain: "snow", passable: true }, { id: "t-4-2", x: 4, y: 2, z: 0, terrain: "snow", passable: true }, { id: "t-5-2", x: 5, y: 2, z: 0, terrain: "snow", passable: true }, { id: "t-6-2", x: 6, y: 2, z: 0, terrain: "snow", passable: true }, { id: "t-7-2", x: 7, y: 2, z: 0, terrain: "snow", passable: true }, { id: "t-8-2", x: 8, y: 2, z: 0, terrain: "wall", passable: false }, { id: "t-9-2", x: 9, y: 2, z: 0, terrain: "snow", passable: true }, { id: "t-10-2", x: 10, y: 2, z: 0, terrain: "snow", passable: true }, { id: "t-11-2", x: 11, y: 2, z: 0, terrain: "snow", passable: true }, { id: "t-0-3", x: 0, y: 3, z: 0, terrain: "snow", passable: true }, { id: "t-1-3", x: 1, y: 3, z: 0, terrain: "snow", passable: true }, { id: "t-2-3", x: 2, y: 3, z: 0, terrain: "snow", passable: true }, { id: "t-3-3", x: 3, y: 3, z: 0, terrain: "wall", passable: false }, { id: "t-4-3", x: 4, y: 3, z: 0, terrain: "snow", passable: true }, { id: "t-5-3", x: 5, y: 3, z: 0, terrain: "snow", passable: true }, { id: "t-6-3", x: 6, y: 3, z: 0, terrain: "snow", passable: true }, { id: "t-7-3", x: 7, y: 3, z: 0, terrain: "snow", passable: true }, { id: "t-8-3", x: 8, y: 3, z: 0, terrain: "snow", passable: true }, { id: "t-9-3", x: 9, y: 3, z: 0, terrain: "snow", passable: true }, { id: "t-10-3", x: 10, y: 3, z: 0, terrain: "snow", passable: true }, { id: "t-11-3", x: 11, y: 3, z: 0, terrain: "snow", passable: true }, { id: "t-0-4", x: 0, y: 4, z: 0, terrain: "snow", passable: true }, { id: "t-1-4", x: 1, y: 4, z: 0, terrain: "snow", passable: true }, { id: "t-2-4", x: 2, y: 4, z: 0, terrain: "snow", passable: true }, { id: "t-3-4", x: 3, y: 4, z: 0, terrain: "snow", passable: true }, { id: "t-4-4", x: 4, y: 4, z: 0, terrain: "snow", passable: true }, { id: "t-5-4", x: 5, y: 4, z: 0, terrain: "snow", passable: true }, { id: "t-6-4", x: 6, y: 4, z: 0, terrain: "snow", passable: true }, { id: "t-7-4", x: 7, y: 4, z: 0, terrain: "wall", passable: false }, { id: "t-8-4", x: 8, y: 4, z: 0, terrain: "snow", passable: true }, { id: "t-9-4", x: 9, y: 4, z: 0, terrain: "snow", passable: true }, { id: "t-10-4", x: 10, y: 4, z: 0, terrain: "snow", passable: true }, { id: "t-11-4", x: 11, y: 4, z: 0, terrain: "snow", passable: true }, { id: "t-0-5", x: 0, y: 5, z: 0, terrain: "snow", passable: true }, { id: "t-1-5", x: 1, y: 5, z: 0, terrain: "snow", passable: true }, { id: "t-2-5", x: 2, y: 5, z: 0, terrain: "wall", passable: false }, { id: "t-3-5", x: 3, y: 5, z: 0, terrain: "snow", passable: true }, { id: "t-4-5", x: 4, y: 5, z: 0, terrain: "snow", passable: true }, { id: "t-5-5", x: 5, y: 5, z: 0, terrain: "snow", passable: true }, { id: "t-6-5", x: 6, y: 5, z: 0, terrain: "snow", passable: true }, { id: "t-7-5", x: 7, y: 5, z: 0, terrain: "snow", passable: true }, { id: "t-8-5", x: 8, y: 5, z: 0, terrain: "snow", passable: true }, { id: "t-9-5", x: 9, y: 5, z: 0, terrain: "snow", passable: true }, { id: "t-10-5", x: 10, y: 5, z: 0, terrain: "snow", passable: true }, { id: "t-11-5", x: 11, y: 5, z: 0, terrain: "snow", passable: true }, { id: "t-0-6", x: 0, y: 6, z: 0, terrain: "snow", passable: true }, { id: "t-1-6", x: 1, y: 6, z: 0, terrain: "snow", passable: true }, { id: "t-2-6", x: 2, y: 6, z: 0, terrain: "snow", passable: true }, { id: "t-3-6", x: 3, y: 6, z: 0, terrain: "snow", passable: true }, { id: "t-4-6", x: 4, y: 6, z: 0, terrain: "snow", passable: true }, { id: "t-5-6", x: 5, y: 6, z: 0, terrain: "snow", passable: true }, { id: "t-6-6", x: 6, y: 6, z: 0, terrain: "wall", passable: false }, { id: "t-7-6", x: 7, y: 6, z: 0, terrain: "snow", passable: true }, { id: "t-8-6", x: 8, y: 6, z: 0, terrain: "snow", passable: true }, { id: "t-9-6", x: 9, y: 6, z: 0, terrain: "snow", passable: true }, { id: "t-10-6", x: 10, y: 6, z: 0, terrain: "snow", passable: true }, { id: "t-11-6", x: 11, y: 6, z: 0, terrain: "snow", passable: true }, { id: "t-0-7", x: 0, y: 7, z: 0, terrain: "snow", passable: true }, { id: "t-1-7", x: 1, y: 7, z: 0, terrain: "snow", passable: true }, { id: "t-2-7", x: 2, y: 7, z: 0, terrain: "snow", passable: true }, { id: "t-3-7", x: 3, y: 7, z: 0, terrain: "snow", passable: true }, { id: "t-4-7", x: 4, y: 7, z: 0, terrain: "snow", passable: true }, { id: "t-5-7", x: 5, y: 7, z: 0, terrain: "snow", passable: true }, { id: "t-6-7", x: 6, y: 7, z: 0, terrain: "snow", passable: true }, { id: "t-7-7", x: 7, y: 7, z: 0, terrain: "snow", passable: true }, { id: "t-8-7", x: 8, y: 7, z: 0, terrain: "snow", passable: true }, { id: "t-9-7", x: 9, y: 7, z: 0, terrain: "snow", passable: true }, { id: "t-10-7", x: 10, y: 7, z: 0, terrain: "snow", passable: true }, { id: "t-11-7", x: 11, y: 7, z: 0, terrain: "snow", passable: true }, { id: "t-0-8", x: 0, y: 8, z: 0, terrain: "snow", passable: true }, { id: "t-1-8", x: 1, y: 8, z: 0, terrain: "snow", passable: true }, { id: "t-2-8", x: 2, y: 8, z: 0, terrain: "snow", passable: true }, { id: "t-3-8", x: 3, y: 8, z: 0, terrain: "snow", passable: true }, { id: "t-4-8", x: 4, y: 8, z: 0, terrain: "snow", passable: true }, { id: "t-5-8", x: 5, y: 8, z: 0, terrain: "wall", passable: false }, { id: "t-6-8", x: 6, y: 8, z: 0, terrain: "snow", passable: true }, { id: "t-7-8", x: 7, y: 8, z: 0, terrain: "snow", passable: true }, { id: "t-8-8", x: 8, y: 8, z: 0, terrain: "snow", passable: true }, { id: "t-9-8", x: 9, y: 8, z: 0, terrain: "snow", passable: true }, { id: "t-10-8", x: 10, y: 8, z: 0, terrain: "snow", passable: true }, { id: "t-11-8", x: 11, y: 8, z: 0, terrain: "snow", passable: true }, { id: "t-0-9", x: 0, y: 9, z: 0, terrain: "snow", passable: true }, { id: "t-1-9", x: 1, y: 9, z: 0, terrain: "snow", passable: true }, { id: "t-2-9", x: 2, y: 9, z: 0, terrain: "snow", passable: true }, { id: "t-3-9", x: 3, y: 9, z: 0, terrain: "snow", passable: true }, { id: "t-4-9", x: 4, y: 9, z: 0, terrain: "snow", passable: true }, { id: "t-5-9", x: 5, y: 9, z: 0, terrain: "snow", passable: true }, { id: "t-6-9", x: 6, y: 9, z: 0, terrain: "snow", passable: true }, { id: "t-7-9", x: 7, y: 9, z: 0, terrain: "snow", passable: true }, { id: "t-8-9", x: 8, y: 9, z: 0, terrain: "snow", passable: true }, { id: "t-9-9", x: 9, y: 9, z: 0, terrain: "wall", passable: false }, { id: "t-10-9", x: 10, y: 9, z: 0, terrain: "snow", passable: true }, { id: "t-11-9", x: 11, y: 9, z: 0, terrain: "snow", passable: true }, { id: "t-0-10", x: 0, y: 10, z: 0, terrain: "snow", passable: true }, { id: "t-1-10", x: 1, y: 10, z: 0, terrain: "snow", passable: true }, { id: "t-2-10", x: 2, y: 10, z: 0, terrain: "snow", passable: true }, { id: "t-3-10", x: 3, y: 10, z: 0, terrain: "snow", passable: true }, { id: "t-4-10", x: 4, y: 10, z: 0, terrain: "snow", passable: true }, { id: "t-5-10", x: 5, y: 10, z: 0, terrain: "snow", passable: true }, { id: "t-6-10", x: 6, y: 10, z: 0, terrain: "snow", passable: true }, { id: "t-7-10", x: 7, y: 10, z: 0, terrain: "snow", passable: true }, { id: "t-8-10", x: 8, y: 10, z: 0, terrain: "snow", passable: true }, { id: "t-9-10", x: 9, y: 10, z: 0, terrain: "snow", passable: true }, { id: "t-10-10", x: 10, y: 10, z: 0, terrain: "snow", passable: true }, { id: "t-11-10", x: 11, y: 10, z: 0, terrain: "snow", passable: true }, { id: "t-0-11", x: 0, y: 11, z: 0, terrain: "snow", passable: true }, { id: "t-1-11", x: 1, y: 11, z: 0, terrain: "snow", passable: true }, { id: "t-2-11", x: 2, y: 11, z: 0, terrain: "snow", passable: true }, { id: "t-3-11", x: 3, y: 11, z: 0, terrain: "snow", passable: true }, { id: "t-4-11", x: 4, y: 11, z: 0, terrain: "snow", passable: true }, { id: "t-5-11", x: 5, y: 11, z: 0, terrain: "snow", passable: true }, { id: "t-6-11", x: 6, y: 11, z: 0, terrain: "snow", passable: true }, { id: "t-7-11", x: 7, y: 11, z: 0, terrain: "snow", passable: true }, { id: "t-8-11", x: 8, y: 11, z: 0, terrain: "snow", passable: true }, { id: "t-9-11", x: 9, y: 11, z: 0, terrain: "snow", passable: true }, { id: "t-10-11", x: 10, y: 11, z: 0, terrain: "snow", passable: true }, { id: "t-11-11", x: 11, y: 11, z: 0, terrain: "snow", passable: true } ]
     }
   }
 
-  page "/holiday-board-3d" as HolidayBoard3DPage -> HolidayBoard3DRender
+  trait Collector = Frame.traits.Collector -> GameState {
+    config {
+      running: true
+      targetType: "gift"
+      pointsPerTarget: 1
+      removeOnReach: true
+      features: [ { id: "gift1", x: 4, y: 2, type: "gift", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-a-round.glb", role: "item", category: "present-a-round", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "present-a-round", thumbnailUrl: "" } }, { id: "gift2", x: 9, y: 3, type: "gift", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-b-cube.glb", role: "item", category: "present-b-cube", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "present-b-cube", thumbnailUrl: "" } }, { id: "gift3", x: 3, y: 8, type: "gift", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-a-rectangle.glb", role: "item", category: "present-a-rectangle", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "present-a-rectangle", thumbnailUrl: "" } }, { id: "gift4", x: 7, y: 9, type: "gift", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/present-b-round.glb", role: "item", category: "present-b-round", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "present-b-round", thumbnailUrl: "" } }, { id: "deco1", x: 6, y: 2, type: "wreath", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/wreath-decorated.glb", role: "decoration", category: "wreath-decorated", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wreath-decorated", thumbnailUrl: "" } }, { id: "deco2", x: 2, y: 9, type: "tree", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/tree-snow-a.glb", role: "decoration", category: "tree-snow-a", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "tree-snow-a", thumbnailUrl: "" } }, { id: "deco3", x: 9, y: 6, type: "candy-cane", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/features/candy-cane-red.glb", role: "decoration", category: "candy-cane-red", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "candy-cane-red", thumbnailUrl: "" } } ]
+    }
+  }
+
+  trait FxDecay = Frame.traits.FxDecay -> GameState {
+    config { running: true }
+  }
+
+  trait RoundGate = Frame.traits.RoundGate -> GameState {
+    config { running: true }
+  }
+
+  trait Player = Frame.traits.HeroIntent -> GameState {
+    config {
+      gridWidth: 12
+      gridHeight: 12
+      movementRange: 1
+      objectiveLabel: "Gifts Left"
+      cameraMode: "top-down"
+      scale: 0.45
+      unitScale: 1
+      bgColor: "#0a1420"
+      assetManifest: { terrains: { snow: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/floor-wood-snow.glb", role: "tile", category: "snow", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "snow", thumbnailUrl: "" }, wall: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-board-3d/kenney-holiday-kit/terrain/cabin-wall.glb", role: "tile", category: "wall", animations: ["static"], style: "lowpoly-flat", variant: "", dimension: "3d", aspect: "1:1", name: "wall", thumbnailUrl: "" } }, units: {}, features: {}, effects: {} }
+    }
+  }
+
+  page "/holiday-board-3d" as HolidayBoard3DPage -> HeroAuthority, Collector, FxDecay, RoundGate, Player
 }

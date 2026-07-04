@@ -1,0 +1,826 @@
+{
+  "description": "Headless single-hero navigation authority: the SOLE writer of units + movesLeft on objective boards. Applies a budget-limited MOVE intent (steps the hero one tile, spends a move, emits HERO_STEPPED) and an optional WANDER intent (random step for neutral NPCs). Renders nothing.",
+  "name": "std-hero-nav",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "units",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "tiles",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "movesLeft",
+            "type": "number"
+          }
+        ],
+        "name": "HeroNavData",
+        "persistence": "runtime",
+        "shared": true
+      },
+      "name": "HeroNavOrbital",
+      "pages": [
+        {
+          "name": "HeroNavPage",
+          "path": "/hero-nav",
+          "traits": [
+            {
+              "ref": "HeroNav"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "gridHeight": {
+              "default": 12.0,
+              "description": "Grid row count clamping move + wander bounds",
+              "label": "Grid Height",
+              "tier": "domain",
+              "type": "number"
+            },
+            "gridWidth": {
+              "default": 12.0,
+              "description": "Grid column count clamping move + wander bounds",
+              "label": "Grid Width",
+              "tier": "domain",
+              "type": "number"
+            },
+            "moveBudget": {
+              "default": 45.0,
+              "description": "Moves the hero may spend before the round is lost if objectives remain",
+              "label": "Move Budget",
+              "tier": "domain",
+              "type": "number"
+            },
+            "running": {
+              "default": true,
+              "description": "When true, MOVE/WANDER intents are applied; toggle to freeze the board",
+              "label": "Running",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "tiles": {
+              "default": [],
+              "description": "Grid tiles used for passability checks (auto-generated all-passable when empty)",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "passable": {
+                    "name": "passable",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Tiles",
+              "tier": "domain",
+              "type": "[Tile]"
+            },
+            "units": {
+              "default": [],
+              "description": "Seed roster: the player hero plus any neutral NPCs",
+              "items": {
+                "properties": {
+                  "health": {
+                    "name": "health",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "maxHealth": {
+                    "name": "maxHealth",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "position": {
+                    "name": "position",
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "team": {
+                    "name": "team",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "unitType": {
+                    "name": "unitType",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "z": {
+                    "name": "z",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Initial Units",
+              "tier": "domain",
+              "type": "[Unit]"
+            }
+          },
+          "emits": [
+            {
+              "description": "Hero moved onto tile (x,z) with movesLeft remaining; objective mechanics listen to score progress and round-flow to decide win/lose",
+              "event": "HERO_STEPPED",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "z",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "movesLeft",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "movesLeft",
+              "tiles",
+              "units"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "HeroNavData",
+          "name": "HeroNav",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "MOVE",
+                "name": "Move",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "WANDER",
+                "name": "Wander",
+                "payloadSchema": [
+                  {
+                    "name": "tick",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "description": "Hero moved onto tile (x,z) with movesLeft remaining; objective mechanics listen to score progress and round-flow to decide win/lose",
+                "key": "HERO_STEPPED",
+                "name": "Hero Stepped",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "z",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "movesLeft",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "active"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.tiles",
+                    [
+                      "if",
+                      [
+                        ">",
+                        [
+                          "array/len",
+                          "@config.tiles"
+                        ],
+                        0.0
+                      ],
+                      "@config.tiles",
+                      [
+                        "array/flatten",
+                        [
+                          "array/map",
+                          [
+                            "array/range",
+                            0.0,
+                            "@config.gridHeight"
+                          ],
+                          [
+                            "fn",
+                            "gy",
+                            [
+                              "array/map",
+                              [
+                                "array/range",
+                                0.0,
+                                "@config.gridWidth"
+                              ],
+                              [
+                                "fn",
+                                "gx",
+                                {
+                                  "id": [
+                                    "str/concat",
+                                    "t-",
+                                    "@gx",
+                                    "-",
+                                    "@gy"
+                                  ],
+                                  "passable": true,
+                                  "x": "@gx",
+                                  "y": "@gy"
+                                }
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.movesLeft",
+                    "@config.moveBudget"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "active",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "@payload.unitId"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "position": {
+                                "x": "@payload.x",
+                                "y": "@payload.y"
+                              }
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.movesLeft",
+                    [
+                      "-",
+                      "@entity.movesLeft",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "HERO_STEPPED",
+                    {
+                      "movesLeft": "@entity.movesLeft",
+                      "unitId": "@payload.unitId",
+                      "x": "@payload.x",
+                      "z": "@payload.y"
+                    }
+                  ]
+                ],
+                "event": "MOVE",
+                "from": "active",
+                "guard": [
+                  "and",
+                  "@config.running",
+                  [
+                    ">",
+                    "@entity.movesLeft",
+                    0.0
+                  ]
+                ],
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.team",
+                            "neutral"
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "cell",
+                                [
+                                  "object/get",
+                                  "@u",
+                                  "position"
+                                ]
+                              ],
+                              [
+                                "dir",
+                                [
+                                  "math/floor",
+                                  [
+                                    "*",
+                                    [
+                                      "math/random"
+                                    ],
+                                    4.0
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "nc",
+                                  [
+                                    "if",
+                                    [
+                                      "==",
+                                      "@dir",
+                                      0.0
+                                    ],
+                                    {
+                                      "x": [
+                                        "+",
+                                        [
+                                          "object/get",
+                                          "@cell",
+                                          "x"
+                                        ],
+                                        1.0
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@cell",
+                                        "y"
+                                      ]
+                                    },
+                                    [
+                                      "if",
+                                      [
+                                        "==",
+                                        "@dir",
+                                        1.0
+                                      ],
+                                      {
+                                        "x": [
+                                          "-",
+                                          [
+                                            "object/get",
+                                            "@cell",
+                                            "x"
+                                          ],
+                                          1.0
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@cell",
+                                          "y"
+                                        ]
+                                      },
+                                      [
+                                        "if",
+                                        [
+                                          "==",
+                                          "@dir",
+                                          2.0
+                                        ],
+                                        {
+                                          "x": [
+                                            "object/get",
+                                            "@cell",
+                                            "x"
+                                          ],
+                                          "y": [
+                                            "+",
+                                            [
+                                              "object/get",
+                                              "@cell",
+                                              "y"
+                                            ],
+                                            1.0
+                                          ]
+                                        },
+                                        {
+                                          "x": [
+                                            "object/get",
+                                            "@cell",
+                                            "x"
+                                          ],
+                                          "y": [
+                                            "-",
+                                            [
+                                              "object/get",
+                                              "@cell",
+                                              "y"
+                                            ],
+                                            1.0
+                                          ]
+                                        }
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "if",
+                                [
+                                  "and",
+                                  [
+                                    "grid/in-bounds",
+                                    "@nc",
+                                    "@config.gridWidth",
+                                    "@config.gridHeight"
+                                  ],
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/find",
+                                          "@entity.tiles",
+                                          [
+                                            "fn",
+                                            "t",
+                                            [
+                                              "and",
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "@t",
+                                                  "x"
+                                                ],
+                                                [
+                                                  "object/get",
+                                                  "@nc",
+                                                  "x"
+                                                ]
+                                              ],
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "@t",
+                                                  "y"
+                                                ],
+                                                [
+                                                  "object/get",
+                                                  "@nc",
+                                                  "y"
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ],
+                                        "passable"
+                                      ],
+                                      true
+                                    ],
+                                    [
+                                      "==",
+                                      [
+                                        "array/len",
+                                        [
+                                          "array/filter",
+                                          "@entity.units",
+                                          [
+                                            "fn",
+                                            "o",
+                                            [
+                                              "and",
+                                              [
+                                                "!=",
+                                                "@o.id",
+                                                "@u.id"
+                                              ],
+                                              [
+                                                "and",
+                                                [
+                                                  "==",
+                                                  [
+                                                    "object/get",
+                                                    [
+                                                      "object/get",
+                                                      "@o",
+                                                      "position"
+                                                    ],
+                                                    "x"
+                                                  ],
+                                                  [
+                                                    "object/get",
+                                                    "@nc",
+                                                    "x"
+                                                  ]
+                                                ],
+                                                [
+                                                  "==",
+                                                  [
+                                                    "object/get",
+                                                    [
+                                                      "object/get",
+                                                      "@o",
+                                                      "position"
+                                                    ],
+                                                    "y"
+                                                  ],
+                                                  [
+                                                    "object/get",
+                                                    "@nc",
+                                                    "y"
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ],
+                                      0.0
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "object/merge",
+                                  "@u",
+                                  {
+                                    "position": "@nc"
+                                  }
+                                ],
+                                "@u"
+                              ]
+                            ]
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                "event": "WANDER",
+                "from": "active",
+                "guard": "@config.running",
+                "to": "active"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.movesLeft",
+                    "@config.moveBudget"
+                  ]
+                ],
+                "event": "RESTART",
+                "from": "active",
+                "to": "active"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

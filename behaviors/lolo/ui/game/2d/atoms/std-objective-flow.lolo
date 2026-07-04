@@ -1,0 +1,46 @@
+app std-objective-flow "1.0.0"
+"Headless win/lose authority for objective boards: owns only result. Listens PROGRESS (objectivesLeft + movesLeft) and sets result to won when every objective is reached, lost when the move budget runs out first, else none. Renders nothing."
+orbital ObjectiveFlowOrbital {
+  entity FlowState [runtime, shared] {
+    id : string!
+    result : string = "none"
+  }
+
+  trait ObjectiveFlow -> @rebindable FlowState [lifecycle] {
+    initial: active
+
+    state active {
+      INIT -> active
+        (set @entity.result "none")
+
+      PROGRESS -> active when @config.running
+        (set @entity.result (if (<= @payload.objectivesLeft 0) "won" (if (<= @payload.movesLeft 0) "lost" "none")))
+        (if (!= @entity.result "none") (emit GAME_END { result: @entity.result }) null)
+
+      RESTART -> active
+        (set @entity.result "none")
+    }
+
+    emits {
+      GAME_END -> external {
+        result : string!
+      }
+        @description "Emitted for parity with round-flow when the round resolves; listeners may react to end-of-round"
+        @tier "domain"
+    }
+
+    listens {
+      PROGRESS { objectivesLeft : number, movesLeft : number }
+      RESTART { id : string }
+    }
+
+    config {
+      running : boolean = true
+        @label "Running"
+        @description "When true, PROGRESS signals resolve win/lose; toggle to freeze"
+        @tier "domain"
+    }
+  }
+
+  page "/objective-flow" as ObjectiveFlowPage -> ObjectiveFlow
+}
