@@ -1823,38 +1823,235 @@
                       "backgroundAsset": "@config.backgroundAsset",
                       "children": [
                         {
-                          "assetManifest": "@config.assetManifest",
-                          "effects": [
-                            "array/map",
-                            "@entity.fx",
-                            [
-                              "fn",
-                              "e",
-                              {
-                                "key": [
-                                  "object/get",
-                                  "e",
-                                  "type"
-                                ],
-                                "ttl": [
-                                  "object/get",
-                                  "e",
-                                  "ttl"
-                                ],
-                                "x": [
-                                  "object/get",
-                                  "e",
-                                  "x"
-                                ],
-                                "y": [
-                                  "object/get",
-                                  "e",
-                                  "z"
+                          "camera": {
+                            "zoom": "@config.scale"
+                          },
+                          "children": [
+                            {
+                              "items": [
+                                "array/map",
+                                "@entity.tiles",
+                                [
+                                  "fn",
+                                  "t",
+                                  {
+                                    "asset": [
+                                      "object/get",
+                                      "@t",
+                                      "terrainSprite"
+                                    ],
+                                    "position": {
+                                      "x": [
+                                        "object/get",
+                                        "@t",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@t",
+                                        "y"
+                                      ]
+                                    },
+                                    "type": "draw-sprite"
+                                  }
                                 ]
-                              }
-                            ]
+                              ],
+                              "type": "draw-sprite-layer"
+                            },
+                            {
+                              "items": [
+                                "array/map",
+                                "@entity.features",
+                                [
+                                  "fn",
+                                  "f",
+                                  {
+                                    "asset": [
+                                      "object/get",
+                                      "@f",
+                                      "sprite"
+                                    ],
+                                    "position": {
+                                      "x": [
+                                        "object/get",
+                                        "@f",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@f",
+                                        "y"
+                                      ]
+                                    },
+                                    "type": "draw-sprite"
+                                  }
+                                ]
+                              ],
+                              "type": "draw-sprite-layer"
+                            },
+                            {
+                              "items": [
+                                "array/map",
+                                [
+                                  "array/concat",
+                                  "@entity.units",
+                                  "@entity.enemies"
+                                ],
+                                [
+                                  "fn",
+                                  "u",
+                                  {
+                                    "asset": [
+                                      "object/get",
+                                      "@u",
+                                      "sprite"
+                                    ],
+                                    "position": [
+                                      "object/get",
+                                      "@u",
+                                      "position"
+                                    ],
+                                    "type": "draw-sprite"
+                                  }
+                                ]
+                              ],
+                              "type": "draw-sprite-layer"
+                            },
+                            {
+                              "items": [
+                                "array/map",
+                                [
+                                  "array/concat",
+                                  "@entity.units",
+                                  "@entity.enemies"
+                                ],
+                                [
+                                  "fn",
+                                  "u",
+                                  {
+                                    "fill": "rgba(0,0,0,0.6)",
+                                    "height": 0.12,
+                                    "offsetY": -0.6,
+                                    "position": [
+                                      "object/get",
+                                      "@u",
+                                      "position"
+                                    ],
+                                    "shape": "rect",
+                                    "type": "draw-shape",
+                                    "width": 0.8
+                                  }
+                                ]
+                              ],
+                              "type": "draw-shape-layer"
+                            },
+                            {
+                              "items": [
+                                "array/map",
+                                [
+                                  "array/concat",
+                                  "@entity.units",
+                                  "@entity.enemies"
+                                ],
+                                [
+                                  "fn",
+                                  "u",
+                                  {
+                                    "fill": "#22c55e",
+                                    "height": 0.12,
+                                    "offsetY": -0.6,
+                                    "position": [
+                                      "object/get",
+                                      "@u",
+                                      "position"
+                                    ],
+                                    "shape": "rect",
+                                    "type": "draw-shape",
+                                    "width": [
+                                      "*",
+                                      0.8,
+                                      [
+                                        "/",
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "health"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "@u",
+                                          "maxHealth"
+                                        ]
+                                      ]
+                                    ]
+                                  }
+                                ]
+                              ],
+                              "type": "draw-shape-layer"
+                            },
+                            {
+                              "items": [
+                                "array/map",
+                                [
+                                  "array/concat",
+                                  "@entity.units",
+                                  "@entity.enemies"
+                                ],
+                                [
+                                  "fn",
+                                  "u",
+                                  {
+                                    "color": "#ffffff",
+                                    "offsetY": -0.85,
+                                    "position": [
+                                      "object/get",
+                                      "@u",
+                                      "position"
+                                    ],
+                                    "text": [
+                                      "object/get",
+                                      "@u",
+                                      "name"
+                                    ],
+                                    "type": "draw-text"
+                                  }
+                                ]
+                              ],
+                              "type": "draw-text-layer"
+                            },
+                            {
+                              "items": [
+                                "array/map",
+                                "@entity.fx",
+                                [
+                                  "fn",
+                                  "f",
+                                  {
+                                    "color": "#ffe066",
+                                    "position": {
+                                      "x": [
+                                        "object/get",
+                                        "@f",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@f",
+                                        "z"
+                                      ]
+                                    },
+                                    "text": [
+                                      "object/get",
+                                      "@f",
+                                      "message"
+                                    ],
+                                    "type": "draw-text"
+                                  }
+                                ]
+                              ],
+                              "type": "draw-text-layer"
+                            }
                           ],
-                          "features": "@entity.features",
                           "keyMap": {
                             "ArrowDown": "MOVE_DOWN",
                             "ArrowLeft": "MOVE_LEFT",
@@ -1866,15 +2063,8 @@
                             "KeyW": "MOVE_UP"
                           },
                           "projection": "flat",
-                          "scale": "@config.scale",
                           "showMinimap": false,
-                          "tiles": "@entity.tiles",
-                          "type": "canvas-2d",
-                          "units": [
-                            "array/concat",
-                            "@entity.units",
-                            "@entity.enemies"
-                          ]
+                          "type": "canvas"
                         }
                       ],
                       "controls": {
@@ -2870,38 +3060,235 @@
                     "backgroundAsset": "@config.backgroundAsset",
                     "children": [
                       {
-                        "assetManifest": "@config.assetManifest",
-                        "effects": [
-                          "array/map",
-                          "@entity.fx",
-                          [
-                            "fn",
-                            "e",
-                            {
-                              "key": [
-                                "object/get",
-                                "e",
-                                "type"
-                              ],
-                              "ttl": [
-                                "object/get",
-                                "e",
-                                "ttl"
-                              ],
-                              "x": [
-                                "object/get",
-                                "e",
-                                "x"
-                              ],
-                              "y": [
-                                "object/get",
-                                "e",
-                                "z"
+                        "camera": {
+                          "zoom": "@config.scale"
+                        },
+                        "children": [
+                          {
+                            "items": [
+                              "array/map",
+                              "@entity.tiles",
+                              [
+                                "fn",
+                                "t",
+                                {
+                                  "asset": [
+                                    "object/get",
+                                    "@t",
+                                    "terrainSprite"
+                                  ],
+                                  "position": {
+                                    "x": [
+                                      "object/get",
+                                      "@t",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@t",
+                                      "y"
+                                    ]
+                                  },
+                                  "type": "draw-sprite"
+                                }
                               ]
-                            }
-                          ]
+                            ],
+                            "type": "draw-sprite-layer"
+                          },
+                          {
+                            "items": [
+                              "array/map",
+                              "@entity.features",
+                              [
+                                "fn",
+                                "f",
+                                {
+                                  "asset": [
+                                    "object/get",
+                                    "@f",
+                                    "sprite"
+                                  ],
+                                  "position": {
+                                    "x": [
+                                      "object/get",
+                                      "@f",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@f",
+                                      "y"
+                                    ]
+                                  },
+                                  "type": "draw-sprite"
+                                }
+                              ]
+                            ],
+                            "type": "draw-sprite-layer"
+                          },
+                          {
+                            "items": [
+                              "array/map",
+                              [
+                                "array/concat",
+                                "@entity.units",
+                                "@entity.enemies"
+                              ],
+                              [
+                                "fn",
+                                "u",
+                                {
+                                  "asset": [
+                                    "object/get",
+                                    "@u",
+                                    "sprite"
+                                  ],
+                                  "position": [
+                                    "object/get",
+                                    "@u",
+                                    "position"
+                                  ],
+                                  "type": "draw-sprite"
+                                }
+                              ]
+                            ],
+                            "type": "draw-sprite-layer"
+                          },
+                          {
+                            "items": [
+                              "array/map",
+                              [
+                                "array/concat",
+                                "@entity.units",
+                                "@entity.enemies"
+                              ],
+                              [
+                                "fn",
+                                "u",
+                                {
+                                  "fill": "rgba(0,0,0,0.6)",
+                                  "height": 0.12,
+                                  "offsetY": -0.6,
+                                  "position": [
+                                    "object/get",
+                                    "@u",
+                                    "position"
+                                  ],
+                                  "shape": "rect",
+                                  "type": "draw-shape",
+                                  "width": 0.8
+                                }
+                              ]
+                            ],
+                            "type": "draw-shape-layer"
+                          },
+                          {
+                            "items": [
+                              "array/map",
+                              [
+                                "array/concat",
+                                "@entity.units",
+                                "@entity.enemies"
+                              ],
+                              [
+                                "fn",
+                                "u",
+                                {
+                                  "fill": "#22c55e",
+                                  "height": 0.12,
+                                  "offsetY": -0.6,
+                                  "position": [
+                                    "object/get",
+                                    "@u",
+                                    "position"
+                                  ],
+                                  "shape": "rect",
+                                  "type": "draw-shape",
+                                  "width": [
+                                    "*",
+                                    0.8,
+                                    [
+                                      "/",
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "health"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "maxHealth"
+                                      ]
+                                    ]
+                                  ]
+                                }
+                              ]
+                            ],
+                            "type": "draw-shape-layer"
+                          },
+                          {
+                            "items": [
+                              "array/map",
+                              [
+                                "array/concat",
+                                "@entity.units",
+                                "@entity.enemies"
+                              ],
+                              [
+                                "fn",
+                                "u",
+                                {
+                                  "color": "#ffffff",
+                                  "offsetY": -0.85,
+                                  "position": [
+                                    "object/get",
+                                    "@u",
+                                    "position"
+                                  ],
+                                  "text": [
+                                    "object/get",
+                                    "@u",
+                                    "name"
+                                  ],
+                                  "type": "draw-text"
+                                }
+                              ]
+                            ],
+                            "type": "draw-text-layer"
+                          },
+                          {
+                            "items": [
+                              "array/map",
+                              "@entity.fx",
+                              [
+                                "fn",
+                                "f",
+                                {
+                                  "color": "#ffe066",
+                                  "position": {
+                                    "x": [
+                                      "object/get",
+                                      "@f",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@f",
+                                      "z"
+                                    ]
+                                  },
+                                  "text": [
+                                    "object/get",
+                                    "@f",
+                                    "message"
+                                  ],
+                                  "type": "draw-text"
+                                }
+                              ]
+                            ],
+                            "type": "draw-text-layer"
+                          }
                         ],
-                        "features": "@entity.features",
                         "keyMap": {
                           "ArrowDown": "MOVE_DOWN",
                           "ArrowLeft": "MOVE_LEFT",
@@ -2913,15 +3300,8 @@
                           "KeyW": "MOVE_UP"
                         },
                         "projection": "flat",
-                        "scale": "@config.scale",
                         "showMinimap": false,
-                        "tiles": "@entity.tiles",
-                        "type": "canvas-2d",
-                        "units": [
-                          "array/concat",
-                          "@entity.units",
-                          "@entity.enemies"
-                        ]
+                        "type": "canvas"
                       }
                     ],
                     "controls": {

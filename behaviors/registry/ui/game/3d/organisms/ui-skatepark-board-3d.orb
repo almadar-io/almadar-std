@@ -377,7 +377,7 @@
                 "dimension": "3d",
                 "name": "coin",
                 "role": "feature",
-                "style": "lowpoly-flat",
+                "style": "",
                 "thumbnailUrl": "",
                 "url": "https://almadar-kflow-assets.web.app/shared/_shared/kenney-prototype-kit/features/coin.glb",
                 "variant": ""
@@ -666,7 +666,7 @@
                 "dimension": "3d",
                 "name": "player",
                 "role": "player",
-                "style": "lowpoly-flat",
+                "style": "",
                 "thumbnailUrl": "",
                 "url": "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/units/character-skate-boy.glb",
                 "variant": ""
@@ -752,7 +752,7 @@
                   "dimension": "3d",
                   "name": "goal",
                   "role": "tile",
-                  "style": "lowpoly-flat",
+                  "style": "",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/skateboard.glb",
                   "variant": ""
@@ -766,7 +766,7 @@
                   "dimension": "3d",
                   "name": "ground",
                   "role": "tile",
-                  "style": "lowpoly-flat",
+                  "style": "",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/terrain/floor-wood.glb",
                   "variant": ""
@@ -780,7 +780,7 @@
                   "dimension": "3d",
                   "name": "hazard",
                   "role": "tile",
-                  "style": "lowpoly-flat",
+                  "style": "",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/structure-wood.glb",
                   "variant": ""
@@ -794,7 +794,7 @@
                   "dimension": "3d",
                   "name": "platform",
                   "role": "tile",
-                  "style": "lowpoly-flat",
+                  "style": "",
                   "thumbnailUrl": "",
                   "url": "https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/obstacle-box.glb",
                   "variant": ""
@@ -1349,36 +1349,99 @@
                       "children": [
                         {
                           "backgroundColor": "@config.bgColor",
-                          "cameraMode": "follow",
-                          "events": "@entity.fx",
-                          "features": [
-                            "array/map",
-                            [
-                              "array/filter",
-                              "@entity.coins",
-                              [
-                                "fn",
-                                "c",
+                          "camera": {
+                            "mode": "follow"
+                          },
+                          "children": [
+                            {
+                              "items": [
+                                "array/map",
+                                "@config.platforms",
                                 [
-                                  "==",
-                                  "@c.taken",
-                                  false
+                                  "fn",
+                                  "p",
+                                  {
+                                    "asset": [
+                                      "object/get",
+                                      "@config.tileSprites",
+                                      "@p.type"
+                                    ],
+                                    "position": {
+                                      "x": "@p.x",
+                                      "y": "@p.y"
+                                    },
+                                    "type": "draw-sprite"
+                                  }
                                 ]
-                              ]
-                            ],
-                            [
-                              "fn",
-                              "c",
-                              {
-                                "assetUrl": "@config.coinSprite",
-                                "id": "@c.id",
-                                "type": "coin",
-                                "x": "@c.x",
-                                "y": "@c.y"
-                              }
-                            ]
+                              ],
+                              "type": "draw-sprite-layer"
+                            },
+                            {
+                              "items": [
+                                "array/map",
+                                [
+                                  "array/filter",
+                                  "@entity.coins",
+                                  [
+                                    "fn",
+                                    "c",
+                                    [
+                                      "==",
+                                      "@c.taken",
+                                      false
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "c",
+                                  {
+                                    "asset": "@config.coinSprite",
+                                    "position": {
+                                      "x": "@c.x",
+                                      "y": "@c.y"
+                                    },
+                                    "type": "draw-sprite"
+                                  }
+                                ]
+                              ],
+                              "type": "draw-sprite-layer"
+                            },
+                            {
+                              "items": [
+                                "array/map",
+                                "@entity.fx",
+                                [
+                                  "fn",
+                                  "f",
+                                  {
+                                    "color": "#ffe066",
+                                    "position": {
+                                      "x": "@f.x",
+                                      "y": "@f.y"
+                                    },
+                                    "text": "@f.message",
+                                    "type": "draw-text"
+                                  }
+                                ]
+                              ],
+                              "type": "draw-text-layer"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "asset": "@config.playerSprite",
+                                  "frame": "@entity.player.frame",
+                                  "position": {
+                                    "x": "@entity.player.x",
+                                    "y": "@entity.player.y"
+                                  },
+                                  "type": "draw-sprite"
+                                }
+                              ],
+                              "type": "draw-sprite-layer"
+                            }
                           ],
-                          "interpolateUnits": true,
                           "keyMap": {
                             "ArrowLeft": "LEFT",
                             "ArrowRight": "RIGHT",
@@ -1396,13 +1459,10 @@
                             "KeyA": "STOP",
                             "KeyD": "STOP"
                           },
+                          "mode": "3d",
                           "pixelsPerUnit": 32.0,
-                          "platforms": "@config.platforms",
-                          "player": "@entity.player",
-                          "playerSprite": "@config.playerSprite",
                           "tileClickEvent": "TILE_CLICK",
-                          "tileSprites": "@config.tileSprites",
-                          "type": "game-canvas-3d",
+                          "type": "canvas",
                           "unitClickEvent": "UNIT_CLICK",
                           "worldHeight": "@entity.worldHeight",
                           "worldWidth": "@entity.worldWidth"
@@ -1771,36 +1831,99 @@
                       "children": [
                         {
                           "backgroundColor": "@config.bgColor",
-                          "cameraMode": "follow",
-                          "events": "@entity.fx",
-                          "features": [
-                            "array/map",
-                            [
-                              "array/filter",
-                              "@entity.coins",
-                              [
-                                "fn",
-                                "c",
+                          "camera": {
+                            "mode": "follow"
+                          },
+                          "children": [
+                            {
+                              "items": [
+                                "array/map",
+                                "@config.platforms",
                                 [
-                                  "==",
-                                  "@c.taken",
-                                  false
+                                  "fn",
+                                  "p",
+                                  {
+                                    "asset": [
+                                      "object/get",
+                                      "@config.tileSprites",
+                                      "@p.type"
+                                    ],
+                                    "position": {
+                                      "x": "@p.x",
+                                      "y": "@p.y"
+                                    },
+                                    "type": "draw-sprite"
+                                  }
                                 ]
-                              ]
-                            ],
-                            [
-                              "fn",
-                              "c",
-                              {
-                                "assetUrl": "@config.coinSprite",
-                                "id": "@c.id",
-                                "type": "coin",
-                                "x": "@c.x",
-                                "y": "@c.y"
-                              }
-                            ]
+                              ],
+                              "type": "draw-sprite-layer"
+                            },
+                            {
+                              "items": [
+                                "array/map",
+                                [
+                                  "array/filter",
+                                  "@entity.coins",
+                                  [
+                                    "fn",
+                                    "c",
+                                    [
+                                      "==",
+                                      "@c.taken",
+                                      false
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "c",
+                                  {
+                                    "asset": "@config.coinSprite",
+                                    "position": {
+                                      "x": "@c.x",
+                                      "y": "@c.y"
+                                    },
+                                    "type": "draw-sprite"
+                                  }
+                                ]
+                              ],
+                              "type": "draw-sprite-layer"
+                            },
+                            {
+                              "items": [
+                                "array/map",
+                                "@entity.fx",
+                                [
+                                  "fn",
+                                  "f",
+                                  {
+                                    "color": "#ffe066",
+                                    "position": {
+                                      "x": "@f.x",
+                                      "y": "@f.y"
+                                    },
+                                    "text": "@f.message",
+                                    "type": "draw-text"
+                                  }
+                                ]
+                              ],
+                              "type": "draw-text-layer"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "asset": "@config.playerSprite",
+                                  "frame": "@entity.player.frame",
+                                  "position": {
+                                    "x": "@entity.player.x",
+                                    "y": "@entity.player.y"
+                                  },
+                                  "type": "draw-sprite"
+                                }
+                              ],
+                              "type": "draw-sprite-layer"
+                            }
                           ],
-                          "interpolateUnits": true,
                           "keyMap": {
                             "ArrowLeft": "LEFT",
                             "ArrowRight": "RIGHT",
@@ -1818,13 +1941,10 @@
                             "KeyA": "STOP",
                             "KeyD": "STOP"
                           },
+                          "mode": "3d",
                           "pixelsPerUnit": 32.0,
-                          "platforms": "@config.platforms",
-                          "player": "@entity.player",
-                          "playerSprite": "@config.playerSprite",
                           "tileClickEvent": "TILE_CLICK",
-                          "tileSprites": "@config.tileSprites",
-                          "type": "game-canvas-3d",
+                          "type": "canvas",
                           "unitClickEvent": "UNIT_CLICK",
                           "worldHeight": "@entity.worldHeight",
                           "worldWidth": "@entity.worldWidth"
@@ -1996,36 +2116,99 @@
                       "children": [
                         {
                           "backgroundColor": "@config.bgColor",
-                          "cameraMode": "follow",
-                          "events": "@entity.fx",
-                          "features": [
-                            "array/map",
-                            [
-                              "array/filter",
-                              "@entity.coins",
-                              [
-                                "fn",
-                                "c",
+                          "camera": {
+                            "mode": "follow"
+                          },
+                          "children": [
+                            {
+                              "items": [
+                                "array/map",
+                                "@config.platforms",
                                 [
-                                  "==",
-                                  "@c.taken",
-                                  false
+                                  "fn",
+                                  "p",
+                                  {
+                                    "asset": [
+                                      "object/get",
+                                      "@config.tileSprites",
+                                      "@p.type"
+                                    ],
+                                    "position": {
+                                      "x": "@p.x",
+                                      "y": "@p.y"
+                                    },
+                                    "type": "draw-sprite"
+                                  }
                                 ]
-                              ]
-                            ],
-                            [
-                              "fn",
-                              "c",
-                              {
-                                "assetUrl": "@config.coinSprite",
-                                "id": "@c.id",
-                                "type": "coin",
-                                "x": "@c.x",
-                                "y": "@c.y"
-                              }
-                            ]
+                              ],
+                              "type": "draw-sprite-layer"
+                            },
+                            {
+                              "items": [
+                                "array/map",
+                                [
+                                  "array/filter",
+                                  "@entity.coins",
+                                  [
+                                    "fn",
+                                    "c",
+                                    [
+                                      "==",
+                                      "@c.taken",
+                                      false
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "fn",
+                                  "c",
+                                  {
+                                    "asset": "@config.coinSprite",
+                                    "position": {
+                                      "x": "@c.x",
+                                      "y": "@c.y"
+                                    },
+                                    "type": "draw-sprite"
+                                  }
+                                ]
+                              ],
+                              "type": "draw-sprite-layer"
+                            },
+                            {
+                              "items": [
+                                "array/map",
+                                "@entity.fx",
+                                [
+                                  "fn",
+                                  "f",
+                                  {
+                                    "color": "#ffe066",
+                                    "position": {
+                                      "x": "@f.x",
+                                      "y": "@f.y"
+                                    },
+                                    "text": "@f.message",
+                                    "type": "draw-text"
+                                  }
+                                ]
+                              ],
+                              "type": "draw-text-layer"
+                            },
+                            {
+                              "items": [
+                                {
+                                  "asset": "@config.playerSprite",
+                                  "frame": "@entity.player.frame",
+                                  "position": {
+                                    "x": "@entity.player.x",
+                                    "y": "@entity.player.y"
+                                  },
+                                  "type": "draw-sprite"
+                                }
+                              ],
+                              "type": "draw-sprite-layer"
+                            }
                           ],
-                          "interpolateUnits": true,
                           "keyMap": {
                             "ArrowLeft": "LEFT",
                             "ArrowRight": "RIGHT",
@@ -2043,13 +2226,10 @@
                             "KeyA": "STOP",
                             "KeyD": "STOP"
                           },
+                          "mode": "3d",
                           "pixelsPerUnit": 32.0,
-                          "platforms": "@config.platforms",
-                          "player": "@entity.player",
-                          "playerSprite": "@config.playerSprite",
                           "tileClickEvent": "TILE_CLICK",
-                          "tileSprites": "@config.tileSprites",
-                          "type": "game-canvas-3d",
+                          "type": "canvas",
                           "unitClickEvent": "UNIT_CLICK",
                           "worldHeight": "@entity.worldHeight",
                           "worldWidth": "@entity.worldWidth"
@@ -3220,36 +3400,99 @@
                     "children": [
                       {
                         "backgroundColor": "@config.bgColor",
-                        "cameraMode": "follow",
-                        "events": "@entity.fx",
-                        "features": [
-                          "array/map",
-                          [
-                            "array/filter",
-                            "@entity.coins",
-                            [
-                              "fn",
-                              "c",
+                        "camera": {
+                          "mode": "follow"
+                        },
+                        "children": [
+                          {
+                            "items": [
+                              "array/map",
+                              "@config.platforms",
                               [
-                                "==",
-                                "@c.taken",
-                                false
+                                "fn",
+                                "p",
+                                {
+                                  "asset": [
+                                    "object/get",
+                                    "@config.tileSprites",
+                                    "@p.type"
+                                  ],
+                                  "position": {
+                                    "x": "@p.x",
+                                    "y": "@p.y"
+                                  },
+                                  "type": "draw-sprite"
+                                }
                               ]
-                            ]
-                          ],
-                          [
-                            "fn",
-                            "c",
-                            {
-                              "assetUrl": "@config.coinSprite",
-                              "id": "@c.id",
-                              "type": "coin",
-                              "x": "@c.x",
-                              "y": "@c.y"
-                            }
-                          ]
+                            ],
+                            "type": "draw-sprite-layer"
+                          },
+                          {
+                            "items": [
+                              "array/map",
+                              [
+                                "array/filter",
+                                "@entity.coins",
+                                [
+                                  "fn",
+                                  "c",
+                                  [
+                                    "==",
+                                    "@c.taken",
+                                    false
+                                  ]
+                                ]
+                              ],
+                              [
+                                "fn",
+                                "c",
+                                {
+                                  "asset": "@config.coinSprite",
+                                  "position": {
+                                    "x": "@c.x",
+                                    "y": "@c.y"
+                                  },
+                                  "type": "draw-sprite"
+                                }
+                              ]
+                            ],
+                            "type": "draw-sprite-layer"
+                          },
+                          {
+                            "items": [
+                              "array/map",
+                              "@entity.fx",
+                              [
+                                "fn",
+                                "f",
+                                {
+                                  "color": "#ffe066",
+                                  "position": {
+                                    "x": "@f.x",
+                                    "y": "@f.y"
+                                  },
+                                  "text": "@f.message",
+                                  "type": "draw-text"
+                                }
+                              ]
+                            ],
+                            "type": "draw-text-layer"
+                          },
+                          {
+                            "items": [
+                              {
+                                "asset": "@config.playerSprite",
+                                "frame": "@entity.player.frame",
+                                "position": {
+                                  "x": "@entity.player.x",
+                                  "y": "@entity.player.y"
+                                },
+                                "type": "draw-sprite"
+                              }
+                            ],
+                            "type": "draw-sprite-layer"
+                          }
                         ],
-                        "interpolateUnits": true,
                         "keyMap": {
                           "ArrowLeft": "LEFT",
                           "ArrowRight": "RIGHT",
@@ -3267,13 +3510,10 @@
                           "KeyA": "STOP",
                           "KeyD": "STOP"
                         },
+                        "mode": "3d",
                         "pixelsPerUnit": 32.0,
-                        "platforms": "@config.platforms",
-                        "player": "@entity.player",
-                        "playerSprite": "@config.playerSprite",
                         "tileClickEvent": "TILE_CLICK",
-                        "tileSprites": "@config.tileSprites",
-                        "type": "game-canvas-3d",
+                        "type": "canvas",
                         "unitClickEvent": "UNIT_CLICK",
                         "worldHeight": "@entity.worldHeight",
                         "worldWidth": "@entity.worldWidth"

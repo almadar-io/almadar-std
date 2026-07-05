@@ -1755,39 +1755,401 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "attackTargets": "@config.attackTargets",
                       "backgroundColor": "@config.backgroundColor",
                       "cameraChangeEvent": "CAMERA_CHANGE",
                       "cameraMode": "@config.cameraMode",
                       "canvasClickEvent": "CANVAS_CLICK",
+                      "children": [
+                        {
+                          "items": [
+                            "array/map",
+                            "@config.tiles",
+                            [
+                              "fn",
+                              "t",
+                              {
+                                "asset": [
+                                  "object/get",
+                                  "@t",
+                                  "terrainSprite"
+                                ],
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@t",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@t",
+                                    "y"
+                                  ]
+                                },
+                                "type": "draw-sprite"
+                              }
+                            ]
+                          ],
+                          "type": "draw-sprite-layer"
+                        },
+                        {
+                          "items": [
+                            "array/map",
+                            "@config.platforms",
+                            [
+                              "fn",
+                              "p",
+                              {
+                                "fill": "#9ca3af",
+                                "height": [
+                                  "object/get",
+                                  "@p",
+                                  "height"
+                                ],
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@p",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@p",
+                                    "y"
+                                  ]
+                                },
+                                "shape": "rect",
+                                "type": "draw-shape",
+                                "width": [
+                                  "object/get",
+                                  "@p",
+                                  "width"
+                                ]
+                              }
+                            ]
+                          ],
+                          "type": "draw-shape-layer"
+                        },
+                        {
+                          "items": [
+                            "array/map",
+                            "@config.features",
+                            [
+                              "fn",
+                              "f",
+                              {
+                                "asset": [
+                                  "object/get",
+                                  "@f",
+                                  "assetUrl"
+                                ],
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@f",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@f",
+                                    "y"
+                                  ]
+                                },
+                                "type": "draw-sprite"
+                              }
+                            ]
+                          ],
+                          "type": "draw-sprite-layer"
+                        },
+                        {
+                          "items": [
+                            "array/map",
+                            "@config.validMoves",
+                            [
+                              "fn",
+                              "m",
+                              {
+                                "fill": "rgba(74,222,128,0.4)",
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@m",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@m",
+                                    "z"
+                                  ]
+                                },
+                                "shape": "cell",
+                                "type": "draw-shape"
+                              }
+                            ]
+                          ],
+                          "type": "draw-shape-layer"
+                        },
+                        {
+                          "items": [
+                            "array/map",
+                            "@config.attackTargets",
+                            [
+                              "fn",
+                              "a",
+                              {
+                                "fill": "rgba(239,68,68,0.4)",
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@a",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@a",
+                                    "z"
+                                  ]
+                                },
+                                "shape": "cell",
+                                "type": "draw-shape"
+                              }
+                            ]
+                          ],
+                          "type": "draw-shape-layer"
+                        },
+                        {
+                          "items": [
+                            "array/map",
+                            [
+                              "array/filter",
+                              "@config.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    "@u",
+                                    "id"
+                                  ],
+                                  "@config.selectedUnitId"
+                                ]
+                              ]
+                            ],
+                            [
+                              "fn",
+                              "u",
+                              {
+                                "position": [
+                                  "object/get",
+                                  "@u",
+                                  "position"
+                                ],
+                                "radiusX": 0.5,
+                                "radiusY": 0.2,
+                                "shape": "ellipse",
+                                "stroke": "rgba(0,200,255,0.8)",
+                                "strokeWidth": 3.0,
+                                "type": "draw-shape"
+                              }
+                            ]
+                          ],
+                          "type": "draw-shape-layer"
+                        },
+                        {
+                          "items": [
+                            "array/map",
+                            "@config.units",
+                            [
+                              "fn",
+                              "u",
+                              {
+                                "asset": [
+                                  "object/get",
+                                  "@u",
+                                  "modelUrl"
+                                ],
+                                "position": [
+                                  "object/get",
+                                  "@u",
+                                  "position"
+                                ],
+                                "type": "draw-sprite"
+                              }
+                            ]
+                          ],
+                          "type": "draw-sprite-layer"
+                        },
+                        {
+                          "items": [
+                            "array/map",
+                            "@config.units",
+                            [
+                              "fn",
+                              "u",
+                              {
+                                "fill": "rgba(0,0,0,0.6)",
+                                "height": 0.12,
+                                "offsetY": -0.6,
+                                "position": [
+                                  "object/get",
+                                  "@u",
+                                  "position"
+                                ],
+                                "shape": "rect",
+                                "type": "draw-shape",
+                                "width": 0.8
+                              }
+                            ]
+                          ],
+                          "type": "draw-shape-layer"
+                        },
+                        {
+                          "items": [
+                            "array/map",
+                            "@config.units",
+                            [
+                              "fn",
+                              "u",
+                              {
+                                "fill": "#22c55e",
+                                "height": 0.12,
+                                "offsetY": -0.6,
+                                "position": [
+                                  "object/get",
+                                  "@u",
+                                  "position"
+                                ],
+                                "shape": "rect",
+                                "type": "draw-shape",
+                                "width": [
+                                  "*",
+                                  0.8,
+                                  [
+                                    "/",
+                                    [
+                                      "object/get",
+                                      "@u",
+                                      "health"
+                                    ],
+                                    [
+                                      "object/get",
+                                      "@u",
+                                      "maxHealth"
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ]
+                          ],
+                          "type": "draw-shape-layer"
+                        },
+                        {
+                          "items": [
+                            "array/map",
+                            "@config.units",
+                            [
+                              "fn",
+                              "u",
+                              {
+                                "color": "#ffffff",
+                                "offsetY": -0.85,
+                                "position": [
+                                  "object/get",
+                                  "@u",
+                                  "position"
+                                ],
+                                "text": [
+                                  "object/get",
+                                  "@u",
+                                  "name"
+                                ],
+                                "type": "draw-text"
+                              }
+                            ]
+                          ],
+                          "type": "draw-text-layer"
+                        },
+                        {
+                          "items": [
+                            "if",
+                            [
+                              "object/has",
+                              "@config.player",
+                              "x"
+                            ],
+                            [
+                              {
+                                "asset": "@config.playerSprite",
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@config.player",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@config.player",
+                                    "y"
+                                  ]
+                                },
+                                "type": "draw-sprite"
+                              }
+                            ],
+                            []
+                          ],
+                          "type": "draw-sprite-layer"
+                        },
+                        {
+                          "items": [
+                            "array/map",
+                            "@config.events",
+                            [
+                              "fn",
+                              "f",
+                              {
+                                "color": "#ffe066",
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@f",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@f",
+                                    "y"
+                                  ]
+                                },
+                                "text": [
+                                  "object/get",
+                                  "@f",
+                                  "message"
+                                ],
+                                "type": "draw-text"
+                              }
+                            ]
+                          ],
+                          "type": "draw-text-layer"
+                        }
+                      ],
                       "className": "@config.className",
                       "error": "@config.error",
-                      "events": "@config.events",
                       "featureClickEvent": "FEATURE_CLICK",
-                      "features": "@config.features",
                       "fogOfWar": "@config.fogOfWar",
                       "interpolateUnits": "@config.interpolateUnits",
                       "isLoading": "@config.isLoading",
                       "keyMap": "@config.keyMap",
                       "keyUpMap": "@config.keyUpMap",
-                      "loadingMessage": "@config.loadingMessage",
                       "onCanvasClick": "CANVAS_CLICK",
                       "onFeatureClick": "FEATURE_CLICK",
                       "onTileClick": "TILE_CLICK",
                       "onTileHover": "TILE_HOVER",
                       "onUnitAnimation": "UNIT_ANIMATION",
                       "onUnitClick": "UNIT_CLICK",
-                      "orientation": "@config.orientation",
                       "overlay": "@config.overlay",
                       "pixelsPerUnit": "@config.pixelsPerUnit",
-                      "platforms": "@config.platforms",
-                      "player": "@config.player",
-                      "playerSprite": "@config.playerSprite",
-                      "preloadAssets": "@config.preloadAssets",
                       "scale": "@config.scale",
-                      "selectedTileIds": "@config.selectedTileIds",
-                      "selectedUnitId": "@config.selectedUnitId",
                       "shadows": "@config.shadows",
                       "showCoordinates": "@config.showCoordinates",
                       "showGrid": "@config.showGrid",
@@ -1795,15 +2157,10 @@
                       "tileClickEvent": "TILE_CLICK",
                       "tileHoverEvent": "TILE_HOVER",
                       "tileLeaveEvent": "TILE_LEAVE",
-                      "tileSprites": "@config.tileSprites",
-                      "tiles": "@config.tiles",
                       "type": "game-canvas-3d",
                       "unitAnimationEvent": "UNIT_ANIMATION",
                       "unitClickEvent": "UNIT_CLICK",
                       "unitScale": "@config.unitScale",
-                      "units": "@config.units",
-                      "useInstancing": "@config.useInstancing",
-                      "validMoves": "@config.validMoves",
                       "worldHeight": "@config.worldHeight",
                       "worldWidth": "@config.worldWidth"
                     }
