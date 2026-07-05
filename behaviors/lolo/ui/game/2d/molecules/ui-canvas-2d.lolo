@@ -137,19 +137,8 @@ orbital Canvas2dOrbital {
           keyUpMap: @config.keyUpMap
           camera: @config.camera
           scale: @config.scale
-          unitScale: @config.unitScale
           showMinimap: @config.showMinimap
-          animate: @config.animate
-          interpolateUnits: @config.interpolateUnits
-          debug: @config.debug
-          spriteHeightRatio: @config.spriteHeightRatio
-          spriteMaxWidthRatio: @config.spriteMaxWidthRatio
-          diamondTopY: @config.diamondTopY
-          effectSpriteUrls: @config.effectSpriteUrls
-          playerSprite: @config.playerSprite
           bgColor: @config.bgColor
-          worldWidth: @config.worldWidth
-          worldHeight: @config.worldHeight
           type: canvas-2d
           children: [
             { type: draw-sprite-layer, items: (array/map @config.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
@@ -157,7 +146,7 @@ orbital Canvas2dOrbital {
             { type: draw-shape-layer, items: (array/map @config.validMoves (fn m { type: draw-shape, shape: "cell", position: { x: (object/get @m x), y: (object/get @m y) }, fill: "rgba(74,222,128,0.4)" })) }
             { type: draw-shape-layer, items: (array/map @config.attackTargets (fn a { type: draw-shape, shape: "cell", position: { x: (object/get @a x), y: (object/get @a y) }, fill: "rgba(239,68,68,0.4)" })) }
             { type: draw-shape-layer, items: (array/map (array/filter @config.units (fn u (== (object/get @u id) @config.selectedUnitId))) (fn u { type: draw-shape, shape: "ellipse", position: { x: (object/get @u x), y: (object/get @u y) }, radiusX: 0.5, radiusY: 0.2, stroke: "rgba(0,200,255,0.8)", strokeWidth: 3 })) }
-            { type: draw-sprite-layer, items: (array/map @config.units (fn u { type: draw-sprite, position: { x: (object/get @u x), y: (object/get @u y) }, asset: (object/get @u modelUrl) })) }
+            { type: draw-sprite-layer, items: (array/map @config.units (fn u { type: draw-sprite, position: { x: (object/get @u x), y: (object/get @u y) }, asset: (object/get @u modelUrl), id: (object/get @u id) })) }
             { type: draw-shape-layer, items: (array/map @config.units (fn u { type: draw-shape, shape: "rect", position: { x: (object/get @u x), y: (object/get @u y) }, offsetY: -0.6, width: 0.8, height: 0.12, fill: "rgba(0,0,0,0.6)" })) }
             { type: draw-shape-layer, items: (array/map @config.units (fn u { type: draw-shape, shape: "rect", position: { x: (object/get @u x), y: (object/get @u y) }, offsetY: -0.6, width: (* 0.8 (/ (object/get @u health) (object/get @u maxHealth))), height: 0.12, fill: "#22c55e" })) }
             { type: draw-text-layer, items: (array/map @config.units (fn u { type: draw-text, text: (object/get @u name), position: { x: (object/get @u x), y: (object/get @u y) }, offsetY: -0.85, color: "#ffffff" })) }
