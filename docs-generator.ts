@@ -178,6 +178,48 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
         description: 'Deterministic A* shortest path and BFS reachability over integer grid cells.',
         icon: '🧭',
     },
+    llm: {
+        name: 'LLM',
+        displayName: 'LLM Operations',
+        description: 'LLM generation, tool-calling, embeddings, and context management.',
+        icon: '🤖',
+    },
+    workspace: {
+        name: 'Workspace',
+        displayName: 'Workspace Operations',
+        description: 'Orbital workspace file operations: read/write orbitals, schema, plan.',
+        icon: '📁',
+    },
+    session: {
+        name: 'Session',
+        displayName: 'Session Store',
+        description: 'Per-orbital generation context: spec, memory, history, errors.',
+        icon: '💾',
+    },
+    memory: {
+        name: 'Memory',
+        displayName: 'Agent Memory',
+        description: 'Agent memory recall, store, and listing.',
+        icon: '🧠',
+    },
+    trace: {
+        name: 'Trace',
+        displayName: 'Observability',
+        description: 'Trace event emission and structured logging.',
+        icon: '📡',
+    },
+    behavior: {
+        name: 'Behavior',
+        displayName: 'Behavior Composition',
+        description: 'Orbital behavior composition, instantiation, validation, and lolo emission.',
+        icon: '🔧',
+    },
+    integration: {
+        name: 'Integration',
+        displayName: 'External Integrations',
+        description: 'HTTP requests and typed API wrappers (GitHub, etc.).',
+        icon: '🔌',
+    },
 };
 
 /**

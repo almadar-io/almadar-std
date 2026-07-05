@@ -45,7 +45,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Generate embeddings for an array of texts. Returns a 2D array of floats.',
     hasSideEffects: true,
-    returnType: { kind: 'array', of: { kind: 'array', of: 'number' } },
+    returnType: 'array',
     params: [
       { name: 'texts', type: { kind: 'array', of: 'string' }, description: 'Texts to embed' },
     ],
@@ -83,7 +83,7 @@ export const LLM_OPERATORS: Record<string, StdOperatorMeta> = {
     maxArity: 1,
     description: 'Compact the context window. Returns before/after token counts.',
     hasSideEffects: true,
-    returnType: { kind: 'object', fields: { before: 'number', after: 'number', strategy: 'string' } },
+    returnType: 'object',
     params: [
       { name: 'strategy', type: { kind: 'union', of: [{ kind: 'literal', value: 'hybrid' }, { kind: 'literal', value: 'summarize' }, { kind: 'literal', value: 'truncate' }, { kind: 'literal', value: 'extract' }] }, description: 'Compaction strategy', optional: true },
     ],

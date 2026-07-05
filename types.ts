@@ -49,6 +49,14 @@ export const OPERATOR_CATEGORIES = [
   'ml-graph',
   'ml-contract',
   'ml-data',
+  // Substrate categories (Almadar_Rabit_LOLO_Plan.md Phase 3)
+  'std-llm',
+  'std-workspace',
+  'std-session',
+  'std-memory',
+  'std-trace',
+  'std-behavior',
+  'std-integration',
 ] as const;
 
 export type OperatorCategory = (typeof OPERATOR_CATEGORIES)[number];

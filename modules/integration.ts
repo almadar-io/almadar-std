@@ -19,7 +19,7 @@ export const INTEGRATION_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 3, maxArity: 4,
     description: 'HTTP request with caller-declared response schema. Validates the response against the schema before returning.',
     hasSideEffects: true,
-    returnType: { kind: 'object', fields: {}, open: true },
+    returnType: 'object',
     params: [
       { name: 'method', type: 'string', description: 'HTTP method (GET, POST, ...)' },
       { name: 'url', type: 'string', description: 'Request URL' },
@@ -33,7 +33,7 @@ export const INTEGRATION_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 2, maxArity: 2,
     description: 'Get a GitHub repository. Typed wrapper for the GitHub API.',
     hasSideEffects: true,
-    returnType: { kind: 'object', fields: { name: 'string', fullName: 'string', private: 'boolean', defaultBranch: 'string' } },
+    returnType: 'object',
     params: [
       { name: 'owner', type: 'string', description: 'Repository owner' },
       { name: 'repo', type: 'string', description: 'Repository name' },
@@ -45,7 +45,7 @@ export const INTEGRATION_OPERATORS: Record<string, StdOperatorMeta> = {
     minArity: 3, maxArity: 3,
     description: 'Create a GitHub issue. Typed wrapper for the GitHub API.',
     hasSideEffects: true,
-    returnType: { kind: 'object', fields: { number: 'number', url: 'string', title: 'string' } },
+    returnType: 'object',
     params: [
       { name: 'repo', type: 'string', description: 'Full repo name (owner/repo)' },
       { name: 'title', type: 'string', description: 'Issue title' },
