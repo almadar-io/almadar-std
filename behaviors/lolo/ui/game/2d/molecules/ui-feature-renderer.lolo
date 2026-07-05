@@ -65,10 +65,12 @@ orbital FeatureRendererOrbital {
         (render-ui main {
           type: canvas-2d
           projection: isometric
-          features: @config.features
           scale: @config.cellSize
           tileClickEvent: FEATURE_CLICK
           tileHoverEvent: FEATURE_HOVER
+          children: [
+            { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
+          ]
         })
     }
 

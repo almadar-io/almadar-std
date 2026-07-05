@@ -81,7 +81,11 @@ orbital BrickSandboxBoard3DOrbital {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Placed", value: @entity.placed }, { label: "Mistakes", value: @entity.mistakes }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Fill every marked cell with a brick" }, { label: "How", value: "Click a marked cell to drop a brick — 3 mistakes and you're out" } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           overlay: (if (!= @entity.result "none") { type: game-menu, title: (if (== @entity.result "won") "BUILD COMPLETE" "OUT OF TRIES"), subtitle: (str/concat "Placed " @entity.placed), options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tiles: @entity.tiles, units: [], features: @entity.features, events: @entity.fx, scale: @config.scale, backgroundColor: @config.bgColor, tileClickEvent: TILE_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "top-down", scale: @config.scale, backgroundColor: @config.bgColor, tileClickEvent: TILE_CLICK, children: [
+            { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t modelUrl) })) }
+            { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
+            { type: draw-text-layer, items: (array/map @entity.fx (fn fx { type: draw-text, text: (object/get @fx message), position: { x: (object/get @fx x), y: (object/get @fx y), z: (object/get @fx z) }, color: "#ffe066" })) }
+          ] } ]
         })
 
       TILE_CLICK -> playing when (== @entity.result "none")
@@ -96,7 +100,11 @@ orbital BrickSandboxBoard3DOrbital {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Placed", value: @entity.placed }, { label: "Mistakes", value: @entity.mistakes }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Fill every marked cell with a brick" }, { label: "How", value: "Click a marked cell to drop a brick — 3 mistakes and you're out" } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           overlay: (if (!= @entity.result "none") { type: game-menu, title: (if (== @entity.result "won") "BUILD COMPLETE" "OUT OF TRIES"), subtitle: (str/concat "Placed " @entity.placed), options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tiles: @entity.tiles, units: [], features: @entity.features, events: @entity.fx, scale: @config.scale, backgroundColor: @config.bgColor, tileClickEvent: TILE_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "top-down", scale: @config.scale, backgroundColor: @config.bgColor, tileClickEvent: TILE_CLICK, children: [
+            { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t modelUrl) })) }
+            { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
+            { type: draw-text-layer, items: (array/map @entity.fx (fn fx { type: draw-text, text: (object/get @fx message), position: { x: (object/get @fx x), y: (object/get @fx y), z: (object/get @fx z) }, color: "#ffe066" })) }
+          ] } ]
         })
           )
         )
@@ -112,7 +120,11 @@ orbital BrickSandboxBoard3DOrbital {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Placed", value: @entity.placed }, { label: "Mistakes", value: @entity.mistakes }, { label: "Result", value: @entity.result }, { label: "Goal", value: "Fill every marked cell with a brick" }, { label: "How", value: "Click a marked cell to drop a brick — 3 mistakes and you're out" } ] }, { type: button, action: PLAY_AGAIN, label: "Restart", variant: secondary } ] }
           overlay: (if (!= @entity.result "none") { type: game-menu, title: (if (== @entity.result "won") "BUILD COMPLETE" "OUT OF TRIES"), subtitle: (str/concat "Placed " @entity.placed), options: [ { id: "again", label: "Play Again", event: "PLAY_AGAIN", variant: "primary" } ] } null)
-          children: [ { type: game-canvas-3d, cameraMode: "top-down", tiles: @entity.tiles, units: [], features: @entity.features, events: @entity.fx, scale: @config.scale, backgroundColor: @config.bgColor, tileClickEvent: TILE_CLICK } ]
+          children: [ { type: game-canvas-3d, cameraMode: "top-down", scale: @config.scale, backgroundColor: @config.bgColor, tileClickEvent: TILE_CLICK, children: [
+            { type: draw-sprite-layer, items: (array/map @entity.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t modelUrl) })) }
+            { type: draw-sprite-layer, items: (array/map @entity.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
+            { type: draw-text-layer, items: (array/map @entity.fx (fn fx { type: draw-text, text: (object/get @fx message), position: { x: (object/get @fx x), y: (object/get @fx y), z: (object/get @fx z) }, color: "#ffe066" })) }
+          ] } ]
         })
 
     }
