@@ -1737,53 +1737,152 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [],
-                        'projection': 'flat',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedGemId',
-                        'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'unitClickEvent': 'UNIT_CLICK',
-                        'units': [
-                          'array/map',
-                          '@entity.gems',
-                          [
-                            'fn',
-                            'g',
-                            {
-                              'animation': 'idle',
-                              'frame': 0,
-                              'id': '@g.id',
-                              'sprite': [
-                                'if',
-                                [
-                                  '!=',
-                                  '@g.color',
-                                  'red',
-                                ],
-                                [
-                                  'if',
-                                  [
-                                    '!=',
-                                    '@g.color',
-                                    'blue',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
                                   ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.gems',
+                                [
+                                  'fn',
+                                  'g',
                                   [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@g',
+                                      'id',
+                                    ],
+                                    '@entity.selectedGemId',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'g',
+                                {
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@g',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@g',
+                                      'y',
+                                    ],
+                                  },
+                                  'radiusX': 0.5,
+                                  'radiusY': 0.2,
+                                  'shape': 'ellipse',
+                                  'stroke': 'rgba(0,200,255,0.8)',
+                                  'strokeWidth': 3,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.gems',
+                              [
+                                'fn',
+                                'g',
+                                {
+                                  'asset': [
                                     'if',
                                     [
                                       '!=',
                                       '@g.color',
-                                      'green',
+                                      'red',
                                     ],
                                     [
                                       'if',
                                       [
                                         '!=',
                                         '@g.color',
-                                        'yellow',
+                                        'blue',
+                                      ],
+                                      [
+                                        'if',
+                                        [
+                                          '!=',
+                                          '@g.color',
+                                          'green',
+                                        ],
+                                        [
+                                          'if',
+                                          [
+                                            '!=',
+                                            '@g.color',
+                                            'yellow',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'gem_pink',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'gem_yellow',
+                                          ],
+                                        ],
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'gem_green',
+                                        ],
                                       ],
                                       [
                                         'object/get',
@@ -1792,16 +1891,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                           '@config.assetManifest',
                                           'units',
                                         ],
-                                        'gem_pink',
-                                      ],
-                                      [
-                                        'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        'gem_yellow',
+                                        'gem_blue',
                                       ],
                                     ],
                                     [
@@ -1811,36 +1901,71 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                         '@config.assetManifest',
                                         'units',
                                       ],
-                                      'gem_green',
+                                      'gem_red',
                                     ],
                                   ],
-                                  [
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@g',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@g',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
                                       '@config.assetManifest',
-                                      'units',
+                                      'effects',
                                     ],
-                                    'gem_blue',
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
                                   ],
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'units',
-                                  ],
-                                  'gem_red',
-                                ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
                               ],
-                              'team': 'player',
-                              'x': '@g.x',
-                              'y': '@g.y',
-                            },
-                          ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
-                        'validMoves': [],
+                        'projection': 'flat',
+                        'showMinimap': false,
+                        'type': 'canvas',
+                        'unitClickEvent': 'UNIT_CLICK',
                       },
                     ],
                     'fontFamily': 'pixel',
@@ -2660,53 +2785,152 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                 },
                                 'children': [
                                   {
-                                    'assetManifest': '@config.assetManifest',
-                                    'effects': '@entity.effects',
-                                    'features': [],
-                                    'projection': 'flat',
-                                    'scale': '@config.scale',
-                                    'selectedUnitId': '@entity.selectedGemId',
-                                    'showMinimap': false,
-                                    'tiles': '@config.tiles',
-                                    'type': 'canvas-2d',
-                                    'unitClickEvent': 'UNIT_CLICK',
-                                    'units': [
-                                      'array/map',
-                                      '@entity.gems',
-                                      [
-                                        'fn',
-                                        'g',
-                                        {
-                                          'animation': 'idle',
-                                          'frame': 0,
-                                          'id': '@g.id',
-                                          'sprite': [
-                                            'if',
-                                            [
-                                              '!=',
-                                              '@g.color',
-                                              'red',
-                                            ],
-                                            [
-                                              'if',
-                                              [
-                                                '!=',
-                                                '@g.color',
-                                                'blue',
+                                    'camera': {
+                                      'zoom': '@config.scale',
+                                    },
+                                    'children': [
+                                      {
+                                        'items': [
+                                          'array/map',
+                                          '@config.tiles',
+                                          [
+                                            'fn',
+                                            't',
+                                            {
+                                              'asset': [
+                                                'object/get',
+                                                '@t',
+                                                'terrainSprite',
                                               ],
+                                              'position': {
+                                                'x': [
+                                                  'object/get',
+                                                  '@t',
+                                                  'x',
+                                                ],
+                                                'y': [
+                                                  'object/get',
+                                                  '@t',
+                                                  'y',
+                                                ],
+                                              },
+                                              'type': 'draw-sprite',
+                                            },
+                                          ],
+                                        ],
+                                        'type': 'draw-sprite-layer',
+                                      },
+                                      {
+                                        'items': [
+                                          'array/map',
+                                          [
+                                            'array/filter',
+                                            '@entity.gems',
+                                            [
+                                              'fn',
+                                              'g',
                                               [
+                                                '==',
+                                                [
+                                                  'object/get',
+                                                  '@g',
+                                                  'id',
+                                                ],
+                                                '@entity.selectedGemId',
+                                              ],
+                                            ],
+                                          ],
+                                          [
+                                            'fn',
+                                            'g',
+                                            {
+                                              'position': {
+                                                'x': [
+                                                  'object/get',
+                                                  '@g',
+                                                  'x',
+                                                ],
+                                                'y': [
+                                                  'object/get',
+                                                  '@g',
+                                                  'y',
+                                                ],
+                                              },
+                                              'radiusX': 0.5,
+                                              'radiusY': 0.2,
+                                              'shape': 'ellipse',
+                                              'stroke': 'rgba(0,200,255,0.8)',
+                                              'strokeWidth': 3,
+                                              'type': 'draw-shape',
+                                            },
+                                          ],
+                                        ],
+                                        'type': 'draw-shape-layer',
+                                      },
+                                      {
+                                        'items': [
+                                          'array/map',
+                                          '@entity.gems',
+                                          [
+                                            'fn',
+                                            'g',
+                                            {
+                                              'asset': [
                                                 'if',
                                                 [
                                                   '!=',
                                                   '@g.color',
-                                                  'green',
+                                                  'red',
                                                 ],
                                                 [
                                                   'if',
                                                   [
                                                     '!=',
                                                     '@g.color',
-                                                    'yellow',
+                                                    'blue',
+                                                  ],
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '!=',
+                                                      '@g.color',
+                                                      'green',
+                                                    ],
+                                                    [
+                                                      'if',
+                                                      [
+                                                        '!=',
+                                                        '@g.color',
+                                                        'yellow',
+                                                      ],
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@config.assetManifest',
+                                                          'units',
+                                                        ],
+                                                        'gem_pink',
+                                                      ],
+                                                      [
+                                                        'object/get',
+                                                        [
+                                                          'object/get',
+                                                          '@config.assetManifest',
+                                                          'units',
+                                                        ],
+                                                        'gem_yellow',
+                                                      ],
+                                                    ],
+                                                    [
+                                                      'object/get',
+                                                      [
+                                                        'object/get',
+                                                        '@config.assetManifest',
+                                                        'units',
+                                                      ],
+                                                      'gem_green',
+                                                    ],
                                                   ],
                                                   [
                                                     'object/get',
@@ -2715,16 +2939,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                       '@config.assetManifest',
                                                       'units',
                                                     ],
-                                                    'gem_pink',
-                                                  ],
-                                                  [
-                                                    'object/get',
-                                                    [
-                                                      'object/get',
-                                                      '@config.assetManifest',
-                                                      'units',
-                                                    ],
-                                                    'gem_yellow',
+                                                    'gem_blue',
                                                   ],
                                                 ],
                                                 [
@@ -2734,36 +2949,71 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                     '@config.assetManifest',
                                                     'units',
                                                   ],
-                                                  'gem_green',
+                                                  'gem_red',
                                                 ],
                                               ],
-                                              [
+                                              'position': {
+                                                'x': [
+                                                  'object/get',
+                                                  '@g',
+                                                  'x',
+                                                ],
+                                                'y': [
+                                                  'object/get',
+                                                  '@g',
+                                                  'y',
+                                                ],
+                                              },
+                                              'type': 'draw-sprite',
+                                            },
+                                          ],
+                                        ],
+                                        'type': 'draw-sprite-layer',
+                                      },
+                                      {
+                                        'items': [
+                                          'array/map',
+                                          '@entity.effects',
+                                          [
+                                            'fn',
+                                            'e',
+                                            {
+                                              'asset': [
                                                 'object/get',
                                                 [
                                                   'object/get',
                                                   '@config.assetManifest',
-                                                  'units',
+                                                  'effects',
                                                 ],
-                                                'gem_blue',
+                                                [
+                                                  'object/get',
+                                                  '@e',
+                                                  'key',
+                                                ],
                                               ],
-                                            ],
-                                            [
-                                              'object/get',
-                                              [
-                                                'object/get',
-                                                '@config.assetManifest',
-                                                'units',
-                                              ],
-                                              'gem_red',
-                                            ],
+                                              'position': {
+                                                'x': [
+                                                  'object/get',
+                                                  '@e',
+                                                  'x',
+                                                ],
+                                                'y': [
+                                                  'object/get',
+                                                  '@e',
+                                                  'y',
+                                                ],
+                                              },
+                                              'type': 'draw-sprite',
+                                            },
                                           ],
-                                          'team': 'player',
-                                          'x': '@g.x',
-                                          'y': '@g.y',
-                                        },
-                                      ],
+                                        ],
+                                        'type': 'draw-sprite-layer',
+                                      },
                                     ],
-                                    'validMoves': [],
+                                    'projection': 'flat',
+                                    'showMinimap': false,
+                                    'type': 'canvas',
+                                    'unitClickEvent': 'UNIT_CLICK',
                                   },
                                 ],
                                 'fontFamily': 'pixel',
@@ -2992,53 +3242,152 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [],
-                        'projection': 'flat',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedGemId',
-                        'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'unitClickEvent': 'UNIT_CLICK',
-                        'units': [
-                          'array/map',
-                          '@entity.gems',
-                          [
-                            'fn',
-                            'g',
-                            {
-                              'animation': 'idle',
-                              'frame': 0,
-                              'id': '@g.id',
-                              'sprite': [
-                                'if',
-                                [
-                                  '!=',
-                                  '@g.color',
-                                  'red',
-                                ],
-                                [
-                                  'if',
-                                  [
-                                    '!=',
-                                    '@g.color',
-                                    'blue',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
                                   ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.gems',
+                                [
+                                  'fn',
+                                  'g',
                                   [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@g',
+                                      'id',
+                                    ],
+                                    '@entity.selectedGemId',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'g',
+                                {
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@g',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@g',
+                                      'y',
+                                    ],
+                                  },
+                                  'radiusX': 0.5,
+                                  'radiusY': 0.2,
+                                  'shape': 'ellipse',
+                                  'stroke': 'rgba(0,200,255,0.8)',
+                                  'strokeWidth': 3,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.gems',
+                              [
+                                'fn',
+                                'g',
+                                {
+                                  'asset': [
                                     'if',
                                     [
                                       '!=',
                                       '@g.color',
-                                      'green',
+                                      'red',
                                     ],
                                     [
                                       'if',
                                       [
                                         '!=',
                                         '@g.color',
-                                        'yellow',
+                                        'blue',
+                                      ],
+                                      [
+                                        'if',
+                                        [
+                                          '!=',
+                                          '@g.color',
+                                          'green',
+                                        ],
+                                        [
+                                          'if',
+                                          [
+                                            '!=',
+                                            '@g.color',
+                                            'yellow',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'gem_pink',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'gem_yellow',
+                                          ],
+                                        ],
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'gem_green',
+                                        ],
                                       ],
                                       [
                                         'object/get',
@@ -3047,16 +3396,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                           '@config.assetManifest',
                                           'units',
                                         ],
-                                        'gem_pink',
-                                      ],
-                                      [
-                                        'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        'gem_yellow',
+                                        'gem_blue',
                                       ],
                                     ],
                                     [
@@ -3066,36 +3406,71 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                         '@config.assetManifest',
                                         'units',
                                       ],
-                                      'gem_green',
+                                      'gem_red',
                                     ],
                                   ],
-                                  [
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@g',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@g',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
                                       '@config.assetManifest',
-                                      'units',
+                                      'effects',
                                     ],
-                                    'gem_blue',
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
                                   ],
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'units',
-                                  ],
-                                  'gem_red',
-                                ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
                               ],
-                              'team': 'player',
-                              'x': '@g.x',
-                              'y': '@g.y',
-                            },
-                          ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
-                        'validMoves': [],
+                        'projection': 'flat',
+                        'showMinimap': false,
+                        'type': 'canvas',
+                        'unitClickEvent': 'UNIT_CLICK',
                       },
                     ],
                     'fontFamily': 'pixel',
@@ -3248,53 +3623,152 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [],
-                        'projection': 'flat',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedGemId',
-                        'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'unitClickEvent': 'UNIT_CLICK',
-                        'units': [
-                          'array/map',
-                          '@entity.gems',
-                          [
-                            'fn',
-                            'g',
-                            {
-                              'animation': 'idle',
-                              'frame': 0,
-                              'id': '@g.id',
-                              'sprite': [
-                                'if',
-                                [
-                                  '!=',
-                                  '@g.color',
-                                  'red',
-                                ],
-                                [
-                                  'if',
-                                  [
-                                    '!=',
-                                    '@g.color',
-                                    'blue',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
                                   ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.gems',
+                                [
+                                  'fn',
+                                  'g',
                                   [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@g',
+                                      'id',
+                                    ],
+                                    '@entity.selectedGemId',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'g',
+                                {
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@g',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@g',
+                                      'y',
+                                    ],
+                                  },
+                                  'radiusX': 0.5,
+                                  'radiusY': 0.2,
+                                  'shape': 'ellipse',
+                                  'stroke': 'rgba(0,200,255,0.8)',
+                                  'strokeWidth': 3,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.gems',
+                              [
+                                'fn',
+                                'g',
+                                {
+                                  'asset': [
                                     'if',
                                     [
                                       '!=',
                                       '@g.color',
-                                      'green',
+                                      'red',
                                     ],
                                     [
                                       'if',
                                       [
                                         '!=',
                                         '@g.color',
-                                        'yellow',
+                                        'blue',
+                                      ],
+                                      [
+                                        'if',
+                                        [
+                                          '!=',
+                                          '@g.color',
+                                          'green',
+                                        ],
+                                        [
+                                          'if',
+                                          [
+                                            '!=',
+                                            '@g.color',
+                                            'yellow',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'gem_pink',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'gem_yellow',
+                                          ],
+                                        ],
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'gem_green',
+                                        ],
                                       ],
                                       [
                                         'object/get',
@@ -3303,16 +3777,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                           '@config.assetManifest',
                                           'units',
                                         ],
-                                        'gem_pink',
-                                      ],
-                                      [
-                                        'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        'gem_yellow',
+                                        'gem_blue',
                                       ],
                                     ],
                                     [
@@ -3322,36 +3787,71 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                         '@config.assetManifest',
                                         'units',
                                       ],
-                                      'gem_green',
+                                      'gem_red',
                                     ],
                                   ],
-                                  [
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@g',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@g',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
                                       '@config.assetManifest',
-                                      'units',
+                                      'effects',
                                     ],
-                                    'gem_blue',
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
                                   ],
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'units',
-                                  ],
-                                  'gem_red',
-                                ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
                               ],
-                              'team': 'player',
-                              'x': '@g.x',
-                              'y': '@g.y',
-                            },
-                          ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
-                        'validMoves': [],
+                        'projection': 'flat',
+                        'showMinimap': false,
+                        'type': 'canvas',
+                        'unitClickEvent': 'UNIT_CLICK',
                       },
                     ],
                     'fontFamily': 'pixel',
@@ -3464,53 +3964,152 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [],
-                        'projection': 'flat',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedGemId',
-                        'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'unitClickEvent': 'UNIT_CLICK',
-                        'units': [
-                          'array/map',
-                          '@entity.gems',
-                          [
-                            'fn',
-                            'g',
-                            {
-                              'animation': 'idle',
-                              'frame': 0,
-                              'id': '@g.id',
-                              'sprite': [
-                                'if',
-                                [
-                                  '!=',
-                                  '@g.color',
-                                  'red',
-                                ],
-                                [
-                                  'if',
-                                  [
-                                    '!=',
-                                    '@g.color',
-                                    'blue',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
                                   ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.gems',
+                                [
+                                  'fn',
+                                  'g',
                                   [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@g',
+                                      'id',
+                                    ],
+                                    '@entity.selectedGemId',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'g',
+                                {
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@g',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@g',
+                                      'y',
+                                    ],
+                                  },
+                                  'radiusX': 0.5,
+                                  'radiusY': 0.2,
+                                  'shape': 'ellipse',
+                                  'stroke': 'rgba(0,200,255,0.8)',
+                                  'strokeWidth': 3,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.gems',
+                              [
+                                'fn',
+                                'g',
+                                {
+                                  'asset': [
                                     'if',
                                     [
                                       '!=',
                                       '@g.color',
-                                      'green',
+                                      'red',
                                     ],
                                     [
                                       'if',
                                       [
                                         '!=',
                                         '@g.color',
-                                        'yellow',
+                                        'blue',
+                                      ],
+                                      [
+                                        'if',
+                                        [
+                                          '!=',
+                                          '@g.color',
+                                          'green',
+                                        ],
+                                        [
+                                          'if',
+                                          [
+                                            '!=',
+                                            '@g.color',
+                                            'yellow',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'gem_pink',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'gem_yellow',
+                                          ],
+                                        ],
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'gem_green',
+                                        ],
                                       ],
                                       [
                                         'object/get',
@@ -3519,16 +4118,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                           '@config.assetManifest',
                                           'units',
                                         ],
-                                        'gem_pink',
-                                      ],
-                                      [
-                                        'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        'gem_yellow',
+                                        'gem_blue',
                                       ],
                                     ],
                                     [
@@ -3538,36 +4128,71 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                         '@config.assetManifest',
                                         'units',
                                       ],
-                                      'gem_green',
+                                      'gem_red',
                                     ],
                                   ],
-                                  [
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@g',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@g',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
                                       '@config.assetManifest',
-                                      'units',
+                                      'effects',
                                     ],
-                                    'gem_blue',
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
                                   ],
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'units',
-                                  ],
-                                  'gem_red',
-                                ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
                               ],
-                              'team': 'player',
-                              'x': '@g.x',
-                              'y': '@g.y',
-                            },
-                          ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
-                        'validMoves': [],
+                        'projection': 'flat',
+                        'showMinimap': false,
+                        'type': 'canvas',
+                        'unitClickEvent': 'UNIT_CLICK',
                       },
                     ],
                     'fontFamily': 'pixel',
@@ -3742,53 +4367,152 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [],
-                        'projection': 'flat',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedGemId',
-                        'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'unitClickEvent': 'UNIT_CLICK',
-                        'units': [
-                          'array/map',
-                          '@entity.gems',
-                          [
-                            'fn',
-                            'g',
-                            {
-                              'animation': 'idle',
-                              'frame': 0,
-                              'id': '@g.id',
-                              'sprite': [
-                                'if',
-                                [
-                                  '!=',
-                                  '@g.color',
-                                  'red',
-                                ],
-                                [
-                                  'if',
-                                  [
-                                    '!=',
-                                    '@g.color',
-                                    'blue',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
                                   ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.gems',
+                                [
+                                  'fn',
+                                  'g',
                                   [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@g',
+                                      'id',
+                                    ],
+                                    '@entity.selectedGemId',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'g',
+                                {
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@g',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@g',
+                                      'y',
+                                    ],
+                                  },
+                                  'radiusX': 0.5,
+                                  'radiusY': 0.2,
+                                  'shape': 'ellipse',
+                                  'stroke': 'rgba(0,200,255,0.8)',
+                                  'strokeWidth': 3,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.gems',
+                              [
+                                'fn',
+                                'g',
+                                {
+                                  'asset': [
                                     'if',
                                     [
                                       '!=',
                                       '@g.color',
-                                      'green',
+                                      'red',
                                     ],
                                     [
                                       'if',
                                       [
                                         '!=',
                                         '@g.color',
-                                        'yellow',
+                                        'blue',
+                                      ],
+                                      [
+                                        'if',
+                                        [
+                                          '!=',
+                                          '@g.color',
+                                          'green',
+                                        ],
+                                        [
+                                          'if',
+                                          [
+                                            '!=',
+                                            '@g.color',
+                                            'yellow',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'gem_pink',
+                                          ],
+                                          [
+                                            'object/get',
+                                            [
+                                              'object/get',
+                                              '@config.assetManifest',
+                                              'units',
+                                            ],
+                                            'gem_yellow',
+                                          ],
+                                        ],
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'gem_green',
+                                        ],
                                       ],
                                       [
                                         'object/get',
@@ -3797,16 +4521,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                           '@config.assetManifest',
                                           'units',
                                         ],
-                                        'gem_pink',
-                                      ],
-                                      [
-                                        'object/get',
-                                        [
-                                          'object/get',
-                                          '@config.assetManifest',
-                                          'units',
-                                        ],
-                                        'gem_yellow',
+                                        'gem_blue',
                                       ],
                                     ],
                                     [
@@ -3816,36 +4531,71 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                         '@config.assetManifest',
                                         'units',
                                       ],
-                                      'gem_green',
+                                      'gem_red',
                                     ],
                                   ],
-                                  [
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@g',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@g',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
                                       '@config.assetManifest',
-                                      'units',
+                                      'effects',
                                     ],
-                                    'gem_blue',
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
                                   ],
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'units',
-                                  ],
-                                  'gem_red',
-                                ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
                               ],
-                              'team': 'player',
-                              'x': '@g.x',
-                              'y': '@g.y',
-                            },
-                          ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
-                        'validMoves': [],
+                        'projection': 'flat',
+                        'showMinimap': false,
+                        'type': 'canvas',
+                        'unitClickEvent': 'UNIT_CLICK',
                       },
                     ],
                     'fontFamily': 'pixel',
@@ -4806,53 +5556,152 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     },
                                     'children': [
                                       {
-                                        'assetManifest': '@config.assetManifest',
-                                        'effects': '@entity.effects',
-                                        'features': [],
-                                        'projection': 'flat',
-                                        'scale': '@config.scale',
-                                        'selectedUnitId': '@entity.selectedGemId',
-                                        'showMinimap': false,
-                                        'tiles': '@config.tiles',
-                                        'type': 'canvas-2d',
-                                        'unitClickEvent': 'UNIT_CLICK',
-                                        'units': [
-                                          'array/map',
-                                          '@entity.gems',
-                                          [
-                                            'fn',
-                                            'g',
-                                            {
-                                              'animation': 'idle',
-                                              'frame': 0,
-                                              'id': '@g.id',
-                                              'sprite': [
-                                                'if',
-                                                [
-                                                  '!=',
-                                                  '@g.color',
-                                                  'red',
-                                                ],
-                                                [
-                                                  'if',
-                                                  [
-                                                    '!=',
-                                                    '@g.color',
-                                                    'blue',
+                                        'camera': {
+                                          'zoom': '@config.scale',
+                                        },
+                                        'children': [
+                                          {
+                                            'items': [
+                                              'array/map',
+                                              '@config.tiles',
+                                              [
+                                                'fn',
+                                                't',
+                                                {
+                                                  'asset': [
+                                                    'object/get',
+                                                    '@t',
+                                                    'terrainSprite',
                                                   ],
+                                                  'position': {
+                                                    'x': [
+                                                      'object/get',
+                                                      '@t',
+                                                      'x',
+                                                    ],
+                                                    'y': [
+                                                      'object/get',
+                                                      '@t',
+                                                      'y',
+                                                    ],
+                                                  },
+                                                  'type': 'draw-sprite',
+                                                },
+                                              ],
+                                            ],
+                                            'type': 'draw-sprite-layer',
+                                          },
+                                          {
+                                            'items': [
+                                              'array/map',
+                                              [
+                                                'array/filter',
+                                                '@entity.gems',
+                                                [
+                                                  'fn',
+                                                  'g',
                                                   [
+                                                    '==',
+                                                    [
+                                                      'object/get',
+                                                      '@g',
+                                                      'id',
+                                                    ],
+                                                    '@entity.selectedGemId',
+                                                  ],
+                                                ],
+                                              ],
+                                              [
+                                                'fn',
+                                                'g',
+                                                {
+                                                  'position': {
+                                                    'x': [
+                                                      'object/get',
+                                                      '@g',
+                                                      'x',
+                                                    ],
+                                                    'y': [
+                                                      'object/get',
+                                                      '@g',
+                                                      'y',
+                                                    ],
+                                                  },
+                                                  'radiusX': 0.5,
+                                                  'radiusY': 0.2,
+                                                  'shape': 'ellipse',
+                                                  'stroke': 'rgba(0,200,255,0.8)',
+                                                  'strokeWidth': 3,
+                                                  'type': 'draw-shape',
+                                                },
+                                              ],
+                                            ],
+                                            'type': 'draw-shape-layer',
+                                          },
+                                          {
+                                            'items': [
+                                              'array/map',
+                                              '@entity.gems',
+                                              [
+                                                'fn',
+                                                'g',
+                                                {
+                                                  'asset': [
                                                     'if',
                                                     [
                                                       '!=',
                                                       '@g.color',
-                                                      'green',
+                                                      'red',
                                                     ],
                                                     [
                                                       'if',
                                                       [
                                                         '!=',
                                                         '@g.color',
-                                                        'yellow',
+                                                        'blue',
+                                                      ],
+                                                      [
+                                                        'if',
+                                                        [
+                                                          '!=',
+                                                          '@g.color',
+                                                          'green',
+                                                        ],
+                                                        [
+                                                          'if',
+                                                          [
+                                                            '!=',
+                                                            '@g.color',
+                                                            'yellow',
+                                                          ],
+                                                          [
+                                                            'object/get',
+                                                            [
+                                                              'object/get',
+                                                              '@config.assetManifest',
+                                                              'units',
+                                                            ],
+                                                            'gem_pink',
+                                                          ],
+                                                          [
+                                                            'object/get',
+                                                            [
+                                                              'object/get',
+                                                              '@config.assetManifest',
+                                                              'units',
+                                                            ],
+                                                            'gem_yellow',
+                                                          ],
+                                                        ],
+                                                        [
+                                                          'object/get',
+                                                          [
+                                                            'object/get',
+                                                            '@config.assetManifest',
+                                                            'units',
+                                                          ],
+                                                          'gem_green',
+                                                        ],
                                                       ],
                                                       [
                                                         'object/get',
@@ -4861,16 +5710,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                           '@config.assetManifest',
                                                           'units',
                                                         ],
-                                                        'gem_pink',
-                                                      ],
-                                                      [
-                                                        'object/get',
-                                                        [
-                                                          'object/get',
-                                                          '@config.assetManifest',
-                                                          'units',
-                                                        ],
-                                                        'gem_yellow',
+                                                        'gem_blue',
                                                       ],
                                                     ],
                                                     [
@@ -4880,36 +5720,71 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                         '@config.assetManifest',
                                                         'units',
                                                       ],
-                                                      'gem_green',
+                                                      'gem_red',
                                                     ],
                                                   ],
-                                                  [
+                                                  'position': {
+                                                    'x': [
+                                                      'object/get',
+                                                      '@g',
+                                                      'x',
+                                                    ],
+                                                    'y': [
+                                                      'object/get',
+                                                      '@g',
+                                                      'y',
+                                                    ],
+                                                  },
+                                                  'type': 'draw-sprite',
+                                                },
+                                              ],
+                                            ],
+                                            'type': 'draw-sprite-layer',
+                                          },
+                                          {
+                                            'items': [
+                                              'array/map',
+                                              '@entity.effects',
+                                              [
+                                                'fn',
+                                                'e',
+                                                {
+                                                  'asset': [
                                                     'object/get',
                                                     [
                                                       'object/get',
                                                       '@config.assetManifest',
-                                                      'units',
+                                                      'effects',
                                                     ],
-                                                    'gem_blue',
+                                                    [
+                                                      'object/get',
+                                                      '@e',
+                                                      'key',
+                                                    ],
                                                   ],
-                                                ],
-                                                [
-                                                  'object/get',
-                                                  [
-                                                    'object/get',
-                                                    '@config.assetManifest',
-                                                    'units',
-                                                  ],
-                                                  'gem_red',
-                                                ],
+                                                  'position': {
+                                                    'x': [
+                                                      'object/get',
+                                                      '@e',
+                                                      'x',
+                                                    ],
+                                                    'y': [
+                                                      'object/get',
+                                                      '@e',
+                                                      'y',
+                                                    ],
+                                                  },
+                                                  'type': 'draw-sprite',
+                                                },
                                               ],
-                                              'team': 'player',
-                                              'x': '@g.x',
-                                              'y': '@g.y',
-                                            },
-                                          ],
+                                            ],
+                                            'type': 'draw-sprite-layer',
+                                          },
                                         ],
-                                        'validMoves': [],
+                                        'projection': 'flat',
+                                        'showMinimap': false,
+                                        'type': 'canvas',
+                                        'unitClickEvent': 'UNIT_CLICK',
                                       },
                                     ],
                                     'fontFamily': 'pixel',
@@ -5070,53 +5945,152 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                   },
                   'children': [
                     {
-                      'assetManifest': '@config.assetManifest',
-                      'effects': '@entity.effects',
-                      'features': [],
-                      'projection': 'flat',
-                      'scale': '@config.scale',
-                      'selectedUnitId': '@entity.selectedGemId',
-                      'showMinimap': false,
-                      'tiles': '@config.tiles',
-                      'type': 'canvas-2d',
-                      'unitClickEvent': 'UNIT_CLICK',
-                      'units': [
-                        'array/map',
-                        '@entity.gems',
-                        [
-                          'fn',
-                          'g',
-                          {
-                            'animation': 'idle',
-                            'frame': 0,
-                            'id': '@g.id',
-                            'sprite': [
-                              'if',
-                              [
-                                '!=',
-                                '@g.color',
-                                'red',
-                              ],
-                              [
-                                'if',
-                                [
-                                  '!=',
-                                  '@g.color',
-                                  'blue',
+                      'camera': {
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@t',
+                                  'terrainSprite',
                                 ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              'array/filter',
+                              '@entity.gems',
+                              [
+                                'fn',
+                                'g',
                                 [
+                                  '==',
+                                  [
+                                    'object/get',
+                                    '@g',
+                                    'id',
+                                  ],
+                                  '@entity.selectedGemId',
+                                ],
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'g',
+                              {
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@g',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@g',
+                                    'y',
+                                  ],
+                                },
+                                'radiusX': 0.5,
+                                'radiusY': 0.2,
+                                'shape': 'ellipse',
+                                'stroke': 'rgba(0,200,255,0.8)',
+                                'strokeWidth': 3,
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.gems',
+                            [
+                              'fn',
+                              'g',
+                              {
+                                'asset': [
                                   'if',
                                   [
                                     '!=',
                                     '@g.color',
-                                    'green',
+                                    'red',
                                   ],
                                   [
                                     'if',
                                     [
                                       '!=',
                                       '@g.color',
-                                      'yellow',
+                                      'blue',
+                                    ],
+                                    [
+                                      'if',
+                                      [
+                                        '!=',
+                                        '@g.color',
+                                        'green',
+                                      ],
+                                      [
+                                        'if',
+                                        [
+                                          '!=',
+                                          '@g.color',
+                                          'yellow',
+                                        ],
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'gem_pink',
+                                        ],
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@config.assetManifest',
+                                            'units',
+                                          ],
+                                          'gem_yellow',
+                                        ],
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'units',
+                                        ],
+                                        'gem_green',
+                                      ],
                                     ],
                                     [
                                       'object/get',
@@ -5125,16 +6099,7 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                         '@config.assetManifest',
                                         'units',
                                       ],
-                                      'gem_pink',
-                                    ],
-                                    [
-                                      'object/get',
-                                      [
-                                        'object/get',
-                                        '@config.assetManifest',
-                                        'units',
-                                      ],
-                                      'gem_yellow',
+                                      'gem_blue',
                                     ],
                                   ],
                                   [
@@ -5144,36 +6109,71 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       '@config.assetManifest',
                                       'units',
                                     ],
-                                    'gem_green',
+                                    'gem_red',
                                   ],
                                 ],
-                                [
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@g',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@g',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.effects',
+                            [
+                              'fn',
+                              'e',
+                              {
+                                'asset': [
                                   'object/get',
                                   [
                                     'object/get',
                                     '@config.assetManifest',
-                                    'units',
+                                    'effects',
                                   ],
-                                  'gem_blue',
+                                  [
+                                    'object/get',
+                                    '@e',
+                                    'key',
+                                  ],
                                 ],
-                              ],
-                              [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'units',
-                                ],
-                                'gem_red',
-                              ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@e',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@e',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
                             ],
-                            'team': 'player',
-                            'x': '@g.x',
-                            'y': '@g.y',
-                          },
-                        ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
                       ],
-                      'validMoves': [],
+                      'projection': 'flat',
+                      'showMinimap': false,
+                      'type': 'canvas',
+                      'unitClickEvent': 'UNIT_CLICK',
                     },
                   ],
                   'fontFamily': 'pixel',

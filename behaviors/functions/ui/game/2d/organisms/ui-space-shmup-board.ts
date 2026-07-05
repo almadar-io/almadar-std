@@ -1576,22 +1576,50 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/concat',
-                          '@config.features',
-                          [
-                            'array/concat',
-                            [
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
                               'array/map',
                               '@entity.projectiles',
                               [
                                 'fn',
                                 'p',
                                 {
-                                  'id': '@p.id',
-                                  'sprite': [
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
@@ -1600,29 +1628,33 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     ],
                                     'playerLaser',
                                   ],
-                                  'type': 'projectile',
-                                  'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@p',
-                                    'y',
-                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                            [
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
                               'array/map',
                               '@entity.enemyProjectiles',
                               [
                                 'fn',
                                 'p',
                                 {
-                                  'id': '@p.id',
-                                  'sprite': [
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
@@ -1631,21 +1663,147 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     ],
                                     'enemyLaser',
                                   ],
-                                  'type': 'projectile',
-                                  'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@p',
-                                    'y',
-                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                          ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/concat',
+                              [
+                                {
+                                  'animation': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'animation',
+                                  ],
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'player',
+                                  ],
+                                  'frame': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'frame',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@entity.player',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@entity.player',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                              [
+                                'array/map',
+                                '@entity.enemies',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'animation': [
+                                      'object/get',
+                                      '@e',
+                                      'animation',
+                                    ],
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'enemy',
+                                    ],
+                                    'frame': [
+                                      'object/get',
+                                      '@e',
+                                      'frame',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'ef',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@ef',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@ef',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@ef',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowDown': 'MOVE_DOWN',
@@ -1659,93 +1817,8 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                           'Space': 'SHOOT',
                         },
                         'projection': 'free',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': [],
-                        'type': 'canvas-2d',
-                        'units': [
-                          'array/concat',
-                          [
-                            {
-                              'animation': [
-                                'object/get',
-                                '@entity.player',
-                                'animation',
-                              ],
-                              'frame': [
-                                'object/get',
-                                '@entity.player',
-                                'frame',
-                              ],
-                              'id': 'player',
-                              'position': {
-                                'x': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'x',
-                                ],
-                                'y': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'y',
-                                ],
-                              },
-                              'sprite': [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'units',
-                                ],
-                                'player',
-                              ],
-                              'team': 'player',
-                            },
-                          ],
-                          [
-                            'array/map',
-                            '@entity.enemies',
-                            [
-                              'fn',
-                              'e',
-                              {
-                                'animation': [
-                                  'object/get',
-                                  '@e',
-                                  'animation',
-                                ],
-                                'frame': [
-                                  'object/get',
-                                  '@e',
-                                  'frame',
-                                ],
-                                'id': '@e.id',
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@e',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@e',
-                                    'y',
-                                  ],
-                                },
-                                'sprite': [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'units',
-                                  ],
-                                  'enemy',
-                                ],
-                                'team': 'enemy',
-                              },
-                            ],
-                          ],
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -2108,22 +2181,50 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/concat',
-                          '@config.features',
-                          [
-                            'array/concat',
-                            [
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
                               'array/map',
                               '@entity.projectiles',
                               [
                                 'fn',
                                 'p',
                                 {
-                                  'id': '@p.id',
-                                  'sprite': [
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
@@ -2132,29 +2233,33 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     ],
                                     'playerLaser',
                                   ],
-                                  'type': 'projectile',
-                                  'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@p',
-                                    'y',
-                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                            [
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
                               'array/map',
                               '@entity.enemyProjectiles',
                               [
                                 'fn',
                                 'p',
                                 {
-                                  'id': '@p.id',
-                                  'sprite': [
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
@@ -2163,21 +2268,147 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     ],
                                     'enemyLaser',
                                   ],
-                                  'type': 'projectile',
-                                  'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@p',
-                                    'y',
-                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                          ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/concat',
+                              [
+                                {
+                                  'animation': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'animation',
+                                  ],
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'player',
+                                  ],
+                                  'frame': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'frame',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@entity.player',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@entity.player',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                              [
+                                'array/map',
+                                '@entity.enemies',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'animation': [
+                                      'object/get',
+                                      '@e',
+                                      'animation',
+                                    ],
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'enemy',
+                                    ],
+                                    'frame': [
+                                      'object/get',
+                                      '@e',
+                                      'frame',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'ef',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@ef',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@ef',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@ef',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowDown': 'MOVE_DOWN',
@@ -2191,93 +2422,8 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                           'Space': 'SHOOT',
                         },
                         'projection': 'free',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': [],
-                        'type': 'canvas-2d',
-                        'units': [
-                          'array/concat',
-                          [
-                            {
-                              'animation': [
-                                'object/get',
-                                '@entity.player',
-                                'animation',
-                              ],
-                              'frame': [
-                                'object/get',
-                                '@entity.player',
-                                'frame',
-                              ],
-                              'id': 'player',
-                              'position': {
-                                'x': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'x',
-                                ],
-                                'y': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'y',
-                                ],
-                              },
-                              'sprite': [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'units',
-                                ],
-                                'player',
-                              ],
-                              'team': 'player',
-                            },
-                          ],
-                          [
-                            'array/map',
-                            '@entity.enemies',
-                            [
-                              'fn',
-                              'e',
-                              {
-                                'animation': [
-                                  'object/get',
-                                  '@e',
-                                  'animation',
-                                ],
-                                'frame': [
-                                  'object/get',
-                                  '@e',
-                                  'frame',
-                                ],
-                                'id': '@e.id',
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@e',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@e',
-                                    'y',
-                                  ],
-                                },
-                                'sprite': [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'units',
-                                  ],
-                                  'enemy',
-                                ],
-                                'team': 'enemy',
-                              },
-                            ],
-                          ],
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -2453,22 +2599,50 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/concat',
-                          '@config.features',
-                          [
-                            'array/concat',
-                            [
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
                               'array/map',
                               '@entity.projectiles',
                               [
                                 'fn',
                                 'p',
                                 {
-                                  'id': '@p.id',
-                                  'sprite': [
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
@@ -2477,29 +2651,33 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     ],
                                     'playerLaser',
                                   ],
-                                  'type': 'projectile',
-                                  'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@p',
-                                    'y',
-                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                            [
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
                               'array/map',
                               '@entity.enemyProjectiles',
                               [
                                 'fn',
                                 'p',
                                 {
-                                  'id': '@p.id',
-                                  'sprite': [
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
@@ -2508,21 +2686,147 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     ],
                                     'enemyLaser',
                                   ],
-                                  'type': 'projectile',
-                                  'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@p',
-                                    'y',
-                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                          ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/concat',
+                              [
+                                {
+                                  'animation': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'animation',
+                                  ],
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'player',
+                                  ],
+                                  'frame': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'frame',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@entity.player',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@entity.player',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                              [
+                                'array/map',
+                                '@entity.enemies',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'animation': [
+                                      'object/get',
+                                      '@e',
+                                      'animation',
+                                    ],
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'enemy',
+                                    ],
+                                    'frame': [
+                                      'object/get',
+                                      '@e',
+                                      'frame',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'ef',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@ef',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@ef',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@ef',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowDown': 'MOVE_DOWN',
@@ -2536,93 +2840,8 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                           'Space': 'SHOOT',
                         },
                         'projection': 'free',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': [],
-                        'type': 'canvas-2d',
-                        'units': [
-                          'array/concat',
-                          [
-                            {
-                              'animation': [
-                                'object/get',
-                                '@entity.player',
-                                'animation',
-                              ],
-                              'frame': [
-                                'object/get',
-                                '@entity.player',
-                                'frame',
-                              ],
-                              'id': 'player',
-                              'position': {
-                                'x': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'x',
-                                ],
-                                'y': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'y',
-                                ],
-                              },
-                              'sprite': [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'units',
-                                ],
-                                'player',
-                              ],
-                              'team': 'player',
-                            },
-                          ],
-                          [
-                            'array/map',
-                            '@entity.enemies',
-                            [
-                              'fn',
-                              'e',
-                              {
-                                'animation': [
-                                  'object/get',
-                                  '@e',
-                                  'animation',
-                                ],
-                                'frame': [
-                                  'object/get',
-                                  '@e',
-                                  'frame',
-                                ],
-                                'id': '@e.id',
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@e',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@e',
-                                    'y',
-                                  ],
-                                },
-                                'sprite': [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'units',
-                                  ],
-                                  'enemy',
-                                ],
-                                'team': 'enemy',
-                              },
-                            ],
-                          ],
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -2807,22 +3026,50 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/concat',
-                          '@config.features',
-                          [
-                            'array/concat',
-                            [
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
                               'array/map',
                               '@entity.projectiles',
                               [
                                 'fn',
                                 'p',
                                 {
-                                  'id': '@p.id',
-                                  'sprite': [
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
@@ -2831,29 +3078,33 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     ],
                                     'playerLaser',
                                   ],
-                                  'type': 'projectile',
-                                  'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@p',
-                                    'y',
-                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                            [
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
                               'array/map',
                               '@entity.enemyProjectiles',
                               [
                                 'fn',
                                 'p',
                                 {
-                                  'id': '@p.id',
-                                  'sprite': [
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
@@ -2862,21 +3113,147 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     ],
                                     'enemyLaser',
                                   ],
-                                  'type': 'projectile',
-                                  'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@p',
-                                    'y',
-                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                          ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/concat',
+                              [
+                                {
+                                  'animation': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'animation',
+                                  ],
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'player',
+                                  ],
+                                  'frame': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'frame',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@entity.player',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@entity.player',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                              [
+                                'array/map',
+                                '@entity.enemies',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'animation': [
+                                      'object/get',
+                                      '@e',
+                                      'animation',
+                                    ],
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'enemy',
+                                    ],
+                                    'frame': [
+                                      'object/get',
+                                      '@e',
+                                      'frame',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'ef',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@ef',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@ef',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@ef',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowDown': 'MOVE_DOWN',
@@ -2890,93 +3267,8 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                           'Space': 'SHOOT',
                         },
                         'projection': 'free',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': [],
-                        'type': 'canvas-2d',
-                        'units': [
-                          'array/concat',
-                          [
-                            {
-                              'animation': [
-                                'object/get',
-                                '@entity.player',
-                                'animation',
-                              ],
-                              'frame': [
-                                'object/get',
-                                '@entity.player',
-                                'frame',
-                              ],
-                              'id': 'player',
-                              'position': {
-                                'x': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'x',
-                                ],
-                                'y': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'y',
-                                ],
-                              },
-                              'sprite': [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'units',
-                                ],
-                                'player',
-                              ],
-                              'team': 'player',
-                            },
-                          ],
-                          [
-                            'array/map',
-                            '@entity.enemies',
-                            [
-                              'fn',
-                              'e',
-                              {
-                                'animation': [
-                                  'object/get',
-                                  '@e',
-                                  'animation',
-                                ],
-                                'frame': [
-                                  'object/get',
-                                  '@e',
-                                  'frame',
-                                ],
-                                'id': '@e.id',
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@e',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@e',
-                                    'y',
-                                  ],
-                                },
-                                'sprite': [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'units',
-                                  ],
-                                  'enemy',
-                                ],
-                                'team': 'enemy',
-                              },
-                            ],
-                          ],
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -3183,22 +3475,50 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/concat',
-                          '@config.features',
-                          [
-                            'array/concat',
-                            [
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
                               'array/map',
                               '@entity.projectiles',
                               [
                                 'fn',
                                 'p',
                                 {
-                                  'id': '@p.id',
-                                  'sprite': [
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
@@ -3207,29 +3527,33 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     ],
                                     'playerLaser',
                                   ],
-                                  'type': 'projectile',
-                                  'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@p',
-                                    'y',
-                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                            [
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
                               'array/map',
                               '@entity.enemyProjectiles',
                               [
                                 'fn',
                                 'p',
                                 {
-                                  'id': '@p.id',
-                                  'sprite': [
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
@@ -3238,21 +3562,147 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     ],
                                     'enemyLaser',
                                   ],
-                                  'type': 'projectile',
-                                  'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@p',
-                                    'y',
-                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                          ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/concat',
+                              [
+                                {
+                                  'animation': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'animation',
+                                  ],
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'player',
+                                  ],
+                                  'frame': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'frame',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@entity.player',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@entity.player',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                              [
+                                'array/map',
+                                '@entity.enemies',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'animation': [
+                                      'object/get',
+                                      '@e',
+                                      'animation',
+                                    ],
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'enemy',
+                                    ],
+                                    'frame': [
+                                      'object/get',
+                                      '@e',
+                                      'frame',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'ef',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@ef',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@ef',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@ef',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowDown': 'MOVE_DOWN',
@@ -3266,93 +3716,8 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                           'Space': 'SHOOT',
                         },
                         'projection': 'free',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': [],
-                        'type': 'canvas-2d',
-                        'units': [
-                          'array/concat',
-                          [
-                            {
-                              'animation': [
-                                'object/get',
-                                '@entity.player',
-                                'animation',
-                              ],
-                              'frame': [
-                                'object/get',
-                                '@entity.player',
-                                'frame',
-                              ],
-                              'id': 'player',
-                              'position': {
-                                'x': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'x',
-                                ],
-                                'y': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'y',
-                                ],
-                              },
-                              'sprite': [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'units',
-                                ],
-                                'player',
-                              ],
-                              'team': 'player',
-                            },
-                          ],
-                          [
-                            'array/map',
-                            '@entity.enemies',
-                            [
-                              'fn',
-                              'e',
-                              {
-                                'animation': [
-                                  'object/get',
-                                  '@e',
-                                  'animation',
-                                ],
-                                'frame': [
-                                  'object/get',
-                                  '@e',
-                                  'frame',
-                                ],
-                                'id': '@e.id',
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@e',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@e',
-                                    'y',
-                                  ],
-                                },
-                                'sprite': [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'units',
-                                  ],
-                                  'enemy',
-                                ],
-                                'team': 'enemy',
-                              },
-                            ],
-                          ],
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -3626,22 +3991,50 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/concat',
-                          '@config.features',
-                          [
-                            'array/concat',
-                            [
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
                               'array/map',
                               '@entity.projectiles',
                               [
                                 'fn',
                                 'p',
                                 {
-                                  'id': '@p.id',
-                                  'sprite': [
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
@@ -3650,29 +4043,33 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     ],
                                     'playerLaser',
                                   ],
-                                  'type': 'projectile',
-                                  'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@p',
-                                    'y',
-                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                            [
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
                               'array/map',
                               '@entity.enemyProjectiles',
                               [
                                 'fn',
                                 'p',
                                 {
-                                  'id': '@p.id',
-                                  'sprite': [
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
@@ -3681,21 +4078,147 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     ],
                                     'enemyLaser',
                                   ],
-                                  'type': 'projectile',
-                                  'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@p',
-                                    'y',
-                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                          ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/concat',
+                              [
+                                {
+                                  'animation': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'animation',
+                                  ],
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'player',
+                                  ],
+                                  'frame': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'frame',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@entity.player',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@entity.player',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                              [
+                                'array/map',
+                                '@entity.enemies',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'animation': [
+                                      'object/get',
+                                      '@e',
+                                      'animation',
+                                    ],
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'enemy',
+                                    ],
+                                    'frame': [
+                                      'object/get',
+                                      '@e',
+                                      'frame',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'ef',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@ef',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@ef',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@ef',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowDown': 'MOVE_DOWN',
@@ -3709,93 +4232,8 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                           'Space': 'SHOOT',
                         },
                         'projection': 'free',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': [],
-                        'type': 'canvas-2d',
-                        'units': [
-                          'array/concat',
-                          [
-                            {
-                              'animation': [
-                                'object/get',
-                                '@entity.player',
-                                'animation',
-                              ],
-                              'frame': [
-                                'object/get',
-                                '@entity.player',
-                                'frame',
-                              ],
-                              'id': 'player',
-                              'position': {
-                                'x': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'x',
-                                ],
-                                'y': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'y',
-                                ],
-                              },
-                              'sprite': [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'units',
-                                ],
-                                'player',
-                              ],
-                              'team': 'player',
-                            },
-                          ],
-                          [
-                            'array/map',
-                            '@entity.enemies',
-                            [
-                              'fn',
-                              'e',
-                              {
-                                'animation': [
-                                  'object/get',
-                                  '@e',
-                                  'animation',
-                                ],
-                                'frame': [
-                                  'object/get',
-                                  '@e',
-                                  'frame',
-                                ],
-                                'id': '@e.id',
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@e',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@e',
-                                    'y',
-                                  ],
-                                },
-                                'sprite': [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'units',
-                                  ],
-                                  'enemy',
-                                ],
-                                'team': 'enemy',
-                              },
-                            ],
-                          ],
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -4069,22 +4507,50 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/concat',
-                          '@config.features',
-                          [
-                            'array/concat',
-                            [
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
                               'array/map',
                               '@entity.projectiles',
                               [
                                 'fn',
                                 'p',
                                 {
-                                  'id': '@p.id',
-                                  'sprite': [
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
@@ -4093,29 +4559,33 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     ],
                                     'playerLaser',
                                   ],
-                                  'type': 'projectile',
-                                  'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@p',
-                                    'y',
-                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                            [
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
                               'array/map',
                               '@entity.enemyProjectiles',
                               [
                                 'fn',
                                 'p',
                                 {
-                                  'id': '@p.id',
-                                  'sprite': [
+                                  'asset': [
                                     'object/get',
                                     [
                                       'object/get',
@@ -4124,21 +4594,147 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                     ],
                                     'enemyLaser',
                                   ],
-                                  'type': 'projectile',
-                                  'x': [
-                                    'object/get',
-                                    '@p',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@p',
-                                    'y',
-                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
                                 },
                               ],
                             ],
-                          ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/concat',
+                              [
+                                {
+                                  'animation': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'animation',
+                                  ],
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'player',
+                                  ],
+                                  'frame': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'frame',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@entity.player',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@entity.player',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                              [
+                                'array/map',
+                                '@entity.enemies',
+                                [
+                                  'fn',
+                                  'e',
+                                  {
+                                    'animation': [
+                                      'object/get',
+                                      '@e',
+                                      'animation',
+                                    ],
+                                    'asset': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'units',
+                                      ],
+                                      'enemy',
+                                    ],
+                                    'frame': [
+                                      'object/get',
+                                      '@e',
+                                      'frame',
+                                    ],
+                                    'position': {
+                                      'x': [
+                                        'object/get',
+                                        '@e',
+                                        'x',
+                                      ],
+                                      'y': [
+                                        'object/get',
+                                        '@e',
+                                        'y',
+                                      ],
+                                    },
+                                    'type': 'draw-sprite',
+                                  },
+                                ],
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'ef',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@ef',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@ef',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@ef',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowDown': 'MOVE_DOWN',
@@ -4152,93 +4748,8 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                           'Space': 'SHOOT',
                         },
                         'projection': 'free',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': [],
-                        'type': 'canvas-2d',
-                        'units': [
-                          'array/concat',
-                          [
-                            {
-                              'animation': [
-                                'object/get',
-                                '@entity.player',
-                                'animation',
-                              ],
-                              'frame': [
-                                'object/get',
-                                '@entity.player',
-                                'frame',
-                              ],
-                              'id': 'player',
-                              'position': {
-                                'x': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'x',
-                                ],
-                                'y': [
-                                  'object/get',
-                                  '@entity.player',
-                                  'y',
-                                ],
-                              },
-                              'sprite': [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'units',
-                                ],
-                                'player',
-                              ],
-                              'team': 'player',
-                            },
-                          ],
-                          [
-                            'array/map',
-                            '@entity.enemies',
-                            [
-                              'fn',
-                              'e',
-                              {
-                                'animation': [
-                                  'object/get',
-                                  '@e',
-                                  'animation',
-                                ],
-                                'frame': [
-                                  'object/get',
-                                  '@e',
-                                  'frame',
-                                ],
-                                'id': '@e.id',
-                                'position': {
-                                  'x': [
-                                    'object/get',
-                                    '@e',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@e',
-                                    'y',
-                                  ],
-                                },
-                                'sprite': [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'units',
-                                  ],
-                                  'enemy',
-                                ],
-                                'team': 'enemy',
-                              },
-                            ],
-                          ],
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -4504,22 +5015,50 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                   },
                   'children': [
                     {
-                      'assetManifest': '@config.assetManifest',
-                      'effects': '@entity.effects',
-                      'features': [
-                        'array/concat',
-                        '@config.features',
-                        [
-                          'array/concat',
-                          [
+                      'camera': {
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.features',
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@f',
+                                  'sprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
                             'array/map',
                             '@entity.projectiles',
                             [
                               'fn',
                               'p',
                               {
-                                'id': '@p.id',
-                                'sprite': [
+                                'asset': [
                                   'object/get',
                                   [
                                     'object/get',
@@ -4528,29 +5067,33 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                   ],
                                   'playerLaser',
                                 ],
-                                'type': 'projectile',
-                                'x': [
-                                  'object/get',
-                                  '@p',
-                                  'x',
-                                ],
-                                'y': [
-                                  'object/get',
-                                  '@p',
-                                  'y',
-                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@p',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@p',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
                               },
                             ],
                           ],
-                          [
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
                             'array/map',
                             '@entity.enemyProjectiles',
                             [
                               'fn',
                               'p',
                               {
-                                'id': '@p.id',
-                                'sprite': [
+                                'asset': [
                                   'object/get',
                                   [
                                     'object/get',
@@ -4559,21 +5102,147 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                   ],
                                   'enemyLaser',
                                 ],
-                                'type': 'projectile',
-                                'x': [
-                                  'object/get',
-                                  '@p',
-                                  'x',
-                                ],
-                                'y': [
-                                  'object/get',
-                                  '@p',
-                                  'y',
-                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@p',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@p',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
                               },
                             ],
                           ],
-                        ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/concat',
+                            [
+                              {
+                                'animation': [
+                                  'object/get',
+                                  '@entity.player',
+                                  'animation',
+                                ],
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'player',
+                                ],
+                                'frame': [
+                                  'object/get',
+                                  '@entity.player',
+                                  'frame',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                            [
+                              'array/map',
+                              '@entity.enemies',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'animation': [
+                                    'object/get',
+                                    '@e',
+                                    'animation',
+                                  ],
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'enemy',
+                                  ],
+                                  'frame': [
+                                    'object/get',
+                                    '@e',
+                                    'frame',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.effects',
+                            [
+                              'fn',
+                              'ef',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@ef',
+                                    'key',
+                                  ],
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@ef',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@ef',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
                       ],
                       'keyMap': {
                         'ArrowDown': 'MOVE_DOWN',
@@ -4587,93 +5256,8 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                         'Space': 'SHOOT',
                       },
                       'projection': 'free',
-                      'scale': '@config.scale',
                       'showMinimap': false,
-                      'tiles': [],
-                      'type': 'canvas-2d',
-                      'units': [
-                        'array/concat',
-                        [
-                          {
-                            'animation': [
-                              'object/get',
-                              '@entity.player',
-                              'animation',
-                            ],
-                            'frame': [
-                              'object/get',
-                              '@entity.player',
-                              'frame',
-                            ],
-                            'id': 'player',
-                            'position': {
-                              'x': [
-                                'object/get',
-                                '@entity.player',
-                                'x',
-                              ],
-                              'y': [
-                                'object/get',
-                                '@entity.player',
-                                'y',
-                              ],
-                            },
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'player',
-                            ],
-                            'team': 'player',
-                          },
-                        ],
-                        [
-                          'array/map',
-                          '@entity.enemies',
-                          [
-                            'fn',
-                            'e',
-                            {
-                              'animation': [
-                                'object/get',
-                                '@e',
-                                'animation',
-                              ],
-                              'frame': [
-                                'object/get',
-                                '@e',
-                                'frame',
-                              ],
-                              'id': '@e.id',
-                              'position': {
-                                'x': [
-                                  'object/get',
-                                  '@e',
-                                  'x',
-                                ],
-                                'y': [
-                                  'object/get',
-                                  '@e',
-                                  'y',
-                                ],
-                              },
-                              'sprite': [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'units',
-                                ],
-                                'enemy',
-                              ],
-                              'team': 'enemy',
-                            },
-                          ],
-                        ],
-                      ],
+                      'type': 'canvas',
                     },
                   ],
                   'controls': {
@@ -5791,22 +6375,50 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                   },
                   'children': [
                     {
-                      'assetManifest': '@config.assetManifest',
-                      'effects': '@entity.effects',
-                      'features': [
-                        'array/concat',
-                        '@config.features',
-                        [
-                          'array/concat',
-                          [
+                      'camera': {
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.features',
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@f',
+                                  'sprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
                             'array/map',
                             '@entity.projectiles',
                             [
                               'fn',
                               'p',
                               {
-                                'id': '@p.id',
-                                'sprite': [
+                                'asset': [
                                   'object/get',
                                   [
                                     'object/get',
@@ -5815,29 +6427,33 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                   ],
                                   'playerLaser',
                                 ],
-                                'type': 'projectile',
-                                'x': [
-                                  'object/get',
-                                  '@p',
-                                  'x',
-                                ],
-                                'y': [
-                                  'object/get',
-                                  '@p',
-                                  'y',
-                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@p',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@p',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
                               },
                             ],
                           ],
-                          [
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
                             'array/map',
                             '@entity.enemyProjectiles',
                             [
                               'fn',
                               'p',
                               {
-                                'id': '@p.id',
-                                'sprite': [
+                                'asset': [
                                   'object/get',
                                   [
                                     'object/get',
@@ -5846,21 +6462,147 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                                   ],
                                   'enemyLaser',
                                 ],
-                                'type': 'projectile',
-                                'x': [
-                                  'object/get',
-                                  '@p',
-                                  'x',
-                                ],
-                                'y': [
-                                  'object/get',
-                                  '@p',
-                                  'y',
-                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@p',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@p',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
                               },
                             ],
                           ],
-                        ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/concat',
+                            [
+                              {
+                                'animation': [
+                                  'object/get',
+                                  '@entity.player',
+                                  'animation',
+                                ],
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'player',
+                                ],
+                                'frame': [
+                                  'object/get',
+                                  '@entity.player',
+                                  'frame',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                            [
+                              'array/map',
+                              '@entity.enemies',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'animation': [
+                                    'object/get',
+                                    '@e',
+                                    'animation',
+                                  ],
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'enemy',
+                                  ],
+                                  'frame': [
+                                    'object/get',
+                                    '@e',
+                                    'frame',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.effects',
+                            [
+                              'fn',
+                              'ef',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@ef',
+                                    'key',
+                                  ],
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@ef',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@ef',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
                       ],
                       'keyMap': {
                         'ArrowDown': 'MOVE_DOWN',
@@ -5874,93 +6616,8 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
                         'Space': 'SHOOT',
                       },
                       'projection': 'free',
-                      'scale': '@config.scale',
                       'showMinimap': false,
-                      'tiles': [],
-                      'type': 'canvas-2d',
-                      'units': [
-                        'array/concat',
-                        [
-                          {
-                            'animation': [
-                              'object/get',
-                              '@entity.player',
-                              'animation',
-                            ],
-                            'frame': [
-                              'object/get',
-                              '@entity.player',
-                              'frame',
-                            ],
-                            'id': 'player',
-                            'position': {
-                              'x': [
-                                'object/get',
-                                '@entity.player',
-                                'x',
-                              ],
-                              'y': [
-                                'object/get',
-                                '@entity.player',
-                                'y',
-                              ],
-                            },
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'player',
-                            ],
-                            'team': 'player',
-                          },
-                        ],
-                        [
-                          'array/map',
-                          '@entity.enemies',
-                          [
-                            'fn',
-                            'e',
-                            {
-                              'animation': [
-                                'object/get',
-                                '@e',
-                                'animation',
-                              ],
-                              'frame': [
-                                'object/get',
-                                '@e',
-                                'frame',
-                              ],
-                              'id': '@e.id',
-                              'position': {
-                                'x': [
-                                  'object/get',
-                                  '@e',
-                                  'x',
-                                ],
-                                'y': [
-                                  'object/get',
-                                  '@e',
-                                  'y',
-                                ],
-                              },
-                              'sprite': [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'units',
-                                ],
-                                'enemy',
-                              ],
-                              'team': 'enemy',
-                            },
-                          ],
-                        ],
-                      ],
+                      'type': 'canvas',
                     },
                   ],
                   'controls': {

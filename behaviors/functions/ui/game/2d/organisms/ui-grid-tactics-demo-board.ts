@@ -669,16 +669,254 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
                     },
                     'children': [
                       {
-                        'effects': '@entity.fx',
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'fill': [
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@t',
+                                        'passable',
+                                      ],
+                                      true,
+                                    ],
+                                    'rgba(148,163,184,0.15)',
+                                    'rgba(51,65,85,0.75)',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.validMoves',
+                              [
+                                'fn',
+                                'm',
+                                {
+                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@m',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@m',
+                                      'z',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    '@entity.selectedUnitId',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'radiusX': 0.5,
+                                  'radiusY': 0.2,
+                                  'shape': 'ellipse',
+                                  'stroke': 'rgba(0,200,255,0.8)',
+                                  'strokeWidth': 3,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': [
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'team',
+                                      ],
+                                      'player',
+                                    ],
+                                    '#3b82f6',
+                                    '#ef4444',
+                                  ],
+                                  'height': 0.7,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': 0.7,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': 0.8,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': '#22c55e',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': [
+                                    '*',
+                                    0.8,
+                                    [
+                                      '/',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'health',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'maxHealth',
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.fx',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'color': '#ffe066',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'text': [
+                                    'object/get',
+                                    '@f',
+                                    'message',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
+                        ],
                         'projection': 'flat',
-                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': false,
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@entity.tiles',
-                        'type': 'canvas-2d',
+                        'type': 'canvas',
                         'unitClickEvent': 'UNIT_CLICK',
-                        'units': '@entity.units',
-                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
@@ -1166,16 +1404,254 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
                   },
                   'children': [
                     {
-                      'effects': '@entity.fx',
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'fill': [
+                                  'if',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@t',
+                                      'passable',
+                                    ],
+                                    true,
+                                  ],
+                                  'rgba(148,163,184,0.15)',
+                                  'rgba(51,65,85,0.75)',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.validMoves',
+                            [
+                              'fn',
+                              'm',
+                              {
+                                'fill': 'rgba(74,222,128,0.4)',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@m',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@m',
+                                    'z',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              'array/filter',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  '==',
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
+                                  '@entity.selectedUnitId',
+                                ],
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'radiusX': 0.5,
+                                'radiusY': 0.2,
+                                'shape': 'ellipse',
+                                'stroke': 'rgba(0,200,255,0.8)',
+                                'strokeWidth': 3,
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': [
+                                  'if',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'team',
+                                    ],
+                                    'player',
+                                  ],
+                                  '#3b82f6',
+                                  '#ef4444',
+                                ],
+                                'height': 0.7,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': 0.7,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': 'rgba(0,0,0,0.6)',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': 0.8,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': '#22c55e',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': [
+                                  '*',
+                                  0.8,
+                                  [
+                                    '/',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'maxHealth',
+                                    ],
+                                  ],
+                                ],
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.fx',
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'color': '#ffe066',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                                'text': [
+                                  'object/get',
+                                  '@f',
+                                  'message',
+                                ],
+                                'type': 'draw-text',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-text-layer',
+                        },
+                      ],
                       'projection': 'flat',
-                      'selectedUnitId': '@entity.selectedUnitId',
                       'showMinimap': false,
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@entity.tiles',
-                      'type': 'canvas-2d',
+                      'type': 'canvas',
                       'unitClickEvent': 'UNIT_CLICK',
-                      'units': '@entity.units',
-                      'validMoves': '@entity.validMoves',
                     },
                   ],
                   'hud': {

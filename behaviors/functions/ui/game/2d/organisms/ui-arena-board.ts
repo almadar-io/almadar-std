@@ -1170,12 +1170,172 @@ export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoa
                   {
                     'children': [
                       {
-                        'effects': '@entity.fx',
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'fill': '#4ade80',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'stroke': 'rgba(0,0,0,0.2)',
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': [
+                                    'if',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'team',
+                                      ],
+                                      'player',
+                                    ],
+                                    '#3b82f6',
+                                    '#ef4444',
+                                  ],
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'radiusX': 0.4,
+                                  'radiusY': 0.4,
+                                  'shape': 'ellipse',
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': 0.8,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': '#22c55e',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': [
+                                    '*',
+                                    0.8,
+                                    [
+                                      '/',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'health',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'maxHealth',
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.fx',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'color': '#ffe066',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'text': [
+                                    'object/get',
+                                    '@f',
+                                    'message',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
+                        ],
                         'projection': 'flat',
                         'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'units': '@entity.units',
+                        'type': 'canvas',
                       },
                     ],
                     'hud': {
@@ -1206,12 +1366,172 @@ export function stdUiArenaBoardArenaBoardOrbital(params: StdUiArenaBoardArenaBoa
                 {
                   'children': [
                     {
-                      'effects': '@entity.fx',
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'fill': '#4ade80',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'stroke': 'rgba(0,0,0,0.2)',
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': [
+                                  'if',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'team',
+                                    ],
+                                    'player',
+                                  ],
+                                  '#3b82f6',
+                                  '#ef4444',
+                                ],
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'radiusX': 0.4,
+                                'radiusY': 0.4,
+                                'shape': 'ellipse',
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': 'rgba(0,0,0,0.6)',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': 0.8,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': '#22c55e',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': [
+                                  '*',
+                                  0.8,
+                                  [
+                                    '/',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'maxHealth',
+                                    ],
+                                  ],
+                                ],
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.fx',
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'color': '#ffe066',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                                'text': [
+                                  'object/get',
+                                  '@f',
+                                  'message',
+                                ],
+                                'type': 'draw-text',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-text-layer',
+                        },
+                      ],
                       'projection': 'flat',
                       'showMinimap': false,
-                      'tiles': '@config.tiles',
-                      'type': 'canvas-2d',
-                      'units': '@entity.units',
+                      'type': 'canvas',
                     },
                   ],
                   'hud': {

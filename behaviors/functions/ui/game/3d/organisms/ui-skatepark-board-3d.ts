@@ -112,7 +112,7 @@ export interface StdUiSkateparkBoard3dConfig {
   bgColor?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `{"animations":["static"],"aspect":"1:1","category":"coin","dimension":"3d","name":"coin","role":"feature","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-prototype-kit/features/coin.glb","variant":""}` */
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"coin","dimension":"3d","name":"coin","role":"feature","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-prototype-kit/features/coin.glb","variant":""}` */
   coinSprite?: EntityRow;
   /** Default: `2220` */
   goalX?: number;
@@ -126,9 +126,9 @@ export interface StdUiSkateparkBoard3dConfig {
   moveSpeed?: number;
   /** Default: `[{"height":32,"type":"ground","width":300,"x":0,"y":368},{"height":32,"type":"ground","width":300,"x":400,"y":368},{"height":32,"type":"ground","width":300,"x":800,"y":368},{"height":32,"type":"ground","width":300,"x":1200,"y":368},{"height":32,"type":"ground","width":300,"x":1600,"y":368},{"height":32,"type":"ground","width":320,"x":2000,"y":368},{"height":16,"type":"platform","width":160,"x":120,"y":280},{"height":16,"type":"platform","width":160,"x":450,"y":220},{"height":16,"type":"platform","width":160,"x":820,"y":280},{"height":16,"type":"platform","width":160,"x":1220,"y":220},{"height":16,"type":"platform","width":160,"x":1620,"y":280},{"height":16,"type":"platform","width":160,"x":2020,"y":220},{"height":32,"type":"hazard","width":64,"x":600,"y":336},{"height":32,"type":"hazard","width":64,"x":1400,"y":336},{"height":32,"type":"hazard","width":64,"x":2100,"y":336},{"height":16,"type":"platform","width":120,"x":2200,"y":280},{"height":28,"type":"goal","width":64,"x":2220,"y":252}]` */
   platforms?: EntityRow[];
-  /** Default: `{"animations":["skate-stand","skate","skate-air","skate-grab","idle","jump","fall"],"aspect":"1:1","category":"player","dimension":"3d","name":"player","role":"player","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/units/character-skate-boy.glb","variant":""}` */
+  /** Default: `{"animations":["skate-stand","skate","skate-air","skate-grab","idle","jump","fall"],"aspect":"1:1","category":"player","dimension":"3d","name":"player","role":"player","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/units/character-skate-boy.glb","variant":""}` */
   playerSprite?: EntityRow;
-  /** Default: `{"goal":{"animations":["static"],"aspect":"1:1","category":"goal","dimension":"3d","name":"goal","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/skateboard.glb","variant":""},"ground":{"animations":["static"],"aspect":"1:1","category":"ground","dimension":"3d","name":"ground","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/terrain/floor-wood.glb","variant":""},"hazard":{"animations":["static"],"aspect":"1:1","category":"hazard","dimension":"3d","name":"hazard","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/structure-wood.glb","variant":""},"platform":{"animations":["static"],"aspect":"1:1","category":"platform","dimension":"3d","name":"platform","role":"tile","style":"lowpoly-flat","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/obstacle-box.glb","variant":""}}` */
+  /** Default: `{"goal":{"animations":["static"],"aspect":"1:1","category":"goal","dimension":"3d","name":"goal","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/skateboard.glb","variant":""},"ground":{"animations":["static"],"aspect":"1:1","category":"ground","dimension":"3d","name":"ground","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/terrain/floor-wood.glb","variant":""},"hazard":{"animations":["static"],"aspect":"1:1","category":"hazard","dimension":"3d","name":"hazard","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/structure-wood.glb","variant":""},"platform":{"animations":["static"],"aspect":"1:1","category":"platform","dimension":"3d","name":"platform","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/obstacle-box.glb","variant":""}}` */
   tileSprites?: Record<string, TraitConfig>;
   /** Default: `50` */
   trickScore?: number;
@@ -551,7 +551,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
               'dimension': '3d',
               'name': 'coin',
               'role': 'feature',
-              'style': 'lowpoly-flat',
+              'style': '',
               'thumbnailUrl': '',
               'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-prototype-kit/features/coin.glb',
               'variant': '',
@@ -840,7 +840,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
               'dimension': '3d',
               'name': 'player',
               'role': 'player',
-              'style': 'lowpoly-flat',
+              'style': '',
               'thumbnailUrl': '',
               'url': 'https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/units/character-skate-boy.glb',
               'variant': '',
@@ -926,7 +926,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                 'dimension': '3d',
                 'name': 'goal',
                 'role': 'tile',
-                'style': 'lowpoly-flat',
+                'style': '',
                 'thumbnailUrl': '',
                 'url': 'https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/skateboard.glb',
                 'variant': '',
@@ -940,7 +940,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                 'dimension': '3d',
                 'name': 'ground',
                 'role': 'tile',
-                'style': 'lowpoly-flat',
+                'style': '',
                 'thumbnailUrl': '',
                 'url': 'https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/terrain/floor-wood.glb',
                 'variant': '',
@@ -954,7 +954,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                 'dimension': '3d',
                 'name': 'hazard',
                 'role': 'tile',
-                'style': 'lowpoly-flat',
+                'style': '',
                 'thumbnailUrl': '',
                 'url': 'https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/structure-wood.glb',
                 'variant': '',
@@ -968,7 +968,7 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                 'dimension': '3d',
                 'name': 'platform',
                 'role': 'tile',
-                'style': 'lowpoly-flat',
+                'style': '',
                 'thumbnailUrl': '',
                 'url': 'https://almadar-kflow-assets.web.app/shared/ui-skatepark-board-3d/kenney-mini-skate/features/obstacle-box.glb',
                 'variant': '',
@@ -1523,36 +1523,99 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                     'children': [
                       {
                         'backgroundColor': '@config.bgColor',
-                        'cameraMode': 'follow',
-                        'events': '@entity.fx',
-                        'features': [
-                          'array/map',
-                          [
-                            'array/filter',
-                            '@entity.coins',
-                            [
-                              'fn',
-                              'c',
+                        'camera': {
+                          'mode': 'follow',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.platforms',
                               [
-                                '==',
-                                '@c.taken',
-                                false,
+                                'fn',
+                                'p',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@config.tileSprites',
+                                    '@p.type',
+                                  ],
+                                  'position': {
+                                    'x': '@p.x',
+                                    'y': '@p.y',
+                                  },
+                                  'type': 'draw-sprite',
+                                },
                               ],
                             ],
-                          ],
-                          [
-                            'fn',
-                            'c',
-                            {
-                              'assetUrl': '@config.coinSprite',
-                              'id': '@c.id',
-                              'type': 'coin',
-                              'x': '@c.x',
-                              'y': '@c.y',
-                            },
-                          ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.coins',
+                                [
+                                  'fn',
+                                  'c',
+                                  [
+                                    '==',
+                                    '@c.taken',
+                                    false,
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'c',
+                                {
+                                  'asset': '@config.coinSprite',
+                                  'position': {
+                                    'x': '@c.x',
+                                    'y': '@c.y',
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.fx',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'color': '#ffe066',
+                                  'position': {
+                                    'x': '@f.x',
+                                    'y': '@f.y',
+                                  },
+                                  'text': '@f.message',
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
+                          {
+                            'items': [
+                              {
+                                'asset': '@config.playerSprite',
+                                'frame': '@entity.player.frame',
+                                'position': {
+                                  'x': '@entity.player.x',
+                                  'y': '@entity.player.y',
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
-                        'interpolateUnits': true,
                         'keyMap': {
                           'ArrowLeft': 'LEFT',
                           'ArrowRight': 'RIGHT',
@@ -1570,13 +1633,10 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                           'KeyA': 'STOP',
                           'KeyD': 'STOP',
                         },
+                        'mode': '3d',
                         'pixelsPerUnit': 32,
-                        'platforms': '@config.platforms',
-                        'player': '@entity.player',
-                        'playerSprite': '@config.playerSprite',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tileSprites': '@config.tileSprites',
-                        'type': 'game-canvas-3d',
+                        'type': 'canvas',
                         'unitClickEvent': 'UNIT_CLICK',
                         'worldHeight': '@entity.worldHeight',
                         'worldWidth': '@entity.worldWidth',
@@ -1945,36 +2005,99 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                     'children': [
                       {
                         'backgroundColor': '@config.bgColor',
-                        'cameraMode': 'follow',
-                        'events': '@entity.fx',
-                        'features': [
-                          'array/map',
-                          [
-                            'array/filter',
-                            '@entity.coins',
-                            [
-                              'fn',
-                              'c',
+                        'camera': {
+                          'mode': 'follow',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.platforms',
                               [
-                                '==',
-                                '@c.taken',
-                                false,
+                                'fn',
+                                'p',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@config.tileSprites',
+                                    '@p.type',
+                                  ],
+                                  'position': {
+                                    'x': '@p.x',
+                                    'y': '@p.y',
+                                  },
+                                  'type': 'draw-sprite',
+                                },
                               ],
                             ],
-                          ],
-                          [
-                            'fn',
-                            'c',
-                            {
-                              'assetUrl': '@config.coinSprite',
-                              'id': '@c.id',
-                              'type': 'coin',
-                              'x': '@c.x',
-                              'y': '@c.y',
-                            },
-                          ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.coins',
+                                [
+                                  'fn',
+                                  'c',
+                                  [
+                                    '==',
+                                    '@c.taken',
+                                    false,
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'c',
+                                {
+                                  'asset': '@config.coinSprite',
+                                  'position': {
+                                    'x': '@c.x',
+                                    'y': '@c.y',
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.fx',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'color': '#ffe066',
+                                  'position': {
+                                    'x': '@f.x',
+                                    'y': '@f.y',
+                                  },
+                                  'text': '@f.message',
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
+                          {
+                            'items': [
+                              {
+                                'asset': '@config.playerSprite',
+                                'frame': '@entity.player.frame',
+                                'position': {
+                                  'x': '@entity.player.x',
+                                  'y': '@entity.player.y',
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
-                        'interpolateUnits': true,
                         'keyMap': {
                           'ArrowLeft': 'LEFT',
                           'ArrowRight': 'RIGHT',
@@ -1992,13 +2115,10 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                           'KeyA': 'STOP',
                           'KeyD': 'STOP',
                         },
+                        'mode': '3d',
                         'pixelsPerUnit': 32,
-                        'platforms': '@config.platforms',
-                        'player': '@entity.player',
-                        'playerSprite': '@config.playerSprite',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tileSprites': '@config.tileSprites',
-                        'type': 'game-canvas-3d',
+                        'type': 'canvas',
                         'unitClickEvent': 'UNIT_CLICK',
                         'worldHeight': '@entity.worldHeight',
                         'worldWidth': '@entity.worldWidth',
@@ -2170,36 +2290,99 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                     'children': [
                       {
                         'backgroundColor': '@config.bgColor',
-                        'cameraMode': 'follow',
-                        'events': '@entity.fx',
-                        'features': [
-                          'array/map',
-                          [
-                            'array/filter',
-                            '@entity.coins',
-                            [
-                              'fn',
-                              'c',
+                        'camera': {
+                          'mode': 'follow',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.platforms',
                               [
-                                '==',
-                                '@c.taken',
-                                false,
+                                'fn',
+                                'p',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@config.tileSprites',
+                                    '@p.type',
+                                  ],
+                                  'position': {
+                                    'x': '@p.x',
+                                    'y': '@p.y',
+                                  },
+                                  'type': 'draw-sprite',
+                                },
                               ],
                             ],
-                          ],
-                          [
-                            'fn',
-                            'c',
-                            {
-                              'assetUrl': '@config.coinSprite',
-                              'id': '@c.id',
-                              'type': 'coin',
-                              'x': '@c.x',
-                              'y': '@c.y',
-                            },
-                          ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.coins',
+                                [
+                                  'fn',
+                                  'c',
+                                  [
+                                    '==',
+                                    '@c.taken',
+                                    false,
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'c',
+                                {
+                                  'asset': '@config.coinSprite',
+                                  'position': {
+                                    'x': '@c.x',
+                                    'y': '@c.y',
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.fx',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'color': '#ffe066',
+                                  'position': {
+                                    'x': '@f.x',
+                                    'y': '@f.y',
+                                  },
+                                  'text': '@f.message',
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
+                          {
+                            'items': [
+                              {
+                                'asset': '@config.playerSprite',
+                                'frame': '@entity.player.frame',
+                                'position': {
+                                  'x': '@entity.player.x',
+                                  'y': '@entity.player.y',
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
-                        'interpolateUnits': true,
                         'keyMap': {
                           'ArrowLeft': 'LEFT',
                           'ArrowRight': 'RIGHT',
@@ -2217,13 +2400,10 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                           'KeyA': 'STOP',
                           'KeyD': 'STOP',
                         },
+                        'mode': '3d',
                         'pixelsPerUnit': 32,
-                        'platforms': '@config.platforms',
-                        'player': '@entity.player',
-                        'playerSprite': '@config.playerSprite',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tileSprites': '@config.tileSprites',
-                        'type': 'game-canvas-3d',
+                        'type': 'canvas',
                         'unitClickEvent': 'UNIT_CLICK',
                         'worldHeight': '@entity.worldHeight',
                         'worldWidth': '@entity.worldWidth',
@@ -3394,36 +3574,99 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                   'children': [
                     {
                       'backgroundColor': '@config.bgColor',
-                      'cameraMode': 'follow',
-                      'events': '@entity.fx',
-                      'features': [
-                        'array/map',
-                        [
-                          'array/filter',
-                          '@entity.coins',
-                          [
-                            'fn',
-                            'c',
+                      'camera': {
+                        'mode': 'follow',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.platforms',
                             [
-                              '==',
-                              '@c.taken',
-                              false,
+                              'fn',
+                              'p',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@config.tileSprites',
+                                  '@p.type',
+                                ],
+                                'position': {
+                                  'x': '@p.x',
+                                  'y': '@p.y',
+                                },
+                                'type': 'draw-sprite',
+                              },
                             ],
                           ],
-                        ],
-                        [
-                          'fn',
-                          'c',
-                          {
-                            'assetUrl': '@config.coinSprite',
-                            'id': '@c.id',
-                            'type': 'coin',
-                            'x': '@c.x',
-                            'y': '@c.y',
-                          },
-                        ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              'array/filter',
+                              '@entity.coins',
+                              [
+                                'fn',
+                                'c',
+                                [
+                                  '==',
+                                  '@c.taken',
+                                  false,
+                                ],
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'c',
+                              {
+                                'asset': '@config.coinSprite',
+                                'position': {
+                                  'x': '@c.x',
+                                  'y': '@c.y',
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.fx',
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'color': '#ffe066',
+                                'position': {
+                                  'x': '@f.x',
+                                  'y': '@f.y',
+                                },
+                                'text': '@f.message',
+                                'type': 'draw-text',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-text-layer',
+                        },
+                        {
+                          'items': [
+                            {
+                              'asset': '@config.playerSprite',
+                              'frame': '@entity.player.frame',
+                              'position': {
+                                'x': '@entity.player.x',
+                                'y': '@entity.player.y',
+                              },
+                              'type': 'draw-sprite',
+                            },
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
                       ],
-                      'interpolateUnits': true,
                       'keyMap': {
                         'ArrowLeft': 'LEFT',
                         'ArrowRight': 'RIGHT',
@@ -3441,13 +3684,10 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                         'KeyA': 'STOP',
                         'KeyD': 'STOP',
                       },
+                      'mode': '3d',
                       'pixelsPerUnit': 32,
-                      'platforms': '@config.platforms',
-                      'player': '@entity.player',
-                      'playerSprite': '@config.playerSprite',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tileSprites': '@config.tileSprites',
-                      'type': 'game-canvas-3d',
+                      'type': 'canvas',
                       'unitClickEvent': 'UNIT_CLICK',
                       'worldHeight': '@entity.worldHeight',
                       'worldWidth': '@entity.worldWidth',

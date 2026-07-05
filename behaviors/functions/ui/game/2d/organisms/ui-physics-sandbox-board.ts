@@ -2301,18 +2301,79 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': [],
-                        'features': '@entity.blocks',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.blocks',
+                              [
+                                'fn',
+                                'b',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@b',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@b',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@b',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                        ],
                         'keyMap': {
                           'Space': 'SPAWN',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'units': [],
+                        'type': 'canvas',
                       },
                     ],
                     'fontFamily': 'future',
@@ -2556,18 +2617,79 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': [],
-                        'features': '@entity.blocks',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.blocks',
+                              [
+                                'fn',
+                                'b',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@b',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@b',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@b',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                        ],
                         'keyMap': {
                           'Space': 'SPAWN',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'units': [],
+                        'type': 'canvas',
                       },
                     ],
                     'fontFamily': 'future',
@@ -2780,18 +2902,79 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': [],
-                        'features': '@entity.blocks',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.blocks',
+                              [
+                                'fn',
+                                'b',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@b',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@b',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@b',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                        ],
                         'keyMap': {
                           'Space': 'SPAWN',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'units': [],
+                        'type': 'canvas',
                       },
                     ],
                     'fontFamily': 'future',
@@ -3004,18 +3187,79 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': [],
-                        'features': '@entity.blocks',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.blocks',
+                              [
+                                'fn',
+                                'b',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@b',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@b',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@b',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                        ],
                         'keyMap': {
                           'Space': 'SPAWN',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'units': [],
+                        'type': 'canvas',
                       },
                     ],
                     'fontFamily': 'future',
@@ -3489,18 +3733,79 @@ export function stdUiPhysicsSandboxBoardPhysicsSandboxBoardOrbital(params: StdUi
                   },
                   'children': [
                     {
-                      'assetManifest': '@config.assetManifest',
-                      'effects': [],
-                      'features': '@entity.blocks',
+                      'camera': {
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@t',
+                                  'terrainSprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.blocks',
+                            [
+                              'fn',
+                              'b',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@b',
+                                  'sprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@b',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@b',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                      ],
                       'keyMap': {
                         'Space': 'SPAWN',
                       },
                       'projection': 'flat',
-                      'scale': '@config.scale',
                       'showMinimap': false,
-                      'tiles': '@config.tiles',
-                      'type': 'canvas-2d',
-                      'units': [],
+                      'type': 'canvas',
                     },
                   ],
                   'fontFamily': 'future',

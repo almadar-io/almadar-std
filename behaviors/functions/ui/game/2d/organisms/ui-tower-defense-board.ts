@@ -7819,32 +7819,338 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/map',
-                          '@entity.towers',
-                          [
-                            'fn',
-                            't',
-                            {
-                              'id': '@t.id',
-                              'type': 'tower',
-                              'x': '@t.x',
-                              'y': '@t.y',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.towers',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'features',
+                                    ],
+                                    'tower',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.validMoves',
+                              [
+                                'fn',
+                                'm',
+                                {
+                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@m',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@m',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.creeps',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    '@entity.selectedUnitId',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'radiusX': 0.5,
+                                  'radiusY': 0.2,
+                                  'shape': 'ellipse',
+                                  'stroke': 'rgba(0,200,255,0.8)',
+                                  'strokeWidth': 3,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'creep',
+                                  ],
+                                  'frame': [
+                                    'object/get',
+                                    '@u',
+                                    'frame',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'asset': [
+                              'object/get',
+                              [
+                                'object/get',
+                                '@config.assetManifest',
+                                'units',
+                              ],
+                              'hero',
+                            ],
+                            'position': {
+                              'x': [
+                                'object/get',
+                                '@entity.hero',
+                                'x',
+                              ],
+                              'y': [
+                                'object/get',
+                                '@entity.hero',
+                                'y',
+                              ],
                             },
-                          ],
+                            'type': 'draw-sprite',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': 0.8,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': '#22c55e',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': [
+                                    '*',
+                                    0.8,
+                                    [
+                                      '/',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'hp',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'maxHp',
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'projection': 'isometric',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
                         'tileClickEvent': 'PLACE_TOWER',
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
+                        'type': 'canvas',
                         'unitClickEvent': 'UNIT_CLICK',
-                        'units': '@entity.creeps',
-                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'fontFamily': 'future',
@@ -8016,32 +8322,338 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/map',
-                          '@entity.towers',
-                          [
-                            'fn',
-                            't',
-                            {
-                              'id': '@t.id',
-                              'type': 'tower',
-                              'x': '@t.x',
-                              'y': '@t.y',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.towers',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'features',
+                                    ],
+                                    'tower',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.validMoves',
+                              [
+                                'fn',
+                                'm',
+                                {
+                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@m',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@m',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.creeps',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    '@entity.selectedUnitId',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'radiusX': 0.5,
+                                  'radiusY': 0.2,
+                                  'shape': 'ellipse',
+                                  'stroke': 'rgba(0,200,255,0.8)',
+                                  'strokeWidth': 3,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'creep',
+                                  ],
+                                  'frame': [
+                                    'object/get',
+                                    '@u',
+                                    'frame',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'asset': [
+                              'object/get',
+                              [
+                                'object/get',
+                                '@config.assetManifest',
+                                'units',
+                              ],
+                              'hero',
+                            ],
+                            'position': {
+                              'x': [
+                                'object/get',
+                                '@entity.hero',
+                                'x',
+                              ],
+                              'y': [
+                                'object/get',
+                                '@entity.hero',
+                                'y',
+                              ],
                             },
-                          ],
+                            'type': 'draw-sprite',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': 0.8,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': '#22c55e',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': [
+                                    '*',
+                                    0.8,
+                                    [
+                                      '/',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'hp',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'maxHp',
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'projection': 'isometric',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
                         'tileClickEvent': 'PLACE_TOWER',
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
+                        'type': 'canvas',
                         'unitClickEvent': 'UNIT_CLICK',
-                        'units': '@entity.creeps',
-                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'fontFamily': 'future',
@@ -8331,32 +8943,338 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/map',
-                          '@entity.towers',
-                          [
-                            'fn',
-                            't',
-                            {
-                              'id': '@t.id',
-                              'type': 'tower',
-                              'x': '@t.x',
-                              'y': '@t.y',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.towers',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'features',
+                                    ],
+                                    'tower',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.validMoves',
+                              [
+                                'fn',
+                                'm',
+                                {
+                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@m',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@m',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.creeps',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    '@entity.selectedUnitId',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'radiusX': 0.5,
+                                  'radiusY': 0.2,
+                                  'shape': 'ellipse',
+                                  'stroke': 'rgba(0,200,255,0.8)',
+                                  'strokeWidth': 3,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'creep',
+                                  ],
+                                  'frame': [
+                                    'object/get',
+                                    '@u',
+                                    'frame',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'asset': [
+                              'object/get',
+                              [
+                                'object/get',
+                                '@config.assetManifest',
+                                'units',
+                              ],
+                              'hero',
+                            ],
+                            'position': {
+                              'x': [
+                                'object/get',
+                                '@entity.hero',
+                                'x',
+                              ],
+                              'y': [
+                                'object/get',
+                                '@entity.hero',
+                                'y',
+                              ],
                             },
-                          ],
+                            'type': 'draw-sprite',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': 0.8,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': '#22c55e',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': [
+                                    '*',
+                                    0.8,
+                                    [
+                                      '/',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'hp',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'maxHp',
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'projection': 'isometric',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
                         'tileClickEvent': 'PLACE_TOWER',
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
+                        'type': 'canvas',
                         'unitClickEvent': 'UNIT_CLICK',
-                        'units': '@entity.creeps',
-                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'fontFamily': 'future',
@@ -8486,32 +9404,338 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                   {
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/map',
-                          '@entity.towers',
-                          [
-                            'fn',
-                            't',
-                            {
-                              'id': '@t.id',
-                              'type': 'tower',
-                              'x': '@t.x',
-                              'y': '@t.y',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.towers',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'features',
+                                    ],
+                                    'tower',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.validMoves',
+                              [
+                                'fn',
+                                'm',
+                                {
+                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@m',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@m',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.creeps',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    '@entity.selectedUnitId',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'radiusX': 0.5,
+                                  'radiusY': 0.2,
+                                  'shape': 'ellipse',
+                                  'stroke': 'rgba(0,200,255,0.8)',
+                                  'strokeWidth': 3,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'creep',
+                                  ],
+                                  'frame': [
+                                    'object/get',
+                                    '@u',
+                                    'frame',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'asset': [
+                              'object/get',
+                              [
+                                'object/get',
+                                '@config.assetManifest',
+                                'units',
+                              ],
+                              'hero',
+                            ],
+                            'position': {
+                              'x': [
+                                'object/get',
+                                '@entity.hero',
+                                'x',
+                              ],
+                              'y': [
+                                'object/get',
+                                '@entity.hero',
+                                'y',
+                              ],
                             },
-                          ],
+                            'type': 'draw-sprite',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': 0.8,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': '#22c55e',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': [
+                                    '*',
+                                    0.8,
+                                    [
+                                      '/',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'hp',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'maxHp',
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'projection': 'isometric',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
                         'tileClickEvent': 'PLACE_TOWER',
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
+                        'type': 'canvas',
                         'unitClickEvent': 'UNIT_CLICK',
-                        'units': '@entity.creeps',
-                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'fontFamily': 'future',
@@ -8757,32 +9981,338 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/map',
-                          '@entity.towers',
-                          [
-                            'fn',
-                            't',
-                            {
-                              'id': '@t.id',
-                              'type': 'tower',
-                              'x': '@t.x',
-                              'y': '@t.y',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.towers',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'features',
+                                    ],
+                                    'tower',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.validMoves',
+                              [
+                                'fn',
+                                'm',
+                                {
+                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@m',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@m',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/filter',
+                                '@entity.creeps',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    '==',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'id',
+                                    ],
+                                    '@entity.selectedUnitId',
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'radiusX': 0.5,
+                                  'radiusY': 0.2,
+                                  'shape': 'ellipse',
+                                  'stroke': 'rgba(0,200,255,0.8)',
+                                  'strokeWidth': 3,
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'creep',
+                                  ],
+                                  'frame': [
+                                    'object/get',
+                                    '@u',
+                                    'frame',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'asset': [
+                              'object/get',
+                              [
+                                'object/get',
+                                '@config.assetManifest',
+                                'units',
+                              ],
+                              'hero',
+                            ],
+                            'position': {
+                              'x': [
+                                'object/get',
+                                '@entity.hero',
+                                'x',
+                              ],
+                              'y': [
+                                'object/get',
+                                '@entity.hero',
+                                'y',
+                              ],
                             },
-                          ],
+                            'type': 'draw-sprite',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': 0.8,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': '#22c55e',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@u',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@u',
+                                      'y',
+                                    ],
+                                  },
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': [
+                                    '*',
+                                    0.8,
+                                    [
+                                      '/',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'hp',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'maxHp',
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'projection': 'isometric',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
                         'tileClickEvent': 'PLACE_TOWER',
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
+                        'type': 'canvas',
                         'unitClickEvent': 'UNIT_CLICK',
-                        'units': '@entity.creeps',
-                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'fontFamily': 'future',
@@ -8996,32 +10526,338 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                   },
                   'children': [
                     {
-                      'assetManifest': '@config.assetManifest',
-                      'effects': '@entity.effects',
-                      'features': [
-                        'array/map',
-                        '@entity.towers',
-                        [
-                          'fn',
-                          't',
-                          {
-                            'id': '@t.id',
-                            'type': 'tower',
-                            'x': '@t.x',
-                            'y': '@t.y',
+                      'camera': {
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@t',
+                                  'terrainSprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.towers',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'features',
+                                  ],
+                                  'tower',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.validMoves',
+                            [
+                              'fn',
+                              'm',
+                              {
+                                'fill': 'rgba(74,222,128,0.4)',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@m',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@m',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              'array/filter',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  '==',
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
+                                  '@entity.selectedUnitId',
+                                ],
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@u',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@u',
+                                    'y',
+                                  ],
+                                },
+                                'radiusX': 0.5,
+                                'radiusY': 0.2,
+                                'shape': 'ellipse',
+                                'stroke': 'rgba(0,200,255,0.8)',
+                                'strokeWidth': 3,
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.creeps',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'creep',
+                                ],
+                                'frame': [
+                                  'object/get',
+                                  '@u',
+                                  'frame',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@u',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@u',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'asset': [
+                            'object/get',
+                            [
+                              'object/get',
+                              '@config.assetManifest',
+                              'units',
+                            ],
+                            'hero',
+                          ],
+                          'position': {
+                            'x': [
+                              'object/get',
+                              '@entity.hero',
+                              'x',
+                            ],
+                            'y': [
+                              'object/get',
+                              '@entity.hero',
+                              'y',
+                            ],
                           },
-                        ],
+                          'type': 'draw-sprite',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.creeps',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': 'rgba(0,0,0,0.6)',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@u',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@u',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': 0.8,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.creeps',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': '#22c55e',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@u',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@u',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': [
+                                  '*',
+                                  0.8,
+                                  [
+                                    '/',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'hp',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'maxHp',
+                                    ],
+                                  ],
+                                ],
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.effects',
+                            [
+                              'fn',
+                              'e',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@e',
+                                    'key',
+                                  ],
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@e',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@e',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
                       ],
                       'projection': 'isometric',
-                      'scale': '@config.scale',
-                      'selectedUnitId': '@entity.selectedUnitId',
                       'showMinimap': true,
                       'tileClickEvent': 'PLACE_TOWER',
-                      'tiles': '@config.tiles',
-                      'type': 'canvas-2d',
+                      'type': 'canvas',
                       'unitClickEvent': 'UNIT_CLICK',
-                      'units': '@entity.creeps',
-                      'validMoves': '@entity.validMoves',
                     },
                   ],
                   'fontFamily': 'future',
@@ -9545,32 +11381,338 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                   },
                   'children': [
                     {
-                      'assetManifest': '@config.assetManifest',
-                      'effects': '@entity.effects',
-                      'features': [
-                        'array/map',
-                        '@entity.towers',
-                        [
-                          'fn',
-                          't',
-                          {
-                            'id': '@t.id',
-                            'type': 'tower',
-                            'x': '@t.x',
-                            'y': '@t.y',
+                      'camera': {
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@t',
+                                  'terrainSprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.towers',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'features',
+                                  ],
+                                  'tower',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.validMoves',
+                            [
+                              'fn',
+                              'm',
+                              {
+                                'fill': 'rgba(74,222,128,0.4)',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@m',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@m',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              'array/filter',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  '==',
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
+                                  '@entity.selectedUnitId',
+                                ],
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@u',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@u',
+                                    'y',
+                                  ],
+                                },
+                                'radiusX': 0.5,
+                                'radiusY': 0.2,
+                                'shape': 'ellipse',
+                                'stroke': 'rgba(0,200,255,0.8)',
+                                'strokeWidth': 3,
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.creeps',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'creep',
+                                ],
+                                'frame': [
+                                  'object/get',
+                                  '@u',
+                                  'frame',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@u',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@u',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'asset': [
+                            'object/get',
+                            [
+                              'object/get',
+                              '@config.assetManifest',
+                              'units',
+                            ],
+                            'hero',
+                          ],
+                          'position': {
+                            'x': [
+                              'object/get',
+                              '@entity.hero',
+                              'x',
+                            ],
+                            'y': [
+                              'object/get',
+                              '@entity.hero',
+                              'y',
+                            ],
                           },
-                        ],
+                          'type': 'draw-sprite',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.creeps',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': 'rgba(0,0,0,0.6)',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@u',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@u',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': 0.8,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.creeps',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': '#22c55e',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@u',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@u',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': [
+                                  '*',
+                                  0.8,
+                                  [
+                                    '/',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'hp',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'maxHp',
+                                    ],
+                                  ],
+                                ],
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.effects',
+                            [
+                              'fn',
+                              'e',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@e',
+                                    'key',
+                                  ],
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@e',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@e',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
                       ],
                       'projection': 'isometric',
-                      'scale': '@config.scale',
-                      'selectedUnitId': '@entity.selectedUnitId',
                       'showMinimap': true,
                       'tileClickEvent': 'PLACE_TOWER',
-                      'tiles': '@config.tiles',
-                      'type': 'canvas-2d',
+                      'type': 'canvas',
                       'unitClickEvent': 'UNIT_CLICK',
-                      'units': '@entity.creeps',
-                      'validMoves': '@entity.validMoves',
                     },
                   ],
                   'fontFamily': 'future',
@@ -10001,32 +12143,338 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                   },
                   'children': [
                     {
-                      'assetManifest': '@config.assetManifest',
-                      'effects': '@entity.effects',
-                      'features': [
-                        'array/map',
-                        '@entity.towers',
-                        [
-                          'fn',
-                          't',
-                          {
-                            'id': '@t.id',
-                            'type': 'tower',
-                            'x': '@t.x',
-                            'y': '@t.y',
+                      'camera': {
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@t',
+                                  'terrainSprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.towers',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'features',
+                                  ],
+                                  'tower',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.validMoves',
+                            [
+                              'fn',
+                              'm',
+                              {
+                                'fill': 'rgba(74,222,128,0.4)',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@m',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@m',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              'array/filter',
+                              '@entity.creeps',
+                              [
+                                'fn',
+                                'u',
+                                [
+                                  '==',
+                                  [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
+                                  '@entity.selectedUnitId',
+                                ],
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@u',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@u',
+                                    'y',
+                                  ],
+                                },
+                                'radiusX': 0.5,
+                                'radiusY': 0.2,
+                                'shape': 'ellipse',
+                                'stroke': 'rgba(0,200,255,0.8)',
+                                'strokeWidth': 3,
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.creeps',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'creep',
+                                ],
+                                'frame': [
+                                  'object/get',
+                                  '@u',
+                                  'frame',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@u',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@u',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'asset': [
+                            'object/get',
+                            [
+                              'object/get',
+                              '@config.assetManifest',
+                              'units',
+                            ],
+                            'hero',
+                          ],
+                          'position': {
+                            'x': [
+                              'object/get',
+                              '@entity.hero',
+                              'x',
+                            ],
+                            'y': [
+                              'object/get',
+                              '@entity.hero',
+                              'y',
+                            ],
                           },
-                        ],
+                          'type': 'draw-sprite',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.creeps',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': 'rgba(0,0,0,0.6)',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@u',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@u',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': 0.8,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.creeps',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': '#22c55e',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@u',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@u',
+                                    'y',
+                                  ],
+                                },
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': [
+                                  '*',
+                                  0.8,
+                                  [
+                                    '/',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'hp',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'maxHp',
+                                    ],
+                                  ],
+                                ],
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.effects',
+                            [
+                              'fn',
+                              'e',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@e',
+                                    'key',
+                                  ],
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@e',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@e',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
                       ],
                       'projection': 'isometric',
-                      'scale': '@config.scale',
-                      'selectedUnitId': '@entity.selectedUnitId',
                       'showMinimap': true,
                       'tileClickEvent': 'PLACE_TOWER',
-                      'tiles': '@config.tiles',
-                      'type': 'canvas-2d',
+                      'type': 'canvas',
                       'unitClickEvent': 'UNIT_CLICK',
-                      'units': '@entity.creeps',
-                      'validMoves': '@entity.validMoves',
                     },
                   ],
                   'fontFamily': 'future',

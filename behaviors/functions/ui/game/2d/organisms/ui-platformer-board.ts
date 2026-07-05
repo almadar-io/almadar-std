@@ -122,9 +122,9 @@ export interface StdUiPlatformerBoardConfig {
   moveSpeed?: number;
   /** Default: `[{"height":32,"type":"ground","width":800,"x":0,"y":368},{"height":16,"type":"platform","width":160,"x":150,"y":280},{"height":16,"type":"platform","width":160,"x":420,"y":220},{"height":16,"type":"hazard","width":80,"x":580,"y":300},{"height":28,"type":"goal","width":64,"x":700,"y":340}]` */
   platforms?: EntityRow[];
-  /** Default: `{"animations":["idle","walk","jump","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-platformer-characters-1/units/kenney-platformer-characters-1.generated.json","category":"player","dimension":"2d","name":"player","role":"player","sprite":"adventurer_idle.png","style":"flat-shaded","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-platformer-characters-1/units/kenney-platformer-characters-1.generated.png","variant":""}` */
+  /** Default: `{"animations":["idle","walk","jump","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-platformer-characters-1/units/kenney-platformer-characters-1.generated.json","category":"player","dimension":"2d","name":"player","role":"player","sprite":"adventurer_idle.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-platformer-characters-1/units/kenney-platformer-characters-1.generated.png","variant":""}` */
   playerSprite?: EntityRow;
-  /** Default: `{"goal":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"goal","dimension":"2d","name":"goal","role":"tile","sprite":"tileBlue_01.png","style":"flat-shaded","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""},"ground":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"ground","dimension":"2d","name":"ground","role":"tile","sprite":"tileGreen_01.png","style":"flat-shaded","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""},"hazard":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"hazard","dimension":"2d","name":"hazard","role":"tile","sprite":"tileYellow_01.png","style":"flat-shaded","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""},"platform":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"platform","dimension":"2d","name":"platform","role":"tile","sprite":"tileBrown_01.png","style":"flat-shaded","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""}}` */
+  /** Default: `{"goal":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"goal","dimension":"2d","name":"goal","role":"tile","sprite":"tileBlue_01.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""},"ground":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"ground","dimension":"2d","name":"ground","role":"tile","sprite":"tileGreen_01.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""},"hazard":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"hazard","dimension":"2d","name":"hazard","role":"tile","sprite":"tileYellow_01.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""},"platform":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.json","category":"platform","dimension":"2d","name":"platform","role":"tile","sprite":"tileBrown_01.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png","variant":""}}` */
   tileSprites?: Record<string, TraitConfig>;
   /** Default: `400` */
   worldHeight?: number;
@@ -660,7 +660,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
               'name': 'player',
               'role': 'player',
               'sprite': 'adventurer_idle.png',
-              'style': 'flat-shaded',
+              'style': '',
               'thumbnailUrl': '',
               'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-platformer-characters-1/units/kenney-platformer-characters-1.generated.png',
               'variant': '',
@@ -748,7 +748,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                 'name': 'goal',
                 'role': 'tile',
                 'sprite': 'tileBlue_01.png',
-                'style': 'flat-shaded',
+                'style': '',
                 'thumbnailUrl': '',
                 'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png',
                 'variant': '',
@@ -764,7 +764,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                 'name': 'ground',
                 'role': 'tile',
                 'sprite': 'tileGreen_01.png',
-                'style': 'flat-shaded',
+                'style': '',
                 'thumbnailUrl': '',
                 'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png',
                 'variant': '',
@@ -780,7 +780,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                 'name': 'hazard',
                 'role': 'tile',
                 'sprite': 'tileYellow_01.png',
-                'style': 'flat-shaded',
+                'style': '',
                 'thumbnailUrl': '',
                 'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png',
                 'variant': '',
@@ -796,7 +796,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                 'name': 'platform',
                 'role': 'tile',
                 'sprite': 'tileBrown_01.png',
-                'style': 'flat-shaded',
+                'style': '',
                 'thumbnailUrl': '',
                 'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/kenney-abstract-platformer/terrain/spritesheet_tiles.png',
                 'variant': '',
@@ -1228,9 +1228,73 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     },
                     'children': [
                       {
+                        'backgroundColor': '@config.bgColor',
                         'backgroundImage': '@config.backgroundImage',
-                        'bgColor': '@config.bgColor',
-                        'camera': 'follow',
+                        'camera': {
+                          'mode': 'follow',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.platforms',
+                              [
+                                'fn',
+                                'p',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@config.tileSprites',
+                                    [
+                                      'object/get',
+                                      '@p',
+                                      'type',
+                                    ],
+                                  ],
+                                  'height': [
+                                    'object/get',
+                                    '@p',
+                                    'height',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': [
+                                    'object/get',
+                                    '@p',
+                                    'width',
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'asset': '@config.playerSprite',
+                            'flipX': [
+                              'not',
+                              '@entity.player.facingRight',
+                            ],
+                            'frame': '@entity.player.frame',
+                            'height': '@entity.player.height',
+                            'position': {
+                              'x': '@entity.player.x',
+                              'y': '@entity.player.y',
+                            },
+                            'type': 'draw-sprite',
+                            'width': '@entity.player.width',
+                          },
+                        ],
                         'keyMap': {
                           'ArrowLeft': 'LEFT',
                           'ArrowRight': 'RIGHT',
@@ -1246,16 +1310,10 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           'KeyA': 'STOP',
                           'KeyD': 'STOP',
                         },
-                        'platforms': '@config.platforms',
-                        'player': '@entity.player',
-                        'playerSprite': '@config.playerSprite',
                         'projection': 'side',
-                        'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tileSprites': '@config.tileSprites',
-                        'type': 'canvas-2d',
+                        'type': 'canvas',
                         'unitClickEvent': 'UNIT_CLICK',
-                        'validMoves': '@entity.validMoves',
                         'worldHeight': '@entity.worldHeight',
                         'worldWidth': '@entity.worldWidth',
                       },
@@ -1648,9 +1706,73 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     },
                     'children': [
                       {
+                        'backgroundColor': '@config.bgColor',
                         'backgroundImage': '@config.backgroundImage',
-                        'bgColor': '@config.bgColor',
-                        'camera': 'follow',
+                        'camera': {
+                          'mode': 'follow',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.platforms',
+                              [
+                                'fn',
+                                'p',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@config.tileSprites',
+                                    [
+                                      'object/get',
+                                      '@p',
+                                      'type',
+                                    ],
+                                  ],
+                                  'height': [
+                                    'object/get',
+                                    '@p',
+                                    'height',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': [
+                                    'object/get',
+                                    '@p',
+                                    'width',
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'asset': '@config.playerSprite',
+                            'flipX': [
+                              'not',
+                              '@entity.player.facingRight',
+                            ],
+                            'frame': '@entity.player.frame',
+                            'height': '@entity.player.height',
+                            'position': {
+                              'x': '@entity.player.x',
+                              'y': '@entity.player.y',
+                            },
+                            'type': 'draw-sprite',
+                            'width': '@entity.player.width',
+                          },
+                        ],
                         'keyMap': {
                           'ArrowLeft': 'LEFT',
                           'ArrowRight': 'RIGHT',
@@ -1666,16 +1788,10 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           'KeyA': 'STOP',
                           'KeyD': 'STOP',
                         },
-                        'platforms': '@config.platforms',
-                        'player': '@entity.player',
-                        'playerSprite': '@config.playerSprite',
                         'projection': 'side',
-                        'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tileSprites': '@config.tileSprites',
-                        'type': 'canvas-2d',
+                        'type': 'canvas',
                         'unitClickEvent': 'UNIT_CLICK',
-                        'validMoves': '@entity.validMoves',
                         'worldHeight': '@entity.worldHeight',
                         'worldWidth': '@entity.worldWidth',
                       },
@@ -1905,9 +2021,73 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     },
                     'children': [
                       {
+                        'backgroundColor': '@config.bgColor',
                         'backgroundImage': '@config.backgroundImage',
-                        'bgColor': '@config.bgColor',
-                        'camera': 'follow',
+                        'camera': {
+                          'mode': 'follow',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.platforms',
+                              [
+                                'fn',
+                                'p',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@config.tileSprites',
+                                    [
+                                      'object/get',
+                                      '@p',
+                                      'type',
+                                    ],
+                                  ],
+                                  'height': [
+                                    'object/get',
+                                    '@p',
+                                    'height',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@p',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@p',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                  'width': [
+                                    'object/get',
+                                    '@p',
+                                    'width',
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'asset': '@config.playerSprite',
+                            'flipX': [
+                              'not',
+                              '@entity.player.facingRight',
+                            ],
+                            'frame': '@entity.player.frame',
+                            'height': '@entity.player.height',
+                            'position': {
+                              'x': '@entity.player.x',
+                              'y': '@entity.player.y',
+                            },
+                            'type': 'draw-sprite',
+                            'width': '@entity.player.width',
+                          },
+                        ],
                         'keyMap': {
                           'ArrowLeft': 'LEFT',
                           'ArrowRight': 'RIGHT',
@@ -1923,16 +2103,10 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           'KeyA': 'STOP',
                           'KeyD': 'STOP',
                         },
-                        'platforms': '@config.platforms',
-                        'player': '@entity.player',
-                        'playerSprite': '@config.playerSprite',
                         'projection': 'side',
-                        'selectedUnitId': '@entity.selectedUnitId',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tileSprites': '@config.tileSprites',
-                        'type': 'canvas-2d',
+                        'type': 'canvas',
                         'unitClickEvent': 'UNIT_CLICK',
-                        'validMoves': '@entity.validMoves',
                         'worldHeight': '@entity.worldHeight',
                         'worldWidth': '@entity.worldWidth',
                       },
@@ -2650,9 +2824,73 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   },
                   'children': [
                     {
+                      'backgroundColor': '@config.bgColor',
                       'backgroundImage': '@config.backgroundImage',
-                      'bgColor': '@config.bgColor',
-                      'camera': 'follow',
+                      'camera': {
+                        'mode': 'follow',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.platforms',
+                            [
+                              'fn',
+                              'p',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@config.tileSprites',
+                                  [
+                                    'object/get',
+                                    '@p',
+                                    'type',
+                                  ],
+                                ],
+                                'height': [
+                                  'object/get',
+                                  '@p',
+                                  'height',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@p',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@p',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                                'width': [
+                                  'object/get',
+                                  '@p',
+                                  'width',
+                                ],
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'asset': '@config.playerSprite',
+                          'flipX': [
+                            'not',
+                            '@entity.player.facingRight',
+                          ],
+                          'frame': '@entity.player.frame',
+                          'height': '@entity.player.height',
+                          'position': {
+                            'x': '@entity.player.x',
+                            'y': '@entity.player.y',
+                          },
+                          'type': 'draw-sprite',
+                          'width': '@entity.player.width',
+                        },
+                      ],
                       'keyMap': {
                         'ArrowLeft': 'LEFT',
                         'ArrowRight': 'RIGHT',
@@ -2668,16 +2906,10 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                         'KeyA': 'STOP',
                         'KeyD': 'STOP',
                       },
-                      'platforms': '@config.platforms',
-                      'player': '@entity.player',
-                      'playerSprite': '@config.playerSprite',
                       'projection': 'side',
-                      'selectedUnitId': '@entity.selectedUnitId',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tileSprites': '@config.tileSprites',
-                      'type': 'canvas-2d',
+                      'type': 'canvas',
                       'unitClickEvent': 'UNIT_CLICK',
-                      'validMoves': '@entity.validMoves',
                       'worldHeight': '@entity.worldHeight',
                       'worldWidth': '@entity.worldWidth',
                     },

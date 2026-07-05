@@ -2975,18 +2975,168 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@config.features',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.track',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.pieces',
+                              [
+                                'fn',
+                                'p',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@p',
+                                    'sprite',
+                                  ],
+                                  'position': [
+                                    'object/get',
+                                    '@p',
+                                    'position',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.pieces',
+                              [
+                                'fn',
+                                'p',
+                                {
+                                  'color': '#ffffff',
+                                  'offsetY': -0.85,
+                                  'position': [
+                                    'object/get',
+                                    '@p',
+                                    'position',
+                                  ],
+                                  'text': [
+                                    'object/get',
+                                    '@p',
+                                    'name',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
+                        ],
                         'keyMap': {
                           'Space': 'ROLL_DICE',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.track',
-                        'type': 'canvas-2d',
-                        'units': '@entity.pieces',
+                        'type': 'canvas',
                       },
                     ],
                     'fontFamily': 'future',
@@ -3361,18 +3511,168 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@config.features',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.track',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.pieces',
+                              [
+                                'fn',
+                                'p',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@p',
+                                    'sprite',
+                                  ],
+                                  'position': [
+                                    'object/get',
+                                    '@p',
+                                    'position',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.pieces',
+                              [
+                                'fn',
+                                'p',
+                                {
+                                  'color': '#ffffff',
+                                  'offsetY': -0.85,
+                                  'position': [
+                                    'object/get',
+                                    '@p',
+                                    'position',
+                                  ],
+                                  'text': [
+                                    'object/get',
+                                    '@p',
+                                    'name',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
+                        ],
                         'keyMap': {
                           'Space': 'ROLL_DICE',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.track',
-                        'type': 'canvas-2d',
-                        'units': '@entity.pieces',
+                        'type': 'canvas',
                       },
                     ],
                     'fontFamily': 'future',
@@ -3544,18 +3844,168 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@config.features',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.track',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.pieces',
+                              [
+                                'fn',
+                                'p',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@p',
+                                    'sprite',
+                                  ],
+                                  'position': [
+                                    'object/get',
+                                    '@p',
+                                    'position',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.pieces',
+                              [
+                                'fn',
+                                'p',
+                                {
+                                  'color': '#ffffff',
+                                  'offsetY': -0.85,
+                                  'position': [
+                                    'object/get',
+                                    '@p',
+                                    'position',
+                                  ],
+                                  'text': [
+                                    'object/get',
+                                    '@p',
+                                    'name',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
+                        ],
                         'keyMap': {
                           'Space': 'ROLL_DICE',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.track',
-                        'type': 'canvas-2d',
-                        'units': '@entity.pieces',
+                        'type': 'canvas',
                       },
                     ],
                     'fontFamily': 'future',
@@ -3802,18 +4252,168 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@config.features',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.track',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.pieces',
+                              [
+                                'fn',
+                                'p',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@p',
+                                    'sprite',
+                                  ],
+                                  'position': [
+                                    'object/get',
+                                    '@p',
+                                    'position',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.pieces',
+                              [
+                                'fn',
+                                'p',
+                                {
+                                  'color': '#ffffff',
+                                  'offsetY': -0.85,
+                                  'position': [
+                                    'object/get',
+                                    '@p',
+                                    'position',
+                                  ],
+                                  'text': [
+                                    'object/get',
+                                    '@p',
+                                    'name',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
+                        ],
                         'keyMap': {
                           'Space': 'ROLL_DICE',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.track',
-                        'type': 'canvas-2d',
-                        'units': '@entity.pieces',
+                        'type': 'canvas',
                       },
                     ],
                     'fontFamily': 'future',
@@ -4010,18 +4610,168 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   },
                   'children': [
                     {
-                      'assetManifest': '@config.assetManifest',
-                      'effects': '@entity.effects',
-                      'features': '@config.features',
+                      'camera': {
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.track',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@t',
+                                  'terrainSprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.features',
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@f',
+                                  'sprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.pieces',
+                            [
+                              'fn',
+                              'p',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@p',
+                                  'sprite',
+                                ],
+                                'position': [
+                                  'object/get',
+                                  '@p',
+                                  'position',
+                                ],
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.effects',
+                            [
+                              'fn',
+                              'e',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@e',
+                                    'key',
+                                  ],
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@e',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@e',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.pieces',
+                            [
+                              'fn',
+                              'p',
+                              {
+                                'color': '#ffffff',
+                                'offsetY': -0.85,
+                                'position': [
+                                  'object/get',
+                                  '@p',
+                                  'position',
+                                ],
+                                'text': [
+                                  'object/get',
+                                  '@p',
+                                  'name',
+                                ],
+                                'type': 'draw-text',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-text-layer',
+                        },
+                      ],
                       'keyMap': {
                         'Space': 'ROLL_DICE',
                       },
                       'projection': 'flat',
-                      'scale': '@config.scale',
                       'showMinimap': false,
-                      'tiles': '@config.track',
-                      'type': 'canvas-2d',
-                      'units': '@entity.pieces',
+                      'type': 'canvas',
                     },
                   ],
                   'fontFamily': 'future',
@@ -4409,18 +5159,168 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   },
                   'children': [
                     {
-                      'assetManifest': '@config.assetManifest',
-                      'effects': '@entity.effects',
-                      'features': '@config.features',
+                      'camera': {
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.track',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@t',
+                                  'terrainSprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.features',
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@f',
+                                  'sprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.pieces',
+                            [
+                              'fn',
+                              'p',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@p',
+                                  'sprite',
+                                ],
+                                'position': [
+                                  'object/get',
+                                  '@p',
+                                  'position',
+                                ],
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.effects',
+                            [
+                              'fn',
+                              'e',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@e',
+                                    'key',
+                                  ],
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@e',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@e',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.pieces',
+                            [
+                              'fn',
+                              'p',
+                              {
+                                'color': '#ffffff',
+                                'offsetY': -0.85,
+                                'position': [
+                                  'object/get',
+                                  '@p',
+                                  'position',
+                                ],
+                                'text': [
+                                  'object/get',
+                                  '@p',
+                                  'name',
+                                ],
+                                'type': 'draw-text',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-text-layer',
+                        },
+                      ],
                       'keyMap': {
                         'Space': 'ROLL_DICE',
                       },
                       'projection': 'flat',
-                      'scale': '@config.scale',
                       'showMinimap': false,
-                      'tiles': '@config.track',
-                      'type': 'canvas-2d',
-                      'units': '@entity.pieces',
+                      'type': 'canvas',
                     },
                   ],
                   'fontFamily': 'future',

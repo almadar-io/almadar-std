@@ -1780,35 +1780,270 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                   {
                     'children': [
                       {
-                        'cameraMode': 'top-down',
-                        'events': '@entity.fx',
-                        'features': [
-                          'array/concat',
-                          '@config.features',
-                          [
-                            'array/map',
-                            '@entity.towers',
-                            [
-                              'fn',
-                              't',
-                              {
-                                'assetUrl': '@config.towerAsset',
-                                'id': '@t.id',
-                                'type': 'tower',
-                                'x': '@t.x',
-                                'y': '@t.y',
-                              },
+                        'camera': {
+                          'mode': 'top-down',
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'modelUrl',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
                             ],
-                          ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/concat',
+                                '@config.features',
+                                [
+                                  'array/map',
+                                  '@entity.towers',
+                                  [
+                                    'fn',
+                                    't',
+                                    {
+                                      'assetUrl': '@config.towerAsset',
+                                      'id': '@t.id',
+                                      'type': 'tower',
+                                      'x': '@t.x',
+                                      'y': '@t.y',
+                                    },
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'assetUrl',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.towerCoverage',
+                              [
+                                'fn',
+                                'm',
+                                {
+                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@m',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@m',
+                                      'z',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@u',
+                                    'modelUrl',
+                                  ],
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': 0.8,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': '#22c55e',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': [
+                                    '*',
+                                    0.8,
+                                    [
+                                      '/',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'health',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'maxHealth',
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'color': '#ffffff',
+                                  'offsetY': -0.85,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'text': [
+                                    'object/get',
+                                    '@u',
+                                    'name',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.fx',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'color': '#ffe066',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'z',
+                                    ],
+                                  },
+                                  'text': [
+                                    'object/get',
+                                    '@f',
+                                    'message',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
                         ],
-                        'interpolateUnits': true,
-                        'scale': '@config.scale',
+                        'mode': '3d',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@entity.tiles',
-                        'type': 'game-canvas-3d',
+                        'type': 'canvas',
                         'unitScale': '@config.unitScale',
-                        'units': '@entity.units',
-                        'validMoves': '@entity.towerCoverage',
                       },
                     ],
                     'hud': {
@@ -1988,35 +2223,270 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                   {
                     'children': [
                       {
-                        'cameraMode': 'top-down',
-                        'events': '@entity.fx',
-                        'features': [
-                          'array/concat',
-                          '@config.features',
-                          [
-                            'array/map',
-                            '@entity.towers',
-                            [
-                              'fn',
-                              't',
-                              {
-                                'assetUrl': '@config.towerAsset',
-                                'id': '@t.id',
-                                'type': 'tower',
-                                'x': '@t.x',
-                                'y': '@t.y',
-                              },
+                        'camera': {
+                          'mode': 'top-down',
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'modelUrl',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
                             ],
-                          ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/concat',
+                                '@config.features',
+                                [
+                                  'array/map',
+                                  '@entity.towers',
+                                  [
+                                    'fn',
+                                    't',
+                                    {
+                                      'assetUrl': '@config.towerAsset',
+                                      'id': '@t.id',
+                                      'type': 'tower',
+                                      'x': '@t.x',
+                                      'y': '@t.y',
+                                    },
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'assetUrl',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.towerCoverage',
+                              [
+                                'fn',
+                                'm',
+                                {
+                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@m',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@m',
+                                      'z',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@u',
+                                    'modelUrl',
+                                  ],
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': 0.8,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': '#22c55e',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': [
+                                    '*',
+                                    0.8,
+                                    [
+                                      '/',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'health',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'maxHealth',
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'color': '#ffffff',
+                                  'offsetY': -0.85,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'text': [
+                                    'object/get',
+                                    '@u',
+                                    'name',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.fx',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'color': '#ffe066',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'z',
+                                    ],
+                                  },
+                                  'text': [
+                                    'object/get',
+                                    '@f',
+                                    'message',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
                         ],
-                        'interpolateUnits': true,
-                        'scale': '@config.scale',
+                        'mode': '3d',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@entity.tiles',
-                        'type': 'game-canvas-3d',
+                        'type': 'canvas',
                         'unitScale': '@config.unitScale',
-                        'units': '@entity.units',
-                        'validMoves': '@entity.towerCoverage',
                       },
                     ],
                     'hud': {
@@ -2177,35 +2647,270 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                   {
                     'children': [
                       {
-                        'cameraMode': 'top-down',
-                        'events': '@entity.fx',
-                        'features': [
-                          'array/concat',
-                          '@config.features',
-                          [
-                            'array/map',
-                            '@entity.towers',
-                            [
-                              'fn',
-                              't',
-                              {
-                                'assetUrl': '@config.towerAsset',
-                                'id': '@t.id',
-                                'type': 'tower',
-                                'x': '@t.x',
-                                'y': '@t.y',
-                              },
+                        'camera': {
+                          'mode': 'top-down',
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'modelUrl',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
                             ],
-                          ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/concat',
+                                '@config.features',
+                                [
+                                  'array/map',
+                                  '@entity.towers',
+                                  [
+                                    'fn',
+                                    't',
+                                    {
+                                      'assetUrl': '@config.towerAsset',
+                                      'id': '@t.id',
+                                      'type': 'tower',
+                                      'x': '@t.x',
+                                      'y': '@t.y',
+                                    },
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'assetUrl',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.towerCoverage',
+                              [
+                                'fn',
+                                'm',
+                                {
+                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@m',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@m',
+                                      'z',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@u',
+                                    'modelUrl',
+                                  ],
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': 0.8,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': '#22c55e',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': [
+                                    '*',
+                                    0.8,
+                                    [
+                                      '/',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'health',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'maxHealth',
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'color': '#ffffff',
+                                  'offsetY': -0.85,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'text': [
+                                    'object/get',
+                                    '@u',
+                                    'name',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.fx',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'color': '#ffe066',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'z',
+                                    ],
+                                  },
+                                  'text': [
+                                    'object/get',
+                                    '@f',
+                                    'message',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
                         ],
-                        'interpolateUnits': true,
-                        'scale': '@config.scale',
+                        'mode': '3d',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@entity.tiles',
-                        'type': 'game-canvas-3d',
+                        'type': 'canvas',
                         'unitScale': '@config.unitScale',
-                        'units': '@entity.units',
-                        'validMoves': '@entity.towerCoverage',
                       },
                     ],
                     'hud': {
@@ -2472,35 +3177,270 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                   {
                     'children': [
                       {
-                        'cameraMode': 'top-down',
-                        'events': '@entity.fx',
-                        'features': [
-                          'array/concat',
-                          '@config.features',
-                          [
-                            'array/map',
-                            '@entity.towers',
-                            [
-                              'fn',
-                              't',
-                              {
-                                'assetUrl': '@config.towerAsset',
-                                'id': '@t.id',
-                                'type': 'tower',
-                                'x': '@t.x',
-                                'y': '@t.y',
-                              },
+                        'camera': {
+                          'mode': 'top-down',
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'modelUrl',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
                             ],
-                          ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/concat',
+                                '@config.features',
+                                [
+                                  'array/map',
+                                  '@entity.towers',
+                                  [
+                                    'fn',
+                                    't',
+                                    {
+                                      'assetUrl': '@config.towerAsset',
+                                      'id': '@t.id',
+                                      'type': 'tower',
+                                      'x': '@t.x',
+                                      'y': '@t.y',
+                                    },
+                                  ],
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'assetUrl',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.towerCoverage',
+                              [
+                                'fn',
+                                'm',
+                                {
+                                  'fill': 'rgba(74,222,128,0.4)',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@m',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@m',
+                                      'z',
+                                    ],
+                                  },
+                                  'shape': 'cell',
+                                  'type': 'draw-shape',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@u',
+                                    'modelUrl',
+                                  ],
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': 'rgba(0,0,0,0.6)',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': 0.8,
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'fill': '#22c55e',
+                                  'height': 0.12,
+                                  'offsetY': -0.6,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'shape': 'rect',
+                                  'type': 'draw-shape',
+                                  'width': [
+                                    '*',
+                                    0.8,
+                                    [
+                                      '/',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'health',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'maxHealth',
+                                      ],
+                                    ],
+                                  ],
+                                },
+                              ],
+                            ],
+                            'type': 'draw-shape-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'color': '#ffffff',
+                                  'offsetY': -0.85,
+                                  'position': [
+                                    'object/get',
+                                    '@u',
+                                    'position',
+                                  ],
+                                  'text': [
+                                    'object/get',
+                                    '@u',
+                                    'name',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.fx',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'color': '#ffe066',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'z',
+                                    ],
+                                  },
+                                  'text': [
+                                    'object/get',
+                                    '@f',
+                                    'message',
+                                  ],
+                                  'type': 'draw-text',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-text-layer',
+                          },
                         ],
-                        'interpolateUnits': true,
-                        'scale': '@config.scale',
+                        'mode': '3d',
                         'tileClickEvent': 'TILE_CLICK',
-                        'tiles': '@entity.tiles',
-                        'type': 'game-canvas-3d',
+                        'type': 'canvas',
                         'unitScale': '@config.unitScale',
-                        'units': '@entity.units',
-                        'validMoves': '@entity.towerCoverage',
                       },
                     ],
                     'hud': {
@@ -2642,35 +3582,270 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                 {
                   'children': [
                     {
-                      'cameraMode': 'top-down',
-                      'events': '@entity.fx',
-                      'features': [
-                        'array/concat',
-                        '@config.features',
-                        [
-                          'array/map',
-                          '@entity.towers',
-                          [
-                            'fn',
-                            't',
-                            {
-                              'assetUrl': '@config.towerAsset',
-                              'id': '@t.id',
-                              'type': 'tower',
-                              'x': '@t.x',
-                              'y': '@t.y',
-                            },
+                      'camera': {
+                        'mode': 'top-down',
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@t',
+                                  'modelUrl',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
                           ],
-                        ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              'array/concat',
+                              '@config.features',
+                              [
+                                'array/map',
+                                '@entity.towers',
+                                [
+                                  'fn',
+                                  't',
+                                  {
+                                    'assetUrl': '@config.towerAsset',
+                                    'id': '@t.id',
+                                    'type': 'tower',
+                                    'x': '@t.x',
+                                    'y': '@t.y',
+                                  },
+                                ],
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@f',
+                                  'assetUrl',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.towerCoverage',
+                            [
+                              'fn',
+                              'm',
+                              {
+                                'fill': 'rgba(74,222,128,0.4)',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@m',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@m',
+                                    'z',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@u',
+                                  'modelUrl',
+                                ],
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': 'rgba(0,0,0,0.6)',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': 0.8,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': '#22c55e',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': [
+                                  '*',
+                                  0.8,
+                                  [
+                                    '/',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'maxHealth',
+                                    ],
+                                  ],
+                                ],
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'color': '#ffffff',
+                                'offsetY': -0.85,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'text': [
+                                  'object/get',
+                                  '@u',
+                                  'name',
+                                ],
+                                'type': 'draw-text',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-text-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.fx',
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'color': '#ffe066',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'z',
+                                  ],
+                                },
+                                'text': [
+                                  'object/get',
+                                  '@f',
+                                  'message',
+                                ],
+                                'type': 'draw-text',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-text-layer',
+                        },
                       ],
-                      'interpolateUnits': true,
-                      'scale': '@config.scale',
+                      'mode': '3d',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@entity.tiles',
-                      'type': 'game-canvas-3d',
+                      'type': 'canvas',
                       'unitScale': '@config.unitScale',
-                      'units': '@entity.units',
-                      'validMoves': '@entity.towerCoverage',
                     },
                   ],
                   'hud': {
@@ -3035,35 +4210,270 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                 {
                   'children': [
                     {
-                      'cameraMode': 'top-down',
-                      'events': '@entity.fx',
-                      'features': [
-                        'array/concat',
-                        '@config.features',
-                        [
-                          'array/map',
-                          '@entity.towers',
-                          [
-                            'fn',
-                            't',
-                            {
-                              'assetUrl': '@config.towerAsset',
-                              'id': '@t.id',
-                              'type': 'tower',
-                              'x': '@t.x',
-                              'y': '@t.y',
-                            },
+                      'camera': {
+                        'mode': 'top-down',
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@t',
+                                  'modelUrl',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
                           ],
-                        ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              'array/concat',
+                              '@config.features',
+                              [
+                                'array/map',
+                                '@entity.towers',
+                                [
+                                  'fn',
+                                  't',
+                                  {
+                                    'assetUrl': '@config.towerAsset',
+                                    'id': '@t.id',
+                                    'type': 'tower',
+                                    'x': '@t.x',
+                                    'y': '@t.y',
+                                  },
+                                ],
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@f',
+                                  'assetUrl',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.towerCoverage',
+                            [
+                              'fn',
+                              'm',
+                              {
+                                'fill': 'rgba(74,222,128,0.4)',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@m',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@m',
+                                    'z',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@u',
+                                  'modelUrl',
+                                ],
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': 'rgba(0,0,0,0.6)',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': 0.8,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': '#22c55e',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': [
+                                  '*',
+                                  0.8,
+                                  [
+                                    '/',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'maxHealth',
+                                    ],
+                                  ],
+                                ],
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'color': '#ffffff',
+                                'offsetY': -0.85,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'text': [
+                                  'object/get',
+                                  '@u',
+                                  'name',
+                                ],
+                                'type': 'draw-text',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-text-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.fx',
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'color': '#ffe066',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'z',
+                                  ],
+                                },
+                                'text': [
+                                  'object/get',
+                                  '@f',
+                                  'message',
+                                ],
+                                'type': 'draw-text',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-text-layer',
+                        },
                       ],
-                      'interpolateUnits': true,
-                      'scale': '@config.scale',
+                      'mode': '3d',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@entity.tiles',
-                      'type': 'game-canvas-3d',
+                      'type': 'canvas',
                       'unitScale': '@config.unitScale',
-                      'units': '@entity.units',
-                      'validMoves': '@entity.towerCoverage',
                     },
                   ],
                   'hud': {
@@ -3400,35 +4810,270 @@ export function stdUiTowerDefenseBoard3dTowerDefenseBoard3DOrbital(params: StdUi
                 {
                   'children': [
                     {
-                      'cameraMode': 'top-down',
-                      'events': '@entity.fx',
-                      'features': [
-                        'array/concat',
-                        '@config.features',
-                        [
-                          'array/map',
-                          '@entity.towers',
-                          [
-                            'fn',
-                            't',
-                            {
-                              'assetUrl': '@config.towerAsset',
-                              'id': '@t.id',
-                              'type': 'tower',
-                              'x': '@t.x',
-                              'y': '@t.y',
-                            },
+                      'camera': {
+                        'mode': 'top-down',
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@t',
+                                  'modelUrl',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
                           ],
-                        ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              'array/concat',
+                              '@config.features',
+                              [
+                                'array/map',
+                                '@entity.towers',
+                                [
+                                  'fn',
+                                  't',
+                                  {
+                                    'assetUrl': '@config.towerAsset',
+                                    'id': '@t.id',
+                                    'type': 'tower',
+                                    'x': '@t.x',
+                                    'y': '@t.y',
+                                  },
+                                ],
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@f',
+                                  'assetUrl',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.towerCoverage',
+                            [
+                              'fn',
+                              'm',
+                              {
+                                'fill': 'rgba(74,222,128,0.4)',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@m',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@m',
+                                    'z',
+                                  ],
+                                },
+                                'shape': 'cell',
+                                'type': 'draw-shape',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@u',
+                                  'modelUrl',
+                                ],
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': 'rgba(0,0,0,0.6)',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': 0.8,
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'fill': '#22c55e',
+                                'height': 0.12,
+                                'offsetY': -0.6,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'shape': 'rect',
+                                'type': 'draw-shape',
+                                'width': [
+                                  '*',
+                                  0.8,
+                                  [
+                                    '/',
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'health',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@u',
+                                      'maxHealth',
+                                    ],
+                                  ],
+                                ],
+                              },
+                            ],
+                          ],
+                          'type': 'draw-shape-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.units',
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'color': '#ffffff',
+                                'offsetY': -0.85,
+                                'position': [
+                                  'object/get',
+                                  '@u',
+                                  'position',
+                                ],
+                                'text': [
+                                  'object/get',
+                                  '@u',
+                                  'name',
+                                ],
+                                'type': 'draw-text',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-text-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.fx',
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'color': '#ffe066',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'z',
+                                  ],
+                                },
+                                'text': [
+                                  'object/get',
+                                  '@f',
+                                  'message',
+                                ],
+                                'type': 'draw-text',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-text-layer',
+                        },
                       ],
-                      'interpolateUnits': true,
-                      'scale': '@config.scale',
+                      'mode': '3d',
                       'tileClickEvent': 'TILE_CLICK',
-                      'tiles': '@entity.tiles',
-                      'type': 'game-canvas-3d',
+                      'type': 'canvas',
                       'unitScale': '@config.unitScale',
-                      'units': '@entity.units',
-                      'validMoves': '@entity.towerCoverage',
                     },
                   ],
                   'hud': {

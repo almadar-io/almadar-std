@@ -2291,75 +2291,197 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/map',
-                          '@entity.crates',
-                          [
-                            'fn',
-                            'c',
-                            {
-                              'id': '@c.id',
-                              'sprite': [
-                                'if',
-                                [
-                                  '!=',
-                                  [
-                                    'array/find',
-                                    '@config.targets',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.crates',
+                              [
+                                'fn',
+                                'c',
+                                {
+                                  'asset': [
+                                    'if',
                                     [
-                                      'fn',
-                                      't',
+                                      '!=',
                                       [
-                                        'and',
+                                        'array/find',
+                                        '@config.targets',
                                         [
-                                          '==',
+                                          'fn',
+                                          't',
                                           [
-                                            'object/get',
-                                            '@t',
-                                            'x',
+                                            'and',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@t',
+                                                'x',
+                                              ],
+                                              [
+                                                'object/get',
+                                                '@c',
+                                                'x',
+                                              ],
+                                            ],
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@t',
+                                                'y',
+                                              ],
+                                              [
+                                                'object/get',
+                                                '@c',
+                                                'y',
+                                              ],
+                                            ],
                                           ],
-                                          '@c.x',
-                                        ],
-                                        [
-                                          '==',
-                                          [
-                                            'object/get',
-                                            '@t',
-                                            'y',
-                                          ],
-                                          '@c.y',
                                         ],
                                       ],
+                                      null,
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'crate_done',
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'crate',
                                     ],
                                   ],
-                                  null,
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
-                                  ],
-                                  'crate_done',
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
-                                  ],
-                                  'crate',
-                                ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@c',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@c',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
                               ],
-                              'type': 'crate',
-                              'x': '@c.x',
-                              'y': '@c.y',
-                            },
-                          ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'pusher',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@f',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowDown': 'MOVE_DOWN',
@@ -2372,37 +2494,8 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                           'KeyW': 'MOVE_UP',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'units': [
-                          {
-                            'animation': 'static',
-                            'frame': 0,
-                            'id': 'pusher',
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'pusher',
-                            ],
-                            'team': 'player',
-                            'x': [
-                              'object/get',
-                              '@entity.player',
-                              'x',
-                            ],
-                            'y': [
-                              'object/get',
-                              '@entity.player',
-                              'y',
-                            ],
-                          },
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -4103,75 +4196,197 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/map',
-                          '@entity.crates',
-                          [
-                            'fn',
-                            'c',
-                            {
-                              'id': '@c.id',
-                              'sprite': [
-                                'if',
-                                [
-                                  '!=',
-                                  [
-                                    'array/find',
-                                    '@config.targets',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.crates',
+                              [
+                                'fn',
+                                'c',
+                                {
+                                  'asset': [
+                                    'if',
                                     [
-                                      'fn',
-                                      't',
+                                      '!=',
                                       [
-                                        'and',
+                                        'array/find',
+                                        '@config.targets',
                                         [
-                                          '==',
+                                          'fn',
+                                          't',
                                           [
-                                            'object/get',
-                                            '@t',
-                                            'x',
+                                            'and',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@t',
+                                                'x',
+                                              ],
+                                              [
+                                                'object/get',
+                                                '@c',
+                                                'x',
+                                              ],
+                                            ],
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@t',
+                                                'y',
+                                              ],
+                                              [
+                                                'object/get',
+                                                '@c',
+                                                'y',
+                                              ],
+                                            ],
                                           ],
-                                          '@c.x',
-                                        ],
-                                        [
-                                          '==',
-                                          [
-                                            'object/get',
-                                            '@t',
-                                            'y',
-                                          ],
-                                          '@c.y',
                                         ],
                                       ],
+                                      null,
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'crate_done',
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'crate',
                                     ],
                                   ],
-                                  null,
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
-                                  ],
-                                  'crate_done',
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
-                                  ],
-                                  'crate',
-                                ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@c',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@c',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
                               ],
-                              'type': 'crate',
-                              'x': '@c.x',
-                              'y': '@c.y',
-                            },
-                          ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'pusher',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@f',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowDown': 'MOVE_DOWN',
@@ -4184,37 +4399,8 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                           'KeyW': 'MOVE_UP',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'units': [
-                          {
-                            'animation': 'static',
-                            'frame': 0,
-                            'id': 'pusher',
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'pusher',
-                            ],
-                            'team': 'player',
-                            'x': [
-                              'object/get',
-                              '@entity.player',
-                              'x',
-                            ],
-                            'y': [
-                              'object/get',
-                              '@entity.player',
-                              'y',
-                            ],
-                          },
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -4377,75 +4563,197 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/map',
-                          '@entity.crates',
-                          [
-                            'fn',
-                            'c',
-                            {
-                              'id': '@c.id',
-                              'sprite': [
-                                'if',
-                                [
-                                  '!=',
-                                  [
-                                    'array/find',
-                                    '@config.targets',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.crates',
+                              [
+                                'fn',
+                                'c',
+                                {
+                                  'asset': [
+                                    'if',
                                     [
-                                      'fn',
-                                      't',
+                                      '!=',
                                       [
-                                        'and',
+                                        'array/find',
+                                        '@config.targets',
                                         [
-                                          '==',
+                                          'fn',
+                                          't',
                                           [
-                                            'object/get',
-                                            '@t',
-                                            'x',
+                                            'and',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@t',
+                                                'x',
+                                              ],
+                                              [
+                                                'object/get',
+                                                '@c',
+                                                'x',
+                                              ],
+                                            ],
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@t',
+                                                'y',
+                                              ],
+                                              [
+                                                'object/get',
+                                                '@c',
+                                                'y',
+                                              ],
+                                            ],
                                           ],
-                                          '@c.x',
-                                        ],
-                                        [
-                                          '==',
-                                          [
-                                            'object/get',
-                                            '@t',
-                                            'y',
-                                          ],
-                                          '@c.y',
                                         ],
                                       ],
+                                      null,
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'crate_done',
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'crate',
                                     ],
                                   ],
-                                  null,
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
-                                  ],
-                                  'crate_done',
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
-                                  ],
-                                  'crate',
-                                ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@c',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@c',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
                               ],
-                              'type': 'crate',
-                              'x': '@c.x',
-                              'y': '@c.y',
-                            },
-                          ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'pusher',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@f',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowDown': 'MOVE_DOWN',
@@ -4458,37 +4766,8 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                           'KeyW': 'MOVE_UP',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'units': [
-                          {
-                            'animation': 'static',
-                            'frame': 0,
-                            'id': 'pusher',
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'pusher',
-                            ],
-                            'team': 'player',
-                            'x': [
-                              'object/get',
-                              '@entity.player',
-                              'x',
-                            ],
-                            'y': [
-                              'object/get',
-                              '@entity.player',
-                              'y',
-                            ],
-                          },
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -4707,75 +4986,197 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/map',
-                          '@entity.crates',
-                          [
-                            'fn',
-                            'c',
-                            {
-                              'id': '@c.id',
-                              'sprite': [
-                                'if',
-                                [
-                                  '!=',
-                                  [
-                                    'array/find',
-                                    '@config.targets',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.crates',
+                              [
+                                'fn',
+                                'c',
+                                {
+                                  'asset': [
+                                    'if',
                                     [
-                                      'fn',
-                                      't',
+                                      '!=',
                                       [
-                                        'and',
+                                        'array/find',
+                                        '@config.targets',
                                         [
-                                          '==',
+                                          'fn',
+                                          't',
                                           [
-                                            'object/get',
-                                            '@t',
-                                            'x',
+                                            'and',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@t',
+                                                'x',
+                                              ],
+                                              [
+                                                'object/get',
+                                                '@c',
+                                                'x',
+                                              ],
+                                            ],
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                '@t',
+                                                'y',
+                                              ],
+                                              [
+                                                'object/get',
+                                                '@c',
+                                                'y',
+                                              ],
+                                            ],
                                           ],
-                                          '@c.x',
-                                        ],
-                                        [
-                                          '==',
-                                          [
-                                            'object/get',
-                                            '@t',
-                                            'y',
-                                          ],
-                                          '@c.y',
                                         ],
                                       ],
+                                      null,
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'crate_done',
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'crate',
                                     ],
                                   ],
-                                  null,
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
-                                  ],
-                                  'crate_done',
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
-                                  ],
-                                  'crate',
-                                ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@c',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@c',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
                               ],
-                              'type': 'crate',
-                              'x': '@c.x',
-                              'y': '@c.y',
-                            },
-                          ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'pusher',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@entity.player',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@f',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowDown': 'MOVE_DOWN',
@@ -4788,37 +5189,8 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                           'KeyW': 'MOVE_UP',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'units': [
-                          {
-                            'animation': 'static',
-                            'frame': 0,
-                            'id': 'pusher',
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'pusher',
-                            ],
-                            'team': 'player',
-                            'x': [
-                              'object/get',
-                              '@entity.player',
-                              'x',
-                            ],
-                            'y': [
-                              'object/get',
-                              '@entity.player',
-                              'y',
-                            ],
-                          },
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -4984,75 +5356,197 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                   },
                   'children': [
                     {
-                      'assetManifest': '@config.assetManifest',
-                      'effects': '@entity.effects',
-                      'features': [
-                        'array/map',
-                        '@entity.crates',
-                        [
-                          'fn',
-                          'c',
-                          {
-                            'id': '@c.id',
-                            'sprite': [
-                              'if',
-                              [
-                                '!=',
-                                [
-                                  'array/find',
-                                  '@config.targets',
+                      'camera': {
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@t',
+                                  'terrainSprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.crates',
+                            [
+                              'fn',
+                              'c',
+                              {
+                                'asset': [
+                                  'if',
                                   [
-                                    'fn',
-                                    't',
+                                    '!=',
                                     [
-                                      'and',
+                                      'array/find',
+                                      '@config.targets',
                                       [
-                                        '==',
+                                        'fn',
+                                        't',
                                         [
-                                          'object/get',
-                                          '@t',
-                                          'x',
+                                          'and',
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@t',
+                                              'x',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@c',
+                                              'x',
+                                            ],
+                                          ],
+                                          [
+                                            '==',
+                                            [
+                                              'object/get',
+                                              '@t',
+                                              'y',
+                                            ],
+                                            [
+                                              'object/get',
+                                              '@c',
+                                              'y',
+                                            ],
+                                          ],
                                         ],
-                                        '@c.x',
-                                      ],
-                                      [
-                                        '==',
-                                        [
-                                          'object/get',
-                                          '@t',
-                                          'y',
-                                        ],
-                                        '@c.y',
                                       ],
                                     ],
+                                    null,
+                                  ],
+                                  [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'features',
+                                    ],
+                                    'crate_done',
+                                  ],
+                                  [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'features',
+                                    ],
+                                    'crate',
                                   ],
                                 ],
-                                null,
-                              ],
-                              [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'features',
-                                ],
-                                'crate_done',
-                              ],
-                              [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'features',
-                                ],
-                                'crate',
-                              ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@c',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@c',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
                             ],
-                            'type': 'crate',
-                            'x': '@c.x',
-                            'y': '@c.y',
-                          },
-                        ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            {
+                              'asset': [
+                                'object/get',
+                                [
+                                  'object/get',
+                                  '@config.assetManifest',
+                                  'units',
+                                ],
+                                'pusher',
+                              ],
+                              'position': {
+                                'x': [
+                                  'object/get',
+                                  '@entity.player',
+                                  'x',
+                                ],
+                                'y': [
+                                  'object/get',
+                                  '@entity.player',
+                                  'y',
+                                ],
+                              },
+                              'type': 'draw-sprite',
+                            },
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.effects',
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@f',
+                                    'key',
+                                  ],
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
                       ],
                       'keyMap': {
                         'ArrowDown': 'MOVE_DOWN',
@@ -5065,37 +5559,8 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
                         'KeyW': 'MOVE_UP',
                       },
                       'projection': 'flat',
-                      'scale': '@config.scale',
                       'showMinimap': false,
-                      'tiles': '@config.tiles',
-                      'type': 'canvas-2d',
-                      'units': [
-                        {
-                          'animation': 'static',
-                          'frame': 0,
-                          'id': 'pusher',
-                          'sprite': [
-                            'object/get',
-                            [
-                              'object/get',
-                              '@config.assetManifest',
-                              'units',
-                            ],
-                            'pusher',
-                          ],
-                          'team': 'player',
-                          'x': [
-                            'object/get',
-                            '@entity.player',
-                            'x',
-                          ],
-                          'y': [
-                            'object/get',
-                            '@entity.player',
-                            'y',
-                          ],
-                        },
-                      ],
+                      'type': 'canvas',
                     },
                   ],
                   'controls': {

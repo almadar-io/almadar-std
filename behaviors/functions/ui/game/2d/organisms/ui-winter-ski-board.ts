@@ -4826,9 +4826,133 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@entity.features',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'hero',
+                                ],
+                                'position': {
+                                  'x': '@entity.hero.x',
+                                  'y': '@entity.hero.y',
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                        ],
                         'keyMap': {
                           'ArrowLeft': 'STEER_LEFT',
                           'ArrowRight': 'STEER_RIGHT',
@@ -4836,31 +4960,8 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                           'KeyD': 'STEER_RIGHT',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'units': [
-                          {
-                            'animation': 'idle',
-                            'frame': 0,
-                            'id': 'hero',
-                            'position': {
-                              'x': '@entity.hero.x',
-                              'y': '@entity.hero.y',
-                            },
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'hero',
-                            ],
-                            'team': 'player',
-                          },
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -5180,9 +5281,133 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@entity.features',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'hero',
+                                ],
+                                'position': {
+                                  'x': '@entity.hero.x',
+                                  'y': '@entity.hero.y',
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                        ],
                         'keyMap': {
                           'ArrowLeft': 'STEER_LEFT',
                           'ArrowRight': 'STEER_RIGHT',
@@ -5190,31 +5415,8 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                           'KeyD': 'STEER_RIGHT',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'units': [
-                          {
-                            'animation': 'idle',
-                            'frame': 0,
-                            'id': 'hero',
-                            'position': {
-                              'x': '@entity.hero.x',
-                              'y': '@entity.hero.y',
-                            },
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'hero',
-                            ],
-                            'team': 'player',
-                          },
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -5552,9 +5754,133 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@entity.features',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'hero',
+                                ],
+                                'position': {
+                                  'x': '@entity.hero.x',
+                                  'y': '@entity.hero.y',
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                        ],
                         'keyMap': {
                           'ArrowLeft': 'STEER_LEFT',
                           'ArrowRight': 'STEER_RIGHT',
@@ -5562,31 +5888,8 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                           'KeyD': 'STEER_RIGHT',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'units': [
-                          {
-                            'animation': 'idle',
-                            'frame': 0,
-                            'id': 'hero',
-                            'position': {
-                              'x': '@entity.hero.x',
-                              'y': '@entity.hero.y',
-                            },
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'hero',
-                            ],
-                            'team': 'player',
-                          },
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -5774,9 +6077,133 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@entity.features',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'hero',
+                                ],
+                                'position': {
+                                  'x': '@entity.hero.x',
+                                  'y': '@entity.hero.y',
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                        ],
                         'keyMap': {
                           'ArrowLeft': 'STEER_LEFT',
                           'ArrowRight': 'STEER_RIGHT',
@@ -5784,31 +6211,8 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                           'KeyD': 'STEER_RIGHT',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'units': [
-                          {
-                            'animation': 'idle',
-                            'frame': 0,
-                            'id': 'hero',
-                            'position': {
-                              'x': '@entity.hero.x',
-                              'y': '@entity.hero.y',
-                            },
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'hero',
-                            ],
-                            'team': 'player',
-                          },
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'fontFamily': 'pixel',
@@ -6006,9 +6410,133 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@entity.features',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              '@config.tiles',
+                              [
+                                'fn',
+                                't',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@t',
+                                    'terrainSprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@t',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@t',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.features',
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'hero',
+                                ],
+                                'position': {
+                                  'x': '@entity.hero.x',
+                                  'y': '@entity.hero.y',
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                        ],
                         'keyMap': {
                           'ArrowLeft': 'STEER_LEFT',
                           'ArrowRight': 'STEER_RIGHT',
@@ -6016,31 +6544,8 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                           'KeyD': 'STEER_RIGHT',
                         },
                         'projection': 'flat',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': '@config.tiles',
-                        'type': 'canvas-2d',
-                        'units': [
-                          {
-                            'animation': 'idle',
-                            'frame': 0,
-                            'id': 'hero',
-                            'position': {
-                              'x': '@entity.hero.x',
-                              'y': '@entity.hero.y',
-                            },
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'hero',
-                            ],
-                            'team': 'player',
-                          },
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -6560,9 +7065,133 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                   },
                   'children': [
                     {
-                      'assetManifest': '@config.assetManifest',
-                      'effects': '@entity.effects',
-                      'features': '@entity.features',
+                      'camera': {
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            '@config.tiles',
+                            [
+                              'fn',
+                              't',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@t',
+                                  'terrainSprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.features',
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@f',
+                                  'sprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            {
+                              'asset': [
+                                'object/get',
+                                [
+                                  'object/get',
+                                  '@config.assetManifest',
+                                  'units',
+                                ],
+                                'hero',
+                              ],
+                              'position': {
+                                'x': '@entity.hero.x',
+                                'y': '@entity.hero.y',
+                              },
+                              'type': 'draw-sprite',
+                            },
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.effects',
+                            [
+                              'fn',
+                              'e',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@e',
+                                    'key',
+                                  ],
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@e',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@e',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                      ],
                       'keyMap': {
                         'ArrowLeft': 'STEER_LEFT',
                         'ArrowRight': 'STEER_RIGHT',
@@ -6570,31 +7199,8 @@ export function stdUiWinterSkiBoardWinterSkiBoardOrbital(params: StdUiWinterSkiB
                         'KeyD': 'STEER_RIGHT',
                       },
                       'projection': 'flat',
-                      'scale': '@config.scale',
                       'showMinimap': false,
-                      'tiles': '@config.tiles',
-                      'type': 'canvas-2d',
-                      'units': [
-                        {
-                          'animation': 'idle',
-                          'frame': 0,
-                          'id': 'hero',
-                          'position': {
-                            'x': '@entity.hero.x',
-                            'y': '@entity.hero.y',
-                          },
-                          'sprite': [
-                            'object/get',
-                            [
-                              'object/get',
-                              '@config.assetManifest',
-                              'units',
-                            ],
-                            'hero',
-                          ],
-                          'team': 'player',
-                        },
-                      ],
+                      'type': 'canvas',
                     },
                   ],
                   'controls': {

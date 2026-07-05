@@ -1215,91 +1215,213 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/concat',
-                          [
-                            'array/map',
-                            '@config.bumpers',
-                            [
-                              'fn',
-                              'b',
-                              {
-                                'id': '@b.id',
-                                'sprite': [
-                                  'object/get',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/concat',
+                                [
+                                  'array/map',
+                                  '@config.bumpers',
                                   [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    'fn',
+                                    'b',
+                                    {
+                                      'id': '@b.id',
+                                      'sprite': [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'bumper',
+                                      ],
+                                      'type': 'bumper',
+                                      'x': '@b.x',
+                                      'y': '@b.y',
+                                    },
                                   ],
-                                  'bumper',
                                 ],
-                                'type': 'bumper',
-                                'x': '@b.x',
-                                'y': '@b.y',
-                              },
+                                [
+                                  {
+                                    'id': 'flipperL',
+                                    'sprite': [
+                                      'if',
+                                      '@entity.leftFlipperActive',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddleActive',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddle',
+                                      ],
+                                    ],
+                                    'type': 'paddle',
+                                    'x': '@config.leftFlipperX',
+                                    'y': '@config.flipperY',
+                                  },
+                                  {
+                                    'id': 'flipperR',
+                                    'sprite': [
+                                      'if',
+                                      '@entity.rightFlipperActive',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddleActive',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddle',
+                                      ],
+                                    ],
+                                    'type': 'paddle',
+                                    'x': '@config.rightFlipperX',
+                                    'y': '@config.flipperY',
+                                  },
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
                             ],
-                          ],
-                          [
-                            {
-                              'id': 'flipperL',
-                              'sprite': [
-                                'if',
-                                '@entity.leftFlipperActive',
-                                [
-                                  'object/get',
-                                  [
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                {
+                                  'id': 'ball',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@entity.ball',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@entity.ball',
+                                      'y',
+                                    ],
+                                  },
+                                  'sprite': [
                                     'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'ball',
                                   ],
-                                  'paddleActive',
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
-                                  ],
-                                  'paddle',
-                                ],
+                                  'team': 'player',
+                                },
                               ],
-                              'type': 'paddle',
-                              'x': '@config.leftFlipperX',
-                              'y': '@config.flipperY',
-                            },
-                            {
-                              'id': 'flipperR',
-                              'sprite': [
-                                'if',
-                                '@entity.rightFlipperActive',
-                                [
-                                  'object/get',
-                                  [
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
                                     'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    '@u',
+                                    'sprite',
                                   ],
-                                  'paddleActive',
-                                ],
-                                [
-                                  'object/get',
-                                  [
+                                  'position': [
                                     'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    '@u',
+                                    'position',
                                   ],
-                                  'paddle',
-                                ],
+                                  'type': 'draw-sprite',
+                                },
                               ],
-                              'type': 'paddle',
-                              'x': '@config.rightFlipperX',
-                              'y': '@config.flipperY',
-                            },
-                          ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowLeft': 'LEFT_FLIPPER',
@@ -1309,37 +1431,8 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                           'Space': 'LAUNCH',
                         },
                         'projection': 'free',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': [],
-                        'type': 'canvas-2d',
-                        'units': [
-                          {
-                            'id': 'ball',
-                            'position': {
-                              'x': [
-                                'object/get',
-                                '@entity.ball',
-                                'x',
-                              ],
-                              'y': [
-                                'object/get',
-                                '@entity.ball',
-                                'y',
-                              ],
-                            },
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'ball',
-                            ],
-                            'team': 'player',
-                          },
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -1572,91 +1665,213 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/concat',
-                          [
-                            'array/map',
-                            '@config.bumpers',
-                            [
-                              'fn',
-                              'b',
-                              {
-                                'id': '@b.id',
-                                'sprite': [
-                                  'object/get',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/concat',
+                                [
+                                  'array/map',
+                                  '@config.bumpers',
                                   [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    'fn',
+                                    'b',
+                                    {
+                                      'id': '@b.id',
+                                      'sprite': [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'bumper',
+                                      ],
+                                      'type': 'bumper',
+                                      'x': '@b.x',
+                                      'y': '@b.y',
+                                    },
                                   ],
-                                  'bumper',
                                 ],
-                                'type': 'bumper',
-                                'x': '@b.x',
-                                'y': '@b.y',
-                              },
+                                [
+                                  {
+                                    'id': 'flipperL',
+                                    'sprite': [
+                                      'if',
+                                      '@entity.leftFlipperActive',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddleActive',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddle',
+                                      ],
+                                    ],
+                                    'type': 'paddle',
+                                    'x': '@config.leftFlipperX',
+                                    'y': '@config.flipperY',
+                                  },
+                                  {
+                                    'id': 'flipperR',
+                                    'sprite': [
+                                      'if',
+                                      '@entity.rightFlipperActive',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddleActive',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddle',
+                                      ],
+                                    ],
+                                    'type': 'paddle',
+                                    'x': '@config.rightFlipperX',
+                                    'y': '@config.flipperY',
+                                  },
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
                             ],
-                          ],
-                          [
-                            {
-                              'id': 'flipperL',
-                              'sprite': [
-                                'if',
-                                '@entity.leftFlipperActive',
-                                [
-                                  'object/get',
-                                  [
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                {
+                                  'id': 'ball',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@entity.ball',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@entity.ball',
+                                      'y',
+                                    ],
+                                  },
+                                  'sprite': [
                                     'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'ball',
                                   ],
-                                  'paddleActive',
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
-                                  ],
-                                  'paddle',
-                                ],
+                                  'team': 'player',
+                                },
                               ],
-                              'type': 'paddle',
-                              'x': '@config.leftFlipperX',
-                              'y': '@config.flipperY',
-                            },
-                            {
-                              'id': 'flipperR',
-                              'sprite': [
-                                'if',
-                                '@entity.rightFlipperActive',
-                                [
-                                  'object/get',
-                                  [
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
                                     'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    '@u',
+                                    'sprite',
                                   ],
-                                  'paddleActive',
-                                ],
-                                [
-                                  'object/get',
-                                  [
+                                  'position': [
                                     'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    '@u',
+                                    'position',
                                   ],
-                                  'paddle',
-                                ],
+                                  'type': 'draw-sprite',
+                                },
                               ],
-                              'type': 'paddle',
-                              'x': '@config.rightFlipperX',
-                              'y': '@config.flipperY',
-                            },
-                          ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowLeft': 'LEFT_FLIPPER',
@@ -1666,37 +1881,8 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                           'Space': 'LAUNCH',
                         },
                         'projection': 'free',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': [],
-                        'type': 'canvas-2d',
-                        'units': [
-                          {
-                            'id': 'ball',
-                            'position': {
-                              'x': [
-                                'object/get',
-                                '@entity.ball',
-                                'x',
-                              ],
-                              'y': [
-                                'object/get',
-                                '@entity.ball',
-                                'y',
-                              ],
-                            },
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'ball',
-                            ],
-                            'team': 'player',
-                          },
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -1849,91 +2035,213 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/concat',
-                          [
-                            'array/map',
-                            '@config.bumpers',
-                            [
-                              'fn',
-                              'b',
-                              {
-                                'id': '@b.id',
-                                'sprite': [
-                                  'object/get',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/concat',
+                                [
+                                  'array/map',
+                                  '@config.bumpers',
                                   [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    'fn',
+                                    'b',
+                                    {
+                                      'id': '@b.id',
+                                      'sprite': [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'bumper',
+                                      ],
+                                      'type': 'bumper',
+                                      'x': '@b.x',
+                                      'y': '@b.y',
+                                    },
                                   ],
-                                  'bumper',
                                 ],
-                                'type': 'bumper',
-                                'x': '@b.x',
-                                'y': '@b.y',
-                              },
+                                [
+                                  {
+                                    'id': 'flipperL',
+                                    'sprite': [
+                                      'if',
+                                      '@entity.leftFlipperActive',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddleActive',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddle',
+                                      ],
+                                    ],
+                                    'type': 'paddle',
+                                    'x': '@config.leftFlipperX',
+                                    'y': '@config.flipperY',
+                                  },
+                                  {
+                                    'id': 'flipperR',
+                                    'sprite': [
+                                      'if',
+                                      '@entity.rightFlipperActive',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddleActive',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddle',
+                                      ],
+                                    ],
+                                    'type': 'paddle',
+                                    'x': '@config.rightFlipperX',
+                                    'y': '@config.flipperY',
+                                  },
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
                             ],
-                          ],
-                          [
-                            {
-                              'id': 'flipperL',
-                              'sprite': [
-                                'if',
-                                '@entity.leftFlipperActive',
-                                [
-                                  'object/get',
-                                  [
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                {
+                                  'id': 'ball',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@entity.ball',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@entity.ball',
+                                      'y',
+                                    ],
+                                  },
+                                  'sprite': [
                                     'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'ball',
                                   ],
-                                  'paddleActive',
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
-                                  ],
-                                  'paddle',
-                                ],
+                                  'team': 'player',
+                                },
                               ],
-                              'type': 'paddle',
-                              'x': '@config.leftFlipperX',
-                              'y': '@config.flipperY',
-                            },
-                            {
-                              'id': 'flipperR',
-                              'sprite': [
-                                'if',
-                                '@entity.rightFlipperActive',
-                                [
-                                  'object/get',
-                                  [
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
                                     'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    '@u',
+                                    'sprite',
                                   ],
-                                  'paddleActive',
-                                ],
-                                [
-                                  'object/get',
-                                  [
+                                  'position': [
                                     'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    '@u',
+                                    'position',
                                   ],
-                                  'paddle',
-                                ],
+                                  'type': 'draw-sprite',
+                                },
                               ],
-                              'type': 'paddle',
-                              'x': '@config.rightFlipperX',
-                              'y': '@config.flipperY',
-                            },
-                          ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowLeft': 'LEFT_FLIPPER',
@@ -1943,37 +2251,8 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                           'Space': 'LAUNCH',
                         },
                         'projection': 'free',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': [],
-                        'type': 'canvas-2d',
-                        'units': [
-                          {
-                            'id': 'ball',
-                            'position': {
-                              'x': [
-                                'object/get',
-                                '@entity.ball',
-                                'x',
-                              ],
-                              'y': [
-                                'object/get',
-                                '@entity.ball',
-                                'y',
-                              ],
-                            },
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'ball',
-                            ],
-                            'team': 'player',
-                          },
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -2193,91 +2472,213 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                     },
                     'children': [
                       {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': [
-                          'array/concat',
-                          [
-                            'array/map',
-                            '@config.bumpers',
-                            [
-                              'fn',
-                              'b',
-                              {
-                                'id': '@b.id',
-                                'sprite': [
-                                  'object/get',
+                        'camera': {
+                          'zoom': '@config.scale',
+                        },
+                        'children': [
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                'array/concat',
+                                [
+                                  'array/map',
+                                  '@config.bumpers',
                                   [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    'fn',
+                                    'b',
+                                    {
+                                      'id': '@b.id',
+                                      'sprite': [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'bumper',
+                                      ],
+                                      'type': 'bumper',
+                                      'x': '@b.x',
+                                      'y': '@b.y',
+                                    },
                                   ],
-                                  'bumper',
                                 ],
-                                'type': 'bumper',
-                                'x': '@b.x',
-                                'y': '@b.y',
-                              },
+                                [
+                                  {
+                                    'id': 'flipperL',
+                                    'sprite': [
+                                      'if',
+                                      '@entity.leftFlipperActive',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddleActive',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddle',
+                                      ],
+                                    ],
+                                    'type': 'paddle',
+                                    'x': '@config.leftFlipperX',
+                                    'y': '@config.flipperY',
+                                  },
+                                  {
+                                    'id': 'flipperR',
+                                    'sprite': [
+                                      'if',
+                                      '@entity.rightFlipperActive',
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddleActive',
+                                      ],
+                                      [
+                                        'object/get',
+                                        [
+                                          'object/get',
+                                          '@config.assetManifest',
+                                          'features',
+                                        ],
+                                        'paddle',
+                                      ],
+                                    ],
+                                    'type': 'paddle',
+                                    'x': '@config.rightFlipperX',
+                                    'y': '@config.flipperY',
+                                  },
+                                ],
+                              ],
+                              [
+                                'fn',
+                                'f',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    '@f',
+                                    'sprite',
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@f',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@f',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
                             ],
-                          ],
-                          [
-                            {
-                              'id': 'flipperL',
-                              'sprite': [
-                                'if',
-                                '@entity.leftFlipperActive',
-                                [
-                                  'object/get',
-                                  [
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              [
+                                {
+                                  'id': 'ball',
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@entity.ball',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@entity.ball',
+                                      'y',
+                                    ],
+                                  },
+                                  'sprite': [
                                     'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'units',
+                                    ],
+                                    'ball',
                                   ],
-                                  'paddleActive',
-                                ],
-                                [
-                                  'object/get',
-                                  [
-                                    'object/get',
-                                    '@config.assetManifest',
-                                    'features',
-                                  ],
-                                  'paddle',
-                                ],
+                                  'team': 'player',
+                                },
                               ],
-                              'type': 'paddle',
-                              'x': '@config.leftFlipperX',
-                              'y': '@config.flipperY',
-                            },
-                            {
-                              'id': 'flipperR',
-                              'sprite': [
-                                'if',
-                                '@entity.rightFlipperActive',
-                                [
-                                  'object/get',
-                                  [
+                              [
+                                'fn',
+                                'u',
+                                {
+                                  'asset': [
                                     'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    '@u',
+                                    'sprite',
                                   ],
-                                  'paddleActive',
-                                ],
-                                [
-                                  'object/get',
-                                  [
+                                  'position': [
                                     'object/get',
-                                    '@config.assetManifest',
-                                    'features',
+                                    '@u',
+                                    'position',
                                   ],
-                                  'paddle',
-                                ],
+                                  'type': 'draw-sprite',
+                                },
                               ],
-                              'type': 'paddle',
-                              'x': '@config.rightFlipperX',
-                              'y': '@config.flipperY',
-                            },
-                          ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
+                          {
+                            'items': [
+                              'array/map',
+                              '@entity.effects',
+                              [
+                                'fn',
+                                'e',
+                                {
+                                  'asset': [
+                                    'object/get',
+                                    [
+                                      'object/get',
+                                      '@config.assetManifest',
+                                      'effects',
+                                    ],
+                                    [
+                                      'object/get',
+                                      '@e',
+                                      'key',
+                                    ],
+                                  ],
+                                  'position': {
+                                    'x': [
+                                      'object/get',
+                                      '@e',
+                                      'x',
+                                    ],
+                                    'y': [
+                                      'object/get',
+                                      '@e',
+                                      'y',
+                                    ],
+                                  },
+                                  'type': 'draw-sprite',
+                                },
+                              ],
+                            ],
+                            'type': 'draw-sprite-layer',
+                          },
                         ],
                         'keyMap': {
                           'ArrowLeft': 'LEFT_FLIPPER',
@@ -2287,37 +2688,8 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                           'Space': 'LAUNCH',
                         },
                         'projection': 'free',
-                        'scale': '@config.scale',
                         'showMinimap': false,
-                        'tiles': [],
-                        'type': 'canvas-2d',
-                        'units': [
-                          {
-                            'id': 'ball',
-                            'position': {
-                              'x': [
-                                'object/get',
-                                '@entity.ball',
-                                'x',
-                              ],
-                              'y': [
-                                'object/get',
-                                '@entity.ball',
-                                'y',
-                              ],
-                            },
-                            'sprite': [
-                              'object/get',
-                              [
-                                'object/get',
-                                '@config.assetManifest',
-                                'units',
-                              ],
-                              'ball',
-                            ],
-                            'team': 'player',
-                          },
-                        ],
+                        'type': 'canvas',
                       },
                     ],
                     'controls': {
@@ -3175,91 +3547,213 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                   },
                   'children': [
                     {
-                      'assetManifest': '@config.assetManifest',
-                      'effects': '@entity.effects',
-                      'features': [
-                        'array/concat',
-                        [
-                          'array/map',
-                          '@config.bumpers',
-                          [
-                            'fn',
-                            'b',
-                            {
-                              'id': '@b.id',
-                              'sprite': [
-                                'object/get',
+                      'camera': {
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              'array/concat',
+                              [
+                                'array/map',
+                                '@config.bumpers',
                                 [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'features',
+                                  'fn',
+                                  'b',
+                                  {
+                                    'id': '@b.id',
+                                    'sprite': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'bumper',
+                                    ],
+                                    'type': 'bumper',
+                                    'x': '@b.x',
+                                    'y': '@b.y',
+                                  },
                                 ],
-                                'bumper',
                               ],
-                              'type': 'bumper',
-                              'x': '@b.x',
-                              'y': '@b.y',
-                            },
+                              [
+                                {
+                                  'id': 'flipperL',
+                                  'sprite': [
+                                    'if',
+                                    '@entity.leftFlipperActive',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'paddleActive',
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'paddle',
+                                    ],
+                                  ],
+                                  'type': 'paddle',
+                                  'x': '@config.leftFlipperX',
+                                  'y': '@config.flipperY',
+                                },
+                                {
+                                  'id': 'flipperR',
+                                  'sprite': [
+                                    'if',
+                                    '@entity.rightFlipperActive',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'paddleActive',
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'paddle',
+                                    ],
+                                  ],
+                                  'type': 'paddle',
+                                  'x': '@config.rightFlipperX',
+                                  'y': '@config.flipperY',
+                                },
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@f',
+                                  'sprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
                           ],
-                        ],
-                        [
-                          {
-                            'id': 'flipperL',
-                            'sprite': [
-                              'if',
-                              '@entity.leftFlipperActive',
-                              [
-                                'object/get',
-                                [
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              {
+                                'id': 'ball',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@entity.ball',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@entity.ball',
+                                    'y',
+                                  ],
+                                },
+                                'sprite': [
                                   'object/get',
-                                  '@config.assetManifest',
-                                  'features',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'ball',
                                 ],
-                                'paddleActive',
-                              ],
-                              [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'features',
-                                ],
-                                'paddle',
-                              ],
+                                'team': 'player',
+                              },
                             ],
-                            'type': 'paddle',
-                            'x': '@config.leftFlipperX',
-                            'y': '@config.flipperY',
-                          },
-                          {
-                            'id': 'flipperR',
-                            'sprite': [
-                              'if',
-                              '@entity.rightFlipperActive',
-                              [
-                                'object/get',
-                                [
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'asset': [
                                   'object/get',
-                                  '@config.assetManifest',
-                                  'features',
+                                  '@u',
+                                  'sprite',
                                 ],
-                                'paddleActive',
-                              ],
-                              [
-                                'object/get',
-                                [
+                                'position': [
                                   'object/get',
-                                  '@config.assetManifest',
-                                  'features',
+                                  '@u',
+                                  'position',
                                 ],
-                                'paddle',
-                              ],
+                                'type': 'draw-sprite',
+                              },
                             ],
-                            'type': 'paddle',
-                            'x': '@config.rightFlipperX',
-                            'y': '@config.flipperY',
-                          },
-                        ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.effects',
+                            [
+                              'fn',
+                              'e',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@e',
+                                    'key',
+                                  ],
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@e',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@e',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
                       ],
                       'keyMap': {
                         'ArrowLeft': 'LEFT_FLIPPER',
@@ -3269,37 +3763,8 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                         'Space': 'LAUNCH',
                       },
                       'projection': 'free',
-                      'scale': '@config.scale',
                       'showMinimap': false,
-                      'tiles': [],
-                      'type': 'canvas-2d',
-                      'units': [
-                        {
-                          'id': 'ball',
-                          'position': {
-                            'x': [
-                              'object/get',
-                              '@entity.ball',
-                              'x',
-                            ],
-                            'y': [
-                              'object/get',
-                              '@entity.ball',
-                              'y',
-                            ],
-                          },
-                          'sprite': [
-                            'object/get',
-                            [
-                              'object/get',
-                              '@config.assetManifest',
-                              'units',
-                            ],
-                            'ball',
-                          ],
-                          'team': 'player',
-                        },
-                      ],
+                      'type': 'canvas',
                     },
                   ],
                   'controls': {
@@ -3503,91 +3968,213 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                   },
                   'children': [
                     {
-                      'assetManifest': '@config.assetManifest',
-                      'effects': '@entity.effects',
-                      'features': [
-                        'array/concat',
-                        [
-                          'array/map',
-                          '@config.bumpers',
-                          [
-                            'fn',
-                            'b',
-                            {
-                              'id': '@b.id',
-                              'sprite': [
-                                'object/get',
+                      'camera': {
+                        'zoom': '@config.scale',
+                      },
+                      'children': [
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              'array/concat',
+                              [
+                                'array/map',
+                                '@config.bumpers',
                                 [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'features',
+                                  'fn',
+                                  'b',
+                                  {
+                                    'id': '@b.id',
+                                    'sprite': [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'bumper',
+                                    ],
+                                    'type': 'bumper',
+                                    'x': '@b.x',
+                                    'y': '@b.y',
+                                  },
                                 ],
-                                'bumper',
                               ],
-                              'type': 'bumper',
-                              'x': '@b.x',
-                              'y': '@b.y',
-                            },
+                              [
+                                {
+                                  'id': 'flipperL',
+                                  'sprite': [
+                                    'if',
+                                    '@entity.leftFlipperActive',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'paddleActive',
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'paddle',
+                                    ],
+                                  ],
+                                  'type': 'paddle',
+                                  'x': '@config.leftFlipperX',
+                                  'y': '@config.flipperY',
+                                },
+                                {
+                                  'id': 'flipperR',
+                                  'sprite': [
+                                    'if',
+                                    '@entity.rightFlipperActive',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'paddleActive',
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@config.assetManifest',
+                                        'features',
+                                      ],
+                                      'paddle',
+                                    ],
+                                  ],
+                                  'type': 'paddle',
+                                  'x': '@config.rightFlipperX',
+                                  'y': '@config.flipperY',
+                                },
+                              ],
+                            ],
+                            [
+                              'fn',
+                              'f',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  '@f',
+                                  'sprite',
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@f',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@f',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
                           ],
-                        ],
-                        [
-                          {
-                            'id': 'flipperL',
-                            'sprite': [
-                              'if',
-                              '@entity.leftFlipperActive',
-                              [
-                                'object/get',
-                                [
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            [
+                              {
+                                'id': 'ball',
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@entity.ball',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@entity.ball',
+                                    'y',
+                                  ],
+                                },
+                                'sprite': [
                                   'object/get',
-                                  '@config.assetManifest',
-                                  'features',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'units',
+                                  ],
+                                  'ball',
                                 ],
-                                'paddleActive',
-                              ],
-                              [
-                                'object/get',
-                                [
-                                  'object/get',
-                                  '@config.assetManifest',
-                                  'features',
-                                ],
-                                'paddle',
-                              ],
+                                'team': 'player',
+                              },
                             ],
-                            'type': 'paddle',
-                            'x': '@config.leftFlipperX',
-                            'y': '@config.flipperY',
-                          },
-                          {
-                            'id': 'flipperR',
-                            'sprite': [
-                              'if',
-                              '@entity.rightFlipperActive',
-                              [
-                                'object/get',
-                                [
+                            [
+                              'fn',
+                              'u',
+                              {
+                                'asset': [
                                   'object/get',
-                                  '@config.assetManifest',
-                                  'features',
+                                  '@u',
+                                  'sprite',
                                 ],
-                                'paddleActive',
-                              ],
-                              [
-                                'object/get',
-                                [
+                                'position': [
                                   'object/get',
-                                  '@config.assetManifest',
-                                  'features',
+                                  '@u',
+                                  'position',
                                 ],
-                                'paddle',
-                              ],
+                                'type': 'draw-sprite',
+                              },
                             ],
-                            'type': 'paddle',
-                            'x': '@config.rightFlipperX',
-                            'y': '@config.flipperY',
-                          },
-                        ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
+                        {
+                          'items': [
+                            'array/map',
+                            '@entity.effects',
+                            [
+                              'fn',
+                              'e',
+                              {
+                                'asset': [
+                                  'object/get',
+                                  [
+                                    'object/get',
+                                    '@config.assetManifest',
+                                    'effects',
+                                  ],
+                                  [
+                                    'object/get',
+                                    '@e',
+                                    'key',
+                                  ],
+                                ],
+                                'position': {
+                                  'x': [
+                                    'object/get',
+                                    '@e',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@e',
+                                    'y',
+                                  ],
+                                },
+                                'type': 'draw-sprite',
+                              },
+                            ],
+                          ],
+                          'type': 'draw-sprite-layer',
+                        },
                       ],
                       'keyMap': {
                         'ArrowLeft': 'LEFT_FLIPPER',
@@ -3597,37 +4184,8 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                         'Space': 'LAUNCH',
                       },
                       'projection': 'free',
-                      'scale': '@config.scale',
                       'showMinimap': false,
-                      'tiles': [],
-                      'type': 'canvas-2d',
-                      'units': [
-                        {
-                          'id': 'ball',
-                          'position': {
-                            'x': [
-                              'object/get',
-                              '@entity.ball',
-                              'x',
-                            ],
-                            'y': [
-                              'object/get',
-                              '@entity.ball',
-                              'y',
-                            ],
-                          },
-                          'sprite': [
-                            'object/get',
-                            [
-                              'object/get',
-                              '@config.assetManifest',
-                              'units',
-                            ],
-                            'ball',
-                          ],
-                          'team': 'player',
-                        },
-                      ],
+                      'type': 'canvas',
                     },
                   ],
                   'controls': {
