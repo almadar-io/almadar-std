@@ -54,6 +54,8 @@ export interface StdUiAlertClosePayload {
  */
 export interface StdUiAlertConfig {
   actions?: unknown;
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */

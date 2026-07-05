@@ -76,8 +76,8 @@ export interface StdUiCanvas2dConfig {
   /** Default: `[{"x":1,"y":1},{"x":2,"y":2}]` */
   attackTargets?: EntityRow[];
   /** Default: `{"animations":["static"],"aspect":"1:1","category":"backgroundImage","dimension":"2d","name":"backgroundImage","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"}` */
-  backgroundImage?: EntityRow;
-  /** Default: `"#5c94fc"` */
+  backgroundImage?: unknown;
+  /** Default: `"Bg Color"` */
   bgColor?: string;
   /** Default: `"pan-zoom"` */
   camera?: 'pan-zoom' | 'follow' | 'fixed';

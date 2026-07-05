@@ -43,6 +43,8 @@ export interface StdUiSplitSectionConfig {
   background?: 'default' | 'alt';
   /** Default: `[]` */
   bullets?: string[];
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `{"alt":"Alt","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */

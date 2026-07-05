@@ -62,6 +62,8 @@ export interface StdUiEntityListEntityListLoadedPayload {
 export interface StdUiEntityListConfig {
   /** Default: `{}` */
   activeFilters?: unknown;
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"Empty Message"` */
@@ -169,6 +171,18 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'label': 'Active Filters',
             'tier': 'presentation',
             'type': 'json',
+          },
+          'children': {
+            'default': [
+              {
+                'content': 'Sample content',
+                'type': 'typography',
+              },
+            ],
+            'description': 'children prop',
+            'label': 'Children',
+            'tier': 'presentation',
+            'type': 'node',
           },
           'className': {
             'default': '',
@@ -478,12 +492,7 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                   'main',
                   {
                     'activeFilters': '@config.activeFilters',
-                    'children': [
-                      {
-                        'content': 'Sample content',
-                        'type': 'typography',
-                      },
-                    ],
+                    'children': '@config.children',
                     'className': '@config.className',
                     'emptyMessage': '@config.emptyMessage',
                     'entity': '@entity',
@@ -523,12 +532,7 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                   'main',
                   {
                     'activeFilters': '@config.activeFilters',
-                    'children': [
-                      {
-                        'content': 'Sample content',
-                        'type': 'typography',
-                      },
-                    ],
+                    'children': '@config.children',
                     'className': '@config.className',
                     'emptyMessage': '@config.emptyMessage',
                     'entity': '@payload.data',

@@ -1,0 +1,273 @@
+[
+  {
+    "organism": "std-dungeon-combat",
+    "orbital": "DungeonCombatOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/ui/game/2d/atoms/std-dungeon-combat.ts",
+    "entities": [
+      {
+        "name": "DungeonCombatData",
+        "fields": [
+          {
+            "name": "enemies",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "hp",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "maxHp",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "combatScore",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "combatResult",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "DungeonCombat",
+        "emittedEvents": [
+          "BURST",
+          "DEFEATED"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BURST",
+            "direction": "emit",
+            "description": "An enemy died from a bump-attack; a fx-particles listener spawns an explosion",
+            "tier": "domain"
+          },
+          {
+            "name": "DEFEATED",
+            "direction": "emit",
+            "description": "Hero HP reached zero from monster contact damage",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "ATTACK",
+            "direction": "listen"
+          },
+          {
+            "name": "MONSTER_TICK",
+            "direction": "listen"
+          },
+          {
+            "name": "RESTART",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "attackDamage",
+            "type": "number",
+            "default": 1,
+            "label": "Attack Damage",
+            "description": "Damage dealt to an enemy per bump-attack",
+            "tier": "domain"
+          },
+          {
+            "key": "enemies",
+            "type": "[Unit]",
+            "default": [],
+            "label": "Initial Enemies",
+            "description": "Seed enemy roster",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "gridHeight",
+            "type": "number",
+            "default": 9,
+            "label": "Grid Height",
+            "description": "Grid row count clamping enemy chase bounds",
+            "tier": "domain"
+          },
+          {
+            "key": "gridWidth",
+            "type": "number",
+            "default": 12,
+            "label": "Grid Width",
+            "description": "Grid column count clamping enemy chase bounds",
+            "tier": "domain"
+          },
+          {
+            "key": "pointsPerKill",
+            "type": "number",
+            "default": 50,
+            "label": "Points Per Kill",
+            "description": "Score awarded when an enemy's health reaches zero",
+            "tier": "domain"
+          },
+          {
+            "key": "running",
+            "type": "boolean",
+            "default": true,
+            "label": "Running",
+            "description": "When true, ATTACK/MONSTER_TICK intents are applied; toggle to freeze combat",
+            "tier": "domain"
+          },
+          {
+            "key": "startHp",
+            "type": "number",
+            "default": 5,
+            "label": "Start HP",
+            "description": "Hero HP set on INIT/RESTART (also used as maxHp)",
+            "tier": "domain"
+          },
+          {
+            "key": "tiles",
+            "type": "[Tile]",
+            "default": [],
+            "label": "Tiles",
+            "description": "Grid tiles used for enemy chase passability checks",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "combatResult",
+            "combatScore",
+            "enemies",
+            "hp",
+            "maxHp"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "DungeonCombatPage",
+        "defaultPath": "/dungeon-combat",
+        "primaryEntity": "DungeonCombatData"
+      }
+    ],
+    "emittedEvents": [
+      "BURST",
+      "DEFEATED"
+    ],
+    "listenedEvents": []
+  }
+]

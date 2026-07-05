@@ -46,6 +46,8 @@ export interface StdUiTimeSlotCellClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTimeSlotCellConfig {
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */

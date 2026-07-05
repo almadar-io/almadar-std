@@ -43,6 +43,8 @@ export interface StdUiFlexConfig {
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   /** Default: `"Basis"` */
   basis?: string;
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"row"` */

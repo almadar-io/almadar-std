@@ -69,6 +69,8 @@ export interface StdUiDashboardLayoutSignOutPayload {
 export interface StdUiDashboardLayoutConfig {
   /** Default: `"{{APP_TITLE}}"` */
   appName?: string;
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `"Current Path"` */
   currentPath?: string;
   headerActions?: unknown;

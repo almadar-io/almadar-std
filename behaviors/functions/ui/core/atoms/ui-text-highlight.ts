@@ -76,6 +76,8 @@ export interface StdUiTextHighlightHoverPayload {
 export interface StdUiTextHighlightConfig {
   /** Default: `"Annotation Id"` */
   annotationId?: string;
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"question"` */

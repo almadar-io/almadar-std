@@ -57,6 +57,8 @@ export interface StdUiEntityCardsConfig {
   activeFilters?: unknown;
   /** Default: `"stretch"` */
   alignItems?: 'start' | 'center' | 'end' | 'stretch';
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name"},{"header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2"}]` */
@@ -185,6 +187,18 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
               'end',
               'stretch',
             ],
+          },
+          'children': {
+            'default': [
+              {
+                'content': 'Sample content',
+                'type': 'typography',
+              },
+            ],
+            'description': 'Children elements (cards) - optional when using entity prop',
+            'label': 'Children',
+            'tier': 'presentation',
+            'type': 'node',
           },
           'className': {
             'default': '',
@@ -601,12 +615,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                   {
                     'activeFilters': '@config.activeFilters',
                     'alignItems': '@config.alignItems',
-                    'children': [
-                      {
-                        'content': 'Sample content',
-                        'type': 'typography',
-                      },
-                    ],
+                    'children': '@config.children',
                     'className': '@config.className',
                     'columns': '@config.columns',
                     'entity': '@entity',
@@ -650,12 +659,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                   {
                     'activeFilters': '@config.activeFilters',
                     'alignItems': '@config.alignItems',
-                    'children': [
-                      {
-                        'content': 'Sample content',
-                        'type': 'typography',
-                      },
-                    ],
+                    'children': '@config.children',
                     'className': '@config.className',
                     'columns': '@config.columns',
                     'entity': '@payload.data',

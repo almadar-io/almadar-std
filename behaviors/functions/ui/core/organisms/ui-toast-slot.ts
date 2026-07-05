@@ -39,6 +39,8 @@ export type StdUiToastSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiToastSlotConfig {
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `5000` */
@@ -120,6 +122,18 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
       rebindInlineTraitEntity({
         'category': 'interaction',
         'config': {
+          'children': {
+            'default': [
+              {
+                'content': 'Sample content',
+                'type': 'typography',
+              },
+            ],
+            'description': 'Content to display in the toast (message or ReactNode)',
+            'label': 'Children',
+            'tier': 'presentation',
+            'type': 'node',
+          },
           'className': {
             'default': '',
             'description': 'Custom class name',
@@ -230,12 +244,7 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'content': 'Sample content',
-                        'type': 'typography',
-                      },
-                    ],
+                    'children': '@config.children',
                     'className': '@config.className',
                     'duration': '@config.duration',
                     'entity': 'ToastSlotItem',

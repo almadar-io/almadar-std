@@ -1,0 +1,1115 @@
+[
+  {
+    "organism": "std-dungeon-board-2d",
+    "orbital": "DungeonBoard2DOrbital",
+    "tier": "molecules",
+    "factoryPath": "behaviors/functions/ui/game/2d/molecules/std-dungeon-board-2d.ts",
+    "entities": [
+      {
+        "name": "GameState",
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "enemies",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "tiles",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "features",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "fx",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "movesLeft",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "combatScore",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "objectivesLeft",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "hp",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "maxHp",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "combatResult",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "HeroAuthority",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 9
+          },
+          {
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 12
+          },
+          {
+            "key": "moveBudget",
+            "type": "unknown",
+            "default": 999999
+          },
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "units",
+            "type": "unknown",
+            "default": [
+              {
+                "health": 1,
+                "id": "hero",
+                "maxHealth": 1,
+                "position": {
+                  "x": 1,
+                  "y": 1
+                },
+                "team": "player",
+                "unitType": "hero",
+                "x": 1,
+                "y": 1,
+                "z": 0
+              }
+            ]
+          }
+        ],
+        "capabilities": [],
+        "ref": "Nav.traits.HeroNav"
+      },
+      {
+        "name": "Enemies",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "attackDamage",
+            "type": "unknown",
+            "default": 1
+          },
+          {
+            "key": "enemies",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "gridHeight",
+            "type": "unknown",
+            "default": 9
+          },
+          {
+            "key": "gridWidth",
+            "type": "unknown",
+            "default": 12
+          },
+          {
+            "key": "pointsPerKill",
+            "type": "unknown",
+            "default": 50
+          },
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "startHp",
+            "type": "unknown",
+            "default": 5
+          }
+        ],
+        "capabilities": [],
+        "ref": "Combat.traits.DungeonCombat"
+      },
+      {
+        "name": "Collector",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "features",
+            "type": "unknown",
+            "default": []
+          },
+          {
+            "key": "pointsPerTarget",
+            "type": "unknown",
+            "default": 200
+          },
+          {
+            "key": "reachRadius",
+            "type": "unknown",
+            "default": 0
+          },
+          {
+            "key": "removeOnReach",
+            "type": "unknown",
+            "default": false
+          },
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          },
+          {
+            "key": "targetType",
+            "type": "unknown",
+            "default": "chest"
+          }
+        ],
+        "capabilities": [],
+        "ref": "Objective.traits.ObjectiveReach"
+      },
+      {
+        "name": "FxDecay",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Particles.traits.FxParticles"
+      },
+      {
+        "name": "RoundGate",
+        "emittedEvents": [],
+        "listenedEvents": [],
+        "overridableConfigKeys": [
+          {
+            "key": "running",
+            "type": "unknown",
+            "default": true
+          }
+        ],
+        "capabilities": [],
+        "ref": "Gate.traits.ObjectiveFlow"
+      },
+      {
+        "name": "DungeonIntent",
+        "emittedEvents": [
+          "MOVE",
+          "ATTACK",
+          "MONSTER_TICK",
+          "MOVE_UP",
+          "MOVE_DOWN",
+          "MOVE_LEFT",
+          "MOVE_RIGHT",
+          "PLAY_AGAIN",
+          "RESTART"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "MOVE",
+            "direction": "emit",
+            "description": "Hero move intent applied by the hero-nav authority",
+            "tier": "domain"
+          },
+          {
+            "name": "ATTACK",
+            "direction": "emit",
+            "description": "Bump-attack intent applied by the dungeon-combat authority",
+            "tier": "domain"
+          },
+          {
+            "name": "MONSTER_TICK",
+            "direction": "emit",
+            "description": "Advances enemy chase AI and applies hero contact damage via the dungeon-combat authority",
+            "tier": "domain"
+          },
+          {
+            "name": "MOVE_UP",
+            "direction": "emit",
+            "description": "Step north (keyMap or d-pad directionEvents)",
+            "tier": "domain"
+          },
+          {
+            "name": "MOVE_DOWN",
+            "direction": "emit",
+            "description": "Step south (keyMap or d-pad directionEvents)",
+            "tier": "domain"
+          },
+          {
+            "name": "MOVE_LEFT",
+            "direction": "emit",
+            "description": "Step west (keyMap or d-pad directionEvents)",
+            "tier": "domain"
+          },
+          {
+            "name": "MOVE_RIGHT",
+            "direction": "emit",
+            "description": "Step east (keyMap or d-pad directionEvents)",
+            "tier": "domain"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Resets every mechanic (units/enemies/HP, objectives, result) for a new run",
+            "tier": "domain"
+          },
+          {
+            "name": "RESTART",
+            "direction": "emit",
+            "description": "Broadcast reset consumed by hero-nav/dungeon-combat/objective-reach/objective-flow",
+            "tier": "domain"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "assetManifest",
+            "type": "AssetManifest",
+            "default": {
+              "effects": {},
+              "features": {},
+              "terrains": {},
+              "units": {}
+            },
+            "label": "Asset Manifest",
+            "description": "Terrain/unit/feature/effect sprite manifest.",
+            "tier": "presentation",
+            "properties": {
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "atlas": {
+                      "name": "atlas",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "sprite": {
+                      "name": "sprite",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          },
+          {
+            "key": "backgroundAsset",
+            "type": "Asset",
+            "default": {},
+            "label": "Background Asset",
+            "description": "Game-shell background panel sprite (theme chrome).",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "atlas": {
+                "name": "atlas",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "sprite": {
+                "name": "sprite",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              },
+              "variant": {
+                "name": "variant",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "directionAssets",
+            "type": "DirectionAssets",
+            "default": {},
+            "label": "Direction Assets",
+            "description": "D-pad direction icon sprites.",
+            "tier": "presentation",
+            "properties": {
+              "down": {
+                "name": "down",
+                "required": false,
+                "properties": {
+                  "animations": {
+                    "name": "animations",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "aspect": {
+                    "name": "aspect",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "atlas": {
+                    "name": "atlas",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "category": {
+                    "name": "category",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "dimension": {
+                    "name": "dimension",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "role": {
+                    "name": "role",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "style": {
+                    "name": "style",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "thumbnailUrl": {
+                    "name": "thumbnailUrl",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "url": {
+                    "name": "url",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "left": {
+                "name": "left",
+                "required": false,
+                "properties": {
+                  "animations": {
+                    "name": "animations",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "aspect": {
+                    "name": "aspect",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "atlas": {
+                    "name": "atlas",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "category": {
+                    "name": "category",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "dimension": {
+                    "name": "dimension",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "role": {
+                    "name": "role",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "style": {
+                    "name": "style",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "thumbnailUrl": {
+                    "name": "thumbnailUrl",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "url": {
+                    "name": "url",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "right": {
+                "name": "right",
+                "required": false,
+                "properties": {
+                  "animations": {
+                    "name": "animations",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "aspect": {
+                    "name": "aspect",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "atlas": {
+                    "name": "atlas",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "category": {
+                    "name": "category",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "dimension": {
+                    "name": "dimension",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "role": {
+                    "name": "role",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "style": {
+                    "name": "style",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "thumbnailUrl": {
+                    "name": "thumbnailUrl",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "url": {
+                    "name": "url",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "up": {
+                "name": "up",
+                "required": false,
+                "properties": {
+                  "animations": {
+                    "name": "animations",
+                    "required": false,
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "aspect": {
+                    "name": "aspect",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "atlas": {
+                    "name": "atlas",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "category": {
+                    "name": "category",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "dimension": {
+                    "name": "dimension",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "role": {
+                    "name": "role",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "style": {
+                    "name": "style",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "thumbnailUrl": {
+                    "name": "thumbnailUrl",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "url": {
+                    "name": "url",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          {
+            "key": "fontFamily",
+            "type": "string",
+            "default": "",
+            "label": "Font Family",
+            "description": "game-shell font family (e.g. pixel).",
+            "tier": "presentation"
+          },
+          {
+            "key": "gridHeight",
+            "type": "number",
+            "default": 9,
+            "label": "Grid Height",
+            "description": "Grid row count (matches HeroAuthority/Enemies.gridHeight).",
+            "tier": "domain"
+          },
+          {
+            "key": "gridWidth",
+            "type": "number",
+            "default": 12,
+            "label": "Grid Width",
+            "description": "Grid column count (matches HeroAuthority/Enemies.gridWidth).",
+            "tier": "domain"
+          },
+          {
+            "key": "hudBackgroundAsset",
+            "type": "Asset",
+            "default": {},
+            "label": "HUD Background Asset",
+            "description": "HUD panel background sprite (theme chrome).",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "atlas": {
+                "name": "atlas",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "sprite": {
+                "name": "sprite",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              },
+              "variant": {
+                "name": "variant",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.3,
+            "label": "Scale",
+            "description": "Canvas render scale.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "DungeonBoard2DPage",
+        "defaultPath": "/dungeon-board-2d",
+        "primaryEntity": "GameState"
+      }
+    ],
+    "emittedEvents": [
+      "ATTACK",
+      "MONSTER_TICK",
+      "MOVE",
+      "MOVE_DOWN",
+      "MOVE_LEFT",
+      "MOVE_RIGHT",
+      "MOVE_UP",
+      "PLAY_AGAIN",
+      "RESTART"
+    ],
+    "listenedEvents": []
+  }
+]

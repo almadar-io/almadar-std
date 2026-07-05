@@ -41,6 +41,8 @@ export type StdUiContentSectionEventKey = 'INIT';
 export interface StdUiContentSectionConfig {
   /** Default: `"default"` */
   background?: 'default' | 'alt' | 'dark' | 'gradient';
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"lg"` */

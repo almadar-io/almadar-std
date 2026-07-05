@@ -43,6 +43,8 @@ export interface StdUiGameShellConfig {
   appName?: string;
   /** Default: `{"animations":["static"],"aspect":"1:1","category":"backgroundAsset","dimension":"2d","name":"backgroundAsset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"}` */
   backgroundAsset?: EntityRow;
+  /** Default: `[{"type":"canvas-2d"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"future"` */

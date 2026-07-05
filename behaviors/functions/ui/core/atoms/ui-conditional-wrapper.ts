@@ -41,6 +41,8 @@ export type StdUiConditionalWrapperEventKey = 'INIT';
 export interface StdUiConditionalWrapperConfig {
   /** Default: `false` */
   animate?: boolean;
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   condition?: EntityRow;
   /** Default: `{"formValues":{},"globalVariables":{}}` */
   context?: EntityRow;

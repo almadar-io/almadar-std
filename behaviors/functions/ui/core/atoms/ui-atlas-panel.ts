@@ -45,6 +45,8 @@ export interface StdUiAtlasPanelConfig {
   borderSlice?: number;
   /** Default: `16` */
   borderWidth?: number;
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"nineSlice"` */

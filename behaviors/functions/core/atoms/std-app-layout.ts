@@ -88,6 +88,7 @@ export interface StdAppLayoutConfig {
   notifications?: EntityRow[];
   /** Default: `"SEARCH"` */
   searchEvent?: string;
+  theme?: string;
   /** Default: `[]` */
   topBarActions?: EntityRow[];
 }

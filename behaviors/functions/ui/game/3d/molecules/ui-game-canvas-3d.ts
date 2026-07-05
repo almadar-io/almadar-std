@@ -130,7 +130,7 @@ export interface StdUiGameCanvas3dConfig {
   assetManifest?: EntityRow;
   /** Default: `[{"x":1,"z":1},{"x":2,"z":2}]` */
   attackTargets?: EntityRow[];
-  /** Default: `"#1a1a2e"` */
+  /** Default: `"Background Color"` */
   backgroundColor?: string;
   /** Default: `"isometric"` */
   cameraMode?: 'isometric' | 'perspective' | 'top-down' | 'follow' | 'chase';

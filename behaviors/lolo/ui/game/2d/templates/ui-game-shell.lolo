@@ -3,23 +3,23 @@ app ui-game-shell "1.0.0"
 orbital GameShellOrbital {
   type GameShellBackgroundAsset = {
     url : asset!
-    role : string
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
     category : string
     animations : [string]
-    style : string
-    dimension : string
-    aspect : string
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
     name : string
     thumbnailUrl : string
   }
   type GameShellHudBackgroundAsset = {
     url : asset!
-    role : string
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
     category : string
     animations : [string]
-    style : string
-    dimension : string
-    aspect : string
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
     name : string
     thumbnailUrl : string
   }
@@ -41,7 +41,7 @@ orbital GameShellOrbital {
           overlay: [{ content: "Overlay", type: typography }]
           className: @config.className
           showTopBar: @config.showTopBar
-          children: [{ type: canvas-2d }]
+          children: @config.children
           backgroundAsset: @config.backgroundAsset
           hudBackgroundAsset: @config.hudBackgroundAsset
           fontFamily: @config.fontFamily
@@ -61,6 +61,10 @@ orbital GameShellOrbital {
       showTopBar : boolean = true
         @label "Show Top Bar"
         @description "Whether to show the title chip (default: true)"
+        @tier "presentation"
+      children : node = [{ type: canvas-2d }]
+        @label "Children"
+        @description "Game content — fills the whole surface underneath the overlays"
         @tier "presentation"
       backgroundAsset : GameShellBackgroundAsset = { url: "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png", role: "decoration", category: "backgroundAsset", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "backgroundAsset", thumbnailUrl: "" }
         @label "Background Asset"

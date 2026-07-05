@@ -239,12 +239,12 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
               'properties': {
                 'header': {
                   'name': 'header',
-                  'required': true,
+                  'required': false,
                   'type': 'string',
                 },
                 'key': {
                   'name': 'key',
-                  'required': true,
+                  'required': false,
                   'type': 'string',
                 },
                 'label': {
@@ -367,12 +367,12 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
               'properties': {
                 'header': {
                   'name': 'header',
-                  'required': true,
+                  'required': false,
                   'type': 'string',
                 },
                 'key': {
                   'name': 'key',
-                  'required': true,
+                  'required': false,
                   'type': 'string',
                 },
                 'label': {

@@ -26,17 +26,6 @@ orbital Canvas2dOrbital {
     animation : string
     frame : number
   }
-  type Canvas2dBackgroundImage = {
-    url : asset!
-    role : string
-    category : string
-    animations : [string]
-    style : string
-    dimension : string
-    aspect : string
-    name : string
-    thumbnailUrl : string
-  }
   type Canvas2dValidMovesItem = {
     x : number!
     y : number!
@@ -54,23 +43,23 @@ orbital Canvas2dOrbital {
   }
   type Canvas2dPlayerSprite = {
     url : asset!
-    role : string
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
     category : string
     animations : [string]
-    style : string
-    dimension : string
-    aspect : string
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
     name : string
     thumbnailUrl : string
   }
   type Canvas2dTileSpritesValue = {
     url : asset!
-    role : string
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
     category : string
     animations : [string]
-    style : string
-    dimension : string
-    aspect : string
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
     name : string
     thumbnailUrl : string
   }
@@ -82,45 +71,45 @@ orbital Canvas2dOrbital {
   }
   type Canvas2dAssetManifestTerrainsValue = {
     url : asset!
-    role : string
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
     category : string
     animations : [string]
-    style : string
-    dimension : string
-    aspect : string
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
     name : string
     thumbnailUrl : string
   }
   type Canvas2dAssetManifestUnitsValue = {
     url : asset!
-    role : string
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
     category : string
     animations : [string]
-    style : string
-    dimension : string
-    aspect : string
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
     name : string
     thumbnailUrl : string
   }
   type Canvas2dAssetManifestFeaturesValue = {
     url : asset!
-    role : string
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
     category : string
     animations : [string]
-    style : string
-    dimension : string
-    aspect : string
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
     name : string
     thumbnailUrl : string
   }
   type Canvas2dAssetManifestEffectsValue = {
     url : asset!
-    role : string
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
     category : string
     animations : [string]
-    style : string
-    dimension : string
-    aspect : string
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
     name : string
     thumbnailUrl : string
   }
@@ -243,9 +232,9 @@ orbital Canvas2dOrbital {
         @label "Player"
         @description "Side-view player. `projection:'side'` only."
         @tier "presentation"
-      backgroundImage : Canvas2dBackgroundImage = { url: "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png", role: "decoration", category: "backgroundImage", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "backgroundImage", thumbnailUrl: "" }
+      backgroundImage : asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png", role: "decoration", category: "backgroundImage", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "backgroundImage", thumbnailUrl: "" }
         @label "Background Image"
-        @description "Background image (tiled behind iso/hex/flat/free; stretched in side)."
+        @description "Background image (tiled behind iso/hex/flat/free; stretched in side). A bare URL string is accepted as shorthand for a standalone backdrop."
         @tier "presentation"
       selectedUnitId : string = ""
         @label "Selected Unit Id"
@@ -293,7 +282,7 @@ orbital Canvas2dOrbital {
         @tier "presentation"
       interpolateUnits : boolean = false
         @label "Interpolate Units"
-        @description "Opt-in: smooth-interpolate unit positions between LOLO tick snapshots via a `requestAnimationFrame` loop (same fixed-timestep technique `SideView` already uses for the player), instead of the default tick-rate-cadence redraw. DEFAULT OFF — for continuous-movement boards only; tile-snapped boards see no behavior change."
+        @description "Opt-in: smooth-interpolate unit positions between LOLO tick snapshots via a `requestAnimationFrame` loop (same fixed-timestep technique `SideCanvas2D` already uses for the player), instead of the default tick-rate-cadence redraw. DEFAULT OFF — for continuous-movement boards only; tile-snapped boards see no behavior change."
         @tier "presentation"
       debug : boolean = false
         @label "Debug"
@@ -323,7 +312,7 @@ orbital Canvas2dOrbital {
         @label "Tile Sprites"
         @description "Platform-type → tile sprite URL map for `side`."
         @tier "presentation"
-      bgColor : string = "#5c94fc"
+      bgColor : string = "Bg Color"
         @label "Bg Color"
         @description "Background color for `side` (when no backgroundImage)."
         @tier "presentation"

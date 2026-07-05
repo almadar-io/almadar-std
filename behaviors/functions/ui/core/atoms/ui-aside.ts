@@ -39,6 +39,8 @@ export type StdUiAsideEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAsideConfig {
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
 }

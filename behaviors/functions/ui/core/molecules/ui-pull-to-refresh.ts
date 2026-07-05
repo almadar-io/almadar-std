@@ -46,6 +46,8 @@ export interface StdUiPullToRefreshRefreshPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPullToRefreshConfig {
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `{}` */

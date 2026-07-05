@@ -46,6 +46,8 @@ export interface StdUiGenericAppTemplateGenericAppTemplateLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGenericAppTemplateConfig {
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   footer?: unknown;

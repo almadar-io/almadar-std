@@ -7,12 +7,12 @@ orbital GameTemplateOrbital {
   }
   type GameTemplateBackgroundAsset = {
     url : asset!
-    role : string
+    role : "player" | "enemy" | "npc" | "item" | "tile" | "projectile" | "effect" | "ui" | "decoration" | "vehicle"
     category : string
     animations : [string]
-    style : string
-    dimension : string
-    aspect : string
+    style : "pixel" | "vector" | "hd" | "1-bit" | "isometric"
+    dimension : "2d" | "3d"
+    aspect : "1:1" | "16:9" | "5:7" | "8:1"
     name : string
     thumbnailUrl : string
   }
@@ -31,7 +31,7 @@ orbital GameTemplateOrbital {
           entity: @entity
           className: @config.className
           title: @config.title
-          children: [{ type: canvas-2d }]
+          children: @config.children
           hud: [{ content: "Hud", type: typography }]
           debugPanel: @config.debugPanel
           showDebugPanel: @config.showDebugPanel
@@ -44,7 +44,7 @@ orbital GameTemplateOrbital {
           entity: @payload.data
           className: @config.className
           title: @config.title
-          children: [{ type: canvas-2d }]
+          children: @config.children
           hud: [{ content: "Hud", type: typography }]
           debugPanel: @config.debugPanel
           showDebugPanel: @config.showDebugPanel
@@ -69,6 +69,10 @@ orbital GameTemplateOrbital {
       title : string = Game
         @label "Title"
         @description "Title of the game"
+        @tier "presentation"
+      children : node = [{ type: canvas-2d }]
+        @label "Children"
+        @description "The main game canvas or content"
         @tier "presentation"
       debugPanel : node
         @label "Debug Panel"

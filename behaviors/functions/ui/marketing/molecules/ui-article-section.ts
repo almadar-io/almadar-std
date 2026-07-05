@@ -39,6 +39,8 @@ export type StdUiArticleSectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiArticleSectionConfig {
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"md"` */

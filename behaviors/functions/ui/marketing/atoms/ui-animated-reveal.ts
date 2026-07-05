@@ -43,6 +43,8 @@ export interface StdUiAnimatedRevealConfig {
   animate?: boolean;
   /** Default: `"fade-up"` */
   animation?: 'fade-up' | 'fade-down' | 'fade-in' | 'fade-left' | 'fade-right' | 'scale' | 'scale-up' | 'none';
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `0` */

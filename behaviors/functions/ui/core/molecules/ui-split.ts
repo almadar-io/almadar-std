@@ -41,6 +41,8 @@ export type StdUiSplitEventKey = 'INIT';
 export interface StdUiSplitConfig {
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch';
+  /** Default: `[{"content":"Panel A","type":"typography"},{"content":"Panel B","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   error?: EntityRow;

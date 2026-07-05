@@ -44,6 +44,8 @@ export interface StdUiHeroSectionConfig {
   /** Default: `"subtle"` */
   background?: 'dark' | 'gradient' | 'subtle';
   backgroundElement?: unknown;
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `{"alt":"Alt","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */

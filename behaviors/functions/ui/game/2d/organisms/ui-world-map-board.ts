@@ -25,87 +25,30 @@ const BEHAVIOR_PATH = 'std/behaviors/ui-world-map-board';
 const ALIAS = 'UiWorldMapBoard';
 
 /**
- * Closed set of event keys this trait recognises —
- * derived from the .orb's `stateMachine.events[]` block
- * (transition triggers + emit names). Use as the key type
- * when passing an `events:` rename map at the call site.
- */
-export type StdUiWorldMapBoardEventKey = 'ADVANCE_TURN' | 'GAME_END' | 'HERO_MOVE' | 'HERO_SELECT' | 'INIT' | 'PLAY_AGAIN';
-
-/**
- * Payload shape for the `HERO_SELECT` event.
- */
-export interface StdUiWorldMapBoardHeroSelectPayload {
-  unitId: string;
-}
-
-/**
- * Payload shape for the `HERO_MOVE` event.
- */
-export interface StdUiWorldMapBoardHeroMovePayload {
-  x: number;
-  y: number;
-}
-
-/**
- * Payload shape for the `ADVANCE_TURN` event.
- */
-export interface StdUiWorldMapBoardAdvanceTurnPayload {
-  id?: string;
-}
-
-/**
- * Payload shape for the `GAME_END` event.
- */
-export interface StdUiWorldMapBoardGameEndPayload {
-  result?: string;
-}
-
-/**
- * Payload shape for the `PLAY_AGAIN` event.
- */
-export interface StdUiWorldMapBoardPlayAgainPayload {
-  id?: string;
-}
-
-/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdUiWorldMapBoardConfig {
-  /** Default: `false` */
-  allowMoveAllHeroes?: boolean;
-  /** Default: `{"effects":{"slash":{"animations":["static"],"aspect":"8:1","atlas":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.json","category":"slash","dimension":"2d","name":"slash","role":"effect","sprite":"regularExplosion04.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png","variant":""}},"features":{"gold_mine":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json","category":"gold_mine","dimension":"2d","name":"gold_mine","role":"decoration","sprite":"mine.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png","variant":""},"portal":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json","category":"portal","dimension":"2d","name":"portal","role":"decoration","sprite":"gate.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png","variant":""}},"terrains":{"forest":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"grass":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"stone":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""}},"units":{"guard":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json","category":"guard","dimension":"2d","name":"guard","role":"npc","sprite":"crocodile.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png","variant":""},"hero":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json","category":"hero","dimension":"2d","name":"hero","role":"npc","sprite":"bear.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png","variant":""}}}` */
-  assetManifest?: EntityRow;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `374` */
-  diamondTopY?: number;
-  /** Default: `["https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png","https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_sonicExplosion.png","https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_particles.png","https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_pixelExplosion.png"]` */
-  effectSpriteUrls?: EntityRow[];
+  /** Default: `3` */
+  attackDamage?: unknown;
+  /** Default: `16` */
+  gridHeight?: unknown;
+  /** Default: `16` */
+  gridWidth?: unknown;
   /** Default: `true` */
-  enableCamera?: boolean;
-  error?: EntityRow;
-  /** Default: `[{"id":"f_mine","sprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json","category":"gold_mine","dimension":"2d","name":"gold_mine","role":"decoration","sprite":"mine.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png","variant":""},"type":"gold_mine","x":11,"y":7},{"id":"f_portal","sprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json","category":"portal","dimension":"2d","name":"portal","role":"decoration","sprite":"gate.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png","variant":""},"type":"portal","x":7,"y":3}]` */
-  features?: EntityRow[];
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0.25` */
-  scale?: number;
+  running?: unknown;
   /** Default: `[{"id":"t0_0","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":0},{"id":"t1_0","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":0},{"id":"t2_0","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":0},{"id":"t3_0","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":0},{"id":"t4_0","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":0},{"id":"t5_0","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":0},{"id":"t6_0","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":0},{"id":"t7_0","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":0},{"id":"t8_0","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":0},{"id":"t9_0","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":0},{"id":"t10_0","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":0},{"id":"t11_0","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":0},{"id":"t12_0","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":0},{"id":"t13_0","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":0},{"id":"t14_0","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":0},{"id":"t15_0","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":0},{"id":"t0_1","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":1},{"id":"t1_1","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":1},{"id":"t2_1","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":1},{"id":"t3_1","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":1},{"id":"t4_1","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":1},{"id":"t5_1","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":1},{"id":"t6_1","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":1},{"id":"t7_1","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":1},{"id":"t8_1","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":1},{"id":"t9_1","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":1},{"id":"t10_1","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":1},{"id":"t11_1","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":1},{"id":"t12_1","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":1},{"id":"t13_1","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":1},{"id":"t14_1","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":1},{"id":"t15_1","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":1},{"id":"t0_2","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":2},{"id":"t1_2","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":2},{"id":"t2_2","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":2},{"id":"t3_2","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":2},{"id":"t4_2","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":2},{"id":"t5_2","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":2},{"id":"t6_2","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":2},{"id":"t7_2","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":2},{"id":"t8_2","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":2},{"id":"t9_2","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":2},{"id":"t10_2","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":2},{"id":"t11_2","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":2},{"id":"t12_2","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":2},{"id":"t13_2","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":2},{"id":"t14_2","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":2},{"id":"t15_2","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":2},{"id":"t0_3","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":3},{"id":"t1_3","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":3},{"id":"t2_3","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":3},{"id":"t3_3","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":3},{"id":"t4_3","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":3},{"id":"t5_3","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":3},{"id":"t6_3","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":3},{"id":"t7_3","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":3},{"id":"t8_3","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":3},{"id":"t9_3","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":3},{"id":"t10_3","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":3},{"id":"t11_3","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":3},{"id":"t12_3","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":3},{"id":"t13_3","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":3},{"id":"t14_3","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":3},{"id":"t15_3","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":3},{"id":"t0_4","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":4},{"id":"t1_4","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":4},{"id":"t2_4","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":4},{"id":"t3_4","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":4},{"id":"t4_4","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":4},{"id":"t5_4","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":4},{"id":"t6_4","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":4},{"id":"t7_4","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":4},{"id":"t8_4","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":4},{"id":"t9_4","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":4},{"id":"t10_4","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":4},{"id":"t11_4","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":4},{"id":"t12_4","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":4},{"id":"t13_4","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":4},{"id":"t14_4","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":4},{"id":"t15_4","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":4},{"id":"t0_5","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":5},{"id":"t1_5","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":5},{"id":"t2_5","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":5},{"id":"t3_5","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":5},{"id":"t4_5","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":5},{"id":"t5_5","passable":false,"terrain":"forest","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"forest","dimension":"2d","name":"forest","role":"tile","sprite":"landscapeTiles_021.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":5},{"id":"t6_5","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":5},{"id":"t7_5","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":5},{"id":"t8_5","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":5},{"id":"t9_5","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":5},{"id":"t10_5","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":5},{"id":"t11_5","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":5},{"id":"t12_5","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":5},{"id":"t13_5","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":5},{"id":"t14_5","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":5},{"id":"t15_5","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":5},{"id":"t0_6","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":6},{"id":"t1_6","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":6},{"id":"t2_6","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":6},{"id":"t3_6","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":6},{"id":"t4_6","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":6},{"id":"t5_6","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":6},{"id":"t6_6","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":6},{"id":"t7_6","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":6},{"id":"t8_6","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":6},{"id":"t9_6","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":6},{"id":"t10_6","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":6},{"id":"t11_6","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":6},{"id":"t12_6","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":6},{"id":"t13_6","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":6},{"id":"t14_6","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":6},{"id":"t15_6","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":6},{"id":"t0_7","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":7},{"id":"t1_7","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":7},{"id":"t2_7","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":7},{"id":"t3_7","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":7},{"id":"t4_7","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":7},{"id":"t5_7","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":7},{"id":"t6_7","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":7},{"id":"t7_7","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":7},{"id":"t8_7","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":7},{"id":"t9_7","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":7},{"id":"t10_7","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":7},{"id":"t11_7","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":7},{"id":"t12_7","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":7},{"id":"t13_7","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":7},{"id":"t14_7","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":7},{"id":"t15_7","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":7},{"id":"t0_8","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":8},{"id":"t1_8","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":8},{"id":"t2_8","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":8},{"id":"t3_8","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":8},{"id":"t4_8","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":8},{"id":"t5_8","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":8},{"id":"t6_8","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":8},{"id":"t7_8","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":8},{"id":"t8_8","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":8},{"id":"t9_8","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":8},{"id":"t10_8","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":8},{"id":"t11_8","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":8},{"id":"t12_8","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":8},{"id":"t13_8","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":8},{"id":"t14_8","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":8},{"id":"t15_8","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":8},{"id":"t0_9","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":9},{"id":"t1_9","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":9},{"id":"t2_9","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":9},{"id":"t3_9","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":9},{"id":"t4_9","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":9},{"id":"t5_9","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":9},{"id":"t6_9","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":9},{"id":"t7_9","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":9},{"id":"t8_9","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":9},{"id":"t9_9","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":9},{"id":"t10_9","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":9},{"id":"t11_9","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":9},{"id":"t12_9","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":9},{"id":"t13_9","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":9},{"id":"t14_9","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":9},{"id":"t15_9","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":9},{"id":"t0_10","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":10},{"id":"t1_10","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":10},{"id":"t2_10","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":10},{"id":"t3_10","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":10},{"id":"t4_10","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":10},{"id":"t5_10","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":10},{"id":"t6_10","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":10},{"id":"t7_10","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":10},{"id":"t8_10","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":10},{"id":"t9_10","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":10},{"id":"t10_10","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":10},{"id":"t11_10","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":10},{"id":"t12_10","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":10},{"id":"t13_10","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":10},{"id":"t14_10","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":10},{"id":"t15_10","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":10},{"id":"t0_11","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":11},{"id":"t1_11","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":11},{"id":"t2_11","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":11},{"id":"t3_11","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":11},{"id":"t4_11","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":11},{"id":"t5_11","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":11},{"id":"t6_11","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":11},{"id":"t7_11","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":11},{"id":"t8_11","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":11},{"id":"t9_11","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":11},{"id":"t10_11","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":11},{"id":"t11_11","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":11},{"id":"t12_11","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":11},{"id":"t13_11","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":11},{"id":"t14_11","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":11},{"id":"t15_11","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":11},{"id":"t0_12","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":12},{"id":"t1_12","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":12},{"id":"t2_12","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":12},{"id":"t3_12","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":12},{"id":"t4_12","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":12},{"id":"t5_12","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":12},{"id":"t6_12","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":12},{"id":"t7_12","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":12},{"id":"t8_12","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":12},{"id":"t9_12","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":12},{"id":"t10_12","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":12},{"id":"t11_12","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":12},{"id":"t12_12","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":12},{"id":"t13_12","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":12},{"id":"t14_12","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":12},{"id":"t15_12","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":12},{"id":"t0_13","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":13},{"id":"t1_13","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":13},{"id":"t2_13","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":13},{"id":"t3_13","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":13},{"id":"t4_13","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":13},{"id":"t5_13","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":13},{"id":"t6_13","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":13},{"id":"t7_13","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":13},{"id":"t8_13","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":13},{"id":"t9_13","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":13},{"id":"t10_13","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":13},{"id":"t11_13","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":13},{"id":"t12_13","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":13},{"id":"t13_13","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":13},{"id":"t14_13","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":13},{"id":"t15_13","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":13},{"id":"t0_14","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":14},{"id":"t1_14","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":14},{"id":"t2_14","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":14},{"id":"t3_14","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":14},{"id":"t4_14","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":14},{"id":"t5_14","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":14},{"id":"t6_14","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":14},{"id":"t7_14","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":14},{"id":"t8_14","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":14},{"id":"t9_14","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":14},{"id":"t10_14","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":14},{"id":"t11_14","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":14},{"id":"t12_14","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":14},{"id":"t13_14","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":14},{"id":"t14_14","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":14},{"id":"t15_14","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":14},{"id":"t0_15","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":0,"y":15},{"id":"t1_15","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":1,"y":15},{"id":"t2_15","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":2,"y":15},{"id":"t3_15","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":3,"y":15},{"id":"t4_15","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":4,"y":15},{"id":"t5_15","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":5,"y":15},{"id":"t6_15","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":6,"y":15},{"id":"t7_15","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":7,"y":15},{"id":"t8_15","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":8,"y":15},{"id":"t9_15","passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"grass","dimension":"2d","name":"grass","role":"tile","sprite":"landscapeTiles_022.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":9,"y":15},{"id":"t10_15","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":10,"y":15},{"id":"t11_15","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":11,"y":15},{"id":"t12_15","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":12,"y":15},{"id":"t13_15","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":13,"y":15},{"id":"t14_15","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":14,"y":15},{"id":"t15_15","passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json","category":"stone","dimension":"2d","name":"stone","role":"tile","sprite":"landscapeTiles_114.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png","variant":""},"x":15,"y":15}]` */
-  tiles?: EntityRow[];
-  /** Default: `2.5` */
-  unitScale?: number;
-  /** Default: `[{"animation":"idle","frame":0,"health":10,"id":"u_hero","maxHealth":10,"movement":3,"name":"Hero","position":{"x":3,"y":10},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json","category":"hero","dimension":"2d","name":"hero","role":"npc","sprite":"bear.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png","variant":""},"team":"player","unitType":"hero"},{"animation":"idle","frame":0,"health":8,"id":"u_guard","maxHealth":8,"movement":2,"name":"Guard","position":{"x":13,"y":4},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json","category":"guard","dimension":"2d","name":"guard","role":"npc","sprite":"crocodile.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png","variant":""},"team":"enemy","unitType":"guard"}]` */
-  units?: EntityRow[];
+  tiles?: unknown;
+  /** Default: `[{"animation":"idle","frame":0,"health":10,"id":"u_hero","maxHealth":10,"name":"Hero","position":{"x":3,"y":10},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json","category":"hero","dimension":"2d","name":"hero","role":"npc","sprite":"bear.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png","variant":""},"team":"player","unitType":"hero"},{"animation":"idle","frame":0,"health":8,"id":"u_guard","maxHealth":8,"name":"Guard","position":{"x":13,"y":4},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","atlas":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json","category":"guard","dimension":"2d","name":"guard","role":"npc","sprite":"crocodile.png","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png","variant":""},"team":"enemy","unitType":"guard"}]` */
+  units?: unknown;
 }
 
 /**
  * Tunable params for the WorldMapBoardOrbital orbital.
  *
- * Canonical entity: WorldMapBoardItem — overridable via
+ * Canonical entity: GameState — overridable via
  * `entityName`. The factory threads the effective name through every
  * trait's `linkedEntity` binding; the `.orb` compiler's inline phase
  * auto-rewrites every `@Entity.x`, `["ref",X]`, `["fetch",X,…]`,
@@ -136,17 +79,22 @@ export interface StdUiWorldMapBoardWorldMapBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'WorldMapBoardRender',
+    'Authority' | 'RoundLogic' | 'GoldAuthority' | 'Hero',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
 
 /** Per-orbital factory: builds the WorldMapBoardOrbital orbital with consumer params. */
 export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoardWorldMapBoardOrbitalParams = {}): OrbitalDefinition {
-  const canonicalName = params.entityName ?? 'WorldMapBoardItem';
+  const canonicalName = params.entityName ?? 'GameState';
   const built = makeOrbitalWithUses({
     name: 'WorldMapBoardOrbital',
-    uses: [],
+    uses: [
+      {
+        'as': 'Frame',
+        'from': 'std/behaviors/std-worldmap-board-2d',
+      },
+    ],
     entity: {
       name: canonicalName,
       persistence: 'runtime',
@@ -158,27 +106,13 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'type': 'string',
           },
           {
+            'default': [],
             'items': {
               'properties': {
                 'animation': {
                   'name': 'animation',
                   'required': false,
                   'type': 'string',
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'required': false,
-                  'type': 'number',
-                },
-                'faction': {
-                  'name': 'faction',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'player',
-                    'enemy',
-                    'neutral',
-                  ],
                 },
                 'frame': {
                   'name': 'frame',
@@ -190,11 +124,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                   'required': false,
                   'type': 'number',
                 },
-                'heroId': {
-                  'name': 'heroId',
-                  'required': false,
-                  'type': 'string',
-                },
                 'id': {
                   'name': 'id',
                   'required': true,
@@ -205,81 +134,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                   'required': false,
                   'type': 'number',
                 },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'movement': {
-                  'name': 'movement',
-                  'required': false,
-                  'type': 'number',
-                },
                 'name': {
                   'name': 'name',
                   'required': false,
@@ -287,23 +141,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                 },
                 'position': {
                   'name': 'position',
-                  'properties': {
-                    'x': {
-                      'name': 'x',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'y': {
-                      'name': 'y',
-                      'required': true,
-                      'type': 'number',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'previousPosition': {
-                  'name': 'previousPosition',
                   'properties': {
                     'x': {
                       'name': 'x',
@@ -399,39 +236,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                     'neutral',
                   ],
                 },
-                'traits': {
-                  'items': {
-                    'properties': {
-                      'cooldown': {
-                        'name': 'cooldown',
-                        'required': true,
-                        'type': 'number',
-                      },
-                      'currentState': {
-                        'name': 'currentState',
-                        'required': true,
-                        'type': 'string',
-                      },
-                      'name': {
-                        'name': 'name',
-                        'required': true,
-                        'type': 'string',
-                      },
-                      'states': {
-                        'items': {
-                          'type': 'string',
-                        },
-                        'name': 'states',
-                        'required': true,
-                        'type': 'array',
-                      },
-                    },
-                    'type': 'object',
-                  },
-                  'name': 'traits',
-                  'required': false,
-                  'type': 'array',
-                },
                 'unitType': {
                   'name': 'unitType',
                   'required': false,
@@ -459,92 +263,13 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'type': 'array',
           },
           {
+            'default': [],
             'items': {
               'properties': {
-                'elevation': {
-                  'name': 'elevation',
-                  'required': false,
-                  'type': 'number',
-                },
                 'id': {
                   'name': 'id',
                   'required': false,
                   'type': 'string',
-                },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'movementCost': {
-                  'name': 'movementCost',
-                  'required': false,
-                  'type': 'number',
                 },
                 'passable': {
                   'name': 'passable',
@@ -626,16 +351,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                   'required': false,
                   'type': 'object',
                 },
-                'tileType': {
-                  'name': 'tileType',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': false,
-                  'type': 'string',
-                },
                 'x': {
                   'name': 'x',
                   'required': true,
@@ -644,11 +359,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                 'y': {
                   'name': 'y',
                   'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
                   'type': 'number',
                 },
               },
@@ -658,188 +368,14 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'type': 'array',
           },
           {
-            'items': {
-              'properties': {
-                'assetUrl': {
-                  'name': 'assetUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'required': false,
-                  'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'sprite': {
-                  'name': 'sprite',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'name': 'features',
-            'type': 'array',
+            'default': 'none',
+            'name': 'result',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'name': 'gold',
+            'type': 'number',
           },
           {
             'default': '',
@@ -867,38 +403,16 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'type': 'array',
           },
           {
+            'default': [],
+            'items': {
+              'type': 'string',
+            },
+            'name': 'waypoints',
+            'type': 'array',
+          },
+          {
             'default': 0,
             'name': 'turn',
-            'type': 'number',
-          },
-          {
-            'default': 0,
-            'name': 'gold',
-            'type': 'number',
-          },
-          {
-            'default': 'none',
-            'name': 'result',
-            'type': 'string',
-            'values': [
-              'none',
-              'win',
-              'lose',
-            ],
-          },
-          {
-            'default': 16,
-            'name': 'gridWidth',
-            'type': 'number',
-          },
-          {
-            'default': 16,
-            'name': 'gridHeight',
-            'type': 'number',
-          },
-          {
-            'default': 3,
-            'name': 'movementRange',
             'type': 'number',
           },
           {
@@ -931,14 +445,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'name': 'effects',
             'type': 'array',
           },
-          {
-            'default': [],
-            'items': {
-              'type': 'string',
-            },
-            'name': 'waypoints',
-            'type': 'array',
-          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -947,771 +453,23 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
       })(),
     } as Entity,
     traits: [
-      rebindInlineTraitEntity({
-        'category': 'interaction',
+      makeTraitRef({
         'config': {
-          'allowMoveAllHeroes': {
-            'default': false,
-            'description': 'Allow selecting / moving ALL heroes (including enemy). For testing.',
-            'label': 'Allow Move All Heroes',
-            'tier': 'presentation',
-            'type': 'boolean',
+          'attackDamage': {
+            'default': 3,
+            'type': 'unknown',
           },
-          'assetManifest': {
-            'default': {
-              'effects': {
-                'slash': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '8:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.json',
-                  'category': 'slash',
-                  'dimension': '2d',
-                  'name': 'slash',
-                  'role': 'effect',
-                  'sprite': 'regularExplosion04.png',
-                  'style': '',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png',
-                  'variant': '',
-                },
-              },
-              'features': {
-                'gold_mine': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                  'category': 'gold_mine',
-                  'dimension': '2d',
-                  'name': 'gold_mine',
-                  'role': 'decoration',
-                  'sprite': 'mine.png',
-                  'style': '',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                  'variant': '',
-                },
-                'portal': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                  'category': 'portal',
-                  'dimension': '2d',
-                  'name': 'portal',
-                  'role': 'decoration',
-                  'sprite': 'gate.png',
-                  'style': '',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                  'variant': '',
-                },
-              },
-              'terrains': {
-                'forest': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
-                  'category': 'forest',
-                  'dimension': '2d',
-                  'name': 'forest',
-                  'role': 'tile',
-                  'sprite': 'landscapeTiles_021.png',
-                  'style': '',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
-                  'variant': '',
-                },
-                'grass': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
-                  'category': 'grass',
-                  'dimension': '2d',
-                  'name': 'grass',
-                  'role': 'tile',
-                  'sprite': 'landscapeTiles_022.png',
-                  'style': '',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
-                  'variant': '',
-                },
-                'stone': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
-                  'category': 'stone',
-                  'dimension': '2d',
-                  'name': 'stone',
-                  'role': 'tile',
-                  'sprite': 'landscapeTiles_114.png',
-                  'style': '',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
-                  'variant': '',
-                },
-              },
-              'units': {
-                'guard': {
-                  'animations': [
-                    'idle',
-                    'walk',
-                    'attack',
-                    'hit',
-                    'death',
-                  ],
-                  'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json',
-                  'category': 'guard',
-                  'dimension': '2d',
-                  'name': 'guard',
-                  'role': 'npc',
-                  'sprite': 'crocodile.png',
-                  'style': '',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png',
-                  'variant': '',
-                },
-                'hero': {
-                  'animations': [
-                    'idle',
-                    'walk',
-                    'attack',
-                    'hit',
-                    'death',
-                  ],
-                  'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json',
-                  'category': 'hero',
-                  'dimension': '2d',
-                  'name': 'hero',
-                  'role': 'npc',
-                  'sprite': 'bear.png',
-                  'style': '',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png',
-                  'variant': '',
-                },
-              },
-            },
-            'description': 'Direct asset manifest — takes priority over entity-derived manifest.',
-            'label': 'Asset Manifest',
-            'properties': {
-              'effects': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'effects',
-                'required': false,
-                'type': 'object',
-              },
-              'features': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'features',
-                'required': false,
-                'type': 'object',
-              },
-              'terrains': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'terrains',
-                'required': false,
-                'type': 'object',
-              },
-              'units': {
-                'items': {
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'units',
-                'required': false,
-                'type': 'object',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'WorldMapBoardAssetManifest',
+          'gridHeight': {
+            'default': 16,
+            'type': 'unknown',
           },
-          'className': {
-            'default': '',
-            'description': 'Additional CSS classes',
-            'label': 'Class Name',
-            'tier': 'presentation',
-            'type': 'string',
+          'gridWidth': {
+            'default': 16,
+            'type': 'unknown',
           },
-          'diamondTopY': {
-            'default': 374,
-            'description': 'Y pixel offset to the top diamond vertex of the isometric grid.',
-            'label': 'Diamond Top Y',
-            'tier': 'presentation',
-            'type': 'number',
-          },
-          'effectSpriteUrls': {
-            'default': [
-              'https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png',
-              'https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_sonicExplosion.png',
-              'https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_particles.png',
-              'https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_pixelExplosion.png',
-            ],
-            'description': 'effectSpriteUrls prop',
-            'items': {
-              'type': 'string',
-            },
-            'label': 'Effect Sprite Urls',
-            'tier': 'presentation',
-            'type': '[asset]',
-          },
-          'enableCamera': {
+          'running': {
             'default': true,
-            'description': 'Enable pan/zoom camera. Set false for fixed maps where overlay labels need stable positions.',
-            'label': 'Enable Camera',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'error': {
-            'description': 'Error state',
-            'label': 'Error',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'required': false,
-                'type': 'string',
-              },
-              'message': {
-                'name': 'message',
-                'required': true,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'stack': {
-                'name': 'stack',
-                'required': false,
-                'type': 'string',
-              },
-            },
-            'tier': 'presentation',
-            'type': 'WorldMapBoardError',
-          },
-          'features': {
-            'default': [
-              {
-                'id': 'f_mine',
-                'sprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                  'category': 'gold_mine',
-                  'dimension': '2d',
-                  'name': 'gold_mine',
-                  'role': 'decoration',
-                  'sprite': 'mine.png',
-                  'style': '',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                  'variant': '',
-                },
-                'type': 'gold_mine',
-                'x': 11,
-                'y': 7,
-              },
-              {
-                'id': 'f_portal',
-                'sprite': {
-                  'animations': [
-                    'static',
-                  ],
-                  'aspect': '1:1',
-                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                  'category': 'portal',
-                  'dimension': '2d',
-                  'name': 'portal',
-                  'role': 'decoration',
-                  'sprite': 'gate.png',
-                  'style': '',
-                  'thumbnailUrl': '',
-                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                  'variant': '',
-                },
-                'type': 'portal',
-                'x': 7,
-                'y': 3,
-              },
-            ],
-            'description': 'World features seeded into entity on INIT.',
-            'items': {
-              'properties': {
-                'assetUrl': {
-                  'name': 'assetUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'color': {
-                  'name': 'color',
-                  'required': false,
-                  'type': 'string',
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'required': false,
-                  'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'sprite': {
-                  'name': 'sprite',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': true,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Features',
-            'tier': 'presentation',
-            'type': '[WorldMapBoardFeaturesItem]',
-          },
-          'isLoading': {
-            'default': false,
-            'description': 'Loading state indicator',
-            'label': 'Is Loading',
-            'tier': 'presentation',
-            'type': 'boolean',
-          },
-          'scale': {
-            'default': 0.25,
-            'description': 'Canvas render scale',
-            'label': 'Scale',
-            'tier': 'presentation',
-            'type': 'number',
+            'type': 'unknown',
           },
           'tiles': {
             'default': [
@@ -7604,212 +6362,7 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                 'y': 15,
               },
             ],
-            'description': 'Initial tile map seeded into entity on INIT — passable drives movement validation in the model.',
-            'items': {
-              'properties': {
-                'elevation': {
-                  'name': 'elevation',
-                  'required': false,
-                  'type': 'number',
-                },
-                'id': {
-                  'name': 'id',
-                  'required': false,
-                  'type': 'string',
-                },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'movementCost': {
-                  'name': 'movementCost',
-                  'required': false,
-                  'type': 'number',
-                },
-                'passable': {
-                  'name': 'passable',
-                  'required': false,
-                  'type': 'boolean',
-                },
-                'terrain': {
-                  'name': 'terrain',
-                  'required': false,
-                  'type': 'string',
-                },
-                'terrainSprite': {
-                  'name': 'terrainSprite',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'tileType': {
-                  'name': 'tileType',
-                  'required': false,
-                  'type': 'string',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'label': 'Tiles',
-            'tier': 'presentation',
-            'type': '[WorldMapBoardTilesItem]',
-          },
-          'unitScale': {
-            'default': 2.5,
-            'description': 'Unit draw-size multiplier',
-            'label': 'Unit Scale',
-            'tier': 'presentation',
-            'type': 'number',
+            'type': 'unknown',
           },
           'units': {
             'default': [
@@ -7819,7 +6372,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                 'health': 10,
                 'id': 'u_hero',
                 'maxHealth': 10,
-                'movement': 3,
                 'name': 'Hero',
                 'position': {
                   'x': 3,
@@ -7854,7 +6406,6 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                 'health': 8,
                 'id': 'u_guard',
                 'maxHealth': 8,
-                'movement': 2,
                 'name': 'Guard',
                 'position': {
                   'x': 13,
@@ -7884,2708 +6435,374 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                 'unitType': 'guard',
               },
             ],
-            'description': 'Initial hero/unit roster seeded into entity on INIT — team+health drive win/lose conditions.',
-            'items': {
-              'properties': {
-                'animation': {
-                  'name': 'animation',
-                  'required': false,
-                  'type': 'string',
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'required': false,
-                  'type': 'number',
-                },
-                'faction': {
-                  'name': 'faction',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'player',
-                    'enemy',
-                    'neutral',
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'Authority',
+        'ref': 'Frame.traits.TacticsAuthority',
+      }),
+      makeTraitRef({
+        'config': {
+          'running': {
+            'default': true,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'RoundLogic',
+        'ref': 'Frame.traits.RoundLogic',
+      }),
+      makeTraitRef({
+        'config': {
+          'running': {
+            'default': true,
+            'type': 'unknown',
+          },
+          'startGold': {
+            'default': 0,
+            'type': 'unknown',
+          },
+          'yieldAmount': {
+            'default': 25,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'GoldAuthority',
+        'ref': 'Frame.traits.GoldAuthority',
+      }),
+      makeTraitRef({
+        'config': {
+          'assetManifest': {
+            'default': {
+              'effects': {
+                'slash': {
+                  'animations': [
+                    'static',
                   ],
+                  'aspect': '8:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.json',
+                  'category': 'slash',
+                  'dimension': '2d',
+                  'name': 'slash',
+                  'role': 'effect',
+                  'sprite': 'regularExplosion04.png',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-explosion-pack/effects/spritesheet_regularExplosion.png',
+                  'variant': '',
                 },
-                'frame': {
-                  'name': 'frame',
-                  'required': false,
-                  'type': 'number',
+              },
+              'features': {
+                'gold_mine': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                  'category': 'gold_mine',
+                  'dimension': '2d',
+                  'name': 'gold_mine',
+                  'role': 'decoration',
+                  'sprite': 'mine.png',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                  'variant': '',
                 },
-                'health': {
-                  'name': 'health',
-                  'required': false,
-                  'type': 'number',
+                'portal': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                  'category': 'portal',
+                  'dimension': '2d',
+                  'name': 'portal',
+                  'role': 'decoration',
+                  'sprite': 'gate.png',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                  'variant': '',
                 },
-                'heroId': {
-                  'name': 'heroId',
-                  'required': false,
-                  'type': 'string',
+              },
+              'terrains': {
+                'forest': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
+                  'category': 'forest',
+                  'dimension': '2d',
+                  'name': 'forest',
+                  'role': 'tile',
+                  'sprite': 'landscapeTiles_021.png',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'variant': '',
                 },
-                'id': {
-                  'name': 'id',
-                  'required': true,
-                  'type': 'string',
+                'grass': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
+                  'category': 'grass',
+                  'dimension': '2d',
+                  'name': 'grass',
+                  'role': 'tile',
+                  'sprite': 'landscapeTiles_022.png',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'variant': '',
                 },
-                'maxHealth': {
-                  'name': 'maxHealth',
-                  'required': false,
-                  'type': 'number',
+                'stone': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.json',
+                  'category': 'stone',
+                  'dimension': '2d',
+                  'name': 'stone',
+                  'role': 'tile',
+                  'sprite': 'landscapeTiles_114.png',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-isometric-tiles-base/terrain/landscapeTiles_sheet.png',
+                  'variant': '',
                 },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
+              },
+              'units': {
+                'guard': {
+                  'animations': [
+                    'idle',
+                    'walk',
+                    'attack',
+                    'hit',
+                    'death',
+                  ],
+                  'aspect': '1:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json',
+                  'category': 'guard',
+                  'dimension': '2d',
+                  'name': 'guard',
+                  'role': 'npc',
+                  'sprite': 'crocodile.png',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png',
+                  'variant': '',
                 },
-                'movement': {
-                  'name': 'movement',
-                  'required': false,
-                  'type': 'number',
+                'hero': {
+                  'animations': [
+                    'idle',
+                    'walk',
+                    'attack',
+                    'hit',
+                    'death',
+                  ],
+                  'aspect': '1:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.json',
+                  'category': 'hero',
+                  'dimension': '2d',
+                  'name': 'hero',
+                  'role': 'npc',
+                  'sprite': 'bear.png',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-animal-pack-redux/units/round.png',
+                  'variant': '',
                 },
-                'name': {
-                  'name': 'name',
-                  'required': false,
-                  'type': 'string',
-                },
-                'position': {
-                  'name': 'position',
-                  'properties': {
-                    'x': {
-                      'name': 'x',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'y': {
-                      'name': 'y',
-                      'required': true,
-                      'type': 'number',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'previousPosition': {
-                  'name': 'previousPosition',
-                  'properties': {
-                    'x': {
-                      'name': 'x',
-                      'required': true,
-                      'type': 'number',
-                    },
-                    'y': {
-                      'name': 'y',
-                      'required': true,
-                      'type': 'number',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
+              },
+            },
+            'type': 'unknown',
+          },
+          'backgroundAsset': {
+            'default': {
+              'animations': [],
+              'aspect': '1:1',
+              'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
+              'category': 'ui',
+              'dimension': '2d',
+              'name': 'panel-frame',
+              'role': 'ui',
+              'sprite': 'panel_beige.png',
+              'style': 'fantasy-border',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+              'variant': '',
+            },
+            'type': 'unknown',
+          },
+          'features': {
+            'default': [
+              {
+                'id': 'f_mine',
                 'sprite': {
-                  'name': 'sprite',
-                  'properties': {
-                    'animations': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'animations',
-                      'required': false,
-                      'type': 'array',
-                    },
-                    'aspect': {
-                      'name': 'aspect',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'atlas': {
-                      'name': 'atlas',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'category': {
-                      'name': 'category',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'dimension': {
-                      'name': 'dimension',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'role': {
-                      'name': 'role',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'sprite': {
-                      'name': 'sprite',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'style': {
-                      'name': 'style',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'thumbnailUrl': {
-                      'name': 'thumbnailUrl',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'url': {
-                      'name': 'url',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'variant': {
-                      'name': 'variant',
-                      'required': false,
-                      'type': 'string',
-                    },
-                  },
-                  'required': false,
-                  'type': 'object',
-                },
-                'team': {
-                  'name': 'team',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'player',
-                    'enemy',
-                    'neutral',
+                  'animations': [
+                    'static',
                   ],
+                  'aspect': '1:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                  'category': 'gold_mine',
+                  'dimension': '2d',
+                  'name': 'gold_mine',
+                  'role': 'decoration',
+                  'sprite': 'mine.png',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                  'variant': '',
                 },
-                'traits': {
-                  'items': {
-                    'properties': {
-                      'cooldown': {
-                        'name': 'cooldown',
-                        'required': true,
-                        'type': 'number',
-                      },
-                      'currentState': {
-                        'name': 'currentState',
-                        'required': true,
-                        'type': 'string',
-                      },
-                      'name': {
-                        'name': 'name',
-                        'required': true,
-                        'type': 'string',
-                      },
-                      'states': {
-                        'items': {
-                          'type': 'string',
-                        },
-                        'name': 'states',
-                        'required': true,
-                        'type': 'array',
-                      },
-                    },
-                    'type': 'object',
-                  },
-                  'name': 'traits',
-                  'required': false,
-                  'type': 'array',
-                },
-                'unitType': {
-                  'name': 'unitType',
-                  'required': false,
-                  'type': 'string',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': false,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': false,
-                  'type': 'number',
-                },
-                'z': {
-                  'name': 'z',
-                  'required': false,
-                  'type': 'number',
-                },
+                'type': 'gold_mine',
+                'x': 11,
+                'y': 7,
               },
-              'type': 'object',
+              {
+                'id': 'f_portal',
+                'sprite': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '1:1',
+                  'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
+                  'category': 'portal',
+                  'dimension': '2d',
+                  'name': 'portal',
+                  'role': 'decoration',
+                  'sprite': 'gate.png',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
+                  'variant': '',
+                },
+                'type': 'portal',
+                'x': 7,
+                'y': 3,
+              },
+            ],
+            'type': 'unknown',
+          },
+          'fontFamily': {
+            'default': 'future',
+            'type': 'unknown',
+          },
+          'goldIconAsset': {
+            'default': {
+              'animations': [],
+              'aspect': '1:1',
+              'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
+              'category': 'ui',
+              'dimension': '2d',
+              'name': 'icon-coin',
+              'role': 'ui',
+              'sprite': 'chest.png',
+              'style': 'fantasy-border',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
+              'variant': '',
             },
-            'label': 'Units',
-            'tier': 'presentation',
-            'type': '[WorldMapBoardUnitsItem]',
+            'type': 'unknown',
+          },
+          'gridHeight': {
+            'default': 16,
+            'type': 'unknown',
+          },
+          'gridWidth': {
+            'default': 16,
+            'type': 'unknown',
+          },
+          'hudBackgroundAsset': {
+            'default': {
+              'animations': [],
+              'aspect': '1:1',
+              'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
+              'category': 'ui',
+              'dimension': '2d',
+              'name': 'panel-frame',
+              'role': 'ui',
+              'sprite': 'panel_beige.png',
+              'style': 'fantasy-border',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
+              'variant': '',
+            },
+            'type': 'unknown',
+          },
+          'movementRange': {
+            'default': 3,
+            'type': 'unknown',
+          },
+          'region': {
+            'default': 'Overworld',
+            'type': 'unknown',
+          },
+          'regionIconAsset': {
+            'default': {
+              'animations': [],
+              'aspect': '1:1',
+              'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
+              'category': 'ui',
+              'dimension': '2d',
+              'name': 'icon-region',
+              'role': 'ui',
+              'sprite': 'compass.png',
+              'style': 'fantasy-border',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
+              'variant': '',
+            },
+            'type': 'unknown',
+          },
+          'scale': {
+            'default': 0.25,
+            'type': 'unknown',
+          },
+          'travelIconAsset': {
+            'default': {
+              'animations': [],
+              'aspect': '1:1',
+              'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
+              'category': 'ui',
+              'dimension': '2d',
+              'name': 'icon-travel',
+              'role': 'ui',
+              'sprite': 'arrowHead.png',
+              'style': 'fantasy-border',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
+              'variant': '',
+            },
+            'type': 'unknown',
+          },
+          'turnIconAsset': {
+            'default': {
+              'animations': [],
+              'aspect': '1:1',
+              'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
+              'category': 'ui',
+              'dimension': '2d',
+              'name': 'icon-turn',
+              'role': 'ui',
+              'sprite': 'flag.png',
+              'style': 'fantasy-border',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
+              'variant': '',
+            },
+            'type': 'unknown',
           },
         },
-        'emits': [
-          {
-            'description': '-- Declarative event props --',
-            'event': 'HERO_SELECT',
-            'payloadSchema': [
-              {
-                'name': 'unitId',
-                'required': true,
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'domain',
-          },
-          {
-            'description': 'Emits UI:{tileClickEvent} with { x, y }',
-            'event': 'HERO_MOVE',
-            'payloadSchema': [
-              {
-                'name': 'x',
-                'required': true,
-                'type': 'number',
-              },
-              {
-                'name': 'y',
-                'required': true,
-                'type': 'number',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'domain',
-          },
-          {
-            'description': 'Emits UI:{advanceTurnEvent} with {} when the player passes the turn without moving',
-            'event': 'ADVANCE_TURN',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'domain',
-          },
-          {
-            'description': 'Called when all enemies or all player heroes are defeated',
-            'event': 'GAME_END',
-            'payloadSchema': [
-              {
-                'name': 'result',
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'domain',
-          },
-          {
-            'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
-            'event': 'PLAY_AGAIN',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
-            'scope': 'external',
-            'tier': 'domain',
-          },
-        ],
-        'entityContract': {
-          'provides': [
-            'effects',
-            'features',
-            'gold',
-            'gridHeight',
-            'gridWidth',
-            'movementRange',
-            'result',
-            'selectedHeroId',
-            'tiles',
-            'turn',
-            'units',
-            'validMoves',
-            'waypoints',
-          ],
-          'requires': [],
-        },
-        'entityRebindable': true,
-        'linkedEntity': 'WorldMapBoardItem',
-        'name': 'WorldMapBoardRender',
-        'scope': 'instance',
-        'stateMachine': {
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'description': '-- Declarative event props --',
-              'key': 'HERO_SELECT',
-              'name': 'Hero Select',
-              'payloadSchema': [
-                {
-                  'name': 'unitId',
-                  'required': true,
-                  'type': 'string',
-                },
-              ],
-              'tier': 'domain',
-            },
-            {
-              'description': 'Emits UI:{advanceTurnEvent} with {} when the player passes the turn without moving',
-              'key': 'ADVANCE_TURN',
-              'name': 'Advance Turn',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-              'tier': 'domain',
-            },
-            {
-              'description': 'Emits UI:{tileClickEvent} with { x, y }',
-              'key': 'HERO_MOVE',
-              'name': 'Hero Move',
-              'payloadSchema': [
-                {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-              ],
-              'tier': 'domain',
-            },
-            {
-              'description': 'Called when all enemies or all player heroes are defeated',
-              'key': 'GAME_END',
-              'name': 'Game End',
-              'payloadSchema': [
-                {
-                  'name': 'result',
-                  'type': 'string',
-                },
-              ],
-              'tier': 'domain',
-            },
-            {
-              'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
-              'key': 'PLAY_AGAIN',
-              'name': 'Play Again',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-              'tier': 'domain',
-            },
-          ],
-          'states': [
-            {
-              'isInitial': true,
-              'name': 'playing',
-            },
-            {
-              'name': 'gameover',
-            },
-          ],
-          'transitions': [
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.units',
-                  [
-                    'array/map',
-                    '@config.units',
-                    [
-                      'fn',
-                      'u',
-                      [
-                        'object/merge',
-                        '@u',
-                        {
-                          'animation': 'idle',
-                          'frame': 0,
-                        },
-                      ],
-                    ],
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.tiles',
-                  '@config.tiles',
-                ],
-                [
-                  'set',
-                  '@entity.features',
-                  '@config.features',
-                ],
-                [
-                  'set',
-                  '@entity.selectedHeroId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.turn',
-                  0,
-                ],
-                [
-                  'set',
-                  '@entity.gold',
-                  0,
-                ],
-                [
-                  'set',
-                  '@entity.result',
-                  'none',
-                ],
-                [
-                  'set',
-                  '@entity.gridWidth',
-                  16,
-                ],
-                [
-                  'set',
-                  '@entity.gridHeight',
-                  16,
-                ],
-                [
-                  'set',
-                  '@entity.movementRange',
-                  3,
-                ],
-                [
-                  'set',
-                  '@entity.effects',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.waypoints',
-                  [],
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'addons': {
-                      'action': 'ADVANCE_TURN',
-                      'iconAsset': {
-                        'animations': [],
-                        'aspect': '1:1',
-                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                        'category': 'ui',
-                        'dimension': '2d',
-                        'name': 'icon-travel',
-                        'role': 'ui',
-                        'sprite': 'arrowHead.png',
-                        'style': 'fantasy-border',
-                        'thumbnailUrl': '',
-                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                        'variant': '',
-                      },
-                      'label': 'Pass Turn',
-                      'type': 'button',
-                      'variant': 'primary',
-                    },
-                    'backgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'children': [
-                      {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@entity.features',
-                        'projection': 'isometric',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedHeroId',
-                        'showMinimap': true,
-                        'tileClickEvent': 'HERO_MOVE',
-                        'tiles': '@entity.tiles',
-                        'type': 'canvas-2d',
-                        'unitClickEvent': 'HERO_SELECT',
-                        'units': '@entity.units',
-                        'validMoves': '@entity.validMoves',
-                      },
-                    ],
-                    'fontFamily': 'future',
-                    'hud': {
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-region',
-                                'role': 'ui',
-                                'sprite': 'compass.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Region',
-                              'value': 'Overworld',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-turn',
-                                'role': 'ui',
-                                'sprite': 'flag.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Turn',
-                              'value': '@entity.turn',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-coin',
-                                'role': 'ui',
-                                'sprite': 'chest.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Gold',
-                              'value': '@entity.gold',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                        {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@entity.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
-                        {
-                          'path': '@entity.validMoves',
-                          'type': 'waypoint-marker',
-                          'waypoints': '@entity.waypoints',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'md',
-                      'justify': 'between',
-                      'type': 'stack',
-                    },
-                    'hudBackgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'type': 'game-shell',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'playing',
-              'to': 'playing',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.selectedHeroId',
-                  '@payload.unitId',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [
-                    'array/map',
-                    [
-                      'array/filter',
-                      '@entity.tiles',
-                      [
-                        'fn',
-                        't',
-                        [
-                          'and',
-                          [
-                            'grid/in-bounds',
-                            {
-                              'x': [
-                                'object/get',
-                                '@t',
-                                'x',
-                              ],
-                              'y': [
-                                'object/get',
-                                '@t',
-                                'y',
-                              ],
-                            },
-                            '@entity.gridWidth',
-                            '@entity.gridHeight',
-                          ],
-                          [
-                            'and',
-                            [
-                              '<=',
-                              [
-                                'grid/manhattan-distance',
-                                [
-                                  'object/get',
-                                  [
-                                    'array/find',
-                                    '@entity.units',
-                                    [
-                                      'fn',
-                                      'u',
-                                      [
-                                        '==',
-                                        '@u.id',
-                                        '@payload.unitId',
-                                      ],
-                                    ],
-                                  ],
-                                  'position',
-                                ],
-                                {
-                                  'x': [
-                                    'object/get',
-                                    '@t',
-                                    'x',
-                                  ],
-                                  'y': [
-                                    'object/get',
-                                    '@t',
-                                    'y',
-                                  ],
-                                },
-                              ],
-                              '@entity.movementRange',
-                            ],
-                            [
-                              'and',
-                              [
-                                '==',
-                                [
-                                  'object/get',
-                                  '@t',
-                                  'passable',
-                                ],
-                                true,
-                              ],
-                              [
-                                '==',
-                                [
-                                  'array/len',
-                                  [
-                                    'array/filter',
-                                    '@entity.units',
-                                    [
-                                      'fn',
-                                      'u',
-                                      [
-                                        'and',
-                                        [
-                                          '==',
-                                          [
-                                            'object/get',
-                                            [
-                                              'object/get',
-                                              '@u',
-                                              'position',
-                                            ],
-                                            'x',
-                                          ],
-                                          [
-                                            'object/get',
-                                            '@t',
-                                            'x',
-                                          ],
-                                        ],
-                                        [
-                                          '==',
-                                          [
-                                            'object/get',
-                                            [
-                                              'object/get',
-                                              '@u',
-                                              'position',
-                                            ],
-                                            'y',
-                                          ],
-                                          [
-                                            'object/get',
-                                            '@t',
-                                            'y',
-                                          ],
-                                        ],
-                                      ],
-                                    ],
-                                  ],
-                                ],
-                                0,
-                              ],
-                            ],
-                          ],
-                        ],
-                      ],
-                    ],
-                    [
-                      'fn',
-                      't',
-                      {
-                        'x': [
-                          'object/get',
-                          '@t',
-                          'x',
-                        ],
-                        'y': [
-                          'object/get',
-                          '@t',
-                          'y',
-                        ],
-                      },
-                    ],
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.waypoints',
-                  [],
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'addons': {
-                      'action': 'ADVANCE_TURN',
-                      'iconAsset': {
-                        'animations': [],
-                        'aspect': '1:1',
-                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                        'category': 'ui',
-                        'dimension': '2d',
-                        'name': 'icon-travel',
-                        'role': 'ui',
-                        'sprite': 'arrowHead.png',
-                        'style': 'fantasy-border',
-                        'thumbnailUrl': '',
-                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                        'variant': '',
-                      },
-                      'label': 'Pass Turn',
-                      'type': 'button',
-                      'variant': 'primary',
-                    },
-                    'backgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'children': [
-                      {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@entity.features',
-                        'projection': 'isometric',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedHeroId',
-                        'showMinimap': true,
-                        'tileClickEvent': 'HERO_MOVE',
-                        'tiles': '@entity.tiles',
-                        'type': 'canvas-2d',
-                        'unitClickEvent': 'HERO_SELECT',
-                        'units': '@entity.units',
-                        'validMoves': '@entity.validMoves',
-                      },
-                    ],
-                    'fontFamily': 'future',
-                    'hud': {
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-region',
-                                'role': 'ui',
-                                'sprite': 'compass.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Region',
-                              'value': 'Overworld',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-turn',
-                                'role': 'ui',
-                                'sprite': 'flag.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Turn',
-                              'value': '@entity.turn',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-coin',
-                                'role': 'ui',
-                                'sprite': 'chest.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Gold',
-                              'value': '@entity.gold',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                        {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@entity.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
-                        {
-                          'path': '@entity.validMoves',
-                          'type': 'waypoint-marker',
-                          'waypoints': '@entity.waypoints',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'md',
-                      'justify': 'between',
-                      'type': 'stack',
-                    },
-                    'hudBackgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'type': 'game-shell',
-                  },
-                ],
-              ],
-              'event': 'HERO_SELECT',
-              'from': 'playing',
-              'guard': [
-                '==',
-                [
-                  'object/get',
-                  [
-                    'array/find',
-                    '@entity.units',
-                    [
-                      'fn',
-                      'u',
-                      [
-                        '==',
-                        '@u.id',
-                        '@payload.unitId',
-                      ],
-                    ],
-                  ],
-                  'team',
-                ],
-                'player',
-              ],
-              'to': 'playing',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.turn',
-                  [
-                    '+',
-                    '@entity.turn',
-                    1,
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.selectedHeroId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'addons': {
-                      'action': 'ADVANCE_TURN',
-                      'iconAsset': {
-                        'animations': [],
-                        'aspect': '1:1',
-                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                        'category': 'ui',
-                        'dimension': '2d',
-                        'name': 'icon-travel',
-                        'role': 'ui',
-                        'sprite': 'arrowHead.png',
-                        'style': 'fantasy-border',
-                        'thumbnailUrl': '',
-                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                        'variant': '',
-                      },
-                      'label': 'Pass Turn',
-                      'type': 'button',
-                      'variant': 'primary',
-                    },
-                    'backgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'children': [
-                      {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@entity.features',
-                        'projection': 'isometric',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedHeroId',
-                        'showMinimap': true,
-                        'tileClickEvent': 'HERO_MOVE',
-                        'tiles': '@entity.tiles',
-                        'type': 'canvas-2d',
-                        'unitClickEvent': 'HERO_SELECT',
-                        'units': '@entity.units',
-                        'validMoves': '@entity.validMoves',
-                      },
-                    ],
-                    'fontFamily': 'future',
-                    'hud': {
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-region',
-                                'role': 'ui',
-                                'sprite': 'compass.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Region',
-                              'value': 'Overworld',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-turn',
-                                'role': 'ui',
-                                'sprite': 'flag.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Turn',
-                              'value': '@entity.turn',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-coin',
-                                'role': 'ui',
-                                'sprite': 'chest.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Gold',
-                              'value': '@entity.gold',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                        {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@entity.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
-                        {
-                          'path': '@entity.validMoves',
-                          'type': 'waypoint-marker',
-                          'waypoints': '@entity.waypoints',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'md',
-                      'justify': 'between',
-                      'type': 'stack',
-                    },
-                    'hudBackgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'type': 'game-shell',
-                  },
-                ],
-              ],
-              'event': 'ADVANCE_TURN',
-              'from': 'playing',
-              'guard': [
-                '==',
-                '@entity.result',
-                'none',
-              ],
-              'to': 'playing',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.units',
-                  [
-                    'array/map',
-                    '@entity.units',
-                    [
-                      'fn',
-                      'u',
-                      [
-                        'if',
-                        [
-                          '==',
-                          '@u.id',
-                          '@entity.selectedHeroId',
-                        ],
-                        [
-                          'object/merge',
-                          '@u',
-                          {
-                            'animation': 'walk',
-                            'position': {
-                              'x': '@payload.x',
-                              'y': '@payload.y',
-                            },
-                          },
-                        ],
-                        '@u',
-                      ],
-                    ],
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.gold',
-                  [
-                    'if',
-                    [
-                      '==',
-                      [
-                        'object/get',
-                        [
-                          'array/find',
-                          '@entity.features',
-                          [
-                            'fn',
-                            'f',
-                            [
-                              'and',
-                              [
-                                '==',
-                                [
-                                  'object/get',
-                                  'f',
-                                  'x',
-                                ],
-                                '@payload.x',
-                              ],
-                              [
-                                'and',
-                                [
-                                  '==',
-                                  [
-                                    'object/get',
-                                    'f',
-                                    'y',
-                                  ],
-                                  '@payload.y',
-                                ],
-                                [
-                                  '==',
-                                  [
-                                    'object/get',
-                                    'f',
-                                    'type',
-                                  ],
-                                  'gold_mine',
-                                ],
-                              ],
-                            ],
-                          ],
-                        ],
-                        'type',
-                      ],
-                      'gold_mine',
-                    ],
-                    [
-                      '+',
-                      '@entity.gold',
-                      25,
-                    ],
-                    '@entity.gold',
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.selectedHeroId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'addons': {
-                      'action': 'ADVANCE_TURN',
-                      'iconAsset': {
-                        'animations': [],
-                        'aspect': '1:1',
-                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                        'category': 'ui',
-                        'dimension': '2d',
-                        'name': 'icon-travel',
-                        'role': 'ui',
-                        'sprite': 'arrowHead.png',
-                        'style': 'fantasy-border',
-                        'thumbnailUrl': '',
-                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                        'variant': '',
-                      },
-                      'label': 'Pass Turn',
-                      'type': 'button',
-                      'variant': 'primary',
-                    },
-                    'backgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'children': [
-                      {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@entity.features',
-                        'projection': 'isometric',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedHeroId',
-                        'showMinimap': true,
-                        'tileClickEvent': 'HERO_MOVE',
-                        'tiles': '@entity.tiles',
-                        'type': 'canvas-2d',
-                        'unitClickEvent': 'HERO_SELECT',
-                        'units': '@entity.units',
-                        'validMoves': '@entity.validMoves',
-                      },
-                    ],
-                    'fontFamily': 'future',
-                    'hud': {
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-region',
-                                'role': 'ui',
-                                'sprite': 'compass.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Region',
-                              'value': 'Overworld',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-turn',
-                                'role': 'ui',
-                                'sprite': 'flag.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Turn',
-                              'value': '@entity.turn',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-coin',
-                                'role': 'ui',
-                                'sprite': 'chest.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Gold',
-                              'value': '@entity.gold',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                        {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@entity.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
-                        {
-                          'path': '@entity.validMoves',
-                          'type': 'waypoint-marker',
-                          'waypoints': '@entity.waypoints',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'md',
-                      'justify': 'between',
-                      'type': 'stack',
-                    },
-                    'hudBackgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'type': 'game-shell',
-                  },
-                ],
-              ],
-              'event': 'HERO_MOVE',
-              'from': 'playing',
-              'guard': [
-                'and',
-                [
-                  '!=',
-                  '@entity.selectedHeroId',
-                  '',
-                ],
-                [
-                  'and',
-                  [
-                    'grid/in-bounds',
-                    {
-                      'x': '@payload.x',
-                      'y': '@payload.y',
-                    },
-                    '@entity.gridWidth',
-                    '@entity.gridHeight',
-                  ],
-                  [
-                    'and',
-                    [
-                      '<=',
-                      [
-                        'grid/manhattan-distance',
-                        [
-                          'object/get',
-                          [
-                            'array/find',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                '==',
-                                '@u.id',
-                                '@entity.selectedHeroId',
-                              ],
-                            ],
-                          ],
-                          'position',
-                        ],
-                        {
-                          'x': '@payload.x',
-                          'y': '@payload.y',
-                        },
-                      ],
-                      '@entity.movementRange',
-                    ],
-                    [
-                      'and',
-                      [
-                        '==',
-                        [
-                          'object/get',
-                          [
-                            'array/find',
-                            '@entity.tiles',
-                            [
-                              'fn',
-                              't',
-                              [
-                                'and',
-                                [
-                                  '==',
-                                  [
-                                    'object/get',
-                                    '@t',
-                                    'x',
-                                  ],
-                                  '@payload.x',
-                                ],
-                                [
-                                  '==',
-                                  [
-                                    'object/get',
-                                    '@t',
-                                    'y',
-                                  ],
-                                  '@payload.y',
-                                ],
-                              ],
-                            ],
-                          ],
-                          'passable',
-                        ],
-                        true,
-                      ],
-                      [
-                        '==',
-                        [
-                          'array/len',
-                          [
-                            'array/filter',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                'and',
-                                [
-                                  '==',
-                                  [
-                                    'object/get',
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'x',
-                                  ],
-                                  '@payload.x',
-                                ],
-                                [
-                                  '==',
-                                  [
-                                    'object/get',
-                                    [
-                                      'object/get',
-                                      '@u',
-                                      'position',
-                                    ],
-                                    'y',
-                                  ],
-                                  '@payload.y',
-                                ],
-                              ],
-                            ],
-                          ],
-                        ],
-                        0,
-                      ],
-                    ],
-                  ],
-                ],
-              ],
-              'to': 'playing',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.units',
-                  [
-                    'array/map',
-                    '@entity.units',
-                    [
-                      'fn',
-                      'u',
-                      [
-                        'if',
-                        [
-                          '==',
-                          '@u.id',
-                          '@payload.unitId',
-                        ],
-                        [
-                          'object/merge',
-                          '@u',
-                          {
-                            'animation': 'hit',
-                            'health': [
-                              'math/max',
-                              0,
-                              [
-                                '-',
-                                [
-                                  'object/get',
-                                  '@u',
-                                  'health',
-                                ],
-                                3,
-                              ],
-                            ],
-                          },
-                        ],
-                        [
-                          'if',
-                          [
-                            '==',
-                            '@u.id',
-                            '@entity.selectedHeroId',
-                          ],
-                          [
-                            'object/merge',
-                            '@u',
-                            {
-                              'animation': 'attack',
-                            },
-                          ],
-                          '@u',
-                        ],
-                      ],
-                    ],
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.effects',
-                  [
-                    'array/append',
-                    '@entity.effects',
-                    {
-                      'key': 'slash',
-                      'ttl': 4,
-                      'x': [
-                        'object/get',
-                        [
-                          'object/get',
-                          [
-                            'array/find',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                '==',
-                                '@u.id',
-                                '@payload.unitId',
-                              ],
-                            ],
-                          ],
-                          'position',
-                        ],
-                        'x',
-                      ],
-                      'y': [
-                        'object/get',
-                        [
-                          'object/get',
-                          [
-                            'array/find',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                '==',
-                                '@u.id',
-                                '@payload.unitId',
-                              ],
-                            ],
-                          ],
-                          'position',
-                        ],
-                        'y',
-                      ],
-                    },
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.selectedHeroId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.turn',
-                  [
-                    '+',
-                    '@entity.turn',
-                    1,
-                  ],
-                ],
-                [
-                  'emit',
-                  'GAME_END',
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'addons': {
-                      'action': 'ADVANCE_TURN',
-                      'iconAsset': {
-                        'animations': [],
-                        'aspect': '1:1',
-                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                        'category': 'ui',
-                        'dimension': '2d',
-                        'name': 'icon-travel',
-                        'role': 'ui',
-                        'sprite': 'arrowHead.png',
-                        'style': 'fantasy-border',
-                        'thumbnailUrl': '',
-                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                        'variant': '',
-                      },
-                      'label': 'Pass Turn',
-                      'type': 'button',
-                      'variant': 'primary',
-                    },
-                    'backgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'children': [
-                      {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@entity.features',
-                        'projection': 'isometric',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedHeroId',
-                        'showMinimap': true,
-                        'tileClickEvent': 'HERO_MOVE',
-                        'tiles': '@entity.tiles',
-                        'type': 'canvas-2d',
-                        'unitClickEvent': 'HERO_SELECT',
-                        'units': '@entity.units',
-                        'validMoves': '@entity.validMoves',
-                      },
-                    ],
-                    'fontFamily': 'future',
-                    'hud': {
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-region',
-                                'role': 'ui',
-                                'sprite': 'compass.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Region',
-                              'value': 'Overworld',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-turn',
-                                'role': 'ui',
-                                'sprite': 'flag.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Turn',
-                              'value': '@entity.turn',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-coin',
-                                'role': 'ui',
-                                'sprite': 'chest.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Gold',
-                              'value': '@entity.gold',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                        {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@entity.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
-                        {
-                          'path': '@entity.validMoves',
-                          'type': 'waypoint-marker',
-                          'waypoints': '@entity.waypoints',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'md',
-                      'justify': 'between',
-                      'type': 'stack',
-                    },
-                    'hudBackgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'type': 'game-shell',
-                  },
-                ],
-              ],
-              'event': 'HERO_SELECT',
-              'from': 'playing',
-              'guard': [
-                'and',
-                [
-                  '!=',
-                  '@entity.selectedHeroId',
-                  '',
-                ],
-                [
-                  'and',
-                  [
-                    '==',
-                    [
-                      'object/get',
-                      [
-                        'array/find',
-                        '@entity.units',
-                        [
-                          'fn',
-                          'u',
-                          [
-                            '==',
-                            '@u.id',
-                            '@payload.unitId',
-                          ],
-                        ],
-                      ],
-                      'team',
-                    ],
-                    'enemy',
-                  ],
-                  [
-                    '==',
-                    [
-                      'grid/manhattan-distance',
-                      [
-                        'object/get',
-                        [
-                          'array/find',
-                          '@entity.units',
-                          [
-                            'fn',
-                            'u',
-                            [
-                              '==',
-                              '@u.id',
-                              '@entity.selectedHeroId',
-                            ],
-                          ],
-                        ],
-                        'position',
-                      ],
-                      [
-                        'object/get',
-                        [
-                          'array/find',
-                          '@entity.units',
-                          [
-                            'fn',
-                            'u',
-                            [
-                              '==',
-                              '@u.id',
-                              '@payload.unitId',
-                            ],
-                          ],
-                        ],
-                        'position',
-                      ],
-                    ],
-                    1,
-                  ],
-                ],
-              ],
-              'to': 'playing',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.result',
-                  [
-                    'if',
-                    [
-                      '==',
-                      [
-                        'array/len',
-                        [
-                          'array/filter',
-                          '@entity.units',
-                          [
-                            'fn',
-                            'u',
-                            [
-                              'and',
-                              [
-                                '==',
-                                '@u.team',
-                                'player',
-                              ],
-                              [
-                                '>',
-                                [
-                                  'object/get',
-                                  '@u',
-                                  'health',
-                                ],
-                                0,
-                              ],
-                            ],
-                          ],
-                        ],
-                      ],
-                      0,
-                    ],
-                    'lose',
-                    'win',
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.selectedHeroId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'addons': {
-                      'action': 'ADVANCE_TURN',
-                      'iconAsset': {
-                        'animations': [],
-                        'aspect': '1:1',
-                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                        'category': 'ui',
-                        'dimension': '2d',
-                        'name': 'icon-travel',
-                        'role': 'ui',
-                        'sprite': 'arrowHead.png',
-                        'style': 'fantasy-border',
-                        'thumbnailUrl': '',
-                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                        'variant': '',
-                      },
-                      'label': 'Pass Turn',
-                      'type': 'button',
-                      'variant': 'primary',
-                    },
-                    'backgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'children': [
-                      {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@entity.features',
-                        'projection': 'isometric',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedHeroId',
-                        'showMinimap': true,
-                        'tileClickEvent': 'HERO_MOVE',
-                        'tiles': '@entity.tiles',
-                        'type': 'canvas-2d',
-                        'unitClickEvent': 'HERO_SELECT',
-                        'units': '@entity.units',
-                        'validMoves': '@entity.validMoves',
-                      },
-                    ],
-                    'fontFamily': 'future',
-                    'hud': {
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-region',
-                                'role': 'ui',
-                                'sprite': 'compass.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Region',
-                              'value': 'Overworld',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-turn',
-                                'role': 'ui',
-                                'sprite': 'flag.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Turn',
-                              'value': '@entity.turn',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-coin',
-                                'role': 'ui',
-                                'sprite': 'chest.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Gold',
-                              'value': '@entity.gold',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                        {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@entity.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
-                        {
-                          'path': '@entity.validMoves',
-                          'type': 'waypoint-marker',
-                          'waypoints': '@entity.waypoints',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'md',
-                      'justify': 'between',
-                      'type': 'stack',
-                    },
-                    'hudBackgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'overlay': {
-                      'options': [
-                        {
-                          'event': 'PLAY_AGAIN',
-                          'id': 'again',
-                          'label': 'Play Again',
-                          'variant': 'primary',
-                        },
-                      ],
-                      'subtitle': [
-                        'if',
-                        [
-                          '==',
-                          '@entity.result',
-                          'win',
-                        ],
-                        'The realm is secured',
-                        'Your heroes have fallen',
-                      ],
-                      'title': [
-                        'if',
-                        [
-                          '==',
-                          '@entity.result',
-                          'win',
-                        ],
-                        'VICTORY',
-                        'DEFEAT',
-                      ],
-                      'type': 'game-menu',
-                    },
-                    'type': 'game-shell',
-                  },
-                ],
-              ],
-              'event': 'GAME_END',
-              'from': 'playing',
-              'guard': [
-                'or',
-                [
-                  '==',
-                  [
-                    'array/len',
-                    [
-                      'array/filter',
-                      '@entity.units',
-                      [
-                        'fn',
-                        'u',
-                        [
-                          'and',
-                          [
-                            '==',
-                            '@u.team',
-                            'enemy',
-                          ],
-                          [
-                            '>',
-                            [
-                              'object/get',
-                              '@u',
-                              'health',
-                            ],
-                            0,
-                          ],
-                        ],
-                      ],
-                    ],
-                  ],
-                  0,
-                ],
-                [
-                  '==',
-                  [
-                    'array/len',
-                    [
-                      'array/filter',
-                      '@entity.units',
-                      [
-                        'fn',
-                        'u',
-                        [
-                          'and',
-                          [
-                            '==',
-                            '@u.team',
-                            'player',
-                          ],
-                          [
-                            '>',
-                            [
-                              'object/get',
-                              '@u',
-                              'health',
-                            ],
-                            0,
-                          ],
-                        ],
-                      ],
-                    ],
-                  ],
-                  0,
-                ],
-              ],
-              'to': 'gameover',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.units',
-                  [
-                    'array/map',
-                    '@config.units',
-                    [
-                      'fn',
-                      'u',
-                      [
-                        'object/merge',
-                        '@u',
-                        {
-                          'animation': 'idle',
-                          'frame': 0,
-                        },
-                      ],
-                    ],
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.tiles',
-                  '@config.tiles',
-                ],
-                [
-                  'set',
-                  '@entity.features',
-                  '@config.features',
-                ],
-                [
-                  'set',
-                  '@entity.selectedHeroId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.validMoves',
-                  [],
-                ],
-                [
-                  'set',
-                  '@entity.turn',
-                  0,
-                ],
-                [
-                  'set',
-                  '@entity.gold',
-                  0,
-                ],
-                [
-                  'set',
-                  '@entity.result',
-                  'none',
-                ],
-                [
-                  'set',
-                  '@entity.effects',
-                  [],
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'addons': {
-                      'action': 'ADVANCE_TURN',
-                      'iconAsset': {
-                        'animations': [],
-                        'aspect': '1:1',
-                        'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                        'category': 'ui',
-                        'dimension': '2d',
-                        'name': 'icon-travel',
-                        'role': 'ui',
-                        'sprite': 'arrowHead.png',
-                        'style': 'fantasy-border',
-                        'thumbnailUrl': '',
-                        'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                        'variant': '',
-                      },
-                      'label': 'Pass Turn',
-                      'type': 'button',
-                      'variant': 'primary',
-                    },
-                    'backgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'children': [
-                      {
-                        'assetManifest': '@config.assetManifest',
-                        'effects': '@entity.effects',
-                        'features': '@entity.features',
-                        'projection': 'isometric',
-                        'scale': '@config.scale',
-                        'selectedUnitId': '@entity.selectedHeroId',
-                        'showMinimap': true,
-                        'tileClickEvent': 'HERO_MOVE',
-                        'tiles': '@entity.tiles',
-                        'type': 'canvas-2d',
-                        'unitClickEvent': 'HERO_SELECT',
-                        'units': '@entity.units',
-                        'validMoves': '@entity.validMoves',
-                      },
-                    ],
-                    'fontFamily': 'future',
-                    'hud': {
-                      'children': [
-                        {
-                          'stats': [
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-region',
-                                'role': 'ui',
-                                'sprite': 'compass.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Region',
-                              'value': 'Overworld',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-turn',
-                                'role': 'ui',
-                                'sprite': 'flag.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Turn',
-                              'value': '@entity.turn',
-                            },
-                            {
-                              'iconUrl': {
-                                'animations': [],
-                                'aspect': '1:1',
-                                'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                                'category': 'ui',
-                                'dimension': '2d',
-                                'name': 'icon-coin',
-                                'role': 'ui',
-                                'sprite': 'chest.png',
-                                'style': 'fantasy-border',
-                                'thumbnailUrl': '',
-                                'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                                'variant': '',
-                              },
-                              'label': 'Gold',
-                              'value': '@entity.gold',
-                            },
-                          ],
-                          'type': 'game-hud',
-                        },
-                        {
-                          'height': '@entity.gridHeight',
-                          'tiles': '@entity.tiles',
-                          'type': 'mini-map',
-                          'units': '@entity.units',
-                          'width': '@entity.gridWidth',
-                        },
-                        {
-                          'path': '@entity.validMoves',
-                          'type': 'waypoint-marker',
-                          'waypoints': '@entity.waypoints',
-                        },
-                      ],
-                      'direction': 'horizontal',
-                      'gap': 'md',
-                      'justify': 'between',
-                      'type': 'stack',
-                    },
-                    'hudBackgroundAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'panel-frame',
-                      'role': 'ui',
-                      'sprite': 'panel_beige.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                      'variant': '',
-                    },
-                    'type': 'game-shell',
-                  },
-                ],
-              ],
-              'event': 'PLAY_AGAIN',
-              'from': 'gameover',
-              'to': 'playing',
-            },
-          ],
-        },
-        'ticks': [
-          {
-            'effects': [
-              [
-                'render-ui',
-                'main',
-                {
-                  'addons': {
-                    'action': 'ADVANCE_TURN',
-                    'iconAsset': {
-                      'animations': [],
-                      'aspect': '1:1',
-                      'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                      'category': 'ui',
-                      'dimension': '2d',
-                      'name': 'icon-travel',
-                      'role': 'ui',
-                      'sprite': 'arrowHead.png',
-                      'style': 'fantasy-border',
-                      'thumbnailUrl': '',
-                      'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                      'variant': '',
-                    },
-                    'label': 'Pass Turn',
-                    'type': 'button',
-                    'variant': 'primary',
-                  },
-                  'backgroundAsset': {
-                    'animations': [],
-                    'aspect': '1:1',
-                    'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                    'category': 'ui',
-                    'dimension': '2d',
-                    'name': 'panel-frame',
-                    'role': 'ui',
-                    'sprite': 'panel_beige.png',
-                    'style': 'fantasy-border',
-                    'thumbnailUrl': '',
-                    'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                    'variant': '',
-                  },
-                  'children': [
-                    {
-                      'assetManifest': '@config.assetManifest',
-                      'effects': '@entity.effects',
-                      'features': '@entity.features',
-                      'projection': 'isometric',
-                      'scale': '@config.scale',
-                      'selectedUnitId': '@entity.selectedHeroId',
-                      'showMinimap': true,
-                      'tileClickEvent': 'HERO_MOVE',
-                      'tiles': '@entity.tiles',
-                      'type': 'canvas-2d',
-                      'unitClickEvent': 'HERO_SELECT',
-                      'units': '@entity.units',
-                      'validMoves': '@entity.validMoves',
-                    },
-                  ],
-                  'fontFamily': 'future',
-                  'hud': {
-                    'children': [
-                      {
-                        'stats': [
-                          {
-                            'iconUrl': {
-                              'animations': [],
-                              'aspect': '1:1',
-                              'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                              'category': 'ui',
-                              'dimension': '2d',
-                              'name': 'icon-region',
-                              'role': 'ui',
-                              'sprite': 'compass.png',
-                              'style': 'fantasy-border',
-                              'thumbnailUrl': '',
-                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                              'variant': '',
-                            },
-                            'label': 'Region',
-                            'value': 'Overworld',
-                          },
-                          {
-                            'iconUrl': {
-                              'animations': [],
-                              'aspect': '1:1',
-                              'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                              'category': 'ui',
-                              'dimension': '2d',
-                              'name': 'icon-turn',
-                              'role': 'ui',
-                              'sprite': 'flag.png',
-                              'style': 'fantasy-border',
-                              'thumbnailUrl': '',
-                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                              'variant': '',
-                            },
-                            'label': 'Turn',
-                            'value': '@entity.turn',
-                          },
-                          {
-                            'iconUrl': {
-                              'animations': [],
-                              'aspect': '1:1',
-                              'atlas': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.json',
-                              'category': 'ui',
-                              'dimension': '2d',
-                              'name': 'icon-coin',
-                              'role': 'ui',
-                              'sprite': 'chest.png',
-                              'style': 'fantasy-border',
-                              'thumbnailUrl': '',
-                              'url': 'https://almadar-kflow-assets.web.app/shared/ui-world-map-board/kenney-cartography-pack/ui/spritesheet_default.png',
-                              'variant': '',
-                            },
-                            'label': 'Gold',
-                            'value': '@entity.gold',
-                          },
-                        ],
-                        'type': 'game-hud',
-                      },
-                      {
-                        'height': '@entity.gridHeight',
-                        'tiles': '@entity.tiles',
-                        'type': 'mini-map',
-                        'units': '@entity.units',
-                        'width': '@entity.gridWidth',
-                      },
-                      {
-                        'path': '@entity.validMoves',
-                        'type': 'waypoint-marker',
-                        'waypoints': '@entity.waypoints',
-                      },
-                    ],
-                    'direction': 'horizontal',
-                    'gap': 'md',
-                    'justify': 'between',
-                    'type': 'stack',
-                  },
-                  'hudBackgroundAsset': {
-                    'animations': [],
-                    'aspect': '1:1',
-                    'atlas': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.json',
-                    'category': 'ui',
-                    'dimension': '2d',
-                    'name': 'panel-frame',
-                    'role': 'ui',
-                    'sprite': 'panel_beige.png',
-                    'style': 'fantasy-border',
-                    'thumbnailUrl': '',
-                    'url': 'https://almadar-kflow-assets.web.app/shared/_shared/kenney-ui-adventure-pack/ui/uipack_rpg_sheet.png',
-                    'variant': '',
-                  },
-                  'type': 'game-shell',
-                },
-              ],
-            ],
-            'guard': [
-              '==',
-              '@entity.result',
-              'none',
-            ],
-            'interval': 100,
-            'name': 'renderTick',
-          },
-        ],
-      } as never, 'WorldMapBoardItem', canonicalName) as never,
+        'linkedEntity': canonicalName,
+        'name': 'Hero',
+        'ref': 'Frame.traits.WorldMapIntent',
+      }),
     ],
     pages: [
       {
@@ -10593,7 +6810,16 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
         'path': '/world-map-board',
         'traits': [
           {
-            'ref': 'WorldMapBoardRender',
+            'ref': 'Authority',
+          },
+          {
+            'ref': 'RoundLogic',
+          },
+          {
+            'ref': 'GoldAuthority',
+          },
+          {
+            'ref': 'Hero',
           },
         ],
       } as never,
@@ -10648,9 +6874,12 @@ export const StdUiWorldMapBoardWorldMapBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
+    'Authority',
+    'RoundLogic',
+    'GoldAuthority',
+    'Hero',
   ] as const,
   inlineTraitNames: [
-    'WorldMapBoardRender',
   ] as const,
 };
 

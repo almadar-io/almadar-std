@@ -53,6 +53,8 @@ export interface StdUiModalOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiModalConfig {
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `true` */

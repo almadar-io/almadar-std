@@ -53,6 +53,8 @@ export interface StdUiSidePanelOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSidePanelConfig {
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */

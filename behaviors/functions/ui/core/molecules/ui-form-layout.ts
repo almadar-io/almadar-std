@@ -41,6 +41,8 @@ export type StdUiFormLayoutEventKey = 'INIT';
 export interface StdUiFormLayoutConfig {
   /** Default: `{}` */
   activeFilters?: unknown;
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `true` */

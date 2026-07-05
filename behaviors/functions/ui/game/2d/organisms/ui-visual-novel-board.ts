@@ -62,12 +62,12 @@ export interface StdUiVisualNovelBoardRestartPayload {
 export interface StdUiVisualNovelBoardConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `{"animations":["static"],"aspect":"16:9","category":"core","dimension":"2d","name":"core","role":"decoration","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/core.png","variant":""}` */
+  /** Default: `{"animations":["static"],"aspect":"16:9","category":"core","dimension":"2d","name":"core","role":"decoration","style":"iram","thumbnailUrl":"","url":"https://almadar-iram-assets.web.app/frames/seq-22-resonance/shot-01-start.png","variant":""}` */
   coreBg?: EntityRow;
-  /** Default: `{"animations":["static"],"aspect":"16:9","category":"corridor","dimension":"2d","name":"corridor","role":"decoration","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png","variant":""}` */
+  /** Default: `{"animations":["static"],"aspect":"16:9","category":"corridor","dimension":"2d","name":"corridor","role":"decoration","style":"iram","thumbnailUrl":"","url":"https://almadar-iram-assets.web.app/frames/seq-01-shift-7421/shot-01-start.png","variant":""}` */
   corridorBg?: EntityRow;
   error?: EntityRow;
-  /** Default: `{"animations":["static"],"aspect":"16:9","category":"forge","dimension":"2d","name":"forge","role":"decoration","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/forge.png","variant":""}` */
+  /** Default: `{"animations":["static"],"aspect":"16:9","category":"forge","dimension":"2d","name":"forge","role":"decoration","style":"iram","thumbnailUrl":"","url":"https://almadar-iram-assets.web.app/frames/seq-05-assembly-line/shot-01-start.png","variant":""}` */
   forgeBg?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
@@ -75,7 +75,7 @@ export interface StdUiVisualNovelBoardConfig {
   nodes?: EntityRow[];
   /** Default: `1` */
   portraitScale?: number;
-  /** Default: `{"animations":["static"],"aspect":"1:2","category":"guide","dimension":"2d","name":"guide","role":"npc","style":"adventure","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png","variant":""}` */
+  /** Default: `{"animations":["static"],"aspect":"1:2","category":"guide","dimension":"2d","name":"guide","role":"npc","style":"iram","thumbnailUrl":"","url":"https://almadar-iram-assets.web.app/references/amir.png","variant":""}` */
   portraitUrl?: EntityRow;
   /** Default: `"start"` */
   startNodeId?: string;
@@ -260,9 +260,9 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
               'dimension': '2d',
               'name': 'core',
               'role': 'decoration',
-              'style': 'adventure',
+              'style': 'iram',
               'thumbnailUrl': '',
-              'url': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/core.png',
+              'url': 'https://almadar-iram-assets.web.app/frames/seq-22-resonance/shot-01-start.png',
               'variant': '',
             },
             'description': 'Ancient core scene background (dark teal).',
@@ -335,9 +335,9 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
               'dimension': '2d',
               'name': 'corridor',
               'role': 'decoration',
-              'style': 'adventure',
+              'style': 'iram',
               'thumbnailUrl': '',
-              'url': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png',
+              'url': 'https://almadar-iram-assets.web.app/frames/seq-01-shift-7421/shot-01-start.png',
               'variant': '',
             },
             'description': 'Stone corridor scene background (dark blue-grey).',
@@ -438,9 +438,9 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
               'dimension': '2d',
               'name': 'forge',
               'role': 'decoration',
-              'style': 'adventure',
+              'style': 'iram',
               'thumbnailUrl': '',
-              'url': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/forge.png',
+              'url': 'https://almadar-iram-assets.web.app/frames/seq-05-assembly-line/shot-01-start.png',
               'variant': '',
             },
             'description': 'Forge room scene background (dark orange-red).',
@@ -645,9 +645,9 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
               'dimension': '2d',
               'name': 'guide',
               'role': 'npc',
-              'style': 'adventure',
+              'style': 'iram',
               'thumbnailUrl': '',
-              'url': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png',
+              'url': 'https://almadar-iram-assets.web.app/references/amir.png',
               'variant': '',
             },
             'description': 'Large character portrait rendered standing over the scene.',

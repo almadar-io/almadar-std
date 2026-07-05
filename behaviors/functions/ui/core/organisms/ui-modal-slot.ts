@@ -39,6 +39,8 @@ export type StdUiModalSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiModalSlotConfig {
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   error?: EntityRow;
@@ -118,6 +120,18 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
       rebindInlineTraitEntity({
         'category': 'interaction',
         'config': {
+          'children': {
+            'default': [
+              {
+                'content': 'Sample content',
+                'type': 'typography',
+              },
+            ],
+            'description': 'Content to display in the modal',
+            'label': 'Children',
+            'tier': 'presentation',
+            'type': 'node',
+          },
           'className': {
             'default': '',
             'description': 'Custom class name',
@@ -222,12 +236,7 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'content': 'Sample content',
-                        'type': 'typography',
-                      },
-                    ],
+                    'children': '@config.children',
                     'className': '@config.className',
                     'entity': 'ModalSlotItem',
                     'error': '@config.error',

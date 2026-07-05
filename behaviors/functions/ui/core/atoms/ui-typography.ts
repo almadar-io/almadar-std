@@ -41,6 +41,8 @@ export type StdUiTypographyEventKey = 'INIT';
 export interface StdUiTypographyConfig {
   /** Default: `"left"` */
   align?: 'left' | 'center' | 'right';
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"primary"` */

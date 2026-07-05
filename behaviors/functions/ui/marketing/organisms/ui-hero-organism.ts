@@ -48,6 +48,8 @@ export interface StdUiHeroOrganismHeroOrganismLoadedPayload {
 export interface StdUiHeroOrganismConfig {
   /** Default: `{}` */
   activeFilters?: unknown;
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   error?: EntityRow;
@@ -247,6 +249,18 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
             'tier': 'presentation',
             'type': 'json',
           },
+          'children': {
+            'default': [
+              {
+                'content': 'Sample content',
+                'type': 'typography',
+              },
+            ],
+            'description': 'children prop',
+            'label': 'Children',
+            'tier': 'presentation',
+            'type': 'node',
+          },
           'className': {
             'default': '',
             'description': 'Additional CSS classes',
@@ -413,12 +427,7 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
                   'main',
                   {
                     'activeFilters': '@config.activeFilters',
-                    'children': [
-                      {
-                        'content': 'Sample content',
-                        'type': 'typography',
-                      },
-                    ],
+                    'children': '@config.children',
                     'className': '@config.className',
                     'entity': '@entity',
                     'error': '@config.error',
@@ -445,12 +454,7 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
                   'main',
                   {
                     'activeFilters': '@config.activeFilters',
-                    'children': [
-                      {
-                        'content': 'Sample content',
-                        'type': 'typography',
-                      },
-                    ],
+                    'children': '@config.children',
                     'className': '@config.className',
                     'entity': '@payload.data',
                     'error': '@config.error',

@@ -41,6 +41,8 @@ export type StdUiContainerEventKey = 'INIT';
 export interface StdUiContainerConfig {
   /** Default: `true` */
   center?: boolean;
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"xs"` */

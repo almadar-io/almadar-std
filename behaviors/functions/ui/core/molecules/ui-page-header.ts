@@ -59,6 +59,8 @@ export interface StdUiPageHeaderConfig {
   activeTab?: string;
   /** Default: `[{"href":"Href","label":"Label"},{"href":"Href 2","label":"Label 2"}]` */
   breadcrumbs?: EntityRow[];
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   error?: EntityRow;

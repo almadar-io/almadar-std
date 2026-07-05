@@ -50,6 +50,8 @@ export interface StdUiStackConfig {
   actionPayload?: unknown;
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"vertical"` */

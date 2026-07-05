@@ -40,6 +40,8 @@ export type StdUiSectionEventKey = 'INIT';
  */
 export interface StdUiSectionConfig {
   action?: unknown;
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"Content Class Name"` */

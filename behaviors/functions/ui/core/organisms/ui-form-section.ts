@@ -69,6 +69,8 @@ export interface StdUiFormSectionFormSectionLoadedPayload {
 export interface StdUiFormSectionConfig {
   /** Default: `"Cancel Label"` */
   cancelLabel?: string;
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `{}` */
@@ -185,6 +187,18 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'label': 'Cancel Label',
             'tier': 'presentation',
             'type': 'string',
+          },
+          'children': {
+            'default': [
+              {
+                'content': 'Sample content',
+                'type': 'typography',
+              },
+            ],
+            'description': 'Form fields (traditional React children)',
+            'label': 'Children',
+            'tier': 'presentation',
+            'type': 'node',
           },
           'className': {
             'default': '',
@@ -1182,12 +1196,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                   {
                     'cancelEvent': 'CANCEL',
                     'cancelLabel': '@config.cancelLabel',
-                    'children': [
-                      {
-                        'content': 'Sample content',
-                        'type': 'typography',
-                      },
-                    ],
+                    'children': '@config.children',
                     'className': '@config.className',
                     'conditionalFields': '@config.conditionalFields',
                     'configPath': '@config.configPath',
@@ -1230,12 +1239,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                   {
                     'cancelEvent': 'CANCEL',
                     'cancelLabel': '@config.cancelLabel',
-                    'children': [
-                      {
-                        'content': 'Sample content',
-                        'type': 'typography',
-                      },
-                    ],
+                    'children': '@config.children',
                     'className': '@config.className',
                     'conditionalFields': '@config.conditionalFields',
                     'configPath': '@config.configPath',

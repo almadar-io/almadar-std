@@ -59,6 +59,8 @@ export interface StdUiBoxConfig {
   bg?: 'transparent' | 'primary' | 'secondary' | 'muted' | 'accent' | 'surface' | 'overlay';
   /** Default: `false` */
   border?: boolean;
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"block"` */

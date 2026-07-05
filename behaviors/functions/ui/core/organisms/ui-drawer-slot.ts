@@ -39,6 +39,8 @@ export type StdUiDrawerSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDrawerSlotConfig {
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   error?: EntityRow;
@@ -120,6 +122,18 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
       rebindInlineTraitEntity({
         'category': 'interaction',
         'config': {
+          'children': {
+            'default': [
+              {
+                'content': 'Sample content',
+                'type': 'typography',
+              },
+            ],
+            'description': 'Content to display in the drawer',
+            'label': 'Children',
+            'tier': 'presentation',
+            'type': 'node',
+          },
           'className': {
             'default': '',
             'description': 'Custom class name',
@@ -235,12 +249,7 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'content': 'Sample content',
-                        'type': 'typography',
-                      },
-                    ],
+                    'children': '@config.children',
                     'className': '@config.className',
                     'entity': 'DrawerSlotItem',
                     'error': '@config.error',

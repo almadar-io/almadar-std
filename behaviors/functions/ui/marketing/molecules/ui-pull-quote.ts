@@ -39,6 +39,8 @@ export type StdUiPullQuoteEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiPullQuoteConfig {
+  /** Default: `"Sample content"` */
+  children?: string;
   /** Default: `""` */
   className?: string;
 }

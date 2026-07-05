@@ -43,6 +43,8 @@ export interface StdUiFormActionsConfig {
   activeFilters?: unknown;
   /** Default: `"right"` */
   align?: 'left' | 'right' | 'between' | 'center';
+  /** Default: `[{"content":"Sample content","type":"typography"}]` */
+  children?: unknown;
   /** Default: `""` */
   className?: string;
   error?: EntityRow;
