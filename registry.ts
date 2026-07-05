@@ -37,6 +37,15 @@ import { EASE_OPERATORS } from './modules/ease.js';
 import { NOISE_OPERATORS } from './modules/noise.js';
 import { PATH_OPERATORS } from './modules/path.js';
 
+// Substrate modules
+import { LLM_OPERATORS } from './modules/llm.js';
+import { WORKSPACE_OPERATORS } from './modules/workspace.js';
+import { SESSION_OPERATORS } from './modules/session.js';
+import { MEMORY_OPERATORS } from './modules/memory.js';
+import { TRACE_OPERATORS } from './modules/trace.js';
+import { BEHAVIOR_OPERATORS } from './modules/behavior.js';
+import { INTEGRATION_OPERATORS } from './modules/integration.js';
+
 // ============================================================================
 // Combined Registry
 // ============================================================================
@@ -71,6 +80,14 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...EASE_OPERATORS,
   ...NOISE_OPERATORS,
   ...PATH_OPERATORS,
+  // Substrate modules
+  ...LLM_OPERATORS,
+  ...WORKSPACE_OPERATORS,
+  ...SESSION_OPERATORS,
+  ...MEMORY_OPERATORS,
+  ...TRACE_OPERATORS,
+  ...BEHAVIOR_OPERATORS,
+  ...INTEGRATION_OPERATORS,
 };
 
 /**
@@ -109,6 +126,14 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   ease: EASE_OPERATORS,
   noise: NOISE_OPERATORS,
   path: PATH_OPERATORS,
+  // Substrate modules
+  llm: LLM_OPERATORS,
+  workspace: WORKSPACE_OPERATORS,
+  session: SESSION_OPERATORS,
+  memory: MEMORY_OPERATORS,
+  trace: TRACE_OPERATORS,
+  behavior: BEHAVIOR_OPERATORS,
+  integration: INTEGRATION_OPERATORS,
 };
 
 // ============================================================================

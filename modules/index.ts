@@ -50,3 +50,12 @@ export { ANIM_OPERATORS, getAnimOperators } from './anim.js';
 export { EASE_OPERATORS, getEaseOperators } from './ease.js';
 export { NOISE_OPERATORS, getNoiseOperators } from './noise.js';
 export { PATH_OPERATORS, getPathOperators } from './path.js';
+
+// Substrate modules (Almadar_Rabit_LOLO_Plan.md Phase 3)
+export { LLM_OPERATORS, getLlmOperators } from './llm.js';
+export { WORKSPACE_OPERATORS, getWorkspaceOperators } from './workspace.js';
+export { SESSION_OPERATORS, getSessionOperators } from './session.js';
+export { MEMORY_OPERATORS, getMemoryOperators } from './memory.js';
+export { TRACE_OPERATORS, getTraceOperators } from './trace.js';
+export { BEHAVIOR_OPERATORS, getBehaviorOperators } from './behavior.js';
+export { INTEGRATION_OPERATORS, getIntegrationOperators } from './integration.js';

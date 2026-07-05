@@ -166,6 +166,14 @@ export const STD_MODULES = [
   'ease',
   'noise',
   'path',
+  // Substrate modules (Almadar_Rabit_LOLO_Plan.md Phase 3)
+  'llm',
+  'workspace',
+  'session',
+  'memory',
+  'trace',
+  'behavior',
+  'integration',
 ] as const;
 
 export type StdModule = (typeof STD_MODULES)[number];
@@ -203,6 +211,14 @@ export const STD_OPERATOR_CATEGORIES = [
   'ml-graph',
   'ml-contract',
   'ml-data',
+  // Substrate categories (Almadar_Rabit_LOLO_Plan.md Phase 3)
+  'std-llm',
+  'std-workspace',
+  'std-session',
+  'std-memory',
+  'std-trace',
+  'std-behavior',
+  'std-integration',
 ] as const;
 
 export type StdOperatorCategory = (typeof STD_OPERATOR_CATEGORIES)[number];
