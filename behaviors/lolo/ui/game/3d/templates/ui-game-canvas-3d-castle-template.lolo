@@ -14,55 +14,33 @@ orbital GameCanvas3dCastleTemplateOrbital {
       INIT -> idle
         (fetch GameCanvas3dCastleTemplateItem { emit: { success: GameCanvas3dCastleTemplateLoaded } })
         (render-ui main {
-          entity: @entity
           className: @config.className
-          tiles: @config.tiles
-          features: @config.features
-          assetManifest: @config.assetManifest
           cameraMode: @config.cameraMode
           showGrid: @config.showGrid
           shadows: @config.shadows
           backgroundColor: @config.backgroundColor
-          buildingClickEvent: @config.buildingClickEvent
-          unitClickEvent: @config.unitClickEvent
-          endTurnEvent: @config.endTurnEvent
-          cancelEvent: @config.cancelEvent
-          attackEvent: @config.attackEvent
-          playAgainEvent: @config.playAgainEvent
-          gameEndEvent: @config.gameEndEvent
-          buildEvent: @config.buildEvent
-          recruitEvent: @config.recruitEvent
-          exitEvent: @config.exitEvent
-          showHeader: @config.showHeader
           unitScale: @config.unitScale
           scale: @config.scale
-          type: game-canvas-3d-castle-template
+          type: game-canvas-3d
+          children: [
+            { type: draw-sprite-layer, items: (array/map @config.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y), z: (object/get @t z) }, asset: (object/get (object/get @config.assetManifest terrains) (object/get @t terrain)) })) }
+            { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y), z: (object/get @f z) }, asset: (object/get @f assetUrl) })) }
+          ]
         })
       GameCanvas3dCastleTemplateLoaded -> idle
         (render-ui main {
-          entity: @payload.data
           className: @config.className
-          tiles: @config.tiles
-          features: @config.features
-          assetManifest: @config.assetManifest
           cameraMode: @config.cameraMode
           showGrid: @config.showGrid
           shadows: @config.shadows
           backgroundColor: @config.backgroundColor
-          buildingClickEvent: @config.buildingClickEvent
-          unitClickEvent: @config.unitClickEvent
-          endTurnEvent: @config.endTurnEvent
-          cancelEvent: @config.cancelEvent
-          attackEvent: @config.attackEvent
-          playAgainEvent: @config.playAgainEvent
-          gameEndEvent: @config.gameEndEvent
-          buildEvent: @config.buildEvent
-          recruitEvent: @config.recruitEvent
-          exitEvent: @config.exitEvent
-          showHeader: @config.showHeader
           unitScale: @config.unitScale
           scale: @config.scale
-          type: game-canvas-3d-castle-template
+          type: game-canvas-3d
+          children: [
+            { type: draw-sprite-layer, items: (array/map @config.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y), z: (object/get @t z) }, asset: (object/get (object/get @config.assetManifest terrains) (object/get @t terrain)) })) }
+            { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y), z: (object/get @f z) }, asset: (object/get @f assetUrl) })) }
+          ]
         })
     }
 

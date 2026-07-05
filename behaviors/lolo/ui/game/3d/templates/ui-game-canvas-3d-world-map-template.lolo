@@ -14,61 +14,37 @@ orbital GameCanvas3dWorldMapTemplateOrbital {
       INIT -> idle
         (fetch GameCanvas3dWorldMapTemplateItem { emit: { success: GameCanvas3dWorldMapTemplateLoaded } })
         (render-ui main {
-          entity: @entity
           className: @config.className
-          tiles: @config.tiles
-          features: @config.features
-          assetManifest: @config.assetManifest
           cameraMode: @config.cameraMode
           showGrid: @config.showGrid
           showCoordinates: @config.showCoordinates
           showTileInfo: @config.showTileInfo
           shadows: @config.shadows
           backgroundColor: @config.backgroundColor
-          tileClickEvent: @config.tileClickEvent
-          unitClickEvent: @config.unitClickEvent
-          endTurnEvent: @config.endTurnEvent
-          cancelEvent: @config.cancelEvent
-          attackEvent: @config.attackEvent
-          playAgainEvent: @config.playAgainEvent
-          gameEndEvent: @config.gameEndEvent
-          featureClickEvent: @config.featureClickEvent
-          tileHoverEvent: @config.tileHoverEvent
-          tileLeaveEvent: @config.tileLeaveEvent
-          cameraChangeEvent: @config.cameraChangeEvent
-          exitEvent: @config.exitEvent
           unitScale: @config.unitScale
           scale: @config.scale
-          type: game-canvas-3d-world-map-template
+          type: game-canvas-3d
+          children: [
+            { type: draw-sprite-layer, items: (array/map @config.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
+            { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
+          ]
         })
       GameCanvas3dWorldMapTemplateLoaded -> idle
         (render-ui main {
-          entity: @payload.data
           className: @config.className
-          tiles: @config.tiles
-          features: @config.features
-          assetManifest: @config.assetManifest
           cameraMode: @config.cameraMode
           showGrid: @config.showGrid
           showCoordinates: @config.showCoordinates
           showTileInfo: @config.showTileInfo
           shadows: @config.shadows
           backgroundColor: @config.backgroundColor
-          tileClickEvent: @config.tileClickEvent
-          unitClickEvent: @config.unitClickEvent
-          endTurnEvent: @config.endTurnEvent
-          cancelEvent: @config.cancelEvent
-          attackEvent: @config.attackEvent
-          playAgainEvent: @config.playAgainEvent
-          gameEndEvent: @config.gameEndEvent
-          featureClickEvent: @config.featureClickEvent
-          tileHoverEvent: @config.tileHoverEvent
-          tileLeaveEvent: @config.tileLeaveEvent
-          cameraChangeEvent: @config.cameraChangeEvent
-          exitEvent: @config.exitEvent
           unitScale: @config.unitScale
           scale: @config.scale
-          type: game-canvas-3d-world-map-template
+          type: game-canvas-3d
+          children: [
+            { type: draw-sprite-layer, items: (array/map @config.tiles (fn t { type: draw-sprite, position: { x: (object/get @t x), y: (object/get @t y) }, asset: (object/get @t terrainSprite) })) }
+            { type: draw-sprite-layer, items: (array/map @config.features (fn f { type: draw-sprite, position: { x: (object/get @f x), y: (object/get @f y) }, asset: (object/get @f assetUrl) })) }
+          ]
         })
     }
 
