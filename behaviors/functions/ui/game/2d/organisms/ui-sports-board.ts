@@ -3348,6 +3348,11 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
                                     '@u',
                                     'frame',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -3819,6 +3824,11 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
                                     'object/get',
                                     '@u',
                                     'frame',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -4296,6 +4306,11 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
                                     'object/get',
                                     '@u',
                                     'frame',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -4801,6 +4816,11 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
                                     '@u',
                                     'frame',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -5304,6 +5324,11 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
                                     '@u',
                                     'frame',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -5796,6 +5821,11 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
                                     '@u',
                                     'frame',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -6255,6 +6285,11 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
                                   'object/get',
                                   '@u',
                                   'frame',
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
                                 ],
                                 'position': [
                                   'object/get',

@@ -1629,6 +1629,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                     '@u',
                                     'frame',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -2265,6 +2270,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                     '@u',
                                     'frame',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -2827,6 +2837,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                     '@u',
                                     'frame',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -3345,6 +3360,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                     'object/get',
                                     '@u',
                                     'frame',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -3865,6 +3885,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                     '@u',
                                     'frame',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -4373,6 +4398,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                     'object/get',
                                     '@u',
                                     'frame',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -4999,6 +5029,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                     '@u',
                                     'frame',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -5602,6 +5637,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                   'object/get',
                                   '@u',
                                   'frame',
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
                                 ],
                                 'position': [
                                   'object/get',
@@ -6726,6 +6766,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                                   'object/get',
                                   '@u',
                                   'frame',
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
                                 ],
                                 'position': [
                                   'object/get',

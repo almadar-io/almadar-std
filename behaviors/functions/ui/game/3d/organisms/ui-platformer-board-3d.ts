@@ -1544,6 +1544,11 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                                 'c',
                                 {
                                   'asset': '@config.coinSprite',
+                                  'id': [
+                                    'object/get',
+                                    '@c',
+                                    'id',
+                                  ],
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -1992,6 +1997,11 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                                 'c',
                                 {
                                   'asset': '@config.coinSprite',
+                                  'id': [
+                                    'object/get',
+                                    '@c',
+                                    'id',
+                                  ],
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2313,6 +2323,11 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                                 'c',
                                 {
                                   'asset': '@config.coinSprite',
+                                  'id': [
+                                    'object/get',
+                                    '@c',
+                                    'id',
+                                  ],
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -3633,6 +3648,11 @@ export function stdUiPlatformerBoard3dPlatformerBoard3DOrbital(params: StdUiPlat
                               'c',
                               {
                                 'asset': '@config.coinSprite',
+                                'id': [
+                                  'object/get',
+                                  '@c',
+                                  'id',
+                                ],
                                 'position': {
                                   'x': [
                                     'object/get',

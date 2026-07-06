@@ -3995,6 +3995,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -4473,6 +4478,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     'object/get',
                                     '@u',
                                     'modelUrl',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -5124,6 +5134,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -5713,6 +5728,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     'object/get',
                                     '@u',
                                     'modelUrl',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -6567,6 +6587,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -7281,6 +7306,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -7832,6 +7862,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -8318,6 +8353,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     'object/get',
                                     '@u',
                                     'modelUrl',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -8827,6 +8867,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -9315,6 +9360,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     'object/get',
                                     '@u',
                                     'modelUrl',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -9835,6 +9885,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     'object/get',
                                     '@u',
                                     'modelUrl',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -10458,6 +10513,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -10929,6 +10989,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'object/get',
                                   '@u',
                                   'modelUrl',
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
                                 ],
                                 'position': [
                                   'object/get',
@@ -11905,6 +11970,11 @@ export function stdUiPirateBoardPirateBoardOrbital(params: StdUiPirateBoardPirat
                                   'object/get',
                                   '@u',
                                   'modelUrl',
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
                                 ],
                                 'position': [
                                   'object/get',

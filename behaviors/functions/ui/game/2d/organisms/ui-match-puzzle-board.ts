@@ -1904,6 +1904,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'gem_red',
                                     ],
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@g',
+                                    'id',
+                                  ],
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -2952,6 +2957,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                   'gem_red',
                                                 ],
                                               ],
+                                              'id': [
+                                                'object/get',
+                                                '@g',
+                                                'id',
+                                              ],
                                               'position': {
                                                 'x': [
                                                   'object/get',
@@ -3409,6 +3419,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'gem_red',
                                     ],
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@g',
+                                    'id',
+                                  ],
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -3790,6 +3805,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       'gem_red',
                                     ],
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@g',
+                                    'id',
+                                  ],
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -4130,6 +4150,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       ],
                                       'gem_red',
                                     ],
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@g',
+                                    'id',
                                   ],
                                   'position': {
                                     'x': [
@@ -4533,6 +4558,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                       ],
                                       'gem_red',
                                     ],
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@g',
+                                    'id',
                                   ],
                                   'position': {
                                     'x': [
@@ -5723,6 +5753,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                                       'gem_red',
                                                     ],
                                                   ],
+                                                  'id': [
+                                                    'object/get',
+                                                    '@g',
+                                                    'id',
+                                                  ],
                                                   'position': {
                                                     'x': [
                                                       'object/get',
@@ -6111,6 +6146,11 @@ export function stdUiMatchPuzzleBoardMatchPuzzleBoardOrbital(params: StdUiMatchP
                                     ],
                                     'gem_red',
                                   ],
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@g',
+                                  'id',
                                 ],
                                 'position': {
                                   'x': [

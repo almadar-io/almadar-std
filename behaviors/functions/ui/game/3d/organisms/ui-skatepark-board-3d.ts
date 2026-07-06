@@ -1571,6 +1571,11 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                                 'c',
                                 {
                                   'asset': '@config.coinSprite',
+                                  'id': [
+                                    'object/get',
+                                    '@c',
+                                    'id',
+                                  ],
                                   'position': {
                                     'x': '@c.x',
                                     'y': '@c.y',
@@ -2053,6 +2058,11 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                                 'c',
                                 {
                                   'asset': '@config.coinSprite',
+                                  'id': [
+                                    'object/get',
+                                    '@c',
+                                    'id',
+                                  ],
                                   'position': {
                                     'x': '@c.x',
                                     'y': '@c.y',
@@ -2338,6 +2348,11 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                                 'c',
                                 {
                                   'asset': '@config.coinSprite',
+                                  'id': [
+                                    'object/get',
+                                    '@c',
+                                    'id',
+                                  ],
                                   'position': {
                                     'x': '@c.x',
                                     'y': '@c.y',
@@ -3622,6 +3637,11 @@ export function stdUiSkateparkBoard3dSkateparkBoard3DOrbital(params: StdUiSkatep
                               'c',
                               {
                                 'asset': '@config.coinSprite',
+                                'id': [
+                                  'object/get',
+                                  '@c',
+                                  'id',
+                                ],
                                 'position': {
                                   'x': '@c.x',
                                   'y': '@c.y',

@@ -802,6 +802,11 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
                                     '#ef4444',
                                   ],
                                   'height': 0.7,
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -1537,6 +1542,11 @@ export function stdUiGridTacticsDemoBoardGridTacticsDemoOrbital(params: StdUiGri
                                   '#ef4444',
                                 ],
                                 'height': 0.7,
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
+                                ],
                                 'position': [
                                   'object/get',
                                   '@u',

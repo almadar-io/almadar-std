@@ -2318,6 +2318,11 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                                     '@u',
                                     'frame',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -2751,6 +2756,11 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                                     'object/get',
                                     '@u',
                                     'frame',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -3190,6 +3200,11 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                                     'object/get',
                                     '@u',
                                     'frame',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -3647,6 +3662,11 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                                     'object/get',
                                     '@u',
                                     'frame',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -4167,6 +4187,11 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                                   'object/get',
                                   '@u',
                                   'frame',
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
                                 ],
                                 'position': [
                                   'object/get',

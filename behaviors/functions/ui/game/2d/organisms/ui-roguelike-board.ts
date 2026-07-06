@@ -8006,6 +8006,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                         ],
                                       ],
                                     ],
+                                    'id': [
+                                      'object/get',
+                                      '@e',
+                                      'id',
+                                    ],
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -8032,6 +8037,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                   ],
                                   'player',
                                 ],
+                                'id': 'player',
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -11656,6 +11662,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                         ],
                                       ],
                                     ],
+                                    'id': [
+                                      'object/get',
+                                      '@e',
+                                      'id',
+                                    ],
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -11682,6 +11693,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                   ],
                                   'player',
                                 ],
+                                'id': 'player',
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -12413,6 +12425,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                         ],
                                       ],
                                     ],
+                                    'id': [
+                                      'object/get',
+                                      '@e',
+                                      'id',
+                                    ],
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -12439,6 +12456,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                   ],
                                   'player',
                                 ],
+                                'id': 'player',
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -13329,6 +13347,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                         ],
                                       ],
                                     ],
+                                    'id': [
+                                      'object/get',
+                                      '@e',
+                                      'id',
+                                    ],
                                     'position': {
                                       'x': [
                                         'object/get',
@@ -13355,6 +13378,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                   ],
                                   'player',
                                 ],
+                                'id': 'player',
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -14132,6 +14156,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                       ],
                                     ],
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@e',
+                                    'id',
+                                  ],
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -14158,6 +14187,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                 ],
                                 'player',
                               ],
+                              'id': 'player',
                               'position': {
                                 'x': [
                                   'object/get',

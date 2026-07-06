@@ -7986,6 +7986,11 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                     '@u',
                                     'frame',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -8488,6 +8493,11 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                     'object/get',
                                     '@u',
                                     'frame',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': {
                                     'x': [
@@ -9110,6 +9120,11 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                     '@u',
                                     'frame',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -9570,6 +9585,11 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                     'object/get',
                                     '@u',
                                     'frame',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': {
                                     'x': [
@@ -10148,6 +10168,11 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                     '@u',
                                     'frame',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': {
                                     'x': [
                                       'object/get',
@@ -10692,6 +10717,11 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                   'object/get',
                                   '@u',
                                   'frame',
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
                                 ],
                                 'position': {
                                   'x': [
@@ -11548,6 +11578,11 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                   '@u',
                                   'frame',
                                 ],
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
+                                ],
                                 'position': {
                                   'x': [
                                     'object/get',
@@ -12309,6 +12344,11 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                   'object/get',
                                   '@u',
                                   'frame',
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
                                 ],
                                 'position': {
                                   'x': [

@@ -2446,6 +2446,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -2910,6 +2915,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                     'object/get',
                                     '@u',
                                     'modelUrl',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -3423,6 +3433,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -3870,6 +3885,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                   'object/get',
                                   '@u',
                                   'modelUrl',
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
                                 ],
                                 'position': [
                                   'object/get',
@@ -5258,6 +5278,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                   'object/get',
                                   '@u',
                                   'modelUrl',
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
                                 ],
                                 'position': [
                                   'object/get',

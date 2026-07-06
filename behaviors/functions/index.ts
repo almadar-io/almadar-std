@@ -12,19 +12,6 @@
  */
 
 // Atoms
-export * from './agent/atoms/std-agent-activity-log.js';
-export * from './agent/atoms/std-agent-chat-thread.js';
-export * from './agent/atoms/std-agent-classifier.js';
-export * from './agent/atoms/std-agent-completion.js';
-export * from './agent/atoms/std-agent-context-window.js';
-export * from './agent/atoms/std-agent-conversation.js';
-export * from './agent/atoms/std-agent-memory.js';
-export * from './agent/atoms/std-agent-provider.js';
-export * from './agent/atoms/std-agent-search.js';
-export * from './agent/atoms/std-agent-session.js';
-export * from './agent/atoms/std-agent-step-progress.js';
-export * from './agent/atoms/std-agent-token-gauge.js';
-export * from './agent/atoms/std-agent-tool-call.js';
 export * from './ui/learning/atoms/std-algo-astargraph.js';
 export * from './ui/learning/atoms/std-algo-astargrid.js';
 export * from './ui/learning/atoms/std-algo-bfs.js';
@@ -277,11 +264,6 @@ export * from './ui/game/2d/atoms/ui-waypoint-marker.js';
 export * from './ui/game/2d/atoms/ui-xp-bar.js';
 
 // Molecules
-export * from './agent/molecules/std-agent-fix-loop.js';
-export * from './agent/molecules/std-agent-learner.js';
-export * from './agent/molecules/std-agent-planner.js';
-export * from './agent/molecules/std-agent-rag.js';
-export * from './agent/molecules/std-agent-tool-loop.js';
 export * from './ui/game/3d/molecules/std-arcade-board-3d.js';
 export * from './ui/game/2d/molecules/std-crew-board-2d.js';
 export * from './core/molecules/std-dashboard.js';
@@ -353,7 +335,6 @@ export * from './ui/core/molecules/ui-form-actions.js';
 export * from './ui/core/molecules/ui-form-field.js';
 export * from './ui/core/molecules/ui-form-layout.js';
 export * from './ui/core/molecules/ui-form-section-header.js';
-export * from './ui/game/3d/molecules/ui-game-canvas-3d.js';
 export * from './ui/game/2d/molecules/ui-game-hud.js';
 export * from './ui/game/2d/molecules/ui-game-menu.js';
 export * from './ui/marketing/molecules/ui-geometric-pattern.js';
@@ -455,11 +436,6 @@ export * from './ui/learning/organisms/learning-physics.js';
 export * from './ui/learning/organisms/learning-physics-lab.js';
 export * from './ui/learning/organisms/learning-probability.js';
 export * from './ui/learning/organisms/learning-probability-lab.js';
-export * from './agent/organisms/std-agent-assistant.js';
-export * from './agent/organisms/std-agent-builder.js';
-export * from './agent/organisms/std-agent-pipeline.js';
-export * from './agent/organisms/std-agent-reviewer.js';
-export * from './agent/organisms/std-agent-tutor.js';
 export * from './core/organisms/std-generic-app.js';
 export * from './ui/game/3d/organisms/ui-arcade-board-3d.js';
 export * from './ui/game/2d/organisms/ui-arena-board.js';
@@ -494,7 +470,6 @@ export * from './ui/marketing/organisms/ui-feature-grid-organism.js';
 export * from './ui/game/2d/organisms/ui-fishing-board.js';
 export * from './ui/core/organisms/ui-form.js';
 export * from './ui/core/organisms/ui-form-section.js';
-export * from './ui/game/3d/organisms/ui-game-board-3d.js';
 export * from './ui/game/3d/organisms/ui-graveyard-board-3d.js';
 export * from './ui/game/2d/organisms/ui-grid-tactics-demo-board.js';
 export * from './ui/marketing/organisms/ui-hero-organism.js';

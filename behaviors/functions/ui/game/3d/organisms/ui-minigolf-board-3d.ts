@@ -2037,6 +2037,11 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -2506,6 +2511,11 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -2964,6 +2974,11 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                                     'object/get',
                                     '@u',
                                     'modelUrl',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -3555,6 +3570,11 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -4062,6 +4082,11 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                                     '@u',
                                     'modelUrl',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -4491,6 +4516,11 @@ export function stdUiMinigolfBoard3dMinigolfBoard3DOrbital(params: StdUiMinigolf
                                     'object/get',
                                     '@u',
                                     'modelUrl',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',

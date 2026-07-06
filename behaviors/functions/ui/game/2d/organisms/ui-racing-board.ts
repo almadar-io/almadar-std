@@ -3452,6 +3452,11 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                                     '@u',
                                     'sprite',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -3976,6 +3981,11 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                                     'object/get',
                                     '@u',
                                     'sprite',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -4506,6 +4516,11 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                                     'object/get',
                                     '@u',
                                     'sprite',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -5055,6 +5070,11 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                                     '@u',
                                     'sprite',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -5603,6 +5623,11 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                                     '@u',
                                     'sprite',
                                   ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
+                                  ],
                                   'position': [
                                     'object/get',
                                     '@u',
@@ -6049,6 +6074,11 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                                     'object/get',
                                     '@u',
                                     'sprite',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -6538,6 +6568,11 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                                     'object/get',
                                     '@u',
                                     'sprite',
+                                  ],
+                                  'id': [
+                                    'object/get',
+                                    '@u',
+                                    'id',
                                   ],
                                   'position': [
                                     'object/get',
@@ -7398,6 +7433,11 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                                   '@u',
                                   'sprite',
                                 ],
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
+                                ],
                                 'position': [
                                   'object/get',
                                   '@u',
@@ -8219,6 +8259,11 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
                                   'object/get',
                                   '@u',
                                   'sprite',
+                                ],
+                                'id': [
+                                  'object/get',
+                                  '@u',
+                                  'id',
                                 ],
                                 'position': [
                                   'object/get',
