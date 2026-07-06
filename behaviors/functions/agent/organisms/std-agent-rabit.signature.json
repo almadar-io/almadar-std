@@ -1,0 +1,285 @@
+[
+  {
+    "organism": "std-agent-rabit",
+    "orbital": "CoordinatorOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/agent/organisms/std-agent-rabit.ts",
+    "entities": [
+      {
+        "name": "Coordinator",
+        "fields": [
+          {
+            "name": "prompt",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "phase",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "plan",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "totalOrbitals",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "completedCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "failedCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "composedSchema",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validationErrors",
+            "type": "array",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "CoordinatorPipeline",
+        "emittedEvents": [
+          "DISPATCHED",
+          "RABIT_DONE"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "DISPATCHED",
+            "direction": "emit"
+          },
+          {
+            "name": "RABIT_DONE",
+            "direction": "emit"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "START",
+            "direction": "listen"
+          },
+          {
+            "name": "ALL_DONE",
+            "direction": "listen"
+          },
+          {
+            "name": "RESET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": []
+      },
+      {
+        "name": "CoordinatorMonitor",
+        "emittedEvents": [
+          "ALL_DONE"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "ALL_DONE",
+            "direction": "emit"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "ORBITAL_COMPLETE",
+            "direction": "listen"
+          },
+          {
+            "name": "ORBITAL_FAILED",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": []
+      },
+      {
+        "name": "CoordinatorListener",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "RABIT_DONE"
+        ],
+        "events": [
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "RABIT_DONE",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "RabitPage",
+        "defaultPath": "/rabit",
+        "primaryEntity": "Coordinator"
+      }
+    ],
+    "emittedEvents": [
+      "ALL_DONE",
+      "DISPATCHED",
+      "RABIT_DONE"
+    ],
+    "listenedEvents": [
+      "RABIT_DONE"
+    ]
+  },
+  {
+    "organism": "std-agent-rabit",
+    "orbital": "OrbitalProcessOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/agent/organisms/std-agent-rabit.ts",
+    "entities": [
+      {
+        "name": "OrbitalProcess",
+        "fields": [
+          {
+            "name": "orbitalName",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "method",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "status",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "attempts",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "maxAttempts",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "fixPrompt",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "spec",
+            "type": "object",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "ProcessPipeline",
+        "emittedEvents": [
+          "BUILD_STEP",
+          "PROCESS_RETRY",
+          "PROCESS_DONE",
+          "REBUILD",
+          "ORBITAL_COMPLETE"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "BUILD_STEP",
+            "direction": "emit"
+          },
+          {
+            "name": "PROCESS_RETRY",
+            "direction": "emit"
+          },
+          {
+            "name": "PROCESS_DONE",
+            "direction": "emit"
+          },
+          {
+            "name": "REBUILD",
+            "direction": "emit"
+          },
+          {
+            "name": "ORBITAL_COMPLETE",
+            "direction": "emit"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "BUILD",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": []
+      },
+      {
+        "name": "ProcessDispatcher",
+        "emittedEvents": [],
+        "listenedEvents": [
+          "DISPATCHED"
+        ],
+        "events": [
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "DISPATCHED",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "OrbitalProcessPage",
+        "defaultPath": "/rabit/process",
+        "primaryEntity": "OrbitalProcess"
+      }
+    ],
+    "emittedEvents": [
+      "BUILD_STEP",
+      "ORBITAL_COMPLETE",
+      "PROCESS_DONE",
+      "PROCESS_RETRY",
+      "REBUILD"
+    ],
+    "listenedEvents": [
+      "DISPATCHED"
+    ]
+  }
+]

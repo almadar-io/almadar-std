@@ -206,6 +206,14 @@ import {
   isStdAgentBuilderAgentBuilderOrbitalParams,
 } from './agent/organisms/std-agent-builder.js';
 import {
+  stdAgentRabitCoordinatorOrbital,
+  StdAgentRabitCoordinatorOrbitalManifest,
+  isStdAgentRabitCoordinatorOrbitalParams,
+  stdAgentRabitOrbitalProcessOrbital,
+  StdAgentRabitOrbitalProcessOrbitalManifest,
+  isStdAgentRabitOrbitalProcessOrbitalParams,
+} from './agent/organisms/std-agent-rabit.js';
+import {
   stdGenericAppContactOrbital,
   StdGenericAppContactOrbitalManifest,
   isStdGenericAppContactOrbitalParams,
@@ -1214,6 +1222,24 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdAgentBuilderAgentBuilderOrbital(p);
     },
     manifest: StdAgentBuilderAgentBuilderOrbitalManifest,
+  }],
+  ['std-agent-rabit::CoordinatorOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentRabitCoordinatorOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-rabit::CoordinatorOrbital');
+      }
+      return stdAgentRabitCoordinatorOrbital(p);
+    },
+    manifest: StdAgentRabitCoordinatorOrbitalManifest,
+  }],
+  ['std-agent-rabit::OrbitalProcessOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdAgentRabitOrbitalProcessOrbitalParams(p)) {
+        throw new TypeError('Invalid params for std-agent-rabit::OrbitalProcessOrbital');
+      }
+      return stdAgentRabitOrbitalProcessOrbital(p);
+    },
+    manifest: StdAgentRabitOrbitalProcessOrbitalManifest,
   }],
   ['std-generic-app::ContactOrbital', {
     factory: (p: object): OrbitalDefinition => {

@@ -1,5 +1,5 @@
 app ui-xp-bar "1.0.0"
-"XpBar — XP progress display via resource-bar."
+"XpBar — XP progress display: a labeled stat-badge bar."
 orbital XpBarOrbital {
   entity XpBarItem [runtime] {
     id : string!
@@ -11,10 +11,12 @@ orbital XpBarOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
-          resources: [{ icon: "star", label: "XP", value: @config.current, max: @config.max }]
-          size: @config.size
+          type: stack
+          direction: horizontal
+          gap: sm
+          align: center
           className: @config.className
-          type: resource-bar
+          children: [ { type: stat-badge, label: "XP", value: @config.current, max: @config.max, format: bar, icon: "star", size: @config.size } ]
         })
     }
 

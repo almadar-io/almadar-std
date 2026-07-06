@@ -1,0 +1,1277 @@
+{
+  "description": "Rabit organism — coordinator decomposes a prompt into orbital specs, dispatches subagent builds, monitors completion, assembles and validates the composed schema.",
+  "name": "std-agent-rabit",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "prompt",
+            "type": "string"
+          },
+          {
+            "default": "idle",
+            "name": "phase",
+            "type": "string",
+            "values": [
+              "idle",
+              "planning",
+              "dispatching",
+              "monitoring",
+              "assembling",
+              "validating",
+              "done",
+              "failed"
+            ]
+          },
+          {
+            "default": "",
+            "name": "plan",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "totalOrbitals",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "completedCount",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "failedCount",
+            "type": "number"
+          },
+          {
+            "default": "",
+            "name": "composedSchema",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "orbitalName": {
+                  "name": "orbitalName",
+                  "required": false,
+                  "type": "string"
+                },
+                "severity": {
+                  "name": "severity",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "validationErrors",
+            "type": "array"
+          }
+        ],
+        "name": "Coordinator",
+        "persistence": "runtime"
+      },
+      "name": "CoordinatorOrbital",
+      "pages": [
+        {
+          "name": "RabitPage",
+          "path": "/rabit",
+          "traits": [
+            {
+              "ref": "CoordinatorPipeline"
+            },
+            {
+              "ref": "CoordinatorMonitor"
+            },
+            {
+              "ref": "CoordinatorListener"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "DISPATCHED",
+              "payloadSchema": [
+                {
+                  "name": "plan",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "totalOrbitals",
+                  "required": true,
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "RABIT_DONE",
+              "payloadSchema": [
+                {
+                  "name": "schema",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "linkedEntity": "Coordinator",
+          "name": "CoordinatorPipeline",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START",
+                "name": "Start",
+                "payloadSchema": [
+                  {
+                    "name": "prompt",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "totalOrbitals",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "ALL_DONE",
+                "name": "All Done"
+              },
+              {
+                "key": "RESET",
+                "name": "Reset"
+              },
+              {
+                "key": "DISPATCHED",
+                "name": "Dispatched",
+                "payloadSchema": [
+                  {
+                    "name": "plan",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "totalOrbitals",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "RABIT_DONE",
+                "name": "Rabit Done",
+                "payloadSchema": [
+                  {
+                    "name": "schema",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "monitoring"
+              },
+              {
+                "name": "done"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.prompt",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.plan",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.totalOrbitals",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.completedCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.failedCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.composedSchema",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validationErrors",
+                    []
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.prompt",
+                    "@payload.prompt"
+                  ],
+                  [
+                    "set",
+                    "@entity.totalOrbitals",
+                    "@payload.totalOrbitals"
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "planning"
+                  ],
+                  [
+                    "set",
+                    "@entity.plan",
+                    [
+                      "llm/generate",
+                      "@entity.prompt"
+                    ]
+                  ],
+                  [
+                    "session/write-spec",
+                    "coordinator-plan",
+                    "@entity.plan"
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "dispatching"
+                  ],
+                  [
+                    "emit",
+                    "DISPATCHED",
+                    {
+                      "plan": "@entity.plan",
+                      "totalOrbitals": "@entity.totalOrbitals"
+                    }
+                  ]
+                ],
+                "event": "START",
+                "from": "idle",
+                "to": "monitoring"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.phase",
+                    "monitoring"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "monitoring",
+                "to": "monitoring"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.phase",
+                    "assembling"
+                  ],
+                  [
+                    "set",
+                    "@entity.composedSchema",
+                    [
+                      "compose/compose-all"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "validating"
+                  ],
+                  [
+                    "validate/validate",
+                    "composed"
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "done"
+                  ],
+                  [
+                    "emit",
+                    "RABIT_DONE",
+                    {
+                      "schema": "@entity.composedSchema"
+                    }
+                  ]
+                ],
+                "event": "ALL_DONE",
+                "from": "monitoring",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.phase",
+                    "done"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "done",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.prompt",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.plan",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.totalOrbitals",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.completedCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.failedCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.composedSchema",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validationErrors",
+                    []
+                  ]
+                ],
+                "event": "RESET",
+                "from": "done",
+                "to": "idle"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "ALL_DONE"
+            }
+          ],
+          "linkedEntity": "Coordinator",
+          "name": "CoordinatorMonitor",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "ORBITAL_COMPLETE",
+                "name": "Orbital Complete"
+              },
+              {
+                "key": "ORBITAL_FAILED",
+                "name": "Orbital Failed"
+              },
+              {
+                "key": "ALL_DONE",
+                "name": "All Done"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "waiting"
+              },
+              {
+                "name": "counting"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.totalOrbitals",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.completedCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.failedCount",
+                    0.0
+                  ]
+                ],
+                "event": "INIT",
+                "from": "waiting",
+                "to": "waiting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.completedCount",
+                    [
+                      "+",
+                      "@entity.completedCount",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "when",
+                    [
+                      "==",
+                      [
+                        "+",
+                        "@entity.completedCount",
+                        "@entity.failedCount"
+                      ],
+                      "@entity.totalOrbitals"
+                    ],
+                    [
+                      "emit",
+                      "ALL_DONE",
+                      {}
+                    ]
+                  ]
+                ],
+                "event": "ORBITAL_COMPLETE",
+                "from": "waiting",
+                "to": "counting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.failedCount",
+                    [
+                      "+",
+                      "@entity.failedCount",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "when",
+                    [
+                      "==",
+                      [
+                        "+",
+                        "@entity.completedCount",
+                        "@entity.failedCount"
+                      ],
+                      "@entity.totalOrbitals"
+                    ],
+                    [
+                      "emit",
+                      "ALL_DONE",
+                      {}
+                    ]
+                  ]
+                ],
+                "event": "ORBITAL_FAILED",
+                "from": "waiting",
+                "to": "counting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.completedCount",
+                    "@entity.completedCount"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "counting",
+                "to": "counting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.completedCount",
+                    [
+                      "+",
+                      "@entity.completedCount",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "when",
+                    [
+                      "==",
+                      [
+                        "+",
+                        "@entity.completedCount",
+                        "@entity.failedCount"
+                      ],
+                      "@entity.totalOrbitals"
+                    ],
+                    [
+                      "emit",
+                      "ALL_DONE",
+                      {}
+                    ]
+                  ]
+                ],
+                "event": "ORBITAL_COMPLETE",
+                "from": "counting",
+                "to": "counting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.failedCount",
+                    [
+                      "+",
+                      "@entity.failedCount",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "when",
+                    [
+                      "==",
+                      [
+                        "+",
+                        "@entity.completedCount",
+                        "@entity.failedCount"
+                      ],
+                      "@entity.totalOrbitals"
+                    ],
+                    [
+                      "emit",
+                      "ALL_DONE",
+                      {}
+                    ]
+                  ]
+                ],
+                "event": "ORBITAL_FAILED",
+                "from": "counting",
+                "to": "counting"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "linkedEntity": "Coordinator",
+          "listens": [
+            {
+              "event": "RABIT_DONE",
+              "source": {
+                "kind": "trait",
+                "trait": "CoordinatorPipeline"
+              },
+              "triggers": "RABIT_DONE"
+            }
+          ],
+          "name": "CoordinatorListener",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "RABIT_DONE",
+                "name": "Rabit Done"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "waiting"
+              },
+              {
+                "name": "done"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.phase",
+                    "idle"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "waiting",
+                "to": "waiting"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.phase",
+                    "done"
+                  ]
+                ],
+                "event": "RABIT_DONE",
+                "from": "waiting",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.phase",
+                    "done"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "done",
+                "to": "done"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "orbitalName",
+            "type": "string"
+          },
+          {
+            "default": "pending",
+            "name": "method",
+            "type": "string",
+            "values": [
+              "pending",
+              "deterministic",
+              "llm",
+              "free-lolo",
+              "archive"
+            ]
+          },
+          {
+            "default": "pending",
+            "name": "status",
+            "type": "string",
+            "values": [
+              "pending",
+              "building",
+              "validating",
+              "repairing",
+              "complete",
+              "failed"
+            ]
+          },
+          {
+            "default": 0.0,
+            "name": "attempts",
+            "type": "number"
+          },
+          {
+            "default": 3.0,
+            "name": "maxAttempts",
+            "type": "number"
+          },
+          {
+            "default": "",
+            "name": "fixPrompt",
+            "type": "string"
+          },
+          {
+            "default": {},
+            "name": "spec",
+            "properties": {
+              "deltaPrompt": {
+                "name": "deltaPrompt",
+                "required": true,
+                "type": "string"
+              },
+              "method": {
+                "name": "method",
+                "required": true,
+                "type": "string"
+              },
+              "orbitalName": {
+                "name": "orbitalName",
+                "required": true,
+                "type": "string"
+              },
+              "organism": {
+                "name": "organism",
+                "required": true,
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        ],
+        "name": "OrbitalProcess",
+        "persistence": "runtime"
+      },
+      "name": "OrbitalProcessOrbital",
+      "pages": [
+        {
+          "name": "OrbitalProcessPage",
+          "path": "/rabit/process",
+          "traits": [
+            {
+              "ref": "ProcessPipeline"
+            },
+            {
+              "ref": "ProcessDispatcher"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "event": "BUILD_STEP",
+              "payloadSchema": [
+                {
+                  "name": "orbitalName",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "PROCESS_RETRY",
+              "payloadSchema": [
+                {
+                  "name": "orbitalName",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "attempt",
+                  "required": true,
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "PROCESS_DONE",
+              "payloadSchema": [
+                {
+                  "name": "orbitalName",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "REBUILD",
+              "payloadSchema": [
+                {
+                  "name": "orbitalName",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "ORBITAL_COMPLETE",
+              "payloadSchema": [
+                {
+                  "name": "orbitalName",
+                  "required": true,
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "linkedEntity": "OrbitalProcess",
+          "name": "ProcessPipeline",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "BUILD",
+                "name": "Build",
+                "payloadSchema": [
+                  {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "method",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "spec",
+                    "required": true,
+                    "type": "OrbitalSpec"
+                  }
+                ]
+              },
+              {
+                "key": "BUILD_STEP",
+                "name": "Build Step",
+                "payloadSchema": [
+                  {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "PROCESS_RETRY",
+                "name": "Process Retry",
+                "payloadSchema": [
+                  {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "attempt",
+                    "required": true,
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "PROCESS_DONE",
+                "name": "Process Done",
+                "payloadSchema": [
+                  {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "REBUILD",
+                "name": "Rebuild",
+                "payloadSchema": [
+                  {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ORBITAL_COMPLETE",
+                "name": "Orbital Complete",
+                "payloadSchema": [
+                  {
+                    "name": "orbitalName",
+                    "required": true,
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "pending"
+              },
+              {
+                "name": "building"
+              },
+              {
+                "name": "validating"
+              },
+              {
+                "name": "repairing"
+              },
+              {
+                "name": "done"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.orbitalName",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.method",
+                    "pending"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "pending"
+                  ],
+                  [
+                    "set",
+                    "@entity.attempts",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.maxAttempts",
+                    3.0
+                  ],
+                  [
+                    "set",
+                    "@entity.fixPrompt",
+                    ""
+                  ]
+                ],
+                "event": "INIT",
+                "from": "pending",
+                "to": "pending"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.orbitalName",
+                    "@payload.orbitalName"
+                  ],
+                  [
+                    "set",
+                    "@entity.method",
+                    "@payload.method"
+                  ],
+                  [
+                    "set",
+                    "@entity.spec",
+                    "@payload.spec"
+                  ],
+                  [
+                    "set",
+                    "@entity.attempts",
+                    0.0
+                  ]
+                ],
+                "event": "BUILD",
+                "from": "pending",
+                "to": "building"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "building"
+                  ],
+                  [
+                    "emit",
+                    "BUILD_STEP",
+                    {
+                      "orbitalName": "@entity.orbitalName"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "building",
+                "to": "building"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.attempts",
+                    [
+                      "+",
+                      "@entity.attempts",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "behavior/instantiate",
+                    "@entity.orbitalName",
+                    "@entity.method"
+                  ]
+                ],
+                "event": "BUILD_STEP",
+                "from": "building",
+                "to": "validating"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "validating"
+                  ],
+                  [
+                    "validate/validate",
+                    "@entity.orbitalName"
+                  ],
+                  [
+                    "when",
+                    [
+                      "<",
+                      "@entity.attempts",
+                      "@entity.maxAttempts"
+                    ],
+                    [
+                      "emit",
+                      "PROCESS_RETRY",
+                      {
+                        "attempt": "@entity.attempts",
+                        "orbitalName": "@entity.orbitalName"
+                      }
+                    ]
+                  ],
+                  [
+                    "when",
+                    [
+                      ">=",
+                      "@entity.attempts",
+                      "@entity.maxAttempts"
+                    ],
+                    [
+                      "emit",
+                      "PROCESS_DONE",
+                      {
+                        "orbitalName": "@entity.orbitalName"
+                      }
+                    ]
+                  ]
+                ],
+                "event": "INIT",
+                "from": "validating",
+                "to": "validating"
+              },
+              {
+                "event": "PROCESS_RETRY",
+                "from": "validating",
+                "to": "repairing"
+              },
+              {
+                "event": "PROCESS_DONE",
+                "from": "validating",
+                "to": "done"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "repairing"
+                  ],
+                  [
+                    "set",
+                    "@entity.fixPrompt",
+                    [
+                      "llm/generate",
+                      "@entity.orbitalName"
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "REBUILD",
+                    {
+                      "orbitalName": "@entity.orbitalName"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "repairing",
+                "to": "repairing"
+              },
+              {
+                "event": "REBUILD",
+                "from": "repairing",
+                "to": "building"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.status",
+                    "complete"
+                  ],
+                  [
+                    "emit",
+                    "ORBITAL_COMPLETE",
+                    {
+                      "orbitalName": "@entity.orbitalName"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "done",
+                "to": "done"
+              }
+            ]
+          }
+        },
+        {
+          "category": "lifecycle",
+          "linkedEntity": "OrbitalProcess",
+          "listens": [
+            {
+              "event": "DISPATCHED",
+              "source": {
+                "kind": "orbital",
+                "orbital": "CoordinatorOrbital",
+                "trait": "CoordinatorPipeline"
+              },
+              "triggers": "DISPATCHED"
+            }
+          ],
+          "name": "ProcessDispatcher",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "DISPATCHED",
+                "name": "Dispatched"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "dispatched"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.orbitalName",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.method",
+                    "pending"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.orbitalName",
+                    "@entity.orbitalName"
+                  ]
+                ],
+                "event": "DISPATCHED",
+                "from": "idle",
+                "to": "dispatched"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.orbitalName",
+                    "@entity.orbitalName"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "dispatched",
+                "to": "dispatched"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}
