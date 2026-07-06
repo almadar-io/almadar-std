@@ -896,7 +896,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.transitions',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               't',
@@ -950,7 +950,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.testCases',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'tc',
@@ -989,7 +989,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                               {
                                 'entity': '@entity.variables',
                                 'fields': [],
-                                'gap': 'xs',
+                                'gap': 'sm',
                                 'renderItem': [
                                   'fn',
                                   'v',
@@ -1228,7 +1228,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.transitions',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               't',
@@ -1282,7 +1282,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.testCases',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'tc',
@@ -1321,7 +1321,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                               {
                                 'entity': '@entity.variables',
                                 'fields': [],
-                                'gap': 'xs',
+                                'gap': 'sm',
                                 'renderItem': [
                                   'fn',
                                   'v',
@@ -1502,7 +1502,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.transitions',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               't',
@@ -1556,7 +1556,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.testCases',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'tc',
@@ -1595,7 +1595,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                               {
                                 'entity': '@entity.variables',
                                 'fields': [],
-                                'gap': 'xs',
+                                'gap': 'sm',
                                 'renderItem': [
                                   'fn',
                                   'v',
@@ -1764,7 +1764,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.transitions',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               't',
@@ -1818,7 +1818,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.testCases',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'tc',
@@ -1857,7 +1857,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                               {
                                 'entity': '@entity.variables',
                                 'fields': [],
-                                'gap': 'xs',
+                                'gap': 'sm',
                                 'renderItem': [
                                   'fn',
                                   'v',
@@ -2026,7 +2026,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.transitions',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               't',
@@ -2080,7 +2080,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.testCases',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'tc',
@@ -2119,7 +2119,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                               {
                                 'entity': '@entity.variables',
                                 'fields': [],
-                                'gap': 'xs',
+                                'gap': 'sm',
                                 'renderItem': [
                                   'fn',
                                   'v',
@@ -2280,7 +2280,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.transitions',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               't',
@@ -2334,7 +2334,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.testCases',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'tc',
@@ -2373,7 +2373,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                               {
                                 'entity': '@entity.variables',
                                 'fields': [],
-                                'gap': 'xs',
+                                'gap': 'sm',
                                 'renderItem': [
                                   'fn',
                                   'v',
@@ -2562,7 +2562,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.transitions',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               't',
@@ -2616,7 +2616,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.testCases',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'tc',
@@ -2655,7 +2655,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                               {
                                 'entity': '@entity.variables',
                                 'fields': [],
-                                'gap': 'xs',
+                                'gap': 'sm',
                                 'renderItem': [
                                   'fn',
                                   'v',
@@ -2877,7 +2877,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.transitions',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               't',
@@ -2931,7 +2931,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.testCases',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'tc',
@@ -2970,7 +2970,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                               {
                                 'entity': '@entity.variables',
                                 'fields': [],
-                                'gap': 'xs',
+                                'gap': 'sm',
                                 'renderItem': [
                                   'fn',
                                   'v',
@@ -3255,7 +3255,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.transitions',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               't',
@@ -3309,7 +3309,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.testCases',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'tc',
@@ -3348,7 +3348,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                               {
                                 'entity': '@entity.variables',
                                 'fields': [],
-                                'gap': 'xs',
+                                'gap': 'sm',
                                 'renderItem': [
                                   'fn',
                                   'v',
@@ -3655,7 +3655,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.transitions',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               't',
@@ -3709,7 +3709,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                           {
                             'entity': '@entity.testCases',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'tc',
@@ -3748,7 +3748,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                               {
                                 'entity': '@entity.variables',
                                 'fields': [],
-                                'gap': 'xs',
+                                'gap': 'sm',
                                 'renderItem': [
                                   'fn',
                                   'v',

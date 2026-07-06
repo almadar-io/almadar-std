@@ -1,0 +1,267 @@
+app std-agent-rabit "1.0.0"
+"Rabit organism — coordinator decomposes a prompt into orbital specs, dispatches subagent builds, monitors completion, assembles and validates the composed schema."
+
+type OrbitalSpec = { orbitalName: string!, organism: string!, method: string!, deltaPrompt: string! }
+type ValidationError = { orbitalName: string, message: string!, code: string!, severity: string! }
+
+orbital CoordinatorOrbital {
+
+  entity Coordinator [runtime] {
+    id : string!
+    prompt : string = ""
+    phase : "idle" | "planning" | "dispatching" | "monitoring" | "assembling" | "validating" | "done" | "failed" = idle
+    plan : string = ""
+    totalOrbitals : number = 0
+    completedCount : number = 0
+    failedCount : number = 0
+    composedSchema : string = ""
+    validationErrors : [ValidationError] = []
+  }
+
+  trait CoordinatorPipeline -> Coordinator [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.prompt "")
+        (set @entity.phase idle)
+        (set @entity.plan "")
+        (set @entity.totalOrbitals 0)
+        (set @entity.completedCount 0)
+        (set @entity.failedCount 0)
+        (set @entity.composedSchema "")
+        (set @entity.validationErrors [])
+      START -> monitoring
+        (set @entity.prompt ?prompt)
+        (set @entity.totalOrbitals ?totalOrbitals)
+        (set @entity.phase planning)
+        (set @entity.plan (llm/generate @entity.prompt))
+        (session/write-spec "coordinator-plan" @entity.plan)
+        (set @entity.phase dispatching)
+        (emit DISPATCHED { plan: @entity.plan, totalOrbitals: @entity.totalOrbitals })
+    }
+
+    state monitoring {
+      INIT -> monitoring
+        (set @entity.phase monitoring)
+      ALL_DONE -> done
+        (set @entity.phase assembling)
+        (set @entity.composedSchema (compose/compose-all))
+        (set @entity.phase validating)
+        (validate/validate "composed")
+        (set @entity.phase done)
+        (emit RABIT_DONE { schema: @entity.composedSchema })
+    }
+
+    state done {
+      INIT -> done
+        (set @entity.phase done)
+      RESET -> idle
+        (set @entity.prompt "")
+        (set @entity.phase idle)
+        (set @entity.plan "")
+        (set @entity.totalOrbitals 0)
+        (set @entity.completedCount 0)
+        (set @entity.failedCount 0)
+        (set @entity.composedSchema "")
+        (set @entity.validationErrors [])
+    }
+
+    emits {
+      DISPATCHED {
+        plan : string!
+        totalOrbitals : number!
+      }
+      RABIT_DONE {
+        schema : string!
+      }
+    }
+
+    listens {
+      START { prompt: string!, totalOrbitals: number! }
+      ALL_DONE
+      RESET
+    }
+  }
+
+  trait CoordinatorMonitor -> Coordinator [lifecycle, instance] {
+    initial: waiting
+
+    state waiting {
+      INIT -> waiting
+        (set @entity.totalOrbitals 0)
+        (set @entity.completedCount 0)
+        (set @entity.failedCount 0)
+      ORBITAL_COMPLETE -> counting
+        (set @entity.completedCount (+ @entity.completedCount 1))
+        (when (== (+ @entity.completedCount @entity.failedCount) @entity.totalOrbitals)
+          (emit ALL_DONE { }))
+      ORBITAL_FAILED -> counting
+        (set @entity.failedCount (+ @entity.failedCount 1))
+        (when (== (+ @entity.completedCount @entity.failedCount) @entity.totalOrbitals)
+          (emit ALL_DONE { }))
+    }
+
+    state counting {
+      INIT -> counting
+        (set @entity.completedCount @entity.completedCount)
+      ORBITAL_COMPLETE -> counting
+        (set @entity.completedCount (+ @entity.completedCount 1))
+        (when (== (+ @entity.completedCount @entity.failedCount) @entity.totalOrbitals)
+          (emit ALL_DONE { }))
+      ORBITAL_FAILED -> counting
+        (set @entity.failedCount (+ @entity.failedCount 1))
+        (when (== (+ @entity.completedCount @entity.failedCount) @entity.totalOrbitals)
+          (emit ALL_DONE { }))
+    }
+
+    emits {
+      ALL_DONE { }
+    }
+
+    listens {
+      ORBITAL_COMPLETE
+      ORBITAL_FAILED
+    }
+  }
+
+  trait CoordinatorListener -> Coordinator [lifecycle, instance] {
+    initial: waiting
+
+    state waiting {
+      INIT -> waiting
+        (set @entity.phase idle)
+      RABIT_DONE -> done
+        (set @entity.phase done)
+    }
+
+    state done {
+      INIT -> done
+        (set @entity.phase done)
+    }
+
+    listens {
+      CoordinatorPipeline.RABIT_DONE -> RABIT_DONE
+    }
+  }
+
+  page "/rabit" as RabitPage -> CoordinatorPipeline, CoordinatorMonitor, CoordinatorListener
+}
+
+orbital OrbitalProcessOrbital {
+
+  entity OrbitalProcess [runtime] {
+    id : string!
+    orbitalName : string = ""
+    method : "pending" | "deterministic" | "llm" | "free-lolo" | "archive" = pending
+    status : "pending" | "building" | "validating" | "repairing" | "complete" | "failed" = pending
+    attempts : number = 0
+    maxAttempts : number = 3
+    fixPrompt : string = ""
+    spec : OrbitalSpec = {}
+  }
+
+  trait ProcessPipeline -> OrbitalProcess [lifecycle, instance] {
+    initial: pending
+
+    state pending {
+      INIT -> pending
+        (set @entity.orbitalName "")
+        (set @entity.method pending)
+        (set @entity.status pending)
+        (set @entity.attempts 0)
+        (set @entity.maxAttempts 3)
+        (set @entity.fixPrompt "")
+      BUILD -> building
+        (set @entity.orbitalName ?orbitalName)
+        (set @entity.method ?method)
+        (set @entity.spec ?spec)
+        (set @entity.attempts 0)
+    }
+
+    state building {
+      INIT -> building
+        (set @entity.status building)
+        (emit BUILD_STEP { orbitalName: @entity.orbitalName })
+      BUILD_STEP -> validating
+        (set @entity.attempts (+ @entity.attempts 1))
+        (behavior/instantiate @entity.orbitalName @entity.method)
+    }
+
+    state validating {
+      INIT -> validating
+        (set @entity.status validating)
+        (validate/validate @entity.orbitalName)
+        (when (< @entity.attempts @entity.maxAttempts)
+          (emit PROCESS_RETRY { orbitalName: @entity.orbitalName, attempt: @entity.attempts }))
+        (when (>= @entity.attempts @entity.maxAttempts)
+          (emit PROCESS_DONE { orbitalName: @entity.orbitalName }))
+      PROCESS_RETRY -> repairing
+      PROCESS_DONE -> done
+    }
+
+    state repairing {
+      INIT -> repairing
+        (set @entity.status repairing)
+        (set @entity.fixPrompt (llm/generate @entity.orbitalName))
+        (emit REBUILD { orbitalName: @entity.orbitalName })
+      REBUILD -> building
+    }
+
+    state done {
+      INIT -> done
+        (set @entity.status complete)
+        (emit ORBITAL_COMPLETE { orbitalName: @entity.orbitalName })
+    }
+
+    emits {
+      BUILD_STEP {
+        orbitalName : string!
+      }
+      PROCESS_RETRY {
+        orbitalName : string!
+        attempt : number!
+      }
+      PROCESS_DONE {
+        orbitalName : string!
+      }
+      REBUILD {
+        orbitalName : string!
+      }
+      ORBITAL_COMPLETE {
+        orbitalName : string!
+      }
+    }
+
+    listens {
+      BUILD { orbitalName: string!, method: string!, spec: OrbitalSpec! }
+      BUILD_STEP
+      PROCESS_RETRY
+      PROCESS_DONE
+      REBUILD
+    }
+  }
+
+  trait ProcessDispatcher -> OrbitalProcess [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.orbitalName "")
+        (set @entity.method pending)
+      DISPATCHED -> dispatched
+        (set @entity.orbitalName @entity.orbitalName)
+    }
+
+    state dispatched {
+      INIT -> dispatched
+        (set @entity.orbitalName @entity.orbitalName)
+    }
+
+    listens {
+      CoordinatorOrbital.CoordinatorPipeline.DISPATCHED -> DISPATCHED
+    }
+  }
+
+  page "/rabit/process" as OrbitalProcessPage -> ProcessPipeline, ProcessDispatcher
+}

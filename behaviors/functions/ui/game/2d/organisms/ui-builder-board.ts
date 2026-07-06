@@ -1037,7 +1037,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                                   {
                                     'entity': '@s.options',
                                     'fields': [],
-                                    'gap': 'xs',
+                                    'gap': 'sm',
                                     'renderItem': [
                                       'fn',
                                       'opt',
@@ -1244,7 +1244,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                                   {
                                     'entity': '@s.options',
                                     'fields': [],
-                                    'gap': 'xs',
+                                    'gap': 'sm',
                                     'renderItem': [
                                       'fn',
                                       'opt',
@@ -1401,7 +1401,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                                   {
                                     'entity': '@s.options',
                                     'fields': [],
-                                    'gap': 'xs',
+                                    'gap': 'sm',
                                     'renderItem': [
                                       'fn',
                                       'opt',
@@ -1544,7 +1544,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                                   {
                                     'entity': '@s.options',
                                     'fields': [],
-                                    'gap': 'xs',
+                                    'gap': 'sm',
                                     'renderItem': [
                                       'fn',
                                       'opt',
@@ -1710,7 +1710,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                                   {
                                     'entity': '@s.options',
                                     'fields': [],
-                                    'gap': 'xs',
+                                    'gap': 'sm',
                                     'renderItem': [
                                       'fn',
                                       'opt',
@@ -1925,7 +1925,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                                   {
                                     'entity': '@s.options',
                                     'fields': [],
-                                    'gap': 'xs',
+                                    'gap': 'sm',
                                     'renderItem': [
                                       'fn',
                                       'opt',

@@ -781,7 +781,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                           {
                             'entity': '@entity.payoffMatrix',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'p',
@@ -1014,7 +1014,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                           {
                             'entity': '@entity.payoffMatrix',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'p',
@@ -1267,7 +1267,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                           {
                             'entity': '@entity.payoffMatrix',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'p',
@@ -1445,7 +1445,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                           {
                             'entity': '@entity.payoffMatrix',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'p',
@@ -1623,7 +1623,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                           {
                             'entity': '@entity.payoffMatrix',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'p',
@@ -1836,7 +1836,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                           {
                             'entity': '@entity.payoffMatrix',
                             'fields': [],
-                            'gap': 'xs',
+                            'gap': 'sm',
                             'renderItem': [
                               'fn',
                               'p',
