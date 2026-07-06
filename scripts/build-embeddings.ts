@@ -27,10 +27,12 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { EmbeddingClient } from '@almadar/llm';
+import type { FactorySignatureCatalog, FactoryTraitSignature } from '@almadar/core';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STD_ROOT = resolve(__dirname, '..');
 const REGISTRY_PATH = join(STD_ROOT, 'behaviors', 'behaviors-registry.json');
+const SIGNATURES_PATH = join(STD_ROOT, 'behaviors', 'registry', 'factory-signatures.json');
 const OUTPUT_PATH = join(STD_ROOT, 'behaviors', 'behaviors-embeddings.json');
 const PKG_PATH = join(STD_ROOT, 'package.json');
 
@@ -58,21 +60,66 @@ interface PackageJson {
 }
 
 /**
+ * Pool every trait signature by its organism name. One organism can span
+ * multiple orbitals (e.g. `learning-algorithms` spans 20) — traits from
+ * every orbital are pooled so `buildEntryText` sees the organism's full
+ * capability/synonym surface regardless of which orbital carries it.
+ */
+export function indexTraitsByOrganism(
+  catalog: FactorySignatureCatalog,
+): Map<string, FactoryTraitSignature[]> {
+  const traitsByOrganism = new Map<string, FactoryTraitSignature[]>();
+  for (const signature of catalog.signatures) {
+    const existing = traitsByOrganism.get(signature.organism);
+    if (existing) {
+      existing.push(...signature.traits);
+    } else {
+      traitsByOrganism.set(signature.organism, [...signature.traits]);
+    }
+  }
+  return traitsByOrganism;
+}
+
+/**
  * Build the searchable text snippet per entry. Includes:
  *   - canonical name (the LLM emits this as `organism` or in `from:`)
  *   - description (the domain language signal)
  *   - default entity name (signals what nouns the behavior is about)
  *   - connectable events (signals what the behavior emits/listens)
+ *   - trait capabilities + entity-binding/knob synonyms lifted from
+ *     `factory-signatures.json` (source-tagged `.lolo` metadata) — widens
+ *     the thin name/description/entity/events text that compressed cosine
+ *     margins on tightly-clustered candidates (G7)
  *
  * The snippet is what we embed; the query side (Stage A) embeds the
  * user's request and ranks against these vectors via cosine similarity.
  */
-function buildEntryText(entry: RegistryEntry): string {
+export function buildEntryText(
+  entry: RegistryEntry,
+  traits: ReadonlyArray<FactoryTraitSignature> | undefined,
+): string {
   const parts: string[] = [entry.name];
   if (entry.description) parts.push(entry.description);
   if (entry.defaultEntity?.name) parts.push(`Entity: ${entry.defaultEntity.name}`);
   if (entry.connectableEvents && entry.connectableEvents.length > 0) {
     parts.push(`Events: ${entry.connectableEvents.join(' ')}`);
+  }
+  if (traits && traits.length > 0) {
+    const capabilities = new Set<string>();
+    const synonyms = new Set<string>();
+    for (const trait of traits) {
+      for (const capability of trait.capabilities) capabilities.add(capability);
+      if (trait.entityBindingSynonyms) synonyms.add(trait.entityBindingSynonyms);
+      for (const knob of trait.overridableConfigKeys) {
+        if (knob.synonyms) synonyms.add(knob.synonyms);
+      }
+    }
+    if (capabilities.size > 0) {
+      parts.push(`Capabilities: ${[...capabilities].sort().join(' ')}`);
+    }
+    if (synonyms.size > 0) {
+      parts.push(`Synonyms: ${[...synonyms].sort().join(' ')}`);
+    }
   }
   return parts.join('\n');
 }
@@ -88,6 +135,8 @@ async function main(): Promise<void> {
   }
 
   const registry: RegistryFile = JSON.parse(readFileSync(REGISTRY_PATH, 'utf-8'));
+  const signatureCatalog: FactorySignatureCatalog = JSON.parse(readFileSync(SIGNATURES_PATH, 'utf-8'));
+  const traitsByOrganism = indexTraitsByOrganism(signatureCatalog);
   const pkg: PackageJson = JSON.parse(readFileSync(PKG_PATH, 'utf-8'));
 
   // Index every entry from the registry. The registry already excludes
@@ -101,7 +150,7 @@ async function main(): Promise<void> {
   const texts: string[] = [];
   for (const [name, entry] of entries) {
     names.push(name);
-    texts.push(buildEntryText(entry));
+    texts.push(buildEntryText(entry, traitsByOrganism.get(name)));
   }
 
   const client = new EmbeddingClient({ provider: EMBEDDING_PROVIDER, model: EMBEDDING_MODEL });
@@ -138,7 +187,11 @@ async function main(): Promise<void> {
   );
 }
 
-main().catch((err) => {
-  console.error('[build-embeddings] FAILED:', err);
-  process.exit(1);
-});
+// Guard the auto-invoke so the module can be imported (e.g. by a dry
+// text-preview harness) without triggering the network call.
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error('[build-embeddings] FAILED:', err);
+    process.exit(1);
+  });
+}
