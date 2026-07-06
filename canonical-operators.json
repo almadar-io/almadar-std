@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-07-04T03:07:50.440Z",
+  "generated": "2026-07-06T00:39:57.743Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -123,6 +123,48 @@
       "target": [
         "ts",
         "rust"
+      ]
+    },
+    "std-llm": {
+      "description": "LLM interaction substrate (runtime)",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-workspace": {
+      "description": "Workspace I/O substrate (runtime)",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-session": {
+      "description": "Session state substrate (runtime)",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-memory": {
+      "description": "Agent memory substrate (runtime)",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-trace": {
+      "description": "Execution tracing substrate (runtime)",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-integration": {
+      "description": "External integration calls (runtime)",
+      "target": [
+        "ts"
+      ]
+    },
+    "std-behavior": {
+      "description": "Behavior substrate effects (runtime)",
+      "target": [
+        "ts"
       ]
     },
     "std-vec": {
@@ -948,6 +990,15 @@
       "module": "async",
       "hasSideEffects": true
     },
+    "behavior/call": {
+      "category": "std-behavior",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "ServiceCallResult",
+      "description": "Call a behavior service action. Returns the ServiceCallResult union — resolves to the specific member when the (behavior, action) pair is a literal.",
+      "module": "behavior",
+      "hasSideEffects": true
+    },
     "behavior/compose": {
       "category": "std-composition",
       "minArity": 1,
@@ -963,6 +1014,15 @@
       "returnType": "string",
       "description": "Auto-detect layout from orbital count and wiring topology. Returns single, tabs, sidebar, dashboard, or wizard-flow.",
       "module": "composition"
+    },
+    "behavior/instantiate": {
+      "category": "std-behavior",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "BuilderResult",
+      "description": "Instantiate a behavior from the registry at runtime (meta-programming). Equivalent to compile-time `uses` but dynamic — the behavior name is a runtime value. Applies the same override surface (linkedEntity, events, config, fields).",
+      "module": "behavior",
+      "hasSideEffects": true
     },
     "behavior/pipe": {
       "category": "std-composition",
@@ -1008,6 +1068,24 @@
       "returnType": "void",
       "description": "Save a model checkpoint (ML effect)",
       "module": "train",
+      "hasSideEffects": true
+    },
+    "compose/compose-all": {
+      "category": "std-behavior",
+      "minArity": 0,
+      "maxArity": 0,
+      "returnType": "ComposeAllResult",
+      "description": "Compose all orbitals in the workspace into a single schema. Backed by composeBehaviors.",
+      "module": "behavior",
+      "hasSideEffects": true
+    },
+    "compose/compose-children": {
+      "category": "std-behavior",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "ComposeChildrenResult",
+      "description": "Compose child orbitals under a parent for recursive builds.",
+      "module": "behavior",
       "hasSideEffects": true
     },
     "contract/clamp-output": {
@@ -1566,6 +1644,33 @@
       "module": "core",
       "returnSemantics": "branch-union"
     },
+    "integration/github-create-issue": {
+      "category": "std-integration",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": "object",
+      "description": "Create a GitHub issue. Typed wrapper for the GitHub API.",
+      "module": "integration",
+      "hasSideEffects": true
+    },
+    "integration/github-get-repo": {
+      "category": "std-integration",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "object",
+      "description": "Get a GitHub repository. Typed wrapper for the GitHub API.",
+      "module": "integration",
+      "hasSideEffects": true
+    },
+    "integration/http": {
+      "category": "std-integration",
+      "minArity": 3,
+      "maxArity": 4,
+      "returnType": "object",
+      "description": "HTTP request with caller-declared response schema. Validates the response against the schema before returning.",
+      "module": "integration",
+      "hasSideEffects": true
+    },
     "let": {
       "category": "control",
       "minArity": 2,
@@ -1582,6 +1687,59 @@
       "description": "Literal array constructor — evaluates each argument and returns them as an array. Lowering wraps a literal list bound for a literal-array slot in `list` so it is unambiguously data, never a call (disambiguates a list whose first element collides with an operator name, e.g. [path method …]).",
       "module": "core"
     },
+    "llm/call-tools": {
+      "category": "std-llm",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "LlmCallToolsResult",
+      "description": "Call the LLM with tool definitions. Returns the assistant response with optional tool calls and token usage.",
+      "module": "llm",
+      "hasSideEffects": true
+    },
+    "llm/compact": {
+      "category": "std-llm",
+      "minArity": 0,
+      "maxArity": 1,
+      "returnType": "object",
+      "description": "Compact the context window. Returns before/after token counts.",
+      "module": "llm",
+      "hasSideEffects": true
+    },
+    "llm/embed": {
+      "category": "std-llm",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "array",
+      "description": "Generate embeddings for an array of texts. Returns a 2D array of floats.",
+      "module": "llm",
+      "hasSideEffects": true
+    },
+    "llm/generate": {
+      "category": "std-llm",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "string",
+      "description": "Generate text from an LLM. Returns the generated string.",
+      "module": "llm",
+      "hasSideEffects": true
+    },
+    "llm/switch": {
+      "category": "std-llm",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Switch the active LLM provider and optionally the model.",
+      "module": "llm",
+      "hasSideEffects": true
+    },
+    "llm/token-count": {
+      "category": "std-llm",
+      "minArity": 0,
+      "maxArity": 0,
+      "returnType": "number",
+      "description": "Get the current token count in the context window.",
+      "module": "llm"
+    },
     "log": {
       "category": "effect",
       "minArity": 1,
@@ -1593,6 +1751,15 @@
       "effect": {
         "kind": "log"
       }
+    },
+    "lolo/emit-body": {
+      "category": "std-behavior",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": "LoloEmitResult",
+      "description": "Emit a .lolo orbital body from the LLM (free-lolo path). Returns the emitted lolo source.",
+      "module": "behavior",
+      "hasSideEffects": true
     },
     "math/abs": {
       "category": "std-math",
@@ -1817,6 +1984,31 @@
       "returnType": "number",
       "description": "Wrap a value into the half-open range [min, max)",
       "module": "math"
+    },
+    "memory/list": {
+      "category": "std-memory",
+      "minArity": 0,
+      "maxArity": 1,
+      "returnType": "array",
+      "description": "List all memories, optionally filtered by category.",
+      "module": "memory"
+    },
+    "memory/recall": {
+      "category": "std-memory",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "array",
+      "description": "Search memories by semantic query. Returns matching memory records.",
+      "module": "memory"
+    },
+    "memory/store": {
+      "category": "std-memory",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "string",
+      "description": "Store a new memory. Returns the new memory ID.",
+      "module": "memory",
+      "hasSideEffects": true
     },
     "navigate": {
       "category": "effect",
@@ -2457,6 +2649,82 @@
       "effect": {
         "kind": "send-server"
       }
+    },
+    "session/append-history": {
+      "category": "std-session",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Append an entry to the per-orbital conversation history.",
+      "module": "session",
+      "hasSideEffects": true
+    },
+    "session/read-analysis": {
+      "category": "std-session",
+      "minArity": 0,
+      "maxArity": 0,
+      "returnType": "object",
+      "description": "Read the pre-computed analysis result.",
+      "module": "session"
+    },
+    "session/read-errors": {
+      "category": "std-session",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "array",
+      "description": "Read validation errors for an orbital.",
+      "module": "session"
+    },
+    "session/read-history": {
+      "category": "std-session",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "array",
+      "description": "Read the per-orbital conversation history.",
+      "module": "session"
+    },
+    "session/read-memory": {
+      "category": "std-session",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "object",
+      "description": "Read the per-orbital memory from the session store.",
+      "module": "session"
+    },
+    "session/read-spec": {
+      "category": "std-session",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "object",
+      "description": "Read the per-orbital spec.json from the session store.",
+      "module": "session"
+    },
+    "session/write-errors": {
+      "category": "std-session",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Write validation errors for an orbital.",
+      "module": "session",
+      "hasSideEffects": true
+    },
+    "session/write-memory": {
+      "category": "std-session",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Write per-orbital memory to the session store.",
+      "module": "session",
+      "hasSideEffects": true
+    },
+    "session/write-spec": {
+      "category": "std-session",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Write the per-orbital spec.json to the session store.",
+      "module": "session",
+      "hasSideEffects": true
     },
     "set": {
       "category": "effect",
@@ -3198,6 +3466,24 @@
       "description": "Get year from timestamp",
       "module": "time"
     },
+    "trace/emit": {
+      "category": "std-trace",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Emit a structured trace event for observability (115 call sites in rabit today).",
+      "module": "trace",
+      "hasSideEffects": true
+    },
+    "trace/log": {
+      "category": "std-trace",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Log a message at the given level.",
+      "module": "trace",
+      "hasSideEffects": true
+    },
     "train": {
       "category": "ml-effect",
       "minArity": 1,
@@ -3549,6 +3835,15 @@
       "description": "Check if value is a valid UUID",
       "module": "validate"
     },
+    "validate/validate": {
+      "category": "std-behavior",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "ValidateResult",
+      "description": "Validate an orbital or the composed schema using orb validate.",
+      "module": "behavior",
+      "hasSideEffects": true
+    },
     "vec/add": {
       "category": "std-vec",
       "minArity": 2,
@@ -3668,6 +3963,99 @@
       "returnType": "void",
       "description": "Conditional effect without an else branch",
       "module": "core"
+    },
+    "workspace/archive-orbital": {
+      "category": "std-workspace",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "void",
+      "description": "Archive (remove from active set) an orbital from the workspace.",
+      "module": "workspace",
+      "hasSideEffects": true
+    },
+    "workspace/exists": {
+      "category": "std-workspace",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "boolean",
+      "description": "Check if a file exists in the workspace.",
+      "module": "workspace"
+    },
+    "workspace/list-orbitals": {
+      "category": "std-workspace",
+      "minArity": 0,
+      "maxArity": 0,
+      "returnType": "array",
+      "description": "List all orbital names in the workspace.",
+      "module": "workspace"
+    },
+    "workspace/read-file": {
+      "category": "std-workspace",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "string",
+      "description": "Read a file from the workspace.",
+      "module": "workspace"
+    },
+    "workspace/read-orbital": {
+      "category": "std-workspace",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "object",
+      "description": "Read an orbital definition from the workspace by name.",
+      "module": "workspace"
+    },
+    "workspace/read-plan": {
+      "category": "std-workspace",
+      "minArity": 0,
+      "maxArity": 0,
+      "returnType": "object",
+      "description": "Read the plan snapshot from the workspace.",
+      "module": "workspace"
+    },
+    "workspace/read-schema": {
+      "category": "std-workspace",
+      "minArity": 0,
+      "maxArity": 0,
+      "returnType": "object",
+      "description": "Read the composed schema.orb from the workspace.",
+      "module": "workspace"
+    },
+    "workspace/write-file": {
+      "category": "std-workspace",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Write a file to the workspace.",
+      "module": "workspace",
+      "hasSideEffects": true
+    },
+    "workspace/write-orbital": {
+      "category": "std-workspace",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Write an orbital definition to the workspace.",
+      "module": "workspace",
+      "hasSideEffects": true
+    },
+    "workspace/write-plan": {
+      "category": "std-workspace",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "void",
+      "description": "Write the plan snapshot to the workspace.",
+      "module": "workspace",
+      "hasSideEffects": true
+    },
+    "workspace/write-schema": {
+      "category": "std-workspace",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "void",
+      "description": "Write the composed schema.orb to the workspace.",
+      "module": "workspace",
+      "hasSideEffects": true
     }
   }
 }
