@@ -1,0 +1,80 @@
+app std-agent-planner "1.0.0"
+"Agent planner molecule — recall memories, then generate a plan from the prompt + recalled context."
+
+type MemoryRecord = { id: string!, content: string!, category: string!, strength: number }
+
+orbital AgentPlannerOrbital {
+
+  entity PlannerPlan [runtime] {
+    prompt : string = ""
+    memories : [MemoryRecord] = []
+    plan : string = ""
+    status : "idle" | "planning" | "planned" = idle
+  }
+
+  trait PlannerExecution -> PlannerPlan [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.prompt "")
+        (set @entity.memories [])
+        (set @entity.plan "")
+        (set @entity.status idle)
+      PLAN -> planned
+        (set @entity.prompt ?prompt)
+        (set @entity.memories (memory/recall @entity.prompt))
+        (set @entity.plan (llm/generate @entity.prompt))
+        (set @entity.status planned)
+        (emit PLANNED { plan: @entity.plan, memoryCount: @entity.memories })
+    }
+
+    state planned {
+      INIT -> planned
+        (set @entity.status planned)
+      RESET -> idle
+        (set @entity.plan "")
+        (set @entity.memories [])
+        (set @entity.prompt "")
+        (set @entity.status idle)
+    }
+
+    emits {
+      PLANNED {
+        plan : string!
+        memoryCount : number!
+      }
+    }
+
+    listens {
+      PLAN {
+        prompt : string!
+      }
+    }
+  }
+
+  trait PlannerListener -> PlannerPlan [lifecycle, instance] {
+    initial: waiting
+
+    state waiting {
+      INIT -> waiting
+        (set @entity.status idle)
+      PLANNED -> ready
+        (set @entity.status planned)
+    }
+
+    state ready {
+      INIT -> ready
+        (set @entity.status planned)
+      RESET -> waiting
+        (set @entity.status idle)
+    }
+
+    listens {
+      PlannerExecution.PLANNED -> PLANNED
+      RESET
+    }
+  }
+
+  page "/agent-planner" as AgentPlannerPage -> PlannerExecution, PlannerListener
+}

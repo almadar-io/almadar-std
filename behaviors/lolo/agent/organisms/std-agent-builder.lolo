@@ -1,0 +1,91 @@
+app std-agent-builder "1.0.0"
+"Agent builder organism — plan, build, validate, fix a single orbital end-to-end."
+
+type OrbitalSpec = { orbitalName: string!, organism: string!, method: string!, deltaPrompt: string! }
+
+orbital AgentBuilderOrbital {
+
+  entity BuilderProcess [runtime] {
+    request : string = ""
+    plan : string = ""
+    orbitalName : string = ""
+    spec : OrbitalSpec = {}
+    validationResult : string = ""
+    fixPrompt : string = ""
+    status : "idle" | "done" = idle
+  }
+
+  trait BuilderPipeline -> BuilderProcess [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.request "")
+        (set @entity.plan "")
+        (set @entity.orbitalName "")
+        (set @entity.validationResult "")
+        (set @entity.fixPrompt "")
+        (set @entity.status idle)
+      START -> done
+        (set @entity.request ?request)
+        (set @entity.orbitalName ?orbitalName)
+        (set @entity.plan (llm/generate @entity.request))
+        (behavior/instantiate @entity.orbitalName @entity.plan)
+        (validate/validate @entity.orbitalName)
+        (set @entity.status done)
+        (emit BUILD_COMPLETE { orbitalName: @entity.orbitalName, plan: @entity.plan })
+    }
+
+    state done {
+      INIT -> done
+        (set @entity.status done)
+      RESET -> idle
+        (set @entity.request "")
+        (set @entity.plan "")
+        (set @entity.orbitalName "")
+        (set @entity.validationResult "")
+        (set @entity.fixPrompt "")
+        (set @entity.status idle)
+    }
+
+    emits {
+      BUILD_COMPLETE {
+        orbitalName : string!
+        plan : string!
+      }
+    }
+
+    listens {
+      START {
+        request : string!
+        orbitalName : string!
+      }
+      RETRY
+    }
+  }
+
+  trait BuilderListener -> BuilderProcess [lifecycle, instance] {
+    initial: waiting
+
+    state waiting {
+      INIT -> waiting
+        (set @entity.status idle)
+      BUILD_COMPLETE -> resolved
+        (set @entity.status done)
+    }
+
+    state resolved {
+      INIT -> resolved
+        (set @entity.status done)
+      RESET -> waiting
+        (set @entity.status idle)
+    }
+
+    listens {
+      BuilderPipeline.BUILD_COMPLETE -> BUILD_COMPLETE
+      RESET
+    }
+  }
+
+  page "/agent-builder" as AgentBuilderPage -> BuilderPipeline, BuilderListener
+}

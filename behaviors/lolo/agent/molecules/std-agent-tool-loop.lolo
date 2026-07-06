@@ -1,0 +1,92 @@
+app std-agent-tool-loop "1.0.0"
+"Agent tool-loop molecule — call-tools, check response, emit result for iteration."
+
+type LlmMessage = { role: string!, content: string!, toolCalls: [object], toolCallId: string }
+type LlmToolDef = { name: string!, description: string!, schema: object }
+
+orbital AgentToolLoopOrbital {
+
+  entity ToolLoop [runtime] {
+    messages : [LlmMessage] = []
+    tools : [LlmToolDef] = []
+    response : string = ""
+    iterations : number = 0
+    status : "idle" | "calling" | "done" = idle
+  }
+
+  trait ToolLoopExecution -> ToolLoop [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.messages [])
+        (set @entity.tools [])
+        (set @entity.response "")
+        (set @entity.iterations 0)
+        (set @entity.status idle)
+      EXECUTE -> done
+        (set @entity.messages ?messages)
+        (set @entity.tools ?tools)
+        (set @entity.response (llm/call-tools @entity.messages @entity.tools))
+        (set @entity.iterations (+ @entity.iterations 1))
+        (set @entity.status done)
+        (emit LOOP_STEP { response: @entity.response, iteration: @entity.iterations })
+    }
+
+    state done {
+      INIT -> done
+        (set @entity.status done)
+      CONTINUE -> done
+        (set @entity.response (llm/call-tools @entity.messages @entity.tools))
+        (set @entity.iterations (+ @entity.iterations 1))
+        (set @entity.status done)
+        (emit LOOP_STEP { response: @entity.response, iteration: @entity.iterations })
+      RESET -> idle
+        (set @entity.messages [])
+        (set @entity.tools [])
+        (set @entity.response "")
+        (set @entity.iterations 0)
+        (set @entity.status idle)
+    }
+
+    emits {
+      LOOP_STEP {
+        response : string!
+        iteration : number!
+      }
+    }
+
+    listens {
+      EXECUTE {
+        messages : [LlmMessage]!
+        tools : [LlmToolDef]!
+      }
+      CONTINUE
+    }
+  }
+
+  trait ToolLoopListener -> ToolLoop [lifecycle, instance] {
+    initial: waiting
+
+    state waiting {
+      INIT -> waiting
+        (set @entity.status idle)
+      LOOP_STEP -> active
+        (set @entity.status done)
+    }
+
+    state active {
+      INIT -> active
+        (set @entity.status done)
+      RESET -> waiting
+        (set @entity.status idle)
+    }
+
+    listens {
+      ToolLoopExecution.LOOP_STEP -> LOOP_STEP
+      RESET
+    }
+  }
+
+  page "/agent-tool-loop" as AgentToolLoopPage -> ToolLoopExecution, ToolLoopListener
+}

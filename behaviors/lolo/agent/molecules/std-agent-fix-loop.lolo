@@ -1,0 +1,75 @@
+app std-agent-fix-loop "1.0.0"
+"Agent fix-loop molecule — validate an orbital, generate a repair prompt if errors, apply fix."
+
+type ValidationError = { orbitalName: string, message: string!, code: string!, severity: string }
+
+orbital AgentFixLoopOrbital {
+
+  entity FixLoop [runtime] {
+    orbitalName : string = ""
+    errors : [ValidationError] = []
+    fixPrompt : string = ""
+    status : "idle" | "validating" | "fixing" | "fixed" | "valid" = idle
+  }
+
+  trait FixLoopExecution -> FixLoop [lifecycle, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.orbitalName "")
+        (set @entity.errors [])
+        (set @entity.fixPrompt "")
+        (set @entity.status idle)
+      VALIDATE_ORBITAL -> fixed
+        (set @entity.orbitalName ?orbitalName)
+        (validate/validate @entity.orbitalName)
+        (set @entity.fixPrompt (llm/generate @entity.orbitalName))
+        (set @entity.status fixed)
+        (emit FIX_APPLIED { orbitalName: @entity.orbitalName, fixPrompt: @entity.fixPrompt })
+    }
+
+    state fixed {
+      INIT -> fixed
+        (set @entity.status fixed)
+      RESET -> idle
+
+    emits {
+      FIX_APPLIED {
+        orbitalName : string!
+        fixPrompt : string!
+      }
+    }
+
+    listens {
+      VALIDATE_ORBITAL {
+        orbitalName : string!
+      }
+    }
+  }
+
+  trait FixLoopListener -> FixLoop [lifecycle, instance] {
+    initial: waiting
+
+    state waiting {
+      INIT -> waiting
+        (set @entity.status idle)
+      FIX_APPLIED -> resolved
+        (set @entity.status fixed)
+    }
+
+    state resolved {
+      INIT -> resolved
+        (set @entity.status fixed)
+      RESET -> waiting
+        (set @entity.status idle)
+    }
+
+    listens {
+      FixLoopExecution.FIX_APPLIED -> FIX_APPLIED
+      RESET
+    }
+  }
+
+  page "/agent-fix-loop" as AgentFixLoopPage -> FixLoopExecution, FixLoopListener
+}
