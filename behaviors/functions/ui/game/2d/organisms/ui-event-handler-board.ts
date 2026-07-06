@@ -882,9 +882,466 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                           'fn',
                           'obj',
                           {
-                            'object': '@obj',
-                            'rulesChangeEvent': 'EDIT_RULE',
-                            'type': 'object-rule-panel',
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'content': '@obj.icon',
+                                    'type': 'typography',
+                                    'variant': 'h5',
+                                  },
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@obj.name',
+                                        'type': 'typography',
+                                        'variant': 'body1',
+                                      },
+                                      {
+                                        'content': [
+                                          'str/concat',
+                                          'State: ',
+                                          '@obj.currentState',
+                                        ],
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'none',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'align': 'center',
+                                    'children': [
+                                      {
+                                        'content': '@obj.name',
+                                        'type': 'typography',
+                                        'variant': 'body2',
+                                      },
+                                      {
+                                        'label': '@obj.currentState',
+                                        'type': 'badge',
+                                        'variant': 'primary',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'content': 'Available actions:',
+                                    'type': 'typography',
+                                    'variant': 'caption',
+                                  },
+                                  {
+                                    'entity': [
+                                      'array/map',
+                                      '@obj.rules',
+                                      [
+                                        'fn',
+                                        'r',
+                                        [
+                                          'object/merge',
+                                          '@r',
+                                          {
+                                            'toState': [
+                                              'if',
+                                              [
+                                                '>',
+                                                [
+                                                  'array/len',
+                                                  [
+                                                    'array/filter',
+                                                    '@obj.states',
+                                                    [
+                                                      'fn',
+                                                      's',
+                                                      [
+                                                        '!=',
+                                                        '@s',
+                                                        '@obj.currentState',
+                                                      ],
+                                                    ],
+                                                  ],
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'array/first',
+                                                [
+                                                  'array/filter',
+                                                  '@obj.states',
+                                                  [
+                                                    'fn',
+                                                    's',
+                                                    [
+                                                      '!=',
+                                                      '@s',
+                                                      '@obj.currentState',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                              '@obj.currentState',
+                                            ],
+                                          },
+                                        ],
+                                      ],
+                                    ],
+                                    'fields': [],
+                                    'gap': 'sm',
+                                    'renderItem': [
+                                      'fn',
+                                      'tr',
+                                      {
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'content': '@tr.whenEvent',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'content': '→',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'content': '@tr.toState',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                        ],
+                                        'direction': 'horizontal',
+                                        'gap': 'xs',
+                                        'type': 'stack',
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'content': [
+                                  'str/concat',
+                                  'Rules (',
+                                  [
+                                    'array/len',
+                                    '@obj.rules',
+                                  ],
+                                  '/',
+                                  '@obj.maxRules',
+                                  '):',
+                                ],
+                                'type': 'typography',
+                                'variant': 'body2',
+                              },
+                              {
+                                'entity': [
+                                  'array/map',
+                                  [
+                                    'array/range',
+                                    0,
+                                    [
+                                      'array/len',
+                                      '@obj.rules',
+                                    ],
+                                  ],
+                                  [
+                                    'fn',
+                                    'i',
+                                    [
+                                      'object/merge',
+                                      [
+                                        'array/nth',
+                                        '@obj.rules',
+                                        '@i',
+                                      ],
+                                      {
+                                        'availableActions': '@obj.availableActions',
+                                        'availableEvents': '@obj.availableEvents',
+                                        'objectId': '@obj.id',
+                                        'ruleIdx': '@i',
+                                        'totalRules': '@obj.rules',
+                                      },
+                                    ],
+                                  ],
+                                ],
+                                'fields': [],
+                                'gap': 'sm',
+                                'renderItem': [
+                                  'fn',
+                                  'rule',
+                                  {
+                                    'children': [
+                                      {
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'content': 'WHEN',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'label': '@rule.whenEvent',
+                                            'type': 'badge',
+                                            'variant': 'secondary',
+                                          },
+                                          {
+                                            'content': '→ THEN',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'label': '@rule.thenAction',
+                                            'type': 'badge',
+                                            'variant': 'secondary',
+                                          },
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/filter',
+                                                  [
+                                                    'array/range',
+                                                    0,
+                                                    [
+                                                      'array/len',
+                                                      '@rule.totalRules',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'fn',
+                                                    'j',
+                                                    [
+                                                      '!=',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'k',
+                                                  [
+                                                    'array/nth',
+                                                    '@rule.totalRules',
+                                                    '@k',
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '×',
+                                            'type': 'button',
+                                            'variant': 'ghost',
+                                          },
+                                        ],
+                                        'direction': 'horizontal',
+                                        'gap': 'xs',
+                                        'type': 'stack',
+                                      },
+                                      {
+                                        'entity': '@rule.availableEvents',
+                                        'fields': [],
+                                        'gap': 'sm',
+                                        'renderItem': [
+                                          'fn',
+                                          'evt',
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/range',
+                                                  0,
+                                                  [
+                                                    'array/len',
+                                                    '@rule.totalRules',
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'j',
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '==',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                    [
+                                                      'object/merge',
+                                                      [
+                                                        'array/nth',
+                                                        '@rule.totalRules',
+                                                        '@j',
+                                                      ],
+                                                      {
+                                                        'whenEvent': '@evt.id',
+                                                      },
+                                                    ],
+                                                    [
+                                                      'array/nth',
+                                                      '@rule.totalRules',
+                                                      '@j',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '@evt.label',
+                                            'type': 'button',
+                                            'variant': [
+                                              'if',
+                                              [
+                                                '==',
+                                                '@evt.id',
+                                                '@rule.whenEvent',
+                                              ],
+                                              'primary',
+                                              'ghost',
+                                            ],
+                                          },
+                                        ],
+                                        'type': 'data-list',
+                                      },
+                                      {
+                                        'entity': '@rule.availableActions',
+                                        'fields': [],
+                                        'gap': 'sm',
+                                        'renderItem': [
+                                          'fn',
+                                          'act',
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/range',
+                                                  0,
+                                                  [
+                                                    'array/len',
+                                                    '@rule.totalRules',
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'j',
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '==',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                    [
+                                                      'object/merge',
+                                                      [
+                                                        'array/nth',
+                                                        '@rule.totalRules',
+                                                        '@j',
+                                                      ],
+                                                      {
+                                                        'thenAction': '@act.id',
+                                                      },
+                                                    ],
+                                                    [
+                                                      'array/nth',
+                                                      '@rule.totalRules',
+                                                      '@j',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '@act.label',
+                                            'type': 'button',
+                                            'variant': [
+                                              'if',
+                                              [
+                                                '==',
+                                                '@act.id',
+                                                '@rule.thenAction',
+                                              ],
+                                              'primary',
+                                              'ghost',
+                                            ],
+                                          },
+                                        ],
+                                        'type': 'data-list',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'xs',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                              {
+                                'action': 'EDIT_RULE',
+                                'actionPayload': {
+                                  'objectId': '@obj.id',
+                                  'rules': [
+                                    'array/append',
+                                    '@obj.rules',
+                                    {
+                                      'thenAction': [
+                                        'object/get',
+                                        [
+                                          'array/first',
+                                          '@obj.availableActions',
+                                        ],
+                                        'id',
+                                        '',
+                                      ],
+                                      'whenEvent': [
+                                        'object/get',
+                                        [
+                                          'array/first',
+                                          '@obj.availableEvents',
+                                        ],
+                                        'id',
+                                        '',
+                                      ],
+                                    },
+                                  ],
+                                },
+                                'disabled': [
+                                  '>=',
+                                  [
+                                    'array/len',
+                                    '@obj.rules',
+                                  ],
+                                  '@obj.maxRules',
+                                ],
+                                'label': 'Add Rule',
+                                'type': 'button',
+                                'variant': 'ghost',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                         ],
                         'type': 'data-list',
@@ -1017,9 +1474,466 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                           'fn',
                           'obj',
                           {
-                            'object': '@obj',
-                            'rulesChangeEvent': 'EDIT_RULE',
-                            'type': 'object-rule-panel',
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'content': '@obj.icon',
+                                    'type': 'typography',
+                                    'variant': 'h5',
+                                  },
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@obj.name',
+                                        'type': 'typography',
+                                        'variant': 'body1',
+                                      },
+                                      {
+                                        'content': [
+                                          'str/concat',
+                                          'State: ',
+                                          '@obj.currentState',
+                                        ],
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'none',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'align': 'center',
+                                    'children': [
+                                      {
+                                        'content': '@obj.name',
+                                        'type': 'typography',
+                                        'variant': 'body2',
+                                      },
+                                      {
+                                        'label': '@obj.currentState',
+                                        'type': 'badge',
+                                        'variant': 'primary',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'content': 'Available actions:',
+                                    'type': 'typography',
+                                    'variant': 'caption',
+                                  },
+                                  {
+                                    'entity': [
+                                      'array/map',
+                                      '@obj.rules',
+                                      [
+                                        'fn',
+                                        'r',
+                                        [
+                                          'object/merge',
+                                          '@r',
+                                          {
+                                            'toState': [
+                                              'if',
+                                              [
+                                                '>',
+                                                [
+                                                  'array/len',
+                                                  [
+                                                    'array/filter',
+                                                    '@obj.states',
+                                                    [
+                                                      'fn',
+                                                      's',
+                                                      [
+                                                        '!=',
+                                                        '@s',
+                                                        '@obj.currentState',
+                                                      ],
+                                                    ],
+                                                  ],
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'array/first',
+                                                [
+                                                  'array/filter',
+                                                  '@obj.states',
+                                                  [
+                                                    'fn',
+                                                    's',
+                                                    [
+                                                      '!=',
+                                                      '@s',
+                                                      '@obj.currentState',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                              '@obj.currentState',
+                                            ],
+                                          },
+                                        ],
+                                      ],
+                                    ],
+                                    'fields': [],
+                                    'gap': 'sm',
+                                    'renderItem': [
+                                      'fn',
+                                      'tr',
+                                      {
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'content': '@tr.whenEvent',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'content': '→',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'content': '@tr.toState',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                        ],
+                                        'direction': 'horizontal',
+                                        'gap': 'xs',
+                                        'type': 'stack',
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'content': [
+                                  'str/concat',
+                                  'Rules (',
+                                  [
+                                    'array/len',
+                                    '@obj.rules',
+                                  ],
+                                  '/',
+                                  '@obj.maxRules',
+                                  '):',
+                                ],
+                                'type': 'typography',
+                                'variant': 'body2',
+                              },
+                              {
+                                'entity': [
+                                  'array/map',
+                                  [
+                                    'array/range',
+                                    0,
+                                    [
+                                      'array/len',
+                                      '@obj.rules',
+                                    ],
+                                  ],
+                                  [
+                                    'fn',
+                                    'i',
+                                    [
+                                      'object/merge',
+                                      [
+                                        'array/nth',
+                                        '@obj.rules',
+                                        '@i',
+                                      ],
+                                      {
+                                        'availableActions': '@obj.availableActions',
+                                        'availableEvents': '@obj.availableEvents',
+                                        'objectId': '@obj.id',
+                                        'ruleIdx': '@i',
+                                        'totalRules': '@obj.rules',
+                                      },
+                                    ],
+                                  ],
+                                ],
+                                'fields': [],
+                                'gap': 'sm',
+                                'renderItem': [
+                                  'fn',
+                                  'rule',
+                                  {
+                                    'children': [
+                                      {
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'content': 'WHEN',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'label': '@rule.whenEvent',
+                                            'type': 'badge',
+                                            'variant': 'secondary',
+                                          },
+                                          {
+                                            'content': '→ THEN',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'label': '@rule.thenAction',
+                                            'type': 'badge',
+                                            'variant': 'secondary',
+                                          },
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/filter',
+                                                  [
+                                                    'array/range',
+                                                    0,
+                                                    [
+                                                      'array/len',
+                                                      '@rule.totalRules',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'fn',
+                                                    'j',
+                                                    [
+                                                      '!=',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'k',
+                                                  [
+                                                    'array/nth',
+                                                    '@rule.totalRules',
+                                                    '@k',
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '×',
+                                            'type': 'button',
+                                            'variant': 'ghost',
+                                          },
+                                        ],
+                                        'direction': 'horizontal',
+                                        'gap': 'xs',
+                                        'type': 'stack',
+                                      },
+                                      {
+                                        'entity': '@rule.availableEvents',
+                                        'fields': [],
+                                        'gap': 'sm',
+                                        'renderItem': [
+                                          'fn',
+                                          'evt',
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/range',
+                                                  0,
+                                                  [
+                                                    'array/len',
+                                                    '@rule.totalRules',
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'j',
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '==',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                    [
+                                                      'object/merge',
+                                                      [
+                                                        'array/nth',
+                                                        '@rule.totalRules',
+                                                        '@j',
+                                                      ],
+                                                      {
+                                                        'whenEvent': '@evt.id',
+                                                      },
+                                                    ],
+                                                    [
+                                                      'array/nth',
+                                                      '@rule.totalRules',
+                                                      '@j',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '@evt.label',
+                                            'type': 'button',
+                                            'variant': [
+                                              'if',
+                                              [
+                                                '==',
+                                                '@evt.id',
+                                                '@rule.whenEvent',
+                                              ],
+                                              'primary',
+                                              'ghost',
+                                            ],
+                                          },
+                                        ],
+                                        'type': 'data-list',
+                                      },
+                                      {
+                                        'entity': '@rule.availableActions',
+                                        'fields': [],
+                                        'gap': 'sm',
+                                        'renderItem': [
+                                          'fn',
+                                          'act',
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/range',
+                                                  0,
+                                                  [
+                                                    'array/len',
+                                                    '@rule.totalRules',
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'j',
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '==',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                    [
+                                                      'object/merge',
+                                                      [
+                                                        'array/nth',
+                                                        '@rule.totalRules',
+                                                        '@j',
+                                                      ],
+                                                      {
+                                                        'thenAction': '@act.id',
+                                                      },
+                                                    ],
+                                                    [
+                                                      'array/nth',
+                                                      '@rule.totalRules',
+                                                      '@j',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '@act.label',
+                                            'type': 'button',
+                                            'variant': [
+                                              'if',
+                                              [
+                                                '==',
+                                                '@act.id',
+                                                '@rule.thenAction',
+                                              ],
+                                              'primary',
+                                              'ghost',
+                                            ],
+                                          },
+                                        ],
+                                        'type': 'data-list',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'xs',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                              {
+                                'action': 'EDIT_RULE',
+                                'actionPayload': {
+                                  'objectId': '@obj.id',
+                                  'rules': [
+                                    'array/append',
+                                    '@obj.rules',
+                                    {
+                                      'thenAction': [
+                                        'object/get',
+                                        [
+                                          'array/first',
+                                          '@obj.availableActions',
+                                        ],
+                                        'id',
+                                        '',
+                                      ],
+                                      'whenEvent': [
+                                        'object/get',
+                                        [
+                                          'array/first',
+                                          '@obj.availableEvents',
+                                        ],
+                                        'id',
+                                        '',
+                                      ],
+                                    },
+                                  ],
+                                },
+                                'disabled': [
+                                  '>=',
+                                  [
+                                    'array/len',
+                                    '@obj.rules',
+                                  ],
+                                  '@obj.maxRules',
+                                ],
+                                'label': 'Add Rule',
+                                'type': 'button',
+                                'variant': 'ghost',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                         ],
                         'type': 'data-list',
@@ -1139,9 +2053,466 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                           'fn',
                           'obj',
                           {
-                            'object': '@obj',
-                            'rulesChangeEvent': 'EDIT_RULE',
-                            'type': 'object-rule-panel',
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'content': '@obj.icon',
+                                    'type': 'typography',
+                                    'variant': 'h5',
+                                  },
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@obj.name',
+                                        'type': 'typography',
+                                        'variant': 'body1',
+                                      },
+                                      {
+                                        'content': [
+                                          'str/concat',
+                                          'State: ',
+                                          '@obj.currentState',
+                                        ],
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'none',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'align': 'center',
+                                    'children': [
+                                      {
+                                        'content': '@obj.name',
+                                        'type': 'typography',
+                                        'variant': 'body2',
+                                      },
+                                      {
+                                        'label': '@obj.currentState',
+                                        'type': 'badge',
+                                        'variant': 'primary',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'content': 'Available actions:',
+                                    'type': 'typography',
+                                    'variant': 'caption',
+                                  },
+                                  {
+                                    'entity': [
+                                      'array/map',
+                                      '@obj.rules',
+                                      [
+                                        'fn',
+                                        'r',
+                                        [
+                                          'object/merge',
+                                          '@r',
+                                          {
+                                            'toState': [
+                                              'if',
+                                              [
+                                                '>',
+                                                [
+                                                  'array/len',
+                                                  [
+                                                    'array/filter',
+                                                    '@obj.states',
+                                                    [
+                                                      'fn',
+                                                      's',
+                                                      [
+                                                        '!=',
+                                                        '@s',
+                                                        '@obj.currentState',
+                                                      ],
+                                                    ],
+                                                  ],
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'array/first',
+                                                [
+                                                  'array/filter',
+                                                  '@obj.states',
+                                                  [
+                                                    'fn',
+                                                    's',
+                                                    [
+                                                      '!=',
+                                                      '@s',
+                                                      '@obj.currentState',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                              '@obj.currentState',
+                                            ],
+                                          },
+                                        ],
+                                      ],
+                                    ],
+                                    'fields': [],
+                                    'gap': 'sm',
+                                    'renderItem': [
+                                      'fn',
+                                      'tr',
+                                      {
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'content': '@tr.whenEvent',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'content': '→',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'content': '@tr.toState',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                        ],
+                                        'direction': 'horizontal',
+                                        'gap': 'xs',
+                                        'type': 'stack',
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'content': [
+                                  'str/concat',
+                                  'Rules (',
+                                  [
+                                    'array/len',
+                                    '@obj.rules',
+                                  ],
+                                  '/',
+                                  '@obj.maxRules',
+                                  '):',
+                                ],
+                                'type': 'typography',
+                                'variant': 'body2',
+                              },
+                              {
+                                'entity': [
+                                  'array/map',
+                                  [
+                                    'array/range',
+                                    0,
+                                    [
+                                      'array/len',
+                                      '@obj.rules',
+                                    ],
+                                  ],
+                                  [
+                                    'fn',
+                                    'i',
+                                    [
+                                      'object/merge',
+                                      [
+                                        'array/nth',
+                                        '@obj.rules',
+                                        '@i',
+                                      ],
+                                      {
+                                        'availableActions': '@obj.availableActions',
+                                        'availableEvents': '@obj.availableEvents',
+                                        'objectId': '@obj.id',
+                                        'ruleIdx': '@i',
+                                        'totalRules': '@obj.rules',
+                                      },
+                                    ],
+                                  ],
+                                ],
+                                'fields': [],
+                                'gap': 'sm',
+                                'renderItem': [
+                                  'fn',
+                                  'rule',
+                                  {
+                                    'children': [
+                                      {
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'content': 'WHEN',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'label': '@rule.whenEvent',
+                                            'type': 'badge',
+                                            'variant': 'secondary',
+                                          },
+                                          {
+                                            'content': '→ THEN',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'label': '@rule.thenAction',
+                                            'type': 'badge',
+                                            'variant': 'secondary',
+                                          },
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/filter',
+                                                  [
+                                                    'array/range',
+                                                    0,
+                                                    [
+                                                      'array/len',
+                                                      '@rule.totalRules',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'fn',
+                                                    'j',
+                                                    [
+                                                      '!=',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'k',
+                                                  [
+                                                    'array/nth',
+                                                    '@rule.totalRules',
+                                                    '@k',
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '×',
+                                            'type': 'button',
+                                            'variant': 'ghost',
+                                          },
+                                        ],
+                                        'direction': 'horizontal',
+                                        'gap': 'xs',
+                                        'type': 'stack',
+                                      },
+                                      {
+                                        'entity': '@rule.availableEvents',
+                                        'fields': [],
+                                        'gap': 'sm',
+                                        'renderItem': [
+                                          'fn',
+                                          'evt',
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/range',
+                                                  0,
+                                                  [
+                                                    'array/len',
+                                                    '@rule.totalRules',
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'j',
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '==',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                    [
+                                                      'object/merge',
+                                                      [
+                                                        'array/nth',
+                                                        '@rule.totalRules',
+                                                        '@j',
+                                                      ],
+                                                      {
+                                                        'whenEvent': '@evt.id',
+                                                      },
+                                                    ],
+                                                    [
+                                                      'array/nth',
+                                                      '@rule.totalRules',
+                                                      '@j',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '@evt.label',
+                                            'type': 'button',
+                                            'variant': [
+                                              'if',
+                                              [
+                                                '==',
+                                                '@evt.id',
+                                                '@rule.whenEvent',
+                                              ],
+                                              'primary',
+                                              'ghost',
+                                            ],
+                                          },
+                                        ],
+                                        'type': 'data-list',
+                                      },
+                                      {
+                                        'entity': '@rule.availableActions',
+                                        'fields': [],
+                                        'gap': 'sm',
+                                        'renderItem': [
+                                          'fn',
+                                          'act',
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/range',
+                                                  0,
+                                                  [
+                                                    'array/len',
+                                                    '@rule.totalRules',
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'j',
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '==',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                    [
+                                                      'object/merge',
+                                                      [
+                                                        'array/nth',
+                                                        '@rule.totalRules',
+                                                        '@j',
+                                                      ],
+                                                      {
+                                                        'thenAction': '@act.id',
+                                                      },
+                                                    ],
+                                                    [
+                                                      'array/nth',
+                                                      '@rule.totalRules',
+                                                      '@j',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '@act.label',
+                                            'type': 'button',
+                                            'variant': [
+                                              'if',
+                                              [
+                                                '==',
+                                                '@act.id',
+                                                '@rule.thenAction',
+                                              ],
+                                              'primary',
+                                              'ghost',
+                                            ],
+                                          },
+                                        ],
+                                        'type': 'data-list',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'xs',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                              {
+                                'action': 'EDIT_RULE',
+                                'actionPayload': {
+                                  'objectId': '@obj.id',
+                                  'rules': [
+                                    'array/append',
+                                    '@obj.rules',
+                                    {
+                                      'thenAction': [
+                                        'object/get',
+                                        [
+                                          'array/first',
+                                          '@obj.availableActions',
+                                        ],
+                                        'id',
+                                        '',
+                                      ],
+                                      'whenEvent': [
+                                        'object/get',
+                                        [
+                                          'array/first',
+                                          '@obj.availableEvents',
+                                        ],
+                                        'id',
+                                        '',
+                                      ],
+                                    },
+                                  ],
+                                },
+                                'disabled': [
+                                  '>=',
+                                  [
+                                    'array/len',
+                                    '@obj.rules',
+                                  ],
+                                  '@obj.maxRules',
+                                ],
+                                'label': 'Add Rule',
+                                'type': 'button',
+                                'variant': 'ghost',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                         ],
                         'type': 'data-list',
@@ -1243,9 +2614,466 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                           'fn',
                           'obj',
                           {
-                            'object': '@obj',
-                            'rulesChangeEvent': 'EDIT_RULE',
-                            'type': 'object-rule-panel',
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'content': '@obj.icon',
+                                    'type': 'typography',
+                                    'variant': 'h5',
+                                  },
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@obj.name',
+                                        'type': 'typography',
+                                        'variant': 'body1',
+                                      },
+                                      {
+                                        'content': [
+                                          'str/concat',
+                                          'State: ',
+                                          '@obj.currentState',
+                                        ],
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'none',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'align': 'center',
+                                    'children': [
+                                      {
+                                        'content': '@obj.name',
+                                        'type': 'typography',
+                                        'variant': 'body2',
+                                      },
+                                      {
+                                        'label': '@obj.currentState',
+                                        'type': 'badge',
+                                        'variant': 'primary',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'content': 'Available actions:',
+                                    'type': 'typography',
+                                    'variant': 'caption',
+                                  },
+                                  {
+                                    'entity': [
+                                      'array/map',
+                                      '@obj.rules',
+                                      [
+                                        'fn',
+                                        'r',
+                                        [
+                                          'object/merge',
+                                          '@r',
+                                          {
+                                            'toState': [
+                                              'if',
+                                              [
+                                                '>',
+                                                [
+                                                  'array/len',
+                                                  [
+                                                    'array/filter',
+                                                    '@obj.states',
+                                                    [
+                                                      'fn',
+                                                      's',
+                                                      [
+                                                        '!=',
+                                                        '@s',
+                                                        '@obj.currentState',
+                                                      ],
+                                                    ],
+                                                  ],
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'array/first',
+                                                [
+                                                  'array/filter',
+                                                  '@obj.states',
+                                                  [
+                                                    'fn',
+                                                    's',
+                                                    [
+                                                      '!=',
+                                                      '@s',
+                                                      '@obj.currentState',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                              '@obj.currentState',
+                                            ],
+                                          },
+                                        ],
+                                      ],
+                                    ],
+                                    'fields': [],
+                                    'gap': 'sm',
+                                    'renderItem': [
+                                      'fn',
+                                      'tr',
+                                      {
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'content': '@tr.whenEvent',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'content': '→',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'content': '@tr.toState',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                        ],
+                                        'direction': 'horizontal',
+                                        'gap': 'xs',
+                                        'type': 'stack',
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'content': [
+                                  'str/concat',
+                                  'Rules (',
+                                  [
+                                    'array/len',
+                                    '@obj.rules',
+                                  ],
+                                  '/',
+                                  '@obj.maxRules',
+                                  '):',
+                                ],
+                                'type': 'typography',
+                                'variant': 'body2',
+                              },
+                              {
+                                'entity': [
+                                  'array/map',
+                                  [
+                                    'array/range',
+                                    0,
+                                    [
+                                      'array/len',
+                                      '@obj.rules',
+                                    ],
+                                  ],
+                                  [
+                                    'fn',
+                                    'i',
+                                    [
+                                      'object/merge',
+                                      [
+                                        'array/nth',
+                                        '@obj.rules',
+                                        '@i',
+                                      ],
+                                      {
+                                        'availableActions': '@obj.availableActions',
+                                        'availableEvents': '@obj.availableEvents',
+                                        'objectId': '@obj.id',
+                                        'ruleIdx': '@i',
+                                        'totalRules': '@obj.rules',
+                                      },
+                                    ],
+                                  ],
+                                ],
+                                'fields': [],
+                                'gap': 'sm',
+                                'renderItem': [
+                                  'fn',
+                                  'rule',
+                                  {
+                                    'children': [
+                                      {
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'content': 'WHEN',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'label': '@rule.whenEvent',
+                                            'type': 'badge',
+                                            'variant': 'secondary',
+                                          },
+                                          {
+                                            'content': '→ THEN',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'label': '@rule.thenAction',
+                                            'type': 'badge',
+                                            'variant': 'secondary',
+                                          },
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/filter',
+                                                  [
+                                                    'array/range',
+                                                    0,
+                                                    [
+                                                      'array/len',
+                                                      '@rule.totalRules',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'fn',
+                                                    'j',
+                                                    [
+                                                      '!=',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'k',
+                                                  [
+                                                    'array/nth',
+                                                    '@rule.totalRules',
+                                                    '@k',
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '×',
+                                            'type': 'button',
+                                            'variant': 'ghost',
+                                          },
+                                        ],
+                                        'direction': 'horizontal',
+                                        'gap': 'xs',
+                                        'type': 'stack',
+                                      },
+                                      {
+                                        'entity': '@rule.availableEvents',
+                                        'fields': [],
+                                        'gap': 'sm',
+                                        'renderItem': [
+                                          'fn',
+                                          'evt',
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/range',
+                                                  0,
+                                                  [
+                                                    'array/len',
+                                                    '@rule.totalRules',
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'j',
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '==',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                    [
+                                                      'object/merge',
+                                                      [
+                                                        'array/nth',
+                                                        '@rule.totalRules',
+                                                        '@j',
+                                                      ],
+                                                      {
+                                                        'whenEvent': '@evt.id',
+                                                      },
+                                                    ],
+                                                    [
+                                                      'array/nth',
+                                                      '@rule.totalRules',
+                                                      '@j',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '@evt.label',
+                                            'type': 'button',
+                                            'variant': [
+                                              'if',
+                                              [
+                                                '==',
+                                                '@evt.id',
+                                                '@rule.whenEvent',
+                                              ],
+                                              'primary',
+                                              'ghost',
+                                            ],
+                                          },
+                                        ],
+                                        'type': 'data-list',
+                                      },
+                                      {
+                                        'entity': '@rule.availableActions',
+                                        'fields': [],
+                                        'gap': 'sm',
+                                        'renderItem': [
+                                          'fn',
+                                          'act',
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/range',
+                                                  0,
+                                                  [
+                                                    'array/len',
+                                                    '@rule.totalRules',
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'j',
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '==',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                    [
+                                                      'object/merge',
+                                                      [
+                                                        'array/nth',
+                                                        '@rule.totalRules',
+                                                        '@j',
+                                                      ],
+                                                      {
+                                                        'thenAction': '@act.id',
+                                                      },
+                                                    ],
+                                                    [
+                                                      'array/nth',
+                                                      '@rule.totalRules',
+                                                      '@j',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '@act.label',
+                                            'type': 'button',
+                                            'variant': [
+                                              'if',
+                                              [
+                                                '==',
+                                                '@act.id',
+                                                '@rule.thenAction',
+                                              ],
+                                              'primary',
+                                              'ghost',
+                                            ],
+                                          },
+                                        ],
+                                        'type': 'data-list',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'xs',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                              {
+                                'action': 'EDIT_RULE',
+                                'actionPayload': {
+                                  'objectId': '@obj.id',
+                                  'rules': [
+                                    'array/append',
+                                    '@obj.rules',
+                                    {
+                                      'thenAction': [
+                                        'object/get',
+                                        [
+                                          'array/first',
+                                          '@obj.availableActions',
+                                        ],
+                                        'id',
+                                        '',
+                                      ],
+                                      'whenEvent': [
+                                        'object/get',
+                                        [
+                                          'array/first',
+                                          '@obj.availableEvents',
+                                        ],
+                                        'id',
+                                        '',
+                                      ],
+                                    },
+                                  ],
+                                },
+                                'disabled': [
+                                  '>=',
+                                  [
+                                    'array/len',
+                                    '@obj.rules',
+                                  ],
+                                  '@obj.maxRules',
+                                ],
+                                'label': 'Add Rule',
+                                'type': 'button',
+                                'variant': 'ghost',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                         ],
                         'type': 'data-list',
@@ -1378,9 +3206,466 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                           'fn',
                           'obj',
                           {
-                            'object': '@obj',
-                            'rulesChangeEvent': 'EDIT_RULE',
-                            'type': 'object-rule-panel',
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'content': '@obj.icon',
+                                    'type': 'typography',
+                                    'variant': 'h5',
+                                  },
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@obj.name',
+                                        'type': 'typography',
+                                        'variant': 'body1',
+                                      },
+                                      {
+                                        'content': [
+                                          'str/concat',
+                                          'State: ',
+                                          '@obj.currentState',
+                                        ],
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'none',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'align': 'center',
+                                    'children': [
+                                      {
+                                        'content': '@obj.name',
+                                        'type': 'typography',
+                                        'variant': 'body2',
+                                      },
+                                      {
+                                        'label': '@obj.currentState',
+                                        'type': 'badge',
+                                        'variant': 'primary',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'content': 'Available actions:',
+                                    'type': 'typography',
+                                    'variant': 'caption',
+                                  },
+                                  {
+                                    'entity': [
+                                      'array/map',
+                                      '@obj.rules',
+                                      [
+                                        'fn',
+                                        'r',
+                                        [
+                                          'object/merge',
+                                          '@r',
+                                          {
+                                            'toState': [
+                                              'if',
+                                              [
+                                                '>',
+                                                [
+                                                  'array/len',
+                                                  [
+                                                    'array/filter',
+                                                    '@obj.states',
+                                                    [
+                                                      'fn',
+                                                      's',
+                                                      [
+                                                        '!=',
+                                                        '@s',
+                                                        '@obj.currentState',
+                                                      ],
+                                                    ],
+                                                  ],
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'array/first',
+                                                [
+                                                  'array/filter',
+                                                  '@obj.states',
+                                                  [
+                                                    'fn',
+                                                    's',
+                                                    [
+                                                      '!=',
+                                                      '@s',
+                                                      '@obj.currentState',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                              '@obj.currentState',
+                                            ],
+                                          },
+                                        ],
+                                      ],
+                                    ],
+                                    'fields': [],
+                                    'gap': 'sm',
+                                    'renderItem': [
+                                      'fn',
+                                      'tr',
+                                      {
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'content': '@tr.whenEvent',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'content': '→',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'content': '@tr.toState',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                        ],
+                                        'direction': 'horizontal',
+                                        'gap': 'xs',
+                                        'type': 'stack',
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'content': [
+                                  'str/concat',
+                                  'Rules (',
+                                  [
+                                    'array/len',
+                                    '@obj.rules',
+                                  ],
+                                  '/',
+                                  '@obj.maxRules',
+                                  '):',
+                                ],
+                                'type': 'typography',
+                                'variant': 'body2',
+                              },
+                              {
+                                'entity': [
+                                  'array/map',
+                                  [
+                                    'array/range',
+                                    0,
+                                    [
+                                      'array/len',
+                                      '@obj.rules',
+                                    ],
+                                  ],
+                                  [
+                                    'fn',
+                                    'i',
+                                    [
+                                      'object/merge',
+                                      [
+                                        'array/nth',
+                                        '@obj.rules',
+                                        '@i',
+                                      ],
+                                      {
+                                        'availableActions': '@obj.availableActions',
+                                        'availableEvents': '@obj.availableEvents',
+                                        'objectId': '@obj.id',
+                                        'ruleIdx': '@i',
+                                        'totalRules': '@obj.rules',
+                                      },
+                                    ],
+                                  ],
+                                ],
+                                'fields': [],
+                                'gap': 'sm',
+                                'renderItem': [
+                                  'fn',
+                                  'rule',
+                                  {
+                                    'children': [
+                                      {
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'content': 'WHEN',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'label': '@rule.whenEvent',
+                                            'type': 'badge',
+                                            'variant': 'secondary',
+                                          },
+                                          {
+                                            'content': '→ THEN',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'label': '@rule.thenAction',
+                                            'type': 'badge',
+                                            'variant': 'secondary',
+                                          },
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/filter',
+                                                  [
+                                                    'array/range',
+                                                    0,
+                                                    [
+                                                      'array/len',
+                                                      '@rule.totalRules',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'fn',
+                                                    'j',
+                                                    [
+                                                      '!=',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'k',
+                                                  [
+                                                    'array/nth',
+                                                    '@rule.totalRules',
+                                                    '@k',
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '×',
+                                            'type': 'button',
+                                            'variant': 'ghost',
+                                          },
+                                        ],
+                                        'direction': 'horizontal',
+                                        'gap': 'xs',
+                                        'type': 'stack',
+                                      },
+                                      {
+                                        'entity': '@rule.availableEvents',
+                                        'fields': [],
+                                        'gap': 'sm',
+                                        'renderItem': [
+                                          'fn',
+                                          'evt',
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/range',
+                                                  0,
+                                                  [
+                                                    'array/len',
+                                                    '@rule.totalRules',
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'j',
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '==',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                    [
+                                                      'object/merge',
+                                                      [
+                                                        'array/nth',
+                                                        '@rule.totalRules',
+                                                        '@j',
+                                                      ],
+                                                      {
+                                                        'whenEvent': '@evt.id',
+                                                      },
+                                                    ],
+                                                    [
+                                                      'array/nth',
+                                                      '@rule.totalRules',
+                                                      '@j',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '@evt.label',
+                                            'type': 'button',
+                                            'variant': [
+                                              'if',
+                                              [
+                                                '==',
+                                                '@evt.id',
+                                                '@rule.whenEvent',
+                                              ],
+                                              'primary',
+                                              'ghost',
+                                            ],
+                                          },
+                                        ],
+                                        'type': 'data-list',
+                                      },
+                                      {
+                                        'entity': '@rule.availableActions',
+                                        'fields': [],
+                                        'gap': 'sm',
+                                        'renderItem': [
+                                          'fn',
+                                          'act',
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/range',
+                                                  0,
+                                                  [
+                                                    'array/len',
+                                                    '@rule.totalRules',
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'j',
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '==',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                    [
+                                                      'object/merge',
+                                                      [
+                                                        'array/nth',
+                                                        '@rule.totalRules',
+                                                        '@j',
+                                                      ],
+                                                      {
+                                                        'thenAction': '@act.id',
+                                                      },
+                                                    ],
+                                                    [
+                                                      'array/nth',
+                                                      '@rule.totalRules',
+                                                      '@j',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '@act.label',
+                                            'type': 'button',
+                                            'variant': [
+                                              'if',
+                                              [
+                                                '==',
+                                                '@act.id',
+                                                '@rule.thenAction',
+                                              ],
+                                              'primary',
+                                              'ghost',
+                                            ],
+                                          },
+                                        ],
+                                        'type': 'data-list',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'xs',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                              {
+                                'action': 'EDIT_RULE',
+                                'actionPayload': {
+                                  'objectId': '@obj.id',
+                                  'rules': [
+                                    'array/append',
+                                    '@obj.rules',
+                                    {
+                                      'thenAction': [
+                                        'object/get',
+                                        [
+                                          'array/first',
+                                          '@obj.availableActions',
+                                        ],
+                                        'id',
+                                        '',
+                                      ],
+                                      'whenEvent': [
+                                        'object/get',
+                                        [
+                                          'array/first',
+                                          '@obj.availableEvents',
+                                        ],
+                                        'id',
+                                        '',
+                                      ],
+                                    },
+                                  ],
+                                },
+                                'disabled': [
+                                  '>=',
+                                  [
+                                    'array/len',
+                                    '@obj.rules',
+                                  ],
+                                  '@obj.maxRules',
+                                ],
+                                'label': 'Add Rule',
+                                'type': 'button',
+                                'variant': 'ghost',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                         ],
                         'type': 'data-list',
@@ -1549,9 +3834,466 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                           'fn',
                           'obj',
                           {
-                            'object': '@obj',
-                            'rulesChangeEvent': 'EDIT_RULE',
-                            'type': 'object-rule-panel',
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'content': '@obj.icon',
+                                    'type': 'typography',
+                                    'variant': 'h5',
+                                  },
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@obj.name',
+                                        'type': 'typography',
+                                        'variant': 'body1',
+                                      },
+                                      {
+                                        'content': [
+                                          'str/concat',
+                                          'State: ',
+                                          '@obj.currentState',
+                                        ],
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'none',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'align': 'center',
+                                    'children': [
+                                      {
+                                        'content': '@obj.name',
+                                        'type': 'typography',
+                                        'variant': 'body2',
+                                      },
+                                      {
+                                        'label': '@obj.currentState',
+                                        'type': 'badge',
+                                        'variant': 'primary',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'content': 'Available actions:',
+                                    'type': 'typography',
+                                    'variant': 'caption',
+                                  },
+                                  {
+                                    'entity': [
+                                      'array/map',
+                                      '@obj.rules',
+                                      [
+                                        'fn',
+                                        'r',
+                                        [
+                                          'object/merge',
+                                          '@r',
+                                          {
+                                            'toState': [
+                                              'if',
+                                              [
+                                                '>',
+                                                [
+                                                  'array/len',
+                                                  [
+                                                    'array/filter',
+                                                    '@obj.states',
+                                                    [
+                                                      'fn',
+                                                      's',
+                                                      [
+                                                        '!=',
+                                                        '@s',
+                                                        '@obj.currentState',
+                                                      ],
+                                                    ],
+                                                  ],
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'array/first',
+                                                [
+                                                  'array/filter',
+                                                  '@obj.states',
+                                                  [
+                                                    'fn',
+                                                    's',
+                                                    [
+                                                      '!=',
+                                                      '@s',
+                                                      '@obj.currentState',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                              '@obj.currentState',
+                                            ],
+                                          },
+                                        ],
+                                      ],
+                                    ],
+                                    'fields': [],
+                                    'gap': 'sm',
+                                    'renderItem': [
+                                      'fn',
+                                      'tr',
+                                      {
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'content': '@tr.whenEvent',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'content': '→',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'content': '@tr.toState',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                        ],
+                                        'direction': 'horizontal',
+                                        'gap': 'xs',
+                                        'type': 'stack',
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'content': [
+                                  'str/concat',
+                                  'Rules (',
+                                  [
+                                    'array/len',
+                                    '@obj.rules',
+                                  ],
+                                  '/',
+                                  '@obj.maxRules',
+                                  '):',
+                                ],
+                                'type': 'typography',
+                                'variant': 'body2',
+                              },
+                              {
+                                'entity': [
+                                  'array/map',
+                                  [
+                                    'array/range',
+                                    0,
+                                    [
+                                      'array/len',
+                                      '@obj.rules',
+                                    ],
+                                  ],
+                                  [
+                                    'fn',
+                                    'i',
+                                    [
+                                      'object/merge',
+                                      [
+                                        'array/nth',
+                                        '@obj.rules',
+                                        '@i',
+                                      ],
+                                      {
+                                        'availableActions': '@obj.availableActions',
+                                        'availableEvents': '@obj.availableEvents',
+                                        'objectId': '@obj.id',
+                                        'ruleIdx': '@i',
+                                        'totalRules': '@obj.rules',
+                                      },
+                                    ],
+                                  ],
+                                ],
+                                'fields': [],
+                                'gap': 'sm',
+                                'renderItem': [
+                                  'fn',
+                                  'rule',
+                                  {
+                                    'children': [
+                                      {
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'content': 'WHEN',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'label': '@rule.whenEvent',
+                                            'type': 'badge',
+                                            'variant': 'secondary',
+                                          },
+                                          {
+                                            'content': '→ THEN',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'label': '@rule.thenAction',
+                                            'type': 'badge',
+                                            'variant': 'secondary',
+                                          },
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/filter',
+                                                  [
+                                                    'array/range',
+                                                    0,
+                                                    [
+                                                      'array/len',
+                                                      '@rule.totalRules',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'fn',
+                                                    'j',
+                                                    [
+                                                      '!=',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'k',
+                                                  [
+                                                    'array/nth',
+                                                    '@rule.totalRules',
+                                                    '@k',
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '×',
+                                            'type': 'button',
+                                            'variant': 'ghost',
+                                          },
+                                        ],
+                                        'direction': 'horizontal',
+                                        'gap': 'xs',
+                                        'type': 'stack',
+                                      },
+                                      {
+                                        'entity': '@rule.availableEvents',
+                                        'fields': [],
+                                        'gap': 'sm',
+                                        'renderItem': [
+                                          'fn',
+                                          'evt',
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/range',
+                                                  0,
+                                                  [
+                                                    'array/len',
+                                                    '@rule.totalRules',
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'j',
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '==',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                    [
+                                                      'object/merge',
+                                                      [
+                                                        'array/nth',
+                                                        '@rule.totalRules',
+                                                        '@j',
+                                                      ],
+                                                      {
+                                                        'whenEvent': '@evt.id',
+                                                      },
+                                                    ],
+                                                    [
+                                                      'array/nth',
+                                                      '@rule.totalRules',
+                                                      '@j',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '@evt.label',
+                                            'type': 'button',
+                                            'variant': [
+                                              'if',
+                                              [
+                                                '==',
+                                                '@evt.id',
+                                                '@rule.whenEvent',
+                                              ],
+                                              'primary',
+                                              'ghost',
+                                            ],
+                                          },
+                                        ],
+                                        'type': 'data-list',
+                                      },
+                                      {
+                                        'entity': '@rule.availableActions',
+                                        'fields': [],
+                                        'gap': 'sm',
+                                        'renderItem': [
+                                          'fn',
+                                          'act',
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/range',
+                                                  0,
+                                                  [
+                                                    'array/len',
+                                                    '@rule.totalRules',
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'j',
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '==',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                    [
+                                                      'object/merge',
+                                                      [
+                                                        'array/nth',
+                                                        '@rule.totalRules',
+                                                        '@j',
+                                                      ],
+                                                      {
+                                                        'thenAction': '@act.id',
+                                                      },
+                                                    ],
+                                                    [
+                                                      'array/nth',
+                                                      '@rule.totalRules',
+                                                      '@j',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '@act.label',
+                                            'type': 'button',
+                                            'variant': [
+                                              'if',
+                                              [
+                                                '==',
+                                                '@act.id',
+                                                '@rule.thenAction',
+                                              ],
+                                              'primary',
+                                              'ghost',
+                                            ],
+                                          },
+                                        ],
+                                        'type': 'data-list',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'xs',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                              {
+                                'action': 'EDIT_RULE',
+                                'actionPayload': {
+                                  'objectId': '@obj.id',
+                                  'rules': [
+                                    'array/append',
+                                    '@obj.rules',
+                                    {
+                                      'thenAction': [
+                                        'object/get',
+                                        [
+                                          'array/first',
+                                          '@obj.availableActions',
+                                        ],
+                                        'id',
+                                        '',
+                                      ],
+                                      'whenEvent': [
+                                        'object/get',
+                                        [
+                                          'array/first',
+                                          '@obj.availableEvents',
+                                        ],
+                                        'id',
+                                        '',
+                                      ],
+                                    },
+                                  ],
+                                },
+                                'disabled': [
+                                  '>=',
+                                  [
+                                    'array/len',
+                                    '@obj.rules',
+                                  ],
+                                  '@obj.maxRules',
+                                ],
+                                'label': 'Add Rule',
+                                'type': 'button',
+                                'variant': 'ghost',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                         ],
                         'type': 'data-list',
@@ -1639,9 +4381,466 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                           'fn',
                           'obj',
                           {
-                            'object': '@obj',
-                            'rulesChangeEvent': 'EDIT_RULE',
-                            'type': 'object-rule-panel',
+                            'children': [
+                              {
+                                'align': 'center',
+                                'children': [
+                                  {
+                                    'content': '@obj.icon',
+                                    'type': 'typography',
+                                    'variant': 'h5',
+                                  },
+                                  {
+                                    'children': [
+                                      {
+                                        'content': '@obj.name',
+                                        'type': 'typography',
+                                        'variant': 'body1',
+                                      },
+                                      {
+                                        'content': [
+                                          'str/concat',
+                                          'State: ',
+                                          '@obj.currentState',
+                                        ],
+                                        'type': 'typography',
+                                        'variant': 'caption',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'none',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'direction': 'horizontal',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'children': [
+                                  {
+                                    'align': 'center',
+                                    'children': [
+                                      {
+                                        'content': '@obj.name',
+                                        'type': 'typography',
+                                        'variant': 'body2',
+                                      },
+                                      {
+                                        'label': '@obj.currentState',
+                                        'type': 'badge',
+                                        'variant': 'primary',
+                                      },
+                                    ],
+                                    'direction': 'horizontal',
+                                    'justify': 'between',
+                                    'type': 'stack',
+                                  },
+                                  {
+                                    'content': 'Available actions:',
+                                    'type': 'typography',
+                                    'variant': 'caption',
+                                  },
+                                  {
+                                    'entity': [
+                                      'array/map',
+                                      '@obj.rules',
+                                      [
+                                        'fn',
+                                        'r',
+                                        [
+                                          'object/merge',
+                                          '@r',
+                                          {
+                                            'toState': [
+                                              'if',
+                                              [
+                                                '>',
+                                                [
+                                                  'array/len',
+                                                  [
+                                                    'array/filter',
+                                                    '@obj.states',
+                                                    [
+                                                      'fn',
+                                                      's',
+                                                      [
+                                                        '!=',
+                                                        '@s',
+                                                        '@obj.currentState',
+                                                      ],
+                                                    ],
+                                                  ],
+                                                ],
+                                                0,
+                                              ],
+                                              [
+                                                'array/first',
+                                                [
+                                                  'array/filter',
+                                                  '@obj.states',
+                                                  [
+                                                    'fn',
+                                                    's',
+                                                    [
+                                                      '!=',
+                                                      '@s',
+                                                      '@obj.currentState',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                              '@obj.currentState',
+                                            ],
+                                          },
+                                        ],
+                                      ],
+                                    ],
+                                    'fields': [],
+                                    'gap': 'sm',
+                                    'renderItem': [
+                                      'fn',
+                                      'tr',
+                                      {
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'content': '@tr.whenEvent',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'content': '→',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'content': '@tr.toState',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                        ],
+                                        'direction': 'horizontal',
+                                        'gap': 'xs',
+                                        'type': 'stack',
+                                      },
+                                    ],
+                                    'type': 'data-list',
+                                  },
+                                ],
+                                'direction': 'vertical',
+                                'gap': 'sm',
+                                'type': 'stack',
+                              },
+                              {
+                                'content': [
+                                  'str/concat',
+                                  'Rules (',
+                                  [
+                                    'array/len',
+                                    '@obj.rules',
+                                  ],
+                                  '/',
+                                  '@obj.maxRules',
+                                  '):',
+                                ],
+                                'type': 'typography',
+                                'variant': 'body2',
+                              },
+                              {
+                                'entity': [
+                                  'array/map',
+                                  [
+                                    'array/range',
+                                    0,
+                                    [
+                                      'array/len',
+                                      '@obj.rules',
+                                    ],
+                                  ],
+                                  [
+                                    'fn',
+                                    'i',
+                                    [
+                                      'object/merge',
+                                      [
+                                        'array/nth',
+                                        '@obj.rules',
+                                        '@i',
+                                      ],
+                                      {
+                                        'availableActions': '@obj.availableActions',
+                                        'availableEvents': '@obj.availableEvents',
+                                        'objectId': '@obj.id',
+                                        'ruleIdx': '@i',
+                                        'totalRules': '@obj.rules',
+                                      },
+                                    ],
+                                  ],
+                                ],
+                                'fields': [],
+                                'gap': 'sm',
+                                'renderItem': [
+                                  'fn',
+                                  'rule',
+                                  {
+                                    'children': [
+                                      {
+                                        'align': 'center',
+                                        'children': [
+                                          {
+                                            'content': 'WHEN',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'label': '@rule.whenEvent',
+                                            'type': 'badge',
+                                            'variant': 'secondary',
+                                          },
+                                          {
+                                            'content': '→ THEN',
+                                            'type': 'typography',
+                                            'variant': 'caption',
+                                          },
+                                          {
+                                            'label': '@rule.thenAction',
+                                            'type': 'badge',
+                                            'variant': 'secondary',
+                                          },
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/filter',
+                                                  [
+                                                    'array/range',
+                                                    0,
+                                                    [
+                                                      'array/len',
+                                                      '@rule.totalRules',
+                                                    ],
+                                                  ],
+                                                  [
+                                                    'fn',
+                                                    'j',
+                                                    [
+                                                      '!=',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'k',
+                                                  [
+                                                    'array/nth',
+                                                    '@rule.totalRules',
+                                                    '@k',
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '×',
+                                            'type': 'button',
+                                            'variant': 'ghost',
+                                          },
+                                        ],
+                                        'direction': 'horizontal',
+                                        'gap': 'xs',
+                                        'type': 'stack',
+                                      },
+                                      {
+                                        'entity': '@rule.availableEvents',
+                                        'fields': [],
+                                        'gap': 'sm',
+                                        'renderItem': [
+                                          'fn',
+                                          'evt',
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/range',
+                                                  0,
+                                                  [
+                                                    'array/len',
+                                                    '@rule.totalRules',
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'j',
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '==',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                    [
+                                                      'object/merge',
+                                                      [
+                                                        'array/nth',
+                                                        '@rule.totalRules',
+                                                        '@j',
+                                                      ],
+                                                      {
+                                                        'whenEvent': '@evt.id',
+                                                      },
+                                                    ],
+                                                    [
+                                                      'array/nth',
+                                                      '@rule.totalRules',
+                                                      '@j',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '@evt.label',
+                                            'type': 'button',
+                                            'variant': [
+                                              'if',
+                                              [
+                                                '==',
+                                                '@evt.id',
+                                                '@rule.whenEvent',
+                                              ],
+                                              'primary',
+                                              'ghost',
+                                            ],
+                                          },
+                                        ],
+                                        'type': 'data-list',
+                                      },
+                                      {
+                                        'entity': '@rule.availableActions',
+                                        'fields': [],
+                                        'gap': 'sm',
+                                        'renderItem': [
+                                          'fn',
+                                          'act',
+                                          {
+                                            'action': 'EDIT_RULE',
+                                            'actionPayload': {
+                                              'objectId': '@rule.objectId',
+                                              'rules': [
+                                                'array/map',
+                                                [
+                                                  'array/range',
+                                                  0,
+                                                  [
+                                                    'array/len',
+                                                    '@rule.totalRules',
+                                                  ],
+                                                ],
+                                                [
+                                                  'fn',
+                                                  'j',
+                                                  [
+                                                    'if',
+                                                    [
+                                                      '==',
+                                                      '@j',
+                                                      '@rule.ruleIdx',
+                                                    ],
+                                                    [
+                                                      'object/merge',
+                                                      [
+                                                        'array/nth',
+                                                        '@rule.totalRules',
+                                                        '@j',
+                                                      ],
+                                                      {
+                                                        'thenAction': '@act.id',
+                                                      },
+                                                    ],
+                                                    [
+                                                      'array/nth',
+                                                      '@rule.totalRules',
+                                                      '@j',
+                                                    ],
+                                                  ],
+                                                ],
+                                              ],
+                                            },
+                                            'label': '@act.label',
+                                            'type': 'button',
+                                            'variant': [
+                                              'if',
+                                              [
+                                                '==',
+                                                '@act.id',
+                                                '@rule.thenAction',
+                                              ],
+                                              'primary',
+                                              'ghost',
+                                            ],
+                                          },
+                                        ],
+                                        'type': 'data-list',
+                                      },
+                                    ],
+                                    'direction': 'vertical',
+                                    'gap': 'xs',
+                                    'type': 'stack',
+                                  },
+                                ],
+                                'type': 'data-list',
+                              },
+                              {
+                                'action': 'EDIT_RULE',
+                                'actionPayload': {
+                                  'objectId': '@obj.id',
+                                  'rules': [
+                                    'array/append',
+                                    '@obj.rules',
+                                    {
+                                      'thenAction': [
+                                        'object/get',
+                                        [
+                                          'array/first',
+                                          '@obj.availableActions',
+                                        ],
+                                        'id',
+                                        '',
+                                      ],
+                                      'whenEvent': [
+                                        'object/get',
+                                        [
+                                          'array/first',
+                                          '@obj.availableEvents',
+                                        ],
+                                        'id',
+                                        '',
+                                      ],
+                                    },
+                                  ],
+                                },
+                                'disabled': [
+                                  '>=',
+                                  [
+                                    'array/len',
+                                    '@obj.rules',
+                                  ],
+                                  '@obj.maxRules',
+                                ],
+                                'label': 'Add Rule',
+                                'type': 'button',
+                                'variant': 'ghost',
+                              },
+                            ],
+                            'direction': 'vertical',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                         ],
                         'type': 'data-list',
